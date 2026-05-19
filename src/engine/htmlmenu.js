@@ -39,4 +39,8 @@ class HTMLMenu {
     SetContainerStyle(style) {
         this.container.setAttribute('style', style);
     }
+
+    HideMenu(style = 'opacity: 0; pointer-events: none;') {
+        this.container.setAttribute('style', style);
+    }
 }

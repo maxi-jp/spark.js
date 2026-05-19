@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="levels">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="level">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="id" type="xs:integer" />
+              <xs:element maxOccurs="unbounded" name="spawn">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="time" type="xs:integer" />
+                    <xs:element maxOccurs="unbounded" name="enemy">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="position">
+                            <xs:complexType>
+                              <xs:sequence>
+                                <xs:element name="x" type="xs:integer" />
+                                <xs:element name="y" type="xs:integer" />
+                              </xs:sequence>
+                            </xs:complexType>
+                          </xs:element>
+                          <xs:element name="type" type="xs:integer" />
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

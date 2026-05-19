@@ -1,0 +1,98 @@
+#container {
+    position: relative;
+    overflow: hidden;
+    box-sizing: border-box;
+    margin: 20px auto;
+}
+
+@font-face {
+  font-family: futuristic;
+  src: url(./fonts/Speed_Rusher.ttf) format('truetype');
+}
+
+#mainMenu {
+    background-color: rgba(0, 0, 0, 0.95);    
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    z-index: 1001;
+    transition: top 0.5s, opacity 0.5s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    opacity: 1;
+}
+
+#pauseMenu {
+    background-color: rgba(0, 0, 0, 0.95);
+    width: 50%;
+    height: 50%;
+    position: absolute;
+    right: 25%;
+    left: 25%;
+    bottom: 50%;    
+    z-index: 1001;
+    transition: opacity 0.1s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    opacity: 1;
+}
+
+#mainMenu h1 {
+    font-size: 48px;
+    margin-bottom: 30px;    
+    font-family: futuristic, sans-serif;
+}
+
+#mainMenu h2 {
+    font-size: 24px;
+    margin-bottom: 60px;
+    font-family: futuristic, sans-serif;
+}
+
+#pauseMenu h1 {
+    font-size: 38px;
+    margin-bottom: 30px;    
+    font-family: futuristic, sans-serif;
+}
+
+.menuButton {
+    width: 300px;
+    height: 50px;
+    background-color: #0066cc;
+    margin: 20px auto;
+    line-height: 50px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 18px;
+    color: white;
+    border: none;
+    transition: background-color 0.3s;    
+    font-family: futuristic, sans-serif;
+}
+
+.menuButton:hover {
+    background-color: #0052a3;
+}
+
+#credits.show {
+    animation-play-state: running;
+}
+
+@keyframes CreditsMovement {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-100%); }
+}
+
+canvas {
+    background-color: white;
+    margin: 20px auto;
+    border: solid black 1px;
+    cursor: url(/src/examples/tts/assets/crosshair060.png) 32 32, auto;
+}

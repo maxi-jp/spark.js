@@ -1,5 +1,12 @@
+const ENEMY_TYPE = {
+    NORMAL: 0,
+    KAMIKAZE: 1,
+    ASTEROID: 2
+}
+
 class Enemy extends SpriteObject {
     static colliderColor = new Color(1, 0, 0, 0.25);
+    static spawnColor = new Color(0, 0, 1, 0.25);
 
     constructor(initialPosition, img, player, sceneLimits) {
         super(initialPosition, 0, 1, img);
@@ -11,6 +18,8 @@ class Enemy extends SpriteObject {
         this.life = 1;
         this.score = 1;
         this.collisionDamage = 1;
+        this.spawnTime = 2;
+        this.spawnBlinkTime = 1;
 
         this.boundingRadious = 18;
         this.boundingRadious2 = this.boundingRadious * this.boundingRadious;
@@ -29,16 +38,44 @@ class Enemy extends SpriteObject {
             this.player.position.y - this.position.y,
             this.player.position.x - this.position.x
         ) + PIH;
+                
+        // update spawn time
+        if (this.spawnTime > 0) {
+            this.spawnTime -= deltaTime;
+            if (this.spawnTime < 0)
+            {                   
+                this.spawnTime = 0;
+                this.sprite.alpha = 1;
+            }
+
+            // Not updateing the movement, only rotation
+            return;
+        }
 
         // move forwards
         this.position.x += Math.cos(this.rotation - PIH) * this.speed * deltaTime;
-        this.position.y += Math.sin(this.rotation - PIH) * this.speed * deltaTime;
+        this.position.y += Math.sin(this.rotation - PIH) * this.speed * deltaTime;        
+    }
+    
+    UpdateSpawnBlinkSprite() {
+        if (this.spawnTime > 0) {
+            const spawnAlpha =  1 - modDecimal(this.spawnTime,this.spawnBlinkTime);
+            this.sprite.alpha = spawnAlpha;
+        }
+    }
+
+    IsSpawning(){
+        return this.spawnTime > 0 
     }
 
     Draw(renderer) {
+        this.UpdateSpawnBlinkSprite();
+
         super.DrawSection(renderer, 149, 182, 31, 46);
 
-        renderer.DrawFillCircle(this.position.x, this.position.y, this.boundingRadious, Enemy.colliderColor);
+        const colliderColor = this.IsSpawning() ? Enemy.spawnColor : Enemy.colliderColor;
+        renderer.DrawFillCircle(this.position.x, this.position.y, this.boundingRadious, colliderColor);
+
     }
 
     Damage(damage) {
@@ -51,6 +88,8 @@ class Enemy extends SpriteObject {
     }
 
     OnCollisionEnter(myCollider, otherCollider) {
+        if (this.IsSpawning()) return; // invulnerable while spawning
+
         if (!(otherCollider.go instanceof Bullet)) return;
 
         const bullet = otherCollider.go;
@@ -101,6 +140,8 @@ class EnemyKamikaze extends Enemy {
                     this.player.position.y - this.position.y,
                     this.player.position.x - this.position.x
                 ) + PIH;
+
+                if (this.IsSpawning()) return;
 
                 this.lookingTimeAux += deltaTime;
                 if (this.lookingTimeAux >= this.lookingTime) {
@@ -175,6 +216,8 @@ class EnemyAsteroid extends Enemy {
 
         this.rotation += this.rotationSpeed * deltaTime;
 
+        if (this.IsSpawning()) return;
+
         // move forwards
         this.position.x += this.direction.x * this.speed * deltaTime;
         this.position.y += this.direction.y * this.speed * deltaTime;
@@ -188,13 +231,16 @@ class EnemyAsteroid extends Enemy {
         }
     }
 
-    Draw(renderer) {
+    Draw(renderer) {   
+        this.UpdateSpawnBlinkSprite();
+
         if (this.small)
             super.DrawSection(renderer, 144, 476, 32, 32);
         else
             super.DrawSection(renderer, 144, 428, 48, 48);
 
-        renderer.DrawFillCircle(this.position.x, this.position.y, this.boundingRadious, Enemy.colliderColor);
+        const colliderColor = this.IsSpawning() ? Enemy.spawnColor : Enemy.colliderColor;
+        renderer.DrawFillCircle(this.position.x, this.position.y, this.boundingRadious, colliderColor);
     }
 
     Damage(damage) {
@@ -202,8 +248,12 @@ class EnemyAsteroid extends Enemy {
         if (dead && !this.small) {
             // spawn two small asteroids
             const smallAsteroidA = new EnemyAsteroid(Vector2.Copy(this.position), this.sprite.img, this.player, this.sceneLimits, new Vector2(-this.direction.y, this.direction.x), true);
+            // Instantly spawn
+            smallAsteroidA.spawnTime = 0;
 
             const smallAsteroidB = new EnemyAsteroid(Vector2.Copy(this.position), this.sprite.img, this.player, this.sceneLimits, new Vector2(this.direction.y, -this.direction.x), true);
+            // Instantly spawn
+            smallAsteroidB.spawnTime = 0;
             
             game.AddEnemy(smallAsteroidA);
             game.AddEnemy(smallAsteroidB);

@@ -582,6 +582,14 @@ var Input = {
     },
 
     /**
+     * Unregisters a named action and its physical input bindings.
+     * @param {string} name The name of the action to unregister.
+     */
+    UnregisterAction: function(name) {
+        delete this.actionMaps[name];
+    },
+
+    /**
      * Registers a named axis and its physical input bindings.
      * @param {string} name The name of the axis (e.g., "MoveHorizontal").
      * @param {Array<Object>} bindings An array of binding objects.
@@ -589,6 +597,14 @@ var Input = {
      */
     RegisterAxis: function(name, bindings) {
         this.axisMaps[name] = bindings;
+    },
+
+    /**
+     * Unregisters a named axis and its physical input bindings.
+     * @param {string} name The name of the axis to unregister.
+     */
+    UnregisterAxis: function(name) {
+        delete this.axisMaps[name];
     },
 
     /**
@@ -814,6 +830,14 @@ var Input = {
             duration: duration,
             delay: delay
         };
+    },
+
+    /**
+     * Unregisters a named rumble preset.
+     * @param {string} id The id of the rumble preset to unregister.
+     */
+    unregisterRumble: function(id) {
+        delete this.rumbleMaps[id];
     },
 
     /**
@@ -1192,6 +1216,14 @@ var Input = {
     RegisterVirtualJoystick: function(id, virtualJoystick) {
         this._virtualControls.joysticks.set(id, virtualJoystick);
         return virtualJoystick;
+    },
+
+    /**
+     * Removes a registered `VirtualJoystick` by id.
+     * @param {string} id 
+     */
+    RemoveVirtualJoystick: function(id) {
+        this._virtualControls.joysticks.delete(id);
     },
 
     /**

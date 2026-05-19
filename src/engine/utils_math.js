@@ -143,6 +143,16 @@ function RotatePointAroundPoint(point, origin, angle, transformedPoint) {
 }
 
 /**
+ * Returns the modulo of two decimal numbers, ensuring a positive result.
+ * @param {number} n - The dividend.
+ * @param {number} m - The divisor.
+ * @returns {number} The modulo result.
+ */
+function modDecimal(n, m) {  
+  return ((n % m) + m) % m;
+}
+
+/**
  * Finds the intersection point of two finite line segments.
  * @param {{x:number,y:number}} l1p1 @param {{x:number,y:number}} l1p2
  * @param {{x:number,y:number}} l2p1 @param {{x:number,y:number}} l2p2
