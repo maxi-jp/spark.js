@@ -82,7 +82,8 @@ class Box2DWatermelon extends Box2DGame {
             screenWidth: 720,
             screenHeight: 1280,
             fillWindow: true,
-            drawColliders: false
+            drawColliders: false,
+            // mobileSupport: true // enable touch events; behavior adapts via mobileWithTouchScreen
         })
     
         this.graphicAssets = {
@@ -92,13 +93,94 @@ class Box2DWatermelon extends Box2DGame {
         }
 
         this.launchLineY = jarLimits.y - jarLimits.height + 50;
+
+        // Score tracking
+        this.score = 0;
+        this.bestScore = 0;
+        this.nextFruitId = 0; // 0 = cherry; updated each spawn
+        this.ui = null;       // HTMLMenu reference, set up in Start()
     }
 
     Start() {
         // create the physics simulated world
         super.Start();
 
-        // and some physic objects
+        // Jar walls
+        this.SetupBoundaries();
+
+        // spawn the first fruit (cherry) and prepare the queue
+        this.score = 0;
+        this.bestScore = parseInt(localStorage.getItem('wm_best') || '0');
+
+        // HTML score UI — syncWithCanvas=true mirrors the canvas fillWindow transform
+        this.ui = new WatermelonUI(this, canvas);
+        this.ui.Start();
+        this.ui.UpdateScoreDisplay();
+
+        this.nextFruitId = 0; // first fruit is always a cherry
+        this.currentFruit = null;
+        this.spawnTimer = 0;
+        this.SpawnNextFruit();
+    }
+
+    Update(deltaTime) {
+        // update physics and gameObjects
+        super.Update(deltaTime);
+        
+        if (this.currentFruit) {
+            // Clamp target X inside the jar walls
+            const fruitRadius = fruits[this.currentFruit.step].radius * this.physicsWorld.scale;
+            const minX = jarLimits.x - jarLimits.width / 2 + fruitRadius;
+            const maxX = jarLimits.x + jarLimits.width / 2 - fruitRadius;
+
+            // Desktop: always follow the mouse.
+            // Mobile:  follow the finger only while it's on screen; otherwise stay centred.
+            let targetX;
+            if (mobileWithTouchScreen) {
+                targetX = Input.touch.any ? Input.mouse.x : this.screenHalfWidth;
+            }
+            else {
+                targetX = Input.mouse.x;
+            }
+            targetX = Math.max(minX, Math.min(maxX, targetX));
+
+            // Keep the fruit suspended at the launch line
+            this.currentFruit.position = new Vector2(Lerp(this.currentFruit.position.x, targetX, 0.25), this.launchLineY);
+
+            // Drop: left-click release on desktop, finger lift on mobile (touch mirrors to mouse)
+            if (Input.IsMouseUp()) {
+                this.currentFruit.Drop();
+                this.currentFruit = null;
+                this.spawnTimer = 1.0; // wait 1 second before spawning the next one
+            }
+        }
+        else {
+            // Handle the spawn timer
+            this.spawnTimer -= deltaTime;
+            if (this.spawnTimer <= 0) {
+                this.SpawnNextFruit();
+            }
+        }
+    }
+
+    Draw() {
+        // background image
+        renderer.DrawImageBasic(this.graphicAssets.bg.img, 0, 0);
+        renderer.DrawImageSectionBasic(this.graphicAssets.jar.img, -12, -290, 0, 0, this.graphicAssets.jar.img.width, 700, 1, 1);
+
+        super.Draw();
+
+        // jar image
+        // renderer.DrawImageBasic(this.graphicAssets.jar.img, -12, -290, this.graphicAssets.jar.img.width, this.graphicAssets.jar.img.height, 0.5);
+        renderer.DrawImageSectionBasic(this.graphicAssets.jar.img, -12, 410, 0, 700, this.graphicAssets.jar.img.width, this.graphicAssets.jar.img.height - 700, 1, 1, 0.5);
+
+        const hint = mobileWithTouchScreen
+            ? "Touch to aim — lift finger to drop!"
+            : "Move mouse to aim — click to drop!";
+        this.renderer.DrawFillText(hint, this.screenHalfWidth, this.screenHeight - 20, "20px Arial", Color.black, "center");
+    }
+
+    SetupBoundaries() {
         // static floor
         CreateEdge(
             this.physicsWorld,
@@ -170,60 +252,6 @@ class Box2DWatermelon extends Box2DGame {
                 type: b2Body.b2_staticBody
             }
         );
-
-        // spawn the first fruit (id=0)
-        this.currentFruit = null;
-        this.spawnTimer = 0;
-        this.SpawnNextFruit(0);
-    }
-
-    Update(deltaTime) {
-        // update physics and gameObjects
-        super.Update(deltaTime);
-        
-        if (this.currentFruit) {
-            // Update horizontal position based on mouse
-            const fruitRadius = fruits[this.currentFruit.step].radius * this.physicsWorld.scale;
-            const minX = 110 + fruitRadius; // Left wall
-            const maxX = canvas.width - 110 - fruitRadius; // Right wall
-            
-            let targetX = Input.mouse.x;
-            if (targetX < minX)
-                targetX = minX;
-            if (targetX > maxX)
-                targetX = maxX;
-            
-            // Keep the fruit suspended at 50 pixels from the top
-            this.currentFruit.position = new Vector2(Lerp(this.currentFruit.position.x, targetX, 0.25), this.launchLineY);
-            
-            if (Input.IsMouseUp()) {
-                // Drop the fruit
-                this.currentFruit.Drop();
-                this.currentFruit = null;
-                this.spawnTimer = 1.0; // Wait 1 second before spawning the next one
-            }
-        }
-        else {
-            // Handle the spawn timer
-            this.spawnTimer -= deltaTime;
-            if (this.spawnTimer <= 0) {
-                this.SpawnNextFruit();
-            }
-        }
-    }
-
-    Draw() {
-        // background image
-        renderer.DrawImageBasic(this.graphicAssets.bg.img, 0, 0);
-        renderer.DrawImageSectionBasic(this.graphicAssets.jar.img, -12, -290, 0, 0, this.graphicAssets.jar.img.width, 700, 1, 1);
-
-        super.Draw();
-
-        // jar image
-        // renderer.DrawImageBasic(this.graphicAssets.jar.img, -12, -290, this.graphicAssets.jar.img.width, this.graphicAssets.jar.img.height, 0.5);
-        renderer.DrawImageSectionBasic(this.graphicAssets.jar.img, -12, 410, 0, 700, this.graphicAssets.jar.img.width, this.graphicAssets.jar.img.height - 700, 1, 1, 0.5);
-
-        this.renderer.DrawFillText("Move the mouse to aim and click to drop!", 10, this.screenHeight - 20, "20px Arial", Color.black, "start");
     }
 
     SpawnFruit(step, position, rotation, impulse=0) {
@@ -232,9 +260,28 @@ class Box2DWatermelon extends Box2DGame {
         newFruit.ApplyImpulse(impulse * RandomBetweenFloat(0, 0.2), 0);
     }
 
-    SpawnNextFruit(fruitId=RandomBetweenInt(0, 2)) { // Random fruit from the first 3
+    /**
+     * Add points to the current score and persist the best score.
+     * Scoring follows triangular numbers: merging two fruits of step N
+     * awards (N+1)*(N+2)/2 points — cherry merge=1, strawberry=3, grape=6, …
+     * @param {number} pts
+     */
+    AddScore(pts) {
+        this.score += pts;
+        if (this.score > this.bestScore) {
+            this.bestScore = this.score;
+            localStorage.setItem('wm_best', this.bestScore);
+        }
+        this.ui.UpdateScoreDisplay();
+    }
+
+    SpawnNextFruit() {
+        const fruitId = this.nextFruitId;
+        // Pick the fruit that will come *after* this one (random from first 5)
+        this.nextFruitId = RandomBetweenInt(0, 4);
         this.currentFruit = new Fruit(new Vector2(this.screenHalfWidth, this.launchLineY), 0, this.physicsWorld, this.graphicAssets.fruits.img, fruitId, true);
         this.gameObjects.push(this.currentFruit);
+        this.ui.UpdateNextFruitPreview();
     }
 }
 
@@ -280,9 +327,57 @@ class Fruit extends Box2DSpriteObject {
                 game.SpawnFruit(nextStep, canvasPos, (this.rotation + other.rotation) / 2, this.body.GetLinearVelocity().x + other.body.GetLinearVelocity().x);
             }
 
+            // Award points: triangular sequence — cherry merge=1, strawberry=3, grape=6, …
+            game.AddScore(nextStep * (nextStep + 1) / 2);
             game.Destroy(this);
             game.Destroy(other);
         }
+    }
+}
+
+class WatermelonUI extends HTMLMenu {
+    constructor(game, canvas) {
+        super(game, '#wm-ui', '#wm-container', canvas, true, true);
+    }
+
+    Start() {
+        super.Start();
+
+        this.SetupElements([
+            '#wm-score',
+            '#wm-best',
+            '#wm-next-fruit'
+        ]);
+    }
+
+    UpdateScoreDisplay() {
+        this.elements['#wm-score'].textContent = this.game.score;
+        this.elements['#wm-best'].textContent  = this.game.bestScore;
+    }
+
+    /** Updates the NEXT fruit preview using CSS background-image sprite technique. */
+    UpdateNextFruitPreview() {
+        const div = this.elements['#wm-next-fruit'];
+        const img = this.game.graphicAssets.fruits.img;
+
+        const ft   = fruits[this.game.nextFruitId];
+        const divW = div.offsetWidth  || 70;
+        const divH = div.offsetHeight || 70;
+
+        // Scale the tile to fill the preview div (with a small margin)
+        const S = Math.min(divW / ft.tileset.w, divH / ft.tileset.h) * 0.85;
+
+        // Scale the entire sheet by the same factor so background-position lines up
+        const sheetW = img.naturalWidth  * S;
+        const sheetH = img.naturalHeight * S;
+
+        // Offset so the tile is centred inside the div
+        const posX = -ft.tileset.x * S + (divW - ft.tileset.w * S) / 2;
+        const posY = -ft.tileset.y * S + (divH - ft.tileset.h * S) / 2;
+
+        div.style.backgroundImage    = `url('${img.src}')`;
+        div.style.backgroundSize     = `${sheetW}px ${sheetH}px`;
+        div.style.backgroundPosition = `${posX}px ${posY}px`;
     }
 }
 
