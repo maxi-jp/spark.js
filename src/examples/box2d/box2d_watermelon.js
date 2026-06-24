@@ -90,7 +90,11 @@ class Box2DWatermelon extends Box2DGame {
             bg:     { path: 'src/examples/box2d/assets/watermelon_bg.avif',  img: null },
             jar:    { path: 'src/examples/box2d/assets/watermelon_jar.avif', img: null },
             fruits: { path: 'src/examples/box2d/assets/watermelon.png', img: null }
-        }
+        };
+
+        this.audioAssets = {
+            backgroundMusic: { path: "src/examples/box2d/assets/Glass_Pieces_at_Noon.mp3" }
+        };
 
         this.launchLineY = jarLimits.y - jarLimits.height + 50;
 
@@ -121,6 +125,8 @@ class Box2DWatermelon extends Box2DGame {
         this.currentFruit = null;
         this.spawnTimer = 0;
         this.SpawnNextFruit();
+
+        audioPlayer.PlayLoop("backgroundMusic");
     }
 
     Update(deltaTime) {
