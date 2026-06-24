@@ -47,6 +47,7 @@ Documentation can be consulted [here](https://maxi-jp.github.io/spark.js/docs/).
     - box2d_basic.js      # Basic Box2D physics demo
     - box2d_basket.js     # Basketball-style physics game
     - box2d_platormer.js  # Platformer with Box2D physics
+    - box2d_watermelon.js # Suika clone (Watermelon game) with Box2D
   - brokeout/             # Breakout clone
   - floppyderp/           # Flappy Bird-like example
   - menu/                 # HTML + CSS menu examples

@@ -3,7 +3,7 @@ const blocks = [
     {x: 14, y: 6, t: 0},
     {x: 15, y: 6, t: 1},
     {x: 16, y: 6, t: 0},
-    {x: 16, y: 10, t: 1},
+    {x: 16, y: 2, t: 1},
     {x: 17, y: 6, t: 1},
     {x: 18, y: 6, t: 0},
 ];
@@ -36,6 +36,10 @@ class Box2DPlatformer extends Box2DGame {
                 img: null
             }
         };
+
+        this.Configure({
+            drawColliders: true
+        });
 
         this.player = null;
         this.camera = null;
@@ -110,7 +114,7 @@ class Box2DPlatformer extends Box2DGame {
         this.background.Start();
 
         // create a coin
-        const coin = new Coin(new Vector2(300, 150), this.graphicAssets.blocks.img, this.physicsWorld);
+        const coin = new Coin(new Vector2(300, 250), this.graphicAssets.blocks.img, this.physicsWorld);
         this.coins.push(coin);
         this.gameObjects.push(coin);
 

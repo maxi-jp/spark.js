@@ -55,6 +55,12 @@ Explore the `src/examples/` directory for practical demonstrations of the engine
 - [Box2D basic](../box2d-basic.html ':ignore :target=_blank')
 - [Box2D basket](../box2d-basket.html ':ignore :target=_blank')
 - [Box2D platformer](../box2d-platformer.html ':ignore :target=_blank') *(WIP)*
+- [Watermelon Game (Suika Clone)](../box2d-watermelon.html ':ignore :target=_blank') *(WIP)* — A physics-based puzzle game demonstrating advanced Box2D integrations, where players drop fruits that merge into larger ones upon contact.
+  **Key features demonstrated:**
+  - **Suspended physics bodies:** Spawning a rigid body that ignores gravity (`body.SetActive(false)`), manually tracking the mouse position, and then "dropping" it by awakening the body (`body.SetActive(true)`).
+  - **World Manifold extraction:** Capturing the exact world coordinates of an impact (`contactPoint`) to spawn the merged fruit exactly where the collision happened.
+  - **Safe destruction:** Relying on the object's `active` flag to safely destroy colliding pairs of Box2D bodies, utilizing the engine's deferred deletion queue to prevent array-mutation bugs during physics steps.
+  - **Scale translations:** Converting canvas pixel coordinates to Box2D meters and back using `Box2DToCanvasPosition`.
 
 ---
 

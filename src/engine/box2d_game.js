@@ -29,7 +29,9 @@ class Box2DGame extends Game {
         // draw gameObjects
         super.Draw();
 
-        // box2d world debug
-        DrawWorldDebug(this.renderer, this.physicsWorld);
+        if (this.config.drawColliders) {
+            // box2d world debug
+            DrawWorldDebug(this.renderer, this.physicsWorld);
+        }
     }
 }

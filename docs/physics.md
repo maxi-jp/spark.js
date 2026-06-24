@@ -71,8 +71,8 @@ Extends the base `Game` class to manage the Box2D physics world.
 #### `physicsWorld`
 The Box2D `b2World` instance. Use for advanced physics operations.
 
-#### `SetDebugDraw(enabled)`
-Enables or disables debug drawing of physics bodies and joints.
+#### Debug Drawing
+To visualise physics bodies, joints, and collision shapes overlaid on the canvas, set `drawColliders: true` in your game's config during `this.Configure()`.
 
 #### `AddBody(bodyDef)` / `RemoveBody(body)`
 Add or remove a `b2Body` from the world. Typically called internally by `Box2DGameObject`s.
@@ -84,22 +84,23 @@ Changes the gravity vector at runtime.
 
 ### `Box2DGameObject` classes
 
-Base class for all physics-enabled game objects. Subclasses: `Box2DRectangleGO`, `Box2DCircleGO`, `Box2DSpriteGO`, `Box2DAnimatedSpriteGO`.
+Base class for all physics-enabled game objects. Subclasses: `Box2DRectangleGO`, `Box2DSpriteObject`, `Box2DSSAnimationObjectBasic`, `Box2DSSAnimationObjectComplex`.
 
-#### `constructor(position, physicsWorld, objectType, sizeOrRadius, density, friction, restitution, ...)`
+#### `constructor(position, physicsWorld, objectType, bodyOptions, ...)`
 
 - `position` — `Vector2` initial position
 - `physicsWorld` — the `b2World` from `Box2DGame`
 - `objectType` — `PhysicsObjectType.Box` or `PhysicsObjectType.Circle`
-- `sizeOrRadius` — `{width, height}` for boxes, or a number for circles
-- `density`, `friction`, `restitution` — physics material properties
-- Additional parameters for rendering (color, image, animation data)
+- `bodyOptions` — Object containing physics properties (`density`, `friction`, `restitution`, `type`, `offset`, `radius`, `width`, `height`, etc.)
+- Additional parameters for rendering (e.g. `width`, `height`, `color`, `img`, `scale`)
 
 #### `body`
 The underlying `b2Body` instance.
 
-#### `OnContactDetected(otherGameObject)`
-Called when this object's body begins contact with another `Box2DGameObject`. Override to handle collisions.
+#### `OnContactDetected(otherGameObject, contactPoint)`
+Called when this object's body begins contact with another `Box2DGameObject`. `contactPoint` is a `b2Vec2` representing the exact world coordinate of the impact.
+
+> **Note:** If you need to destroy an object during a collision, just use `game.Destroy(this)`. The engine uses deferred deletion (a kill queue) at the end of the frame, making it 100% safe to destroy bodies inside Box2D contact callbacks!
 
 #### `OnContactEnded(otherGameObject)`
 Called when contact ends.
@@ -129,8 +130,8 @@ Configure collision filtering categories and masks.
 
 ### Helper functions (`box2d_helper.js`)
 
-#### `PixelsToMeters(pixels)` / `MetersToPixels(meters)`
-Convert between pixel values and Box2D meter values using `pixelsPerMeter`.
+#### `CanvasToBox2DPosition(canvas, canvasPos, scale)`
+Converts a `Vector2` pixel coordinate from the canvas space to a `b2Vec2` in the Box2D physics world space (inverts the Y-axis).
 
-#### `Vector2ToB2Vec2(vector2)` / `B2Vec2ToVector2(b2vec2)`
-Convert between the engine's `Vector2` and Box2D's `b2Vec2`.
+#### `Box2DToCanvasPosition(canvas, box2DPos, scale)`
+Converts a `b2Vec2` coordinate from the physics world back to a pixel `Vector2` for canvas rendering.

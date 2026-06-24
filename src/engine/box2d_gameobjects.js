@@ -5,11 +5,12 @@ class Box2DGameObject extends GameObject {
         this.world = physicsWorld;
 
         // Create the Box2D body
-        this.body = CreatePhysicsObject(physicsWorld, type, position.x / physicsWorld.scale, position.y / physicsWorld.scale, bodyOptions);
+        this.body = CreatePhysicsObject(physicsWorld, type, position.x / physicsWorld.scale, (canvas.height - position.y) / physicsWorld.scale, bodyOptions);
         this.body.SetUserData(this);
 
         this.hasContact = false; // true if the body has colide with another object
         this.contactUserData = null; // the user data of the object that has colide with this object
+        this.lastContactData = null; // information of the last contact detected
         this.hasContactEnded = false; // true if the body has end the collision with another object
         this.contactEndedUserData = null; // the user data of the object that has ended a collision with this object
 
@@ -48,7 +49,7 @@ class Box2DGameObject extends GameObject {
         if (this.hasContact) {
             // Consume the contact
             this.hasContact = false;
-            this.OnContactDetected(this.contactUserData);
+            this.OnContactDetected(this.contactUserData, this.lastContactData);
         }
 
         if (this.hasContactEnded) {
@@ -59,11 +60,12 @@ class Box2DGameObject extends GameObject {
     }
 
     // DO NOT OVERRIDE: Used internally by Box2D contact system
-    OnContactDetectedBox2D(other) {
+    OnContactDetectedBox2D(other, contactPoint) {
         if (this.hasContact)
             return; // already detected a contact
 
         this.contactUserData = other;
+        this.lastContactData = contactPoint;
         this.hasContact = true;
     }
 
@@ -76,7 +78,7 @@ class Box2DGameObject extends GameObject {
         this.hasContactEnded = true;
     }
 
-    OnContactDetected(other) { }
+    OnContactDetected(other, contactPoint) { }
     OnContactDetectEnded(other) { }
 
     /**
