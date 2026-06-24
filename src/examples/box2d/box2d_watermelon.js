@@ -83,7 +83,7 @@ class Box2DWatermelon extends Box2DGame {
             screenHeight: 1280,
             fillWindow: true,
             drawColliders: false,
-            // mobileSupport: true // enable touch events; behavior adapts via mobileWithTouchScreen
+            mobileSupport: true // enable touch events; behavior adapts via mobileWithTouchScreen
         })
     
         this.graphicAssets = {
