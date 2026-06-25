@@ -71,8 +71,10 @@ const jarLimits = {
     x: 720 / 2,
     y: 1280 - 200,
     width: 560,
-    height: 800
+    height: 900
 }
+
+const GAME_OVER_DELAY = 3; // seconds
 
 class Box2DWatermelon extends Box2DGame {
     constructor(renderer) {
@@ -82,7 +84,7 @@ class Box2DWatermelon extends Box2DGame {
             screenWidth: 720,
             screenHeight: 1280,
             fillWindow: true,
-            drawColliders: true,
+            drawColliders: false,
             mobileSupport: true // enable touch events; behavior adapts via mobileWithTouchScreen
         })
     
@@ -103,6 +105,10 @@ class Box2DWatermelon extends Box2DGame {
         this.bestScore = 0;
         this.nextFruitId = 0; // 0 = cherry; updated each spawn
         this.ui = null;       // HTMLMenu reference, set up in Start()
+
+        // Game-over state
+        this.gameOver    = false;
+        this.gameOverZone = null; // Box2DTrigger that detects fruits above the danger line
     }
 
     Start() {
@@ -111,6 +117,16 @@ class Box2DWatermelon extends Box2DGame {
 
         // Jar walls
         this.SetupBoundaries();
+
+        // Game-over danger zone — a thin sensor that spans the jar opening at the launch line.
+        // Any non-suspended fruit that stays inside for >= 3 seconds triggers game over.
+        this.gameOver = false;
+        this.gameOverZone = new GameOverZone(
+            new Vector2(jarLimits.x, this.launchLineY),
+            this.physicsWorld,
+            this.physicsScale
+        );
+        this.gameObjects.push(this.gameOverZone);
 
         // spawn the first fruit (cherry) and prepare the queue
         this.score = 0;
@@ -130,6 +146,13 @@ class Box2DWatermelon extends Box2DGame {
     }
 
     Update(deltaTime) {
+        // When game over: wait for a tap/click then restart via Start()
+        if (this.gameOver) {
+            if (Input.IsMouseDown() || Input.touch.down)
+                this.Start();
+            return;
+        }
+
         // update physics and gameObjects
         super.Update(deltaTime);
         
@@ -179,6 +202,28 @@ class Box2DWatermelon extends Box2DGame {
         // jar image
         // renderer.DrawImageBasic(this.graphicAssets.jar.img, -12, -290, this.graphicAssets.jar.img.width, this.graphicAssets.jar.img.height, 0.5);
         renderer.DrawImageSectionBasic(this.graphicAssets.jar.img, -12, 410, 0, 700, this.graphicAssets.jar.img.width, this.graphicAssets.jar.img.height - 700, 1, 1, 0.5);
+
+        // Danger line — pulses red when fruits are in the zone, dim otherwise
+        if (this.gameOverZone) {
+            const t = this.gameOverZone.maxTimeInside; // 0 when clear, up to 3+
+            const pulse  = Math.abs(Math.sin(totalTime * 6));
+            const alpha  = t > 0 ? 0.5 + 0.5 * pulse : 0.25;
+            const green  = t > 0 ? 0.2 * (1 - Math.min(t, 3) / 3) : 0;
+            this.renderer.DrawLine(
+                jarLimits.x - jarLimits.width / 2, this.launchLineY,
+                jarLimits.x + jarLimits.width / 2, this.launchLineY,
+                new Color(1, green, 0, alpha), 3
+            );
+        }
+
+        // Game-over overlay
+        if (this.gameOver) {
+            this.renderer.DrawFillBasicRectangle(0, 0, this.screenWidth, this.screenHeight, new Color(0, 0, 0, 0.65));
+            this.renderer.DrawFillText("GAME OVER",       this.screenHalfWidth, this.screenHalfHeight - 50,  "bold 72px Arial", Color.white, "center");
+            this.renderer.DrawFillText(`Score: ${this.score}`, this.screenHalfWidth, this.screenHalfHeight + 30, "40px Arial",      Color.white, "center");
+            this.renderer.DrawFillText("Tap or click to restart", this.screenHalfWidth, this.screenHalfHeight + 110, "26px Arial", new Color(0.7, 0.7, 0.7), "center");
+            return;
+        }
 
         const hint = mobileWithTouchScreen
             ? "Touch to aim — lift finger to drop!"
@@ -281,6 +326,17 @@ class Box2DWatermelon extends Box2DGame {
         this.ui.UpdateScoreDisplay();
     }
 
+    /** Triggers the game-over state. Safe to call multiple times. */
+    GameOver() {
+        if (this.gameOver) return;
+        this.gameOver = true;
+        // Drop the held fruit so it falls naturally into the pile
+        if (this.currentFruit) {
+            this.currentFruit.Drop();
+            this.currentFruit = null;
+        }
+    }
+
     SpawnNextFruit() {
         const fruitId = this.nextFruitId;
         // Pick the fruit that will come *after* this one (random from first 5)
@@ -338,6 +394,39 @@ class Fruit extends Box2DSpriteObject {
             game.Destroy(this);
             game.Destroy(other);
         }
+    }
+}
+
+/**
+ * Thin sensor box that spans the jar opening at the launch line.
+ * Any non-suspended Fruit that remains inside for GAME_OVER_DELAY seconds
+ * triggers Box2DWatermelon.GameOver().
+ */
+
+class GameOverZone extends Box2DTrigger {
+    constructor(position, physicsWorld, physicsScale) {
+        super(position, physicsWorld, PhysicsObjectType.Box, {
+            width:  jarLimits.width / physicsScale, // spans the full jar opening
+            height: 0.5                             // 50 px tall in game space
+        });
+        // Maximum seconds any non-suspended fruit has been inside this frame.
+        this.maxTimeInside = 0;
+    }
+
+    Update(deltaTime) {
+        super.Update(deltaTime); // processes enter/exit queues and calls OnTriggerStay
+
+        // Compute the longest time any non-suspended fruit has been in the zone
+        this.maxTimeInside = 0;
+        for (const [other, data] of this._overlapping) {
+            if (other instanceof Fruit && !other.isSuspended)
+                this.maxTimeInside = Math.max(this.maxTimeInside, data.time);
+        }
+    }
+
+    OnTriggerStay(other, timeInside) {
+        if (other instanceof Fruit && !other.isSuspended && timeInside >= GAME_OVER_DELAY)
+            game.GameOver();
     }
 }
 
