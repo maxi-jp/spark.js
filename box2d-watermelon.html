@@ -7,74 +7,7 @@
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
     <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="stylesheet" href="css/style.css">
-    <style>
-        #wm-container {
-            position: relative;
-            box-sizing: border-box;
-            margin: 0 auto;
-        }
-
-        canvas {
-            margin: 0;
-            border: none;
-        }
-        /* ── Suika-style score UI ───────────────────────── */
-        /* position / size / transform / z-index are set by HTMLMenu.SetupFillWindowOverlay() */
-        #wm-ui {
-            position: absolute;
-            top: 0;
-            left: 0;
-            box-sizing: border-box;
-        }
-        .wm-bubbles-row {
-            position: absolute;
-            top: 0;
-            left: 0;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            gap: 24px;
-            margin-top: 80px;
-            width: 100%;
-        }
-        .wm-bubble {
-            background: rgb(235 204 175);
-            border: 6px solid #c7a388;
-            border-radius: 50%;
-            padding: 8px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 120px;
-            height: 120px;
-            box-sizing: border-box;
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
-        }
-        .wm-bubble-label {
-            font-family: Arial, sans-serif;
-            font-size: 18px;
-            font-weight: bold;
-            color: #f8ece0;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            text-shadow: #33271e 0px 0px 2px, #6c513c 0px 2px 5px;
-        }
-        .wm-bubble-value {
-            position: absolute;
-            top: 0;
-            line-height: 120px;
-            font-family: Arial, sans-serif;
-            font-size: 40px;
-            font-weight: bold;
-            color: #f7ebdd;
-            text-shadow: #33271e 0px 0px 2px, #6c513c 0px 2px 5px;
-        }
-        #wm-next-fruit {
-            width: 70px;
-            height: 70px;
-            background-repeat: no-repeat;
-        }
-    </style>
+    <link rel="stylesheet" href="src/examples/box2d/box2d_watermelon.css">
     <script src="src/engine/renderer.js"></script>
     <script src="src/engine/main.js"></script>
     <script src="src/engine/utils_math.js"></script>
@@ -98,15 +31,15 @@
         <div id="wm-ui">
             <div class="wm-bubbles-row">
                 <div class="wm-bubble">
-                    <div class="wm-bubble-label">BEST</div>
+                    <div class="wm-bubble-label">Best</div>
                     <div class="wm-bubble-value" id="wm-best">0</div>
                 </div>
                 <div class="wm-bubble">
-                    <div class="wm-bubble-label">SCORE</div>
+                    <div class="wm-bubble-label">Score</div>
                     <div class="wm-bubble-value" id="wm-score">0</div>
                 </div>
                 <div class="wm-bubble">
-                    <div class="wm-bubble-label">NEXT</div>
+                    <div class="wm-bubble-label">Next</div>
                     <div id="wm-next-fruit"></div>
                 </div>
             </div>

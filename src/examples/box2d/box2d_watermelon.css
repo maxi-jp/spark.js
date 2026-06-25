@@ -1,0 +1,151 @@
+
+:root {
+	--bubbleTiming: cubic-bezier(0.5,0.15,0.25,1.75);
+}
+
+#wm-container {
+    position: relative;
+    box-sizing: border-box;
+    margin: 0 auto;
+}
+
+canvas {
+    margin: 0;
+    border: none;
+}
+/* ── Suika-style score UI ───────────────────────── */
+/* position / size / transform / z-index are set by HTMLMenu.SetupFillWindowOverlay() */
+#wm-ui {
+    position: absolute;
+    top: 0;
+    left: 0;
+    box-sizing: border-box;
+}
+.wm-bubbles-row {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 24px;
+    margin-top: 80px;
+    width: 100%;
+}
+.wm-bubble {
+    background: rgb(235 204 175 / 54%);
+    border-radius: 50%;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 120px;
+    height: 120px;
+    box-sizing: border-box;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+
+    background-image:
+		radial-gradient(8% 8% at 22% 28%,hsl(0,0%,100%) 45%,hsla(0,0%,100%,0) 50%),
+		radial-gradient(8% 8% at 23% 27%,hsl(0,0%,100%) 45%,hsla(0,0%,100%,0) 50%),
+		radial-gradient(8% 8% at 24% 26%,hsl(0,0%,100%) 45%,hsla(0,0%,100%,0) 50%),
+		radial-gradient(8% 8% at 25% 25%,hsl(0,0%,100%) 45%,hsla(0,0%,100%,0) 50%),
+		radial-gradient(8% 8% at 26% 24%,hsl(0,0%,100%) 45%,hsla(0,0%,100%,0) 50%),
+		radial-gradient(8% 8% at 27% 23%,hsl(0,0%,100%) 45%,hsla(0,0%,100%,0) 50%),
+		radial-gradient(8% 8% at 28% 22%,hsl(0,0%,100%) 45%,hsla(0,0%,100%,0) 50%);
+    box-shadow:
+		0 -6px 5px hsl(120,90%,100%) inset,
+		0 -12.5px 30px hsl(180deg 47.53% 74.85%) inset,
+		0 3.75px 3.75px hsl(315.43deg 32.22% 71.02%) inset,
+		3.75px 0 7.5px hsl(120,90%,100%) inset,
+		-3.75px 0 7.5px hsl(120,90%,100%) inset,
+		0 7.5px 30px hsl(30deg 63.16% 92.55%) inset;	
+    transform-style: preserve-3d;
+	transition-property: box-shadow, scale, width, height;
+	transition-timing-function: ease-in-out, ease-in-out, var(--bubbleTiming), var(--bubbleTiming);
+	will-change: transform, scale;
+	appearance: none;
+
+    animation: float 4s ease-in-out infinite;
+}
+
+.wm-bubble:nth-child(1) {
+    animation-duration: 4.2s;
+    animation-delay: -1.2s;
+}
+.wm-bubble:nth-child(2) {
+    animation-duration: 3.8s;
+    animation-delay: -2.5s;
+}
+.wm-bubble:nth-child(3) {
+    animation-duration: 4.5s;
+    animation-delay: -0.5s;
+}
+
+.wm-bubble, .wm-bubble:after  {
+	transition-duration: 0.2s;
+}
+.wm-bubble, .wm-bubble:after {
+	border-radius: 50%;
+}
+.wm-bubble:after {
+	content: "";
+	display: block;
+	position: absolute;
+	transition-timing-function: var(--bubbleTiming);
+	background: radial-gradient(100% 100% at center,hsla(0,0%,0%,0) 35%,hsla(0,0%,0%,0.2) 48%,hsla(0,0%,0%,0) 50%);
+	filter: blur(4px);
+	top: 16px;
+	left: 8px;
+	width: 100%;
+	height: 100%;
+	transform: translate3d(0,0,-1px);
+	z-index: -2;
+}
+.wm-bubble:focus, .wm-bubble:hover, .wm-bubble.pop {
+	scale: 1.1;
+}
+.wm-bubble:focus:active, .wm-bubble:hover:active {
+	width: 140px;
+	height: 120px;
+}
+.wm-bubble:focus:after, .wm-bubble:hover:after, .wm-bubble.pop:after {
+	transform: translate3d(7.5px,7.5px,-1px);
+}
+
+.wm-bubble-label {
+    font-family: Arial, sans-serif;
+    font-size: 24px;
+    font-weight: bold;
+    color: #f8ece0;
+    text-shadow: #33271e 0px 0px 2px, #6c513c 0px 2px 5px;
+}
+.wm-bubble-value {
+    position: absolute;
+    top: 0;
+    line-height: 120px;
+    font-family: Arial, sans-serif;
+    font-size: 46px;
+    font-weight: bold;
+    color: #f7ebdd;
+    text-shadow: #33271e 0px 0px 2px, #6c513c 0px 2px 5px;
+}
+#wm-next-fruit {
+    width: 70px;
+    height: 70px;
+    background-repeat: no-repeat;
+}
+
+@keyframes float {
+	from, to {
+		transform: translate(0,2%);
+	}
+	25% {
+		transform: translate(-2%,0);
+	}
+	50% {
+		transform: translate(0,-2%);
+	}
+	75% {
+		transform: translate(2%,0);
+	}
+}

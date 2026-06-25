@@ -82,7 +82,7 @@ class Box2DWatermelon extends Box2DGame {
             screenWidth: 720,
             screenHeight: 1280,
             fillWindow: true,
-            drawColliders: false,
+            drawColliders: true,
             mobileSupport: true // enable touch events; behavior adapts via mobileWithTouchScreen
         })
     
@@ -357,8 +357,25 @@ class WatermelonUI extends HTMLMenu {
     }
 
     UpdateScoreDisplay() {
-        this.elements['#wm-score'].textContent = this.game.score;
-        this.elements['#wm-best'].textContent  = this.game.bestScore;
+        const scoreEl = this.elements['#wm-score'];
+        if (scoreEl.textContent !== this.game.score.toString()) {
+            scoreEl.textContent = this.game.score;
+            this.PopBubble(scoreEl.parentElement);
+        }
+
+        const bestEl = this.elements['#wm-best'];
+        if (bestEl.textContent !== this.game.bestScore.toString()) {
+            bestEl.textContent = this.game.bestScore;
+            this.PopBubble(bestEl.parentElement);
+        }
+    }
+
+    PopBubble(bubbleElement) {
+        bubbleElement.classList.remove('pop');
+        void bubbleElement.offsetWidth; // Trigger reflow to restart transition
+        bubbleElement.classList.add('pop');
+
+        setTimeout(() => bubbleElement.classList.remove('pop'), 200);
     }
 
     /** Updates the NEXT fruit preview using CSS background-image sprite technique. */
