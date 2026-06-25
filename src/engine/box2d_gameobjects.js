@@ -315,3 +315,146 @@ class Box2DSSAnimationObjectComplex extends Box2DGameObject {
         this.animation.PlayAnimationLoop(animationId, resetToFrame0);
     }
 }
+
+/**
+ * A sensor body that fires Unity-style trigger callbacks — `OnTriggerEnter`,
+ * `OnTriggerStay`, and `OnTriggerExit` — as physics bodies overlap it.
+ *
+ * Unlike the single-contact pattern in `Box2DGameObject`, `Box2DTrigger` tracks
+ * **all** simultaneously overlapping bodies via a Map, so multi-body scenarios
+ * work correctly. `isSensor` is always forced to `true`; the body type defaults
+ * to `b2_staticBody` but can be overridden to `b2_kinematicBody` for moving
+ * trigger zones.
+ *
+ * Override `OnTriggerEnter`, `OnTriggerStay`, and `OnTriggerExit` in a subclass
+ * to respond to overlap events.
+ *
+ * @example
+ * class DangerZone extends Box2DTrigger {
+ *     constructor(world) {
+ *         super(new Vector2(360, 300), world, PhysicsObjectType.Box, {
+ *             width: 5.6, height: 0.05
+ *         });
+ *     }
+ *     OnTriggerStay(other, timeInside) {
+ *         if (other instanceof Fruit && timeInside >= 3)
+ *             game.GameOver();
+ *     }
+ * }
+ */
+class Box2DTrigger extends Box2DGameObject {
+    /**
+     * @param {Vector2}           position    - Canvas-space position of the trigger.
+     * @param {*}                 physicsWorld - The Box2D world instance.
+     * @param {PhysicsObjectType} shapeType   - Shape of the trigger area (Box, Circle, or Edge).
+     * @param {object}           [bodyOptions] - Same options as other Box2D bodies.
+     *   `isSensor` is always `true` regardless of what is passed.
+     *   `type` defaults to `b2_staticBody`; pass `b2_kinematicBody` for moving triggers.
+     */
+    constructor(position, physicsWorld, shapeType, bodyOptions = {}) {
+        super(position, physicsWorld, shapeType, {
+            type: b2Body.b2_staticBody, // sensible default; can be overridden
+            ...bodyOptions,
+            isSensor: true              // always a sensor — not overridable
+        });
+
+        /** @type {Map<*, {time:number}>} All bodies currently overlapping this trigger, keyed by userData. */
+        this._overlapping  = new Map();
+        /** @type {Array} Enter events queued during the Box2D contact callback. */
+        this._pendingEnter = [];
+        /** @type {Array} Exit events queued during the Box2D contact callback. */
+        this._pendingExit  = [];
+    }
+
+    // ── Internal Box2D contact hooks ─────────────────────────────────────────
+    // Override the single-slot pattern from Box2DGameObject so that ALL
+    // simultaneous contacts are captured, not just the most recent one.
+
+    OnContactDetectedBox2D(other, _contactPoint) {
+        this._pendingEnter.push(other);
+    }
+
+    OnEndContactDetectedBox2D(other) {
+        this._pendingExit.push(other);
+    }
+
+    // ── Frame update ─────────────────────────────────────────────────────────
+
+    Update(deltaTime) {
+        // Sync body → canvas coords. super also checks hasContact / hasContactEnded,
+        // but those flags are never set because we override the contact hooks above.
+        super.Update(deltaTime);
+
+        // Process queued enter events (deduplicated — Box2D can fire multiple BeginContacts
+        // for the same pair if the shapes have multiple contact points).
+        for (const other of this._pendingEnter) {
+            if (!this._overlapping.has(other)) {
+                this._overlapping.set(other, { time: 0 });
+                this.OnTriggerEnter(other);
+            }
+        }
+        this._pendingEnter.length = 0;
+
+        // Process queued exit events.
+        for (const other of this._pendingExit) {
+            if (this._overlapping.has(other)) {
+                this._overlapping.delete(other);
+                this.OnTriggerExit(other);
+            }
+        }
+        this._pendingExit.length = 0;
+
+        // Per-frame stay callbacks — accumulate time for each overlapping body.
+        for (const [other, data] of this._overlapping) {
+            data.time += deltaTime;
+            this.OnTriggerStay(other, data.time);
+        }
+    }
+
+    // ── Trigger callbacks (override in subclasses) ────────────────────────────
+
+    /**
+     * Called **once** on the frame a body first enters this trigger.
+     * @param {Box2DGameObject|*} other - The entering body's `userData`.
+     */
+    OnTriggerEnter(other) {}
+
+    /**
+     * Called **every frame** while a body remains inside this trigger.
+     * @param {Box2DGameObject|*} other      - The overlapping body's `userData`.
+     * @param {number}            timeInside - Seconds elapsed since the body entered.
+     */
+    OnTriggerStay(other, timeInside) {}
+
+    /**
+     * Called **once** on the frame a body exits this trigger.
+     * @param {Box2DGameObject|*} other - The exiting body's `userData`.
+     */
+    OnTriggerExit(other) {}
+
+    // ── Utility ───────────────────────────────────────────────────────────────
+
+    /**
+     * Returns `true` if the given `userData` is currently overlapping this trigger.
+     * @param {*} other
+     * @returns {boolean}
+     */
+    IsOverlapping(other) {
+        return this._overlapping.has(other);
+    }
+
+    /**
+     * Returns how long (seconds) the given body has been inside this trigger,
+     * or `0` if it is not currently overlapping.
+     * @param {*} other
+     * @returns {number}
+     */
+    GetTimeInside(other) {
+        return this._overlapping.get(other)?.time ?? 0;
+    }
+
+    /** @returns {number} Number of bodies currently overlapping this trigger. */
+    get overlapCount() {
+        return this._overlapping.size;
+    }
+}

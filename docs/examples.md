@@ -54,6 +54,7 @@ Explore the `src/examples/` directory for practical demonstrations of the engine
 
 - [Box2D basic](../box2d-basic.html ':ignore :target=_blank')
 - [Box2D basket](../box2d-basket.html ':ignore :target=_blank')
+- [Box2D trigger demo](../box2d-trigger.html ':ignore :target=_blank') — three side-by-side `Box2DTrigger` zones demonstrating `OnTriggerEnter`, `OnTriggerStay` with time tracking, and `OnTriggerStay` with deferred destruction
 - [Box2D platformer](../box2d-platformer.html ':ignore :target=_blank') *(WIP)*
 - [Watermelon Game (Suika Clone)](../box2d-watermelon.html ':ignore :target=_blank') *(WIP)* — A physics-based puzzle game demonstrating advanced Box2D integrations, where players drop fruits that merge into larger ones upon contact.
   **Key features demonstrated:**
