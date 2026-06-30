@@ -13,6 +13,35 @@
  * game.audioPlayer.PlayLoop('music', 0, 0.5);
  */
 class AudioPlayer {
+    
+    /**
+     * Gets or sets the global mute state.
+     * Setting to `true` silences all clips by zeroing their gain nodes while
+     * preserving their volume values. Setting back to `false` restores every
+     * clip to the volume it had when muted (or when last played).
+     * Audio continues playing in the background — unmuting is seamless.
+     * @type {boolean}
+     */
+    get muted() {
+        return this._muted;
+    }
+    set muted(value) {
+        if (this._muted === value)
+            return;
+
+        this._muted = value;
+
+        for (const asset of Object.values(this.audioAssets)) {
+            if (value) {
+                asset._savedGain = asset.gainNode.gain.value;
+                asset.gainNode.gain.value = 0;
+            }
+            else {
+                asset.gainNode.gain.value = asset._savedGain ?? 1;
+            }
+        }
+    }
+
     /**
      * @param {boolean} [analyzer=false] - Enable FFT frequency analysis (for visualisers).
      * @param {number} [analyzerfftSize=128] - FFT bin count, must be in [32, 2048].
@@ -21,6 +50,8 @@ class AudioPlayer {
     constructor(analyzer=false, analyzerfftSize=128, analyzerSmoothing=0.5) {
         this.audioAssets = {};
         this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        this._muted = false;
 
         this.analyzer = analyzer;
         if (this.analyzer) {
@@ -103,11 +134,15 @@ class AudioPlayer {
     PlayAudio(name, pan=0, volume=1, pitch=1) {
         if (this.audioAssets[name]) {
             this.audioAssets[name].panner.pan.value = pan;
-            this.audioAssets[name].gainNode.gain.value = volume;
             this.audioAssets[name].audio.playbackRate = pitch;
             this.audioAssets[name].audio.loop = false;
+            if (this._muted) {
+                this.audioAssets[name]._savedGain = volume; // save for unmute
+            }
+            else {
+                this.audioAssets[name].gainNode.gain.value = volume;
+            }
             this.audioAssets[name].audio.playPromise = this.audioAssets[name].audio.play();
-            
             return this.audioAssets[name].audio.playPromise;
         }
         else {
@@ -163,12 +198,16 @@ class AudioPlayer {
     PlayFromTheStart(name, pan=0, volume=1, pitch=1) {
         if (this.audioAssets[name]) {
             this.audioAssets[name].panner.pan.value = pan;
-            this.audioAssets[name].gainNode.gain.value = volume;
             this.audioAssets[name].audio.playbackRate = pitch;
             this.audioAssets[name].audio.currentTime = 0;
             this.audioAssets[name].audio.loop = false;
+            if (this._muted) {
+                this.audioAssets[name]._savedGain = volume;
+            }
+            else {
+                this.audioAssets[name].gainNode.gain.value = volume;
+            }
             this.audioAssets[name].audio.playPromise = this.audioAssets[name].audio.play();
-
             return this.audioAssets[name].audio.playPromise;
         }
         else {
@@ -185,12 +224,16 @@ class AudioPlayer {
     PlayLoop(name, pan=0, volume=1, pitch=1) {
         if (this.audioAssets[name]) {
             this.audioAssets[name].panner.pan.value = pan;
-            this.audioAssets[name].gainNode.gain.value = volume;
             this.audioAssets[name].audio.playbackRate = pitch;
             this.audioAssets[name].audio.currentTime = 0;
             this.audioAssets[name].audio.loop = true;
+            if (this._muted) {
+                this.audioAssets[name]._savedGain = volume;
+            }
+            else {
+                this.audioAssets[name].gainNode.gain.value = volume;
+            }
             this.audioAssets[name].audio.playPromise = this.audioAssets[name].audio.play();
-            
             return this.audioAssets[name].audio.playPromise;
         }
         else {
@@ -219,7 +262,13 @@ class AudioPlayer {
      */
     SetVolume(name, volumeValue) {
         if (this.audioAssets[name]) {
-            this.audioAssets[name].gainNode.gain.value = volumeValue;
+            if (this._muted) {
+                // Don't change the actual gain while muted; save for when unmuted
+                this.audioAssets[name]._savedGain = volumeValue;
+            }
+            else {
+                this.audioAssets[name].gainNode.gain.value = volumeValue;
+            }
         }
         else {
             console.warn(`Audio asset "${name}" not found.`);

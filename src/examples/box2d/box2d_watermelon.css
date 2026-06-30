@@ -101,15 +101,33 @@ canvas {
 	transform: translate3d(0,0,-1px);
 	z-index: -2;
 }
-.wm-bubble:focus, .wm-bubble:hover, .wm-bubble.pop {
+/* Scale up on pop animation, keyboard focus, and press/tap (always safe).
+   :active fires on touchstart→touchend on mobile, so it scales up while
+   the finger is down and clears correctly when lifted — no stuck state. */
+.wm-bubble:focus-visible, .wm-bubble:active, .wm-bubble.pop {
 	scale: 1.1;
 }
-.wm-bubble:focus:active, .wm-bubble:hover:active {
-	width: 140px;
-	height: 120px;
-}
-.wm-bubble:focus:after, .wm-bubble:hover:after, .wm-bubble.pop:after {
+.wm-bubble:focus-visible:after, .wm-bubble:active:after, .wm-bubble.pop:after {
 	transform: translate3d(7.5px,7.5px,-1px);
+}
+
+/* Scale up on hover only on devices that actually support hover (mouse/trackpad).
+   @media (hover: hover) excludes touch screens, preventing the stuck-hover
+   bug where :hover stays active after a tap until the user taps elsewhere. */
+@media (hover: hover) {
+	.wm-bubble:hover {
+		scale: 1.1;
+	}
+	.wm-bubble:active {
+		scale: 1.1;
+	}
+	.wm-bubble:hover:active {
+		width: 140px;
+		height: 120px;
+	}
+	.wm-bubble:hover:after {
+		transform: translate3d(7.5px,7.5px,-1px);
+	}
 }
 
 .wm-bubble-label {
@@ -133,6 +151,26 @@ canvas {
     width: 70px;
     height: 70px;
     background-repeat: no-repeat;
+}
+
+/* Mute toggle button */
+#wm-mute {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    pointer-events: auto;
+    width: 72px;
+    height: 72px;
+    font-size: 34px;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+    animation-duration: 3.2s;
+    animation-delay: -0.8s;
+}
+
+#wm-mute:hover:after, #wm-mute:active:after {
+    transform: translate3d(2px, 2px, -1px);
 }
 
 @keyframes float {

@@ -107,8 +107,11 @@ class Box2DWatermelon extends Box2DGame {
         this.ui = null;       // HTMLMenu reference, set up in Start()
 
         // Game-over state
-        this.gameOver    = false;
+        this.gameOver     = false;
         this.gameOverZone = null; // Box2DTrigger that detects fruits above the danger line
+
+        // Last confirmed touch X — used to avoid the fruit snapping to centre on touchend
+        this._lastTouchX  = null;
     }
 
     Start() {
@@ -143,6 +146,7 @@ class Box2DWatermelon extends Box2DGame {
         this.SpawnNextFruit();
 
         audioPlayer.PlayLoop("backgroundMusic");
+        audioPlayer.muted = localStorage.getItem('wm_muted') === 'true';
     }
 
     Update(deltaTime) {
@@ -163,10 +167,15 @@ class Box2DWatermelon extends Box2DGame {
             const maxX = jarLimits.x + jarLimits.width / 2 - fruitRadius;
 
             // Desktop: always follow the mouse.
-            // Mobile:  follow the finger only while it's on screen; otherwise stay centred.
+            // Mobile:  follow the finger while it is on screen and remember the last
+            //          position so the fruit does NOT snap to centre on the touchend frame.
             let targetX;
             if (mobileWithTouchScreen) {
-                targetX = Input.touch.any ? Input.mouse.x : this.screenHalfWidth;
+                if (Input.touch.any) {
+                    this._lastTouchX = Input.mouse.x; // update while finger is down
+                }
+                // Use the remembered position (or centre before the first touch)
+                targetX = this._lastTouchX ?? this.screenHalfWidth;
             }
             else {
                 targetX = Input.mouse.x;
@@ -341,6 +350,7 @@ class Box2DWatermelon extends Box2DGame {
         const fruitId = this.nextFruitId;
         // Pick the fruit that will come *after* this one (random from first 5)
         this.nextFruitId = RandomBetweenInt(0, 4);
+        this._lastTouchX = null; // each new fruit starts centred until the player touches
         this.currentFruit = new Fruit(new Vector2(this.screenHalfWidth, this.launchLineY), 0, this.physicsWorld, this.graphicAssets.fruits.img, fruitId, true);
         this.gameObjects.push(this.currentFruit);
         this.ui.UpdateNextFruitPreview();
@@ -441,8 +451,21 @@ class WatermelonUI extends HTMLMenu {
         this.SetupElements([
             '#wm-score',
             '#wm-best',
-            '#wm-next-fruit'
+            '#wm-next-fruit',
+            '#wm-mute'
         ]);
+
+        // Restore saved mute icon (volume is applied in Box2DWatermelon.Start()
+        // after PlayLoop, which resets the gain node)
+        const muteBtn = this.elements['#wm-mute'];
+        muteBtn.textContent = localStorage.getItem('wm_muted') === 'true' ? '\ud83d\udd07' : '\ud83d\udd0a';
+        muteBtn.onclick = () => this.ToggleMute();
+    }
+
+    ToggleMute() {
+        audioPlayer.muted = !audioPlayer.muted;
+        localStorage.setItem('wm_muted', audioPlayer.muted);
+        this.elements['#wm-mute'].textContent = audioPlayer.muted ? '\ud83d\udd07' : '\ud83d\udd0a';
     }
 
     UpdateScoreDisplay() {
