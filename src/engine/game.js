@@ -320,6 +320,14 @@ class Game {
     }
 
     /**
+     * Removes all game objects from the game, safely destroying them and clearing colliders.
+     * Uses deferred deletion to queue all objects for safe removal at the end of the frame.
+     */
+    DestroyAllGameObjects() {
+        this.gameObjects.forEach(gameObject => this.Destroy(gameObject));
+    }
+
+    /**
      * Registers a collider with the collision system so it participates in collision detection.
      * @param {Collider} collider - The collider to add.
      */

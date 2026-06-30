@@ -50,7 +50,8 @@ class HTMLMenu {
 
     SetupButtons(buttonsSelectorsAndCallbacks) {
         this.buttons = buttonsSelectorsAndCallbacks.map(button =>
-            document.querySelector(button.selector));
+            document.querySelector(button.selector)
+        );
 
         for (let i = 0; i < this.buttons.length; i++) {
             this.buttons[i].addEventListener('click', buttonsSelectorsAndCallbacks[i].callback);

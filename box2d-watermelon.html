@@ -27,9 +27,10 @@
     <div id="wm-container">
         <canvas id="myCanvas" width="720" height="1280"></canvas>
 
-        <!-- Suika-style score UI overlay -->
+        <!-- Menus and UI overlay -->
         <div id="wm-ui">
-            <div class="wm-bubbles-row">
+            <!-- Ingame UI overlay -->
+            <div id="wm-bubbles-row" class="hidden">
                 <div class="wm-bubble">
                     <div class="wm-bubble-label">Best</div>
                     <div class="wm-bubble-value" id="wm-best">0</div>
@@ -43,7 +44,31 @@
                     <div id="wm-next-fruit"></div>
                 </div>
             </div>
+
             <button id="wm-mute" class="wm-bubble">🔊</button>
+
+            <!-- Main Menu -->
+            <div id="wm-main-menu" class="wm-menu-panel">
+                <h1 class="wm-title">Spark.js Watermelon Game</h1>
+                <button class="wm-bubble wm-btn" id="btn-start">Start<br>Game<br> :D</button>
+                <button class="wm-bubble wm-btn" id="btn-credits">Credits</button>
+                
+                <div id="wm-credits-text" class="hidden wm-credits-panel">
+                    <p>Created with spark.js by maxi_jp.</p>
+                    <p>Graphics and music are placeholders created with Gemini AI.</p>
+                    <button class="wm-bubble wm-btn" id="btn-credits-back">Back</button>
+                </div>
+            </div>
+    
+            <!-- Game Over Menu -->
+            <div id="wm-game-over" class="wm-menu-panel hidden">
+                <h1 class="wm-title">Game Over</h1>
+                <div class="wm-bubble wm-large-bubble">
+                    <div class="wm-bubble-label">Score</div>
+                    <div class="wm-bubble-value" id="wm-final-score">0</div>
+                </div>
+                <button class="wm-bubble wm-btn" id="btn-restart">Start<br>Again!<br>:o</button>
+            </div>
         </div>
     </div>
 </body>

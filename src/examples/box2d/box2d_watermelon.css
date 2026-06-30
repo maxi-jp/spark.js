@@ -21,7 +21,7 @@ canvas {
     left: 0;
     box-sizing: border-box;
 }
-.wm-bubbles-row {
+#wm-bubbles-row {
     position: absolute;
     top: 0;
     left: 0;
@@ -165,12 +165,85 @@ canvas {
     justify-content: center;
     border: none;
     cursor: pointer;
+    z-index: 1;
     animation-duration: 3.2s;
     animation-delay: -0.8s;
 }
 
 #wm-mute:hover:after, #wm-mute:active:after {
     transform: translate3d(2px, 2px, -1px);
+}
+
+/* ── Menus ──────────────────────────────────────── */
+.wm-menu-panel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.33);
+    backdrop-filter: blur(4px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+    pointer-events: auto; /* TODO check if this should be added to all HTMLMenu objects */
+}
+.wm-title {
+    font-family: Arial, sans-serif;
+    font-size: 64px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    margin: 0 0 20px 0;
+    text-align: center;
+}
+.wm-btn {
+    border: none;
+    width: 220px;
+    height: 220px;
+    font-size: 36px;
+    color: #f7ebdd;
+    font-family: Arial, sans-serif;
+    font-weight: bold;
+    text-shadow: #33271e 0px 0px 2px, #6c513c 0px 2px 5px;
+    justify-content: center;
+    cursor: pointer;
+}
+.wm-credits-panel {
+    background: rgb(255 222 191 / 33%);
+    padding: 30px;
+    border-radius: 20px;
+    text-align: center;
+    max-width: 80%;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    font-family: Arial, sans-serif;
+    color: #6c513c;
+    font-size: 26px;
+    font-weight: bold;
+}
+.wm-credits-panel p {
+    margin: 0;
+}
+.wm-large-bubble {
+    width: 220px !important;
+    height: 220px !important;
+}
+.wm-large-bubble .wm-bubble-value {
+    line-height: 220px;
+    font-size: 72px;
+}
+.wm-large-bubble .wm-bubble-label {
+    font-size: 32px;
+    margin-top: 15px;
+}
+.hidden {
+    display: none !important;
 }
 
 @keyframes float {

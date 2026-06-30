@@ -76,6 +76,12 @@ const jarLimits = {
 
 const GAME_OVER_DELAY = 3; // seconds
 
+let STATE = {
+    menu: 0,
+    playing: 1,
+    gameover: 2
+};
+
 class Box2DWatermelon extends Box2DGame {
     constructor(renderer) {
         super(renderer, 100, { x: 0, y: -9.8 }, false); // 1 pixel = 1/100 meter, gravity in m/s^2, allow bodies to sleep
@@ -106,8 +112,8 @@ class Box2DWatermelon extends Box2DGame {
         this.nextFruitId = 0; // 0 = cherry; updated each spawn
         this.ui = null;       // HTMLMenu reference, set up in Start()
 
-        // Game-over state
-        this.gameOver     = false;
+        // Game state
+        this.gameState    = STATE.menu;
         this.gameOverZone = null; // Box2DTrigger that detects fruits above the danger line
 
         // Last confirmed touch X — used to avoid the fruit snapping to centre on touchend
@@ -121,16 +127,6 @@ class Box2DWatermelon extends Box2DGame {
         // Jar walls
         this.SetupBoundaries();
 
-        // Game-over danger zone — a thin sensor that spans the jar opening at the launch line.
-        // Any non-suspended fruit that stays inside for >= 3 seconds triggers game over.
-        this.gameOver = false;
-        this.gameOverZone = new GameOverZone(
-            new Vector2(jarLimits.x, this.launchLineY),
-            this.physicsWorld,
-            this.physicsScale
-        );
-        this.gameObjects.push(this.gameOverZone);
-
         // spawn the first fruit (cherry) and prepare the queue
         this.score = 0;
         this.bestScore = parseInt(localStorage.getItem('wm_best') || '0');
@@ -140,25 +136,46 @@ class Box2DWatermelon extends Box2DGame {
         this.ui.Start();
         this.ui.UpdateScoreDisplay();
 
-        this.nextFruitId = 0; // first fruit is always a cherry
-        this.currentFruit = null;
-        this.spawnTimer = 0;
-        this.SpawnNextFruit();
-
-        audioPlayer.PlayLoop("backgroundMusic");
         audioPlayer.muted = localStorage.getItem('wm_muted') === 'true';
     }
 
-    Update(deltaTime) {
-        // When game over: wait for a tap/click then restart via Start()
-        if (this.gameOver) {
-            if (Input.IsMouseDown() || Input.touch.down)
-                this.Start();
-            return;
-        }
+    StartGame() {
+        this.gameState = STATE.playing;
+        
+        // Clean up previous game objects (fruits and game over zone)
+        this.DestroyAllGameObjects();
 
+        // Game-over danger zone — a thin sensor that spans the jar opening at the launch line.
+        // Any non-suspended fruit that stays inside for >= 3 seconds triggers game over.
+        this.gameOverZone = new GameOverZone(
+            new Vector2(jarLimits.x, this.launchLineY),
+            this.physicsWorld,
+            this.physicsScale
+        );
+        this.gameObjects.push(this.gameOverZone);
+
+        // Reset game state
+        this.score = 0;
+        this.ui.UpdateScoreDisplay();
+
+        this.nextFruitId = 0; // first fruit is always a cherry
+        this.currentFruit = null;
+        this.spawnTimer = 0;
+
+        if (!audioPlayer.IsPlaying("backgroundMusic"))
+            audioPlayer.PlayLoop("backgroundMusic");
+        
+        this.SpawnNextFruit();
+    }
+
+    Update(deltaTime) {
         // update physics and gameObjects
         super.Update(deltaTime);
+
+        // Pause gameplay logic if not actively playing (e.g. in menu or game over)
+        if (this.gameState !== STATE.playing) {
+            return;
+        }
         
         if (this.currentFruit) {
             // Clamp target X inside the jar walls
@@ -225,19 +242,12 @@ class Box2DWatermelon extends Box2DGame {
             );
         }
 
-        // Game-over overlay
-        if (this.gameOver) {
-            this.renderer.DrawFillBasicRectangle(0, 0, this.screenWidth, this.screenHeight, new Color(0, 0, 0, 0.65));
-            this.renderer.DrawFillText("GAME OVER",       this.screenHalfWidth, this.screenHalfHeight - 50,  "bold 72px Arial", Color.white, "center");
-            this.renderer.DrawFillText(`Score: ${this.score}`, this.screenHalfWidth, this.screenHalfHeight + 30, "40px Arial",      Color.white, "center");
-            this.renderer.DrawFillText("Tap or click to restart", this.screenHalfWidth, this.screenHalfHeight + 110, "26px Arial", new Color(0.7, 0.7, 0.7), "center");
-            return;
+        if (this.gameState === STATE.playing) {
+            const hint = mobileWithTouchScreen
+                ? "Touch to aim — lift finger to drop!"
+                : "Move mouse to aim — click to drop!";
+            this.renderer.DrawFillText(hint, this.screenHalfWidth, this.screenHeight - 20, "20px Arial", Color.black, "center");
         }
-
-        const hint = mobileWithTouchScreen
-            ? "Touch to aim — lift finger to drop!"
-            : "Move mouse to aim — click to drop!";
-        this.renderer.DrawFillText(hint, this.screenHalfWidth, this.screenHeight - 20, "20px Arial", Color.black, "center");
     }
 
     SetupBoundaries() {
@@ -337,13 +347,16 @@ class Box2DWatermelon extends Box2DGame {
 
     /** Triggers the game-over state. Safe to call multiple times. */
     GameOver() {
-        if (this.gameOver) return;
-        this.gameOver = true;
+        if (this.gameState === STATE.gameover)
+            return;
+
+        this.gameState = STATE.gameover;
         // Drop the held fruit so it falls naturally into the pile
         if (this.currentFruit) {
             this.currentFruit.Drop();
             this.currentFruit = null;
         }
+        this.ui.ShowGameOver();
     }
 
     SpawnNextFruit() {
@@ -449,10 +462,19 @@ class WatermelonUI extends HTMLMenu {
         super.Start();
 
         this.SetupElements([
+            '#wm-bubbles-row',
             '#wm-score',
             '#wm-best',
             '#wm-next-fruit',
-            '#wm-mute'
+            '#wm-mute',
+            '#wm-main-menu',
+            '#wm-game-over',
+            '#btn-start',
+            '#btn-credits',
+            '#btn-credits-back',
+            '#btn-restart',
+            '#wm-credits-text',
+            '#wm-final-score'
         ]);
 
         // Restore saved mute icon (volume is applied in Box2DWatermelon.Start()
@@ -460,12 +482,50 @@ class WatermelonUI extends HTMLMenu {
         const muteBtn = this.elements['#wm-mute'];
         muteBtn.textContent = localStorage.getItem('wm_muted') === 'true' ? '\ud83d\udd07' : '\ud83d\udd0a';
         muteBtn.onclick = () => this.ToggleMute();
+
+        this.SetupButtons([
+            { selector: '#btn-start', callback: this.OnStartClick.bind(this) },
+            { selector: '#btn-credits', callback: this.OnCreditsClick.bind(this) },
+            { selector: '#btn-credits-back', callback: this.OnCreditsBackClick.bind(this) },
+            { selector: '#btn-restart', callback: this.OnRestartClick.bind(this) }
+        ]);
     }
 
     ToggleMute() {
         audioPlayer.muted = !audioPlayer.muted;
         localStorage.setItem('wm_muted', audioPlayer.muted);
         this.elements['#wm-mute'].textContent = audioPlayer.muted ? '\ud83d\udd07' : '\ud83d\udd0a';
+    }
+
+    OnStartClick() {
+        this.elements['#wm-main-menu'].classList.add('hidden');
+        this.elements['#wm-bubbles-row'].classList.remove('hidden');
+        this.game.StartGame();
+    }
+
+    OnCreditsClick() {
+        this.elements['#btn-start'].classList.add('hidden');
+        this.elements['#btn-credits'].classList.add('hidden');
+        this.elements['#wm-credits-text'].classList.remove('hidden');
+    }
+
+    OnCreditsBackClick() {
+        this.elements['#wm-credits-text'].classList.add('hidden');
+        this.elements['#btn-start'].classList.remove('hidden');
+        this.elements['#btn-credits'].classList.remove('hidden');
+    }
+
+    OnRestartClick() {
+        this.elements['#wm-game-over'].classList.add('hidden');
+        this.elements['#wm-bubbles-row'].classList.remove('hidden');
+        this.game.StartGame();
+    }
+
+    ShowGameOver() {
+        this.elements['#wm-bubbles-row'].classList.add('hidden');
+        this.elements['#wm-game-over'].classList.remove('hidden');
+        this.elements['#wm-final-score'].textContent = this.game.score;
+        this.PopBubble(this.elements['#wm-final-score'].parentElement);
     }
 
     UpdateScoreDisplay() {
