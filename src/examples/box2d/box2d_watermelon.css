@@ -233,6 +233,7 @@ canvas {
 .wm-large-bubble {
     width: 220px !important;
     height: 220px !important;
+    position: relative;
 }
 .wm-large-bubble .wm-bubble-value {
     line-height: 220px;
@@ -241,6 +242,29 @@ canvas {
 .wm-large-bubble .wm-bubble-label {
     font-size: 32px;
     margin-top: 15px;
+}
+.wm-new-best-badge {
+    position: absolute;
+    width: 100px !important;
+    height: 100px !important;
+    right: -30px;
+    top: -20px;
+    font-family: Arial, sans-serif;
+    font-size: 22px;
+    font-weight: bold;
+    line-height: 26px;
+    justify-content: center;
+    text-align: center;
+    color: #fff200;
+    text-shadow: #c88100 0px 2px 4px, #33271e 0px 0px 2px;
+    rotate: 15deg;
+    z-index: 5;
+    padding: 0;
+    animation-duration: 2.5s;
+}
+.wm-new-best-badge:after {
+    top: 12px;
+    left: 12px;
 }
 .hidden {
     display: none !important;

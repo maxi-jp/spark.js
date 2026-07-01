@@ -145,6 +145,9 @@ class Box2DWatermelon extends Box2DGame {
         // Clean up previous game objects (fruits and game over zone)
         this.DestroyAllGameObjects();
 
+        // Track the best score at the start of this specific run
+        this.sessionStartBestScore = this.bestScore;
+
         // Game-over danger zone — a thin sensor that spans the jar opening at the launch line.
         // Any non-suspended fruit that stays inside for >= 3 seconds triggers game over.
         this.gameOverZone = new GameOverZone(
@@ -474,7 +477,8 @@ class WatermelonUI extends HTMLMenu {
             '#btn-credits-back',
             '#btn-restart',
             '#wm-credits-text',
-            '#wm-final-score'
+            '#wm-final-score',
+            '#wm-new-best'
         ]);
 
         // Restore saved mute icon (volume is applied in Box2DWatermelon.Start()
@@ -526,6 +530,15 @@ class WatermelonUI extends HTMLMenu {
         this.elements['#wm-game-over'].classList.remove('hidden');
         this.elements['#wm-final-score'].textContent = this.game.score;
         this.PopBubble(this.elements['#wm-final-score'].parentElement);
+
+        const newBestBadge = this.elements['#wm-new-best'];
+        if (this.game.score > this.game.sessionStartBestScore && this.game.score > 0) {
+            newBestBadge.classList.remove('hidden');
+            this.PopBubble(newBestBadge);
+        }
+        else {
+            newBestBadge.classList.add('hidden');
+        }
     }
 
     UpdateScoreDisplay() {
