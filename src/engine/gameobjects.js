@@ -751,6 +751,12 @@ class Pool {
         
         return object;
     }
+
+    DisableAll() {
+        this.objects.forEach(object => {
+            object.active = false;
+        });
+    }
 }
 
 // #endregion

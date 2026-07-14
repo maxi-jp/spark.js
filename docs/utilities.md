@@ -281,6 +281,15 @@ Colliders are drawn in **red** when not colliding and switch to **green** when o
 
 `Pool` (in `gameobjects.js`) pre-allocates a fixed set of objects and reuses them instead of creating and destroying GameObjects every frame. Ideal for bullets, particles, enemies, etc.
 
+### Main methods
+
+| Method | Description |
+|---|---|
+| `Activate()` | Returns the first inactive object and marks it active. Creates a new object only if the pool is exhausted. |
+| `Update(deltaTime)` | Updates all active pooled objects. |
+| `Draw(renderer)` | Draws all active pooled objects. |
+| `DisableAll()` | Sets every pooled object to `active = false` in one call. Useful on reset, scene transitions, or game over. |
+
 ```javascript
 // In Game constructor:
 this.bulletPool = new Pool(this, 20, Bullet, [constructorArg1, constructorArg2]);
@@ -294,6 +303,9 @@ this.bulletPool.Draw(this.renderer);
 // To fire a bullet — grabs the first inactive object from the pool:
 const bullet = this.bulletPool.Activate();
 bullet.Launch(this.player.position, this.player.rotation);
+
+// To instantly return all bullets to the pool (e.g. level restart):
+this.bulletPool.DisableAll();
 ```
 
 Objects in the pool are created with `active = false` upfront. Call `object.active = false` inside the object's own `Update` to return it to the pool (e.g. when it goes off-screen).
