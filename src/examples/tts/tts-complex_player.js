@@ -157,6 +157,10 @@ class TTSCPlayer extends SpriteObject {
             return;
 
         const enemy = otherCollider.go;
+        
+        // Dont collide with spawning enemy
+        if (enemy.IsSpawning()) return;
+        
         this.Damage(enemy.collisionDamage);
 
         game.EnemyCollidesWithPlayer(enemy);
