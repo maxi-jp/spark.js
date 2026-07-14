@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spark.js - Box2D watermelon example</title>
+    <title>Spark.js - Box2D Suika Game clone example</title>
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
     <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="src/examples/box2d/box2d_watermelon.css">
     <script src="src/engine/renderer.js"></script>
     <script src="src/engine/main.js"></script>
     <script src="src/engine/utils_math.js"></script>
@@ -24,52 +23,6 @@
     <script src="src/examples/box2d/box2d_watermelon.js"></script>
 </head>
 <body>
-    <div id="wm-container">
-        <canvas id="myCanvas" width="720" height="1280"></canvas>
-
-        <!-- Menus and UI overlay -->
-        <div id="wm-ui">
-            <!-- Ingame UI overlay -->
-            <div id="wm-bubbles-row" class="hidden">
-                <div class="wm-bubble">
-                    <div class="wm-bubble-label">Best</div>
-                    <div class="wm-bubble-value" id="wm-best">0</div>
-                </div>
-                <div class="wm-bubble">
-                    <div class="wm-bubble-label">Score</div>
-                    <div class="wm-bubble-value" id="wm-score">0</div>
-                </div>
-                <div class="wm-bubble">
-                    <div class="wm-bubble-label">Next</div>
-                    <div id="wm-next-fruit"></div>
-                </div>
-            </div>
-
-            <button id="wm-mute" class="wm-bubble">🔊</button>
-
-            <!-- Main Menu -->
-            <div id="wm-main-menu" class="wm-menu-panel">
-                <h1 class="wm-title">Spark.js Watermelon Game</h1>
-                <button class="wm-bubble wm-btn" id="btn-start">Start<br>Game<br> :D</button>
-                <button class="wm-bubble wm-btn" id="btn-credits">Credits</button>
-                
-                <div id="wm-credits-text" class="hidden wm-credits-panel">
-                    <p>Created with spark.js by maxi_jp.</p>
-                    <p>Graphics and music are placeholders created with Gemini AI.</p>
-                    <button class="wm-bubble wm-btn" id="btn-credits-back">Back</button>
-                </div>
-            </div>
-    
-            <!-- Game Over Menu -->
-            <div id="wm-game-over" class="wm-menu-panel hidden">
-                <h1 class="wm-title">Game Over</h1>
-                <div class="wm-bubble wm-large-bubble">
-                    <div class="wm-bubble-label">Score</div>
-                    <div class="wm-bubble-value" id="wm-final-score">0</div>
-                </div>
-                <button class="wm-bubble wm-btn" id="btn-restart">Start<br>Again!<br>:o</button>
-            </div>
-        </div>
-    </div>
+    <canvas id="myCanvas" width="720" height="1280"></canvas>
 </body>
 </html>

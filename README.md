@@ -47,7 +47,7 @@ Documentation can be consulted [here](https://maxi-jp.github.io/spark.js/docs/).
     - box2d_basic.js      # Basic Box2D physics demo
     - box2d_basket.js     # Basketball-style physics game
     - box2d_platormer.js  # Platformer with Box2D physics
-    - box2d_watermelon.js # Suika clone (Watermelon game) with Box2D
+    - box2d_watermelon.js # Suika Game clone with Box2D
   - brokeout/             # Breakout clone
   - floppyderp/           # Flappy Bird-like example
   - menu/                 # HTML + CSS menu examples
@@ -60,6 +60,7 @@ Documentation can be consulted [here](https://maxi-jp.github.io/spark.js/docs/).
     - tetris.js           # Complex Tetris with modern features
   - tts/                  # Twin-stick shooter advanced implementation
   - tts_basic/            # Basic Twin-stick shooter game
+  - watermelon/           # Watermelon Game (Suika Game clone, extension of the box2d_watermelon example project)
   - canvas_resizing.js    # Canvas fullscreen and display configuration demo
   - coliders_test.js      # Collision detection testing
   - columns.js            # Columns-style puzzle game

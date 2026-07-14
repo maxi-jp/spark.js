@@ -3,6 +3,10 @@
 	--bubbleTiming: cubic-bezier(0.5,0.15,0.25,1.75);
 }
 
+body {
+    background-color: black;
+}
+
 #wm-container {
     position: relative;
     box-sizing: border-box;
