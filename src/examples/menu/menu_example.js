@@ -45,7 +45,7 @@ class MenuExample extends Game {
 
 class MainMenu extends HTMLMenu {
     constructor(game, canvas) {
-        super(game, "#mainMenu", "#container", canvas, true);
+        super(game, "#mainMenu", "#container", canvas);
     }
 
     Start() {

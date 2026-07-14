@@ -162,7 +162,6 @@ canvas {
     position: absolute;
     top: 24px;
     right: 24px;
-    pointer-events: auto;
     width: 72px;
     height: 72px;
     font-size: 34px;
@@ -192,7 +191,6 @@ canvas {
     align-items: center;
     justify-content: center;
     gap: 30px;
-    pointer-events: auto; /* TODO check if this should be added to all HTMLMenu objects */
 }
 .wm-title {
     font-family: Arial, sans-serif;

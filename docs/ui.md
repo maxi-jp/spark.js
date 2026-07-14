@@ -60,7 +60,7 @@ The canvas sits inside a **relative-positioned container**. Menu divs are absolu
 **Constructor**
 
 ```javascript
-new HTMLMenu(game, menuContainerSelector, canvasContainerSelector, canvas, coverCanvas, syncWithCanvas)
+new HTMLMenu(game, menuContainerSelector, canvasContainerSelector, canvas, coverCanvas, syncWithCanvas, clipToCanvasContainer)
 ```
 
 | Parameter | Default | Description |
@@ -69,18 +69,23 @@ new HTMLMenu(game, menuContainerSelector, canvasContainerSelector, canvas, cover
 | `menuContainerSelector` | — | CSS selector for the menu `<div>` (e.g. `"#mainMenu"`) |
 | `canvasContainerSelector` | — | CSS selector for the wrapper `<div>` (e.g. `"#container"`) |
 | `canvas` | — | The `canvas` DOM element |
-| `coverCanvas` | `false` | When `true`, positions the overlay directly above the canvas at the same logical size. Works in both normal-flow and `fillWindow` modes — see below. |
+| `coverCanvas` | `true` | When `true`, positions the overlay directly above the canvas at the same logical size. Works in both normal-flow and `fillWindow` modes — see below. This flag controls layout behavior, not visibility priority. |
 | `syncWithCanvas` | `false` | When `true`, re-syncs the overlay position/transform every time the window resizes (via `game.WindowResized`). Required when `fillWindow` is active so the overlay scales identically with the canvas. Safe to combine with `coverCanvas`. |
+| `clipToCanvasContainer` | `false` | When `true` and `fillWindow` is active, syncs the canvas container to the canvas transform and places the menu as absolute inside it. Use this when you want `overflow: hidden` on the canvas container to clip menu slide transitions. |
+
+> Menus are always layered above the canvas by default. `coverCanvas` changes how the menu is laid out/synced, but does not decide whether it appears in front of the canvas.
 
 **Key methods**
 
 | Method | Description |
 |---|---|
 | `Start()` | Call once (from your `Game.Start()`). Applies `coverCanvas` and/or `syncWithCanvas` positioning. |
-| `SetupElements(selectors[])` | Registers DOM elements by CSS selector for later access via `this.elements["#id"]` |
-| `SetupButtons([ {selector, callback} ])` | Registers click listeners; callbacks are bound to your class methods |
-| `SetContainerStyle(styleString)` | Directly sets the container's `style` attribute — useful for CSS transitions |
+| `SetupElements(selectors[])` | Registers DOM elements by CSS selector for later access via `this.elements["#id"]` and automatically enables `pointer-events: auto` on those elements. |
+| `SetupButtons([ {selector, callback} ])` | Registers click listeners; callbacks are bound to your class methods; button elements automatically get `pointer-events: auto`. |
+| `SetContainerStyle(styleString)` | Applies the given style declarations to the container (for example `top`, `left`, `opacity`) without removing engine-managed layout styles |
 | `SetupFillWindowOverlay()` | Called automatically by `Start()` when `syncWithCanvas` is `true`. Can also be called manually. |
+
+> The menu container itself may use `pointer-events: none` for canvas passthrough. You normally should **not** add manual CSS rules like `pointer-events: auto` to every panel/button anymore — registered elements/buttons are made interactable automatically.
 
 ---
 
