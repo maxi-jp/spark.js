@@ -6,9 +6,9 @@
     <title>spark.js - Twin Stick Shooter (complex edition)</title>
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
     <link rel="shortcut icon" href="/favicon.ico" />    
+    <link rel="stylesheet" href="css/style.css">    
     <link rel="stylesheet" href="./src/examples/tts/fonts/aircruiserlaserital.ttf">
     <link rel="stylesheet" href="./src/examples/tts/style.css">
-    <link rel="stylesheet" href="css/style.css">    
     <script src="src/engine/renderer.js"></script>
     <script src="src/engine/main.js"></script>
     <script src="src/engine/utils_math.js"></script>
@@ -18,26 +18,43 @@
     <script src="src/engine/game.js"></script>
     <script src="src/engine/utils_classes.js"></script>
     <script src="src/engine/gameobjects.js"></script>
+    <script src="src/engine/htmlmenu.js"></script>
     <script src="src/examples/tts/tts-complex_player.js"></script>
+    <script src="src/examples/tts/tts-complex_menus.js"></script>
     <script src="src/examples/tts/tts_enemies.js"></script>
     <script src="src/examples/tts/tts_bullet.js"></script>    
-    <script src="src/engine/htmlmenu.js"></script>
     <script src="src/examples/tts/tts-complex.js"></script>
 </head>
 <body>
     <div id="container">
+        <!-- game canvas -->
         <canvas id="myCanvas" width="640" height="480"></canvas>
+
+        <!-- UI - main menu -->
         <div id="mainMenu">
             <h1>Twin Stick Shooter</h1>
             <h2>move'n'shoot</h2>
             <div class="menuButton" id="menuStart">Start</div>            
         </div>
+
+        <!-- UI - pause menu -->
         <div id="pauseMenu" class="hidden" width="320" height="240">
             <h1>Game Paused</h1>
             <div class="menuButton" id="menuResume">Resume</div>
         </div>
-        <div id="ingameUI" class="hidden">
-            
+
+        <!-- ingame UI -->
+        <div id="ingameUI" class="hidden"></div>
+
+        <!-- UI - Game Over -->
+        <!-- Game Over Menu -->
+        <div id="gameOverMenu" class="hidden">
+            <h1>GAME OVER</h1>
+            <div class="score-display">
+                <h2>Final Score</h2>
+                <p id="finalScore">0</p>
+            </div>
+            <div id="btnRestart" class="menuButton">Play Again</div>
         </div>
     </div>
 </body>
