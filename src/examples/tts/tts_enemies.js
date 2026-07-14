@@ -59,7 +59,7 @@ class Enemy extends SpriteObject {
     
     UpdateSpawnBlinkSprite() {
         if (this.spawnTime > 0) {
-            const spawnAlpha =  1 - modDecimal(this.spawnTime,this.spawnBlinkTime);
+            const spawnAlpha =  1 - ModDecimal(this.spawnTime,this.spawnBlinkTime);
             this.sprite.alpha = spawnAlpha;
         }
     }
@@ -88,9 +88,11 @@ class Enemy extends SpriteObject {
     }
 
     OnCollisionEnter(myCollider, otherCollider) {
-        if (this.IsSpawning()) return; // invulnerable while spawning
+        if (this.IsSpawning())
+            return; // invulnerable while spawning
 
-        if (!(otherCollider.go instanceof Bullet)) return;
+        if (!(otherCollider.go instanceof Bullet))
+            return;
 
         const bullet = otherCollider.go;
         bullet.active = false;

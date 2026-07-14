@@ -148,7 +148,7 @@ function RotatePointAroundPoint(point, origin, angle, transformedPoint) {
  * @param {number} m - The divisor.
  * @returns {number} The modulo result.
  */
-function modDecimal(n, m) {  
+function ModDecimal(n, m) {  
   return ((n % m) + m) % m;
 }
 

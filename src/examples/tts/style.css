@@ -7,7 +7,11 @@
 
 @font-face {
   font-family: futuristic;
-  src: url(./fonts/Speed_Rusher.ttf) format('truetype');
+  src: url(./fonts/aircruiserlaserital.ttf) format('truetype');
+}
+
+#mainMenu, #pauseMenu {
+    pointer-events: auto !important;
 }
 
 #mainMenu {

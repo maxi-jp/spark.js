@@ -12,12 +12,19 @@ const SPAWN_MODE = {
 
 class TTSC extends Game {
 
+    _state = GAME_STATE.MAIN_MENU;
+    _lastState = GAME_STATE.MAIN_MENU;
+
     get state() {
         return this._state;
     }
     set state(value) {
         this._lastState = this._state;
         this._state = value;
+    }
+
+    get lastState() {
+        return this._lastState;
     }
 
     constructor(renderer) {
@@ -40,7 +47,6 @@ class TTSC extends Game {
                 img: null
             }
         };        
-
 
         this.gamePaused = false;
 
@@ -79,7 +85,6 @@ class TTSC extends Game {
         // Player lives UI
         this.playerLivesLabel = new TextLabel("Ships:", new Vector2(this.screenWidth * 2 - 370, 50), "30px futuristic", Color.white, "center", "bottom");
         this.playerLives = [];
-
     }
 
     _ParseXml() {
@@ -565,6 +570,10 @@ class PauseMenu extends HTMLMenu {
     
     ShowMenu() {
         this.SetContainerStyle('top: 0%; opacity: 1; pointer-events: auto;');
+    }
+
+    HideMenu() {
+        this.SetContainerStyle('top: -100%; opacity: 0; pointer-events: none;');
     }
 }
 
