@@ -1,6 +1,10 @@
 class Box2DBasic extends Box2DGame {
     constructor(renderer) {
         super(renderer, 100, { x: 0, y: -9.8 }, true); // 1 pixel = 1/100 meter, gravity in m/s^2, allow bodies to sleep
+    
+        this.Configure({
+            drawColliders: true
+        });
     }
 
     Start() {
@@ -40,7 +44,7 @@ class Box2DBasic extends Box2DGame {
         // a box
         CreateBox(
             this.physicsWorld,
-            (this.screenWidth / 2) / this.physicsScale, // x coordinate
+            this.screenHalfWidth / this.physicsScale, // x coordinate
             3, // y coordinate
             {
                 width: 1,

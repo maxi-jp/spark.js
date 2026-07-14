@@ -46,7 +46,7 @@ Rewinds to `currentTime = 0` then plays. **Use this for sound effects** that sho
 
 ```javascript
 // In FloppyDerp — play jump sound on every jump
-if (game.audioActive) {
+if (!audioPlayer.muted) {
     audioPlayer.PlayFromTheStart("sfx_jump");
 }
 ```
@@ -111,35 +111,25 @@ if (!audioPlayer.IsPlaying("bgm")) {
 
 ---
 
-## Muting / audio active flag
+## Global mute
 
-The `Game` base class exposes `this.audioActive` as a global mute flag. Guard every play call with it to respect the player's mute preference:
-
-```javascript
-Update(deltaTime) {
-    super.Update(deltaTime);
-
-    if (Input.IsKeyDown(KEY_SPACE)) {
-        if (this.audioActive) {
-            audioPlayer.PlayFromTheStart("sfx_jump");
-        }
-        this.player.Jump();
-    }
-}
-```
-
-Toggle mute at runtime:
+`audioPlayer.muted` is a boolean property that silences all clips at once without stopping them. When set back to `false`, every clip resumes at the volume it had before muting — playback position is never interrupted, so unmuting is completely seamless.
 
 ```javascript
-this.audioActive = !this.audioActive;
+// Mute everything
+audioPlayer.muted = true;
 
-if (!this.audioActive) {
-    audioPlayer.StopAudio("bgm");
-}
-else {
-    audioPlayer.PlayLoop("bgm");
-}
+// Unmute — all clips resume at their original volumes from where they are in the track
+audioPlayer.muted = false;
+
+// Toggle
+audioPlayer.muted = !audioPlayer.muted;
 ```
+
+`SetVolume`, `PlayAudio`, `PlayFromTheStart`, and `PlayLoop` all respect the muted state: if called while muted they save the requested volume for restoration on unmute rather than applying it immediately, so a `PlayLoop` started while muted will play silently and then come in at full volume when unmuted.
+
+> **`Game.audioActive` vs `audioPlayer.muted`**  
+> `this.audioActive` (on the `Game` class) is a flag you manage yourself — the engine does not read it automatically. `audioPlayer.muted` is the recommended way to silence all audio because it is handled entirely inside `AudioPlayer` and requires no guard calls at every play site.
 
 ---
 
@@ -200,3 +190,4 @@ Draw() {
 | `SetPitch(name, value)` | Set playback rate (`1` = normal) |
 | `IsPlaying(name)` | Returns `true` if the audio is currently playing |
 | `GetFrequencyData()` | Returns `Uint8Array` of frequency magnitudes (analyser must be enabled) |
+| `muted` | Boolean property — `true` silences all clips; `false` restores their volumes. Seamless: audio keeps playing in the background. |

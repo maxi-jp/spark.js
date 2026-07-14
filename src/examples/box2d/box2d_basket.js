@@ -9,6 +9,10 @@ class Box2DBasket extends Box2DGame {
             }
         };
 
+        this.Configure({
+            drawColliders: true
+        });
+
         this.ball = null;
         this.basketSensor = null;
     }

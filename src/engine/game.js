@@ -96,6 +96,7 @@ class Game {
         this.collidersById = new Map(); // Maps collider.id to Collider instance for quick lookups
         this.lastCollisions = new Set(); // ids of colliding pairs detected the last frame
         this.detectedCollisions = new Set(); // collisions detected on this frame
+        this._objectsToDestroy = new Set(); // gameObjects queued to be destroyed
     }
 
     /** @returns {number} Current canvas width in pixels. */
@@ -180,6 +181,7 @@ class Game {
         this.collidersById.clear();
         this.lastCollisions.clear();
         this.detectedCollisions.clear();
+        this._objectsToDestroy.clear();
     }
     
     /**
@@ -268,6 +270,22 @@ class Game {
 
         this.lastCollisions = this.detectedCollisions;
         this.detectedCollisions = new Set();
+
+        // Process deferred destruction
+        if (this._objectsToDestroy.size > 0) {
+            this._objectsToDestroy.forEach((gameObject) => {
+                const index = this.gameObjects.indexOf(gameObject);
+                if (index !== -1) {
+                    const collider = gameObject.collider;
+                    if (collider) {
+                        this.RemoveCollider(collider);
+                    }
+                    gameObject.Destroy();
+                    this.gameObjects.splice(index, 1);
+                }
+            });
+            this._objectsToDestroy.clear();
+        }
     }
     
     /** Called every frame after `Update()`. Override to draw custom graphics using `this.renderer`. */
@@ -291,23 +309,22 @@ class Game {
      * @param {GameObject} gameObject - The game object to remove.
      */
     Destroy(gameObject) {
-        const index = this.gameObjects.indexOf(gameObject);
-        if (index !== -1) {
-            // check if the gameObject has a collider
-            const collider = gameObject.collider;
-            if (collider) {
-                // remove the collider from the this.collider array
-                this.RemoveCollider(collider);
-            }
-
-            gameObject.Destroy();
-
+        if (this.gameObjects.indexOf(gameObject) !== -1) {
+            // Mark as inactive immediately so it stops updating/drawing
             gameObject.active = false;
-
-            this.gameObjects.splice(index, 1);
+            // Add to the deferred destruction queue
+            this._objectsToDestroy.add(gameObject);
         }
         else
             console.warn("Error when destroying the gameObjet: GO not found in the gameObjects array.", gameObject);
+    }
+
+    /**
+     * Removes all game objects from the game, safely destroying them and clearing colliders.
+     * Uses deferred deletion to queue all objects for safe removal at the end of the frame.
+     */
+    DestroyAllGameObjects() {
+        this.gameObjects.forEach(gameObject => this.Destroy(gameObject));
     }
 
     /**

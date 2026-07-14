@@ -7,6 +7,7 @@ var b2Vec2 = Box2D.Common.Math.b2Vec2
     ,   b2Fixture = Box2D.Dynamics.b2Fixture
     ,   b2World = Box2D.Dynamics.b2World
     ,   b2Shape = Box2D.Collision.Shapes.b2Shape
+    ,   b2WorldManifold = Box2D.Collision.b2WorldManifold
     ,   b2PolygonShape = Box2D.Collision.Shapes.b2PolygonShape
     ,   b2CircleShape = Box2D.Collision.Shapes.b2CircleShape
     ,   b2PolygonShape = Box2D.Collision.Shapes.b2PolygonShape
@@ -111,6 +112,10 @@ function CreateCircle(world, x, y, options) {
 
     // set the box shape
     fixtDef.shape = new b2CircleShape(options.radius);
+    
+    if (options.offset) {
+        fixtDef.shape.SetLocalPosition(new b2Vec2(options.offset.x, options.offset.y));
+    }
 
     const body = CreateBody(world, options, x, y, fixtDef);
 
@@ -218,12 +223,16 @@ function OnContactDetected(contact) {
     const userDataB = contact.GetFixtureB().GetBody().GetUserData();
 
     // console.log("collision between " + userDataA + " and " + userDataB);
+    // Extract the contact points in world space
+    const worldManifold = new b2WorldManifold();
+    contact.GetWorldManifold(worldManifold);
+    const contactPoint = worldManifold.m_points[0];
 
     if (userDataA?.OnContactDetectedBox2D) {
-        userDataA.OnContactDetectedBox2D(userDataB);
+        userDataA.OnContactDetectedBox2D(userDataB, contactPoint);
     }
     if (userDataB?.OnContactDetectedBox2D) {
-        userDataB.OnContactDetectedBox2D(userDataA);
+        userDataB.OnContactDetectedBox2D(userDataA, contactPoint);
     }
 }
 

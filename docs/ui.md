@@ -37,7 +37,7 @@ The canvas sits inside a **relative-positioned container**. Menu divs are absolu
 ```css
 #container {
     position: relative;  /* required — overlays use position: absolute inside this */
-    overflow: hidden;
+    /* do NOT add overflow: hidden here — it clips absolutely-positioned overlays */
 }
 
 #mainMenu {
@@ -60,25 +60,97 @@ The canvas sits inside a **relative-positioned container**. Menu divs are absolu
 **Constructor**
 
 ```javascript
-new HTMLMenu(game, menuContainerSelector, canvasContainerSelector, canvas, coverCanvas)
+new HTMLMenu(game, menuContainerSelector, canvasContainerSelector, canvas, coverCanvas, syncWithCanvas)
 ```
 
-| Parameter | Description |
-|---|---|
-| `game` | Reference to your `Game` instance (gives menu access to game state) |
-| `menuContainerSelector` | CSS selector for the menu `<div>` (e.g. `"#mainMenu"`) |
-| `canvasContainerSelector` | CSS selector for the wrapper `<div>` (e.g. `"#container"`) |
-| `canvas` | The `canvas` DOM element |
-| `coverCanvas` | If `true`, `Start()` resizes the menu container to exactly match the canvas size |
+| Parameter | Default | Description |
+|---|---|---|
+| `game` | — | Reference to your `Game` instance (gives menu access to game state) |
+| `menuContainerSelector` | — | CSS selector for the menu `<div>` (e.g. `"#mainMenu"`) |
+| `canvasContainerSelector` | — | CSS selector for the wrapper `<div>` (e.g. `"#container"`) |
+| `canvas` | — | The `canvas` DOM element |
+| `coverCanvas` | `false` | When `true`, positions the overlay directly above the canvas at the same logical size. Works in both normal-flow and `fillWindow` modes — see below. |
+| `syncWithCanvas` | `false` | When `true`, re-syncs the overlay position/transform every time the window resizes (via `game.WindowResized`). Required when `fillWindow` is active so the overlay scales identically with the canvas. Safe to combine with `coverCanvas`. |
 
 **Key methods**
 
 | Method | Description |
 |---|---|
-| `Start()` | Call once (from your `Game.Start()`). Optionally sizes the container to match the canvas. |
+| `Start()` | Call once (from your `Game.Start()`). Applies `coverCanvas` and/or `syncWithCanvas` positioning. |
 | `SetupElements(selectors[])` | Registers DOM elements by CSS selector for later access via `this.elements["#id"]` |
 | `SetupButtons([ {selector, callback} ])` | Registers click listeners; callbacks are bound to your class methods |
 | `SetContainerStyle(styleString)` | Directly sets the container's `style` attribute — useful for CSS transitions |
+| `SetupFillWindowOverlay()` | Called automatically by `Start()` when `syncWithCanvas` is `true`. Can also be called manually. |
+
+---
+
+### Overlay positioning: `coverCanvas` and `syncWithCanvas`
+
+How the overlay is positioned depends on two flags and whether `fillWindow` is active:
+
+| `coverCanvas` | `syncWithCanvas` | `fillWindow` | Result |
+|---|---|---|---|
+| `true` | `false` | `false` | `position:absolute` over the canvas — same size, no scaling |
+| `true` | `false` | `true` | `position:fixed` + z-index above the canvas — visible on top, no scaling |
+| `false` | `true` | `true` | `position:fixed` + matches canvas CSS transform — content **scales** with canvas on resize |
+| `true` | `true` | `true` | Same as above — overlay covers the canvas **and** scales with it |
+
+> **`fillWindow` detection** is automatic: `_syncStyles()` checks whether `canvas.style.position === 'fixed'` (which the renderer sets when fill-window mode is active) and chooses the correct positioning strategy.
+
+> **Avoid `overflow: hidden`** on the canvas container div. It clips absolutely-positioned overlays in normal-flow mode and can hide fixed overlays in certain browser configurations.
+
+#### Overlay for `fillWindow` games — example
+
+When the game uses `fillWindow: true`, pass `syncWithCanvas: true` so the overlay scales with the canvas on every window resize:
+
+```javascript
+class GameHUD extends HTMLMenu {
+    constructor(game, canvas) {
+        // coverCanvas=true  → overlay covers the canvas
+        // syncWithCanvas=true → re-syncs on resize so content scales with the canvas
+        super(game, '#hud', '#canvas-container', canvas, true, true);
+    }
+
+    Start() {
+        super.Start(); // applies positioning automatically
+        this.SetupElements(['#score', '#lives']);
+    }
+
+    UpdateHUD() {
+        this.elements['#score'].textContent = this.game.score;
+        this.elements['#lives'].textContent = this.game.lives;
+    }
+}
+```
+
+And in the `Game` class:
+
+```javascript
+Start() {
+    super.Start(); // renderer applies fillWindow CSS before this line returns
+
+    this.hud = new GameHUD(this, canvas);
+    this.hud.Start(); // positioning is set up here, after the canvas is already fixed
+    this.hud.SetupElements(['#score']);
+}
+```
+
+The HTML structure for a `fillWindow` game:
+
+```html
+<body>
+    <div id="canvas-container">
+        <canvas id="myCanvas" width="720" height="1280"></canvas>
+    </div>
+    <!-- HUD overlay — positioned and scaled by HTMLMenu.Start() -->
+    <div id="hud">
+        <span id="score">0</span>
+        <span id="lives">3</span>
+    </div>
+</body>
+```
+
+> `#hud` is placed **outside** `#canvas-container` when using `fillWindow`, because in fill-window mode the canvas has `position:fixed` and the container collapses to zero height — the overlay is positioned programmatically anyway.
 
 ---
 

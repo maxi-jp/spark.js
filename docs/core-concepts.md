@@ -150,7 +150,8 @@ Some methods that the base `Game` class provides and can be used in your game:
 
 | Method | Description |
 |---|---|
-| `Destroy(gameObject)` | Removes a game object from `gameObjects`, fires its `Destroy()` hook, and cleans up its collider |
+| `Destroy(gameObject)` | Defers deletion to the end of the frame: instantly marks the object as inactive, then safely removes it from `gameObjects`, fires its `Destroy()` hook, and cleans up its collider |
+| `DestroyAllGameObjects()` | Defers deletion of all current game objects by routing them through `Destroy()` |
 | `AddCollider(collider)` | Registers a collider with the collision detection system |
 | `RemoveCollider(collider)` | Unregisters a collider and cleans up any pending collision pairs |
 | `SetScreenSize(width, height)` | Resize the canvas at runtime |
