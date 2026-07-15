@@ -7,7 +7,7 @@ const GAME_STATE = {
 
 const SPAWN_MODE = {
     RANDOM: 0,
-    FROM_XML: 1
+    JSON_LEVELS: 1
 }
 
 class TTSC extends Game {
@@ -79,6 +79,7 @@ class TTSC extends Game {
 
         this.playerScore = 0;
         this.playerScoreLabel = new TextLabel("0", new Vector2(this.screenWidth / 2, 50), "30px futuristic", Color.white, "center", "bottom");        
+        this.gameTimerLabel = new TextLabel("Time: 00:00", new Vector2(20, 50), "30px futuristic", Color.white, "left", "bottom");
 
         this.playerSpeedBar = new SpeedMultBar(new Vector2(this.screenWidth - 120, 20), 100, 20);
 
@@ -91,7 +92,7 @@ class TTSC extends Game {
         super.Start();
 
         this.state = GAME_STATE.MAIN_MENU;
-        this.spawnMode = SPAWN_MODE.FROM_XML; // Change this to required spawn mode
+        this.spawnMode = SPAWN_MODE.JSON_LEVELS; 
 
         // Player's input configuration --------------------
         this.SetupInput();
@@ -120,8 +121,8 @@ class TTSC extends Game {
         // Setup events to automatically pause the game when the window loses focus or the tab becomes inactive
         this.SetupPauseEvents();
         
-        if (this.spawnMode == SPAWN_MODE.FROM_XML)
-            this._ParseXml();
+        if (this.spawnMode == SPAWN_MODE.JSON_LEVELS)
+            this.LoadLevelData(0);
     }
 
     SetupInput() {
@@ -172,55 +173,15 @@ class TTSC extends Game {
         Input.RegisterRumble("EnemyKilled", 0, 0.25, 100, 0);                 
     }
 
-    _ParseXml() {
-        fetch('/src/examples/tts/xml/levels.xml')
-        .then(response => response.text())
-        .then(str => {
-            const parser = new DOMParser();
-            const xml = parser.parseFromString(str, "application/xml");
-                        
-            const levels = xml.getElementsByTagName("level");
-            // TODO separate levels if more than 1
-            const spawnsXml = levels[0];
-            const spawnsArray = [...spawnsXml.getElementsByTagName("spawn")];
-            this.spawns = []
+    LoadLevelData(levelIndex = 0) {
+        const levelData = LEVEL_1_DATA;
 
-            
-            // parse xml objects to array
-            for (let i = 0; i < spawnsArray.length; i++) {
-                let spawn = 
-                {   
-                    time: parseInt(spawnsArray[i].getElementsByTagName("time")[0].textContent),
-                    enemies: []
-                }
-                let enemies = spawnsArray[i].getElementsByTagName("enemy")
-                for (let j = 0; j < enemies.length; j++) {
-                    const enemyXml = enemies[j];
-                    const position = enemyXml.getElementsByTagName("position")[0];                    
-                    const type = parseInt(enemyXml.getElementsByTagName("type")[0].textContent);
-                    let enemy =
-                    {
-                        x: parseInt(position.getElementsByTagName("x")[0].textContent),
-                        y: parseInt(position.getElementsByTagName("y")[0].textContent),
-                        type: type
-                    }
-                    spawn.enemies.push(enemy)                    
-                }
-                this.spawns.push(spawn)                       
-            }
-            
-            // TODO maybe at previous parse insert ordered instead of ordering afterwards.
-            // orders from less time of spawn to high
-            this.spawns.sort(function(a,b){
-                if (a.time < b.time)
-                    return -1;
-                if (b.time < a.time)
-                    return 1;
-                return 0;
-            })
-            
-        })
-        .catch(err => console.error(err));
+        // Deep copy the level data so we can safely modify/shift it during gameplay
+        // without permanently destroying the original constant
+        this.spawns = JSON.parse(JSON.stringify(levelData));
+        
+        // Sort by time (lowest first) to guarantee chronological order
+        this.spawns.sort((a, b) => a.time - b.time);
     }
 
     StartLevel1() {
@@ -253,6 +214,7 @@ class TTSC extends Game {
         this.playerScore = 0;
         this.playerScoreLabel.text = this.playerScore;
         this.timeSinceStart = 0;
+        this.gameTimerLabel.text = "Time: 00:00";
         this.timeToSpawnEnemy = 1;
 
         // Destroy all existing enemies
@@ -261,9 +223,9 @@ class TTSC extends Game {
         }
         this.enemies = [];
 
-        // Re-parse spawns if using XML
-        if (this.spawnMode == SPAWN_MODE.FROM_XML) {
-            this._ParseXml();
+        // Reload spawn data
+        if (this.spawnMode == SPAWN_MODE.JSON_LEVELS) {
+            this.LoadLevelData(0);
         }
 
         // begin with level 1
@@ -347,6 +309,14 @@ class TTSC extends Game {
     }
 
     _updateGame(deltaTime) {
+        // Update time since start
+        this.timeSinceStart += deltaTime;
+
+        // Update timer label (format as SS:DC)
+        const secs = String(Math.floor(this.timeSinceStart)).padStart(2, '0');
+        const centis = String(Math.floor((this.timeSinceStart % 1) * 100)).padStart(2, '0');
+        this.gameTimerLabel.text = "Time: " + secs + ":" + centis;
+
         if (this.spawnMode == SPAWN_MODE.RANDOM){
             // ramdom enemy spawning
             this.timeToSpawnEnemyAux += deltaTime;
@@ -355,9 +325,7 @@ class TTSC extends Game {
                 this.SpawnRandomEnemy();
             }
         }
-        else if (this.spawnMode == SPAWN_MODE.FROM_XML){
-            // Update time since start
-            this.timeSinceStart += deltaTime;
+        else if (this.spawnMode == SPAWN_MODE.JSON_LEVELS){
             // Check list of spawns at level (doing only level 1 TODO more levels)
             if (this.spawns && this.spawns.length > 0){
                 if (this.spawns[0].time < this.timeSinceStart){
@@ -391,6 +359,8 @@ class TTSC extends Game {
                 this.camera.PostDraw(this.renderer);
 
                 this.playerScoreLabel.Draw(renderer);
+
+                this.gameTimerLabel.Draw(renderer);
 
                 this.playerSpeedBar.Draw(renderer);
 
@@ -448,7 +418,7 @@ class TTSC extends Game {
         let enemy = null;
         switch (type) {
             case 0: // Normal
-                enemy = new Enemy(spawnPoint, this.graphicAssets.ships.img, this.player, this.sceneLimits);
+                enemy = new EnemyBasic(spawnPoint, this.graphicAssets.ships.img, this.player, this.sceneLimits);
                 break;
             case 1: // Kamikaze
                 enemy = new EnemyKamikaze(spawnPoint, this.graphicAssets.ships.img, this.player, this.sceneLimits);
