@@ -45,12 +45,12 @@ class DinoGame extends Game {
 
     Restart() {
         // Clear any existing game objects
-        this.gameObjects = [];
+        this.DestroyAllGameObjects();
 
         // Create player using engine GameObject / SpriteObject pattern
         this.player = new PlayerDino(new Vector2(60, this.groundY - 46), this.graphicAssets.dino_ss.img);
         this.player.groundY = this.groundY;
-        this.gameObjects.push(this.player);
+        this.AddGameObject(this.player);
 
         this.obstacles = [];
         this.obstacleTimer = 0;

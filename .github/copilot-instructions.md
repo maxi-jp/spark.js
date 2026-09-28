@@ -21,8 +21,10 @@ Each example HTML file must load engine scripts in this order before any game co
 9. `src/engine/virtualcontrols.js` — VirtualJoystick, VirtualDPad
 10. `src/engine/game.js` — Game base class
 11. `src/engine/tiled_loader.js` — TiledLoader *(optional — only if using Tiled maps)*
-12. `src/lib/Box2D.js` + `src/engine/box2d_helper.js` + `src/engine/box2d_game.js` + `src/engine/box2d_gameobjects.js` *(optional — only for physics games; load `Box2D.js` first)*
-13. `src/engine/main.js` — engine bootstrap (LoadImages, StartGame)
+12. `src/engine/ai.js` — AStarPathfinder *(optional — only if using pathfinding)*
+13. `src/engine/fsm.js` — FSMState, FSM, FSMCompositeState *(optional — only if using FSM/HFSM)*
+14. `src/lib/Box2D.js` + `src/engine/box2d_helper.js` + `src/engine/box2d_game.js` + `src/engine/box2d_gameobjects.js` *(optional — only for physics games; load `Box2D.js` first)*
+15. `src/engine/main.js` — engine bootstrap (LoadImages, StartGame)
 
 ---
 
@@ -37,6 +39,42 @@ Each example HTML file must load engine scripts in this order before any game co
 
 ---
 
+## Vector2 & utilities quick-reference
+
+### Vector2 (defined in `utils_math.js`)
+
+| Usage | Call |
+|---|---|
+| Create | `new Vector2(x, y)` |
+| Zero vector | `Vector2.Zero()` |
+| Copy | `Vector2.Copy(v)` |
+| Distance between two points | `Vector2.Magnitude(v1, v2)` — accepts any `{x,y}` object, including `Input.mouse` |
+| Squared distance (faster for comparisons) | `Vector2.SqrMagnitude(v1, v2)` |
+| Lerp between two vectors | `Vector2.Lerp(v1, v2, t)` |
+| Length of this vector | `v.Length()` / `v.SqrLength()` |
+| Normalize in-place | `v.Normalize()` — returns `this` |
+| Add / subtract in-place | `v.Add(other)` / `v.Sub(other)` |
+| Scale in-place | `v.MultiplyScalar(s)` — returns `this` |
+| Set both components | `v.Set(x, y)` |
+| Access components | `v.x` / `v.y` (setters fire onChange if set) |
+
+> `Add`, `Sub`, and `MultiplyScalar` mutate in place and do **not** return a new vector. Use `Vector2.Copy(v).Sub(other)` when you need a non-destructive version.
+
+### Key free functions (utils_math.js)
+
+| Call | Description |
+|---|---|
+| `Clamp(value, min, max)` | Clamp to range |
+| `Lerp(start, end, t)` | Linear interpolation |
+| `SmoothRotation(current, target, speed)` | Rotate toward target, shortest arc, max `speed` rad/call |
+| `LerpRotation(current, target, t)` | Lerp angle, shortest arc |
+| `RandomBetweenInt(min, max)` | Random integer in [min, max] inclusive |
+| `RandomBetweenFloat(min, max)` | Random float in [min, max) |
+| `Length(x, y)` | Magnitude from raw components |
+| `SqrLength(dx, dy)` | Squared magnitude (no sqrt) |
+
+---
+
 ## Class hierarchy
 ```
 Game
@@ -46,8 +84,16 @@ GameObject
 ├── RectangleGO
 ├── CircleGO
 └── SpriteObject
+    ├── SpriteSectionObject
     ├── SSAnimationObjectBasic
-    └── SSAnimationObjectComplex
+    ├── SSAnimationObjectComplex
+    └── Tileset
+
+Camera
+├── FollowCameraBasic
+└── FollowCamera
+
+Pool
 
 Renderer
 ├── Canvas2DRenderer
@@ -74,13 +120,18 @@ Box2DGameObject (extends GameObject)
 ├── Box2DSSAnimationObjectBasic
 ├── Box2DSSAnimationObjectComplex
 └── Box2DTrigger
+
+FSMState
+└── FSMCompositeState
+
+FSM
 ```
 
 ---
 
 ## Project layout
 ```
-src/engine/          ← engine source (14 files)
+src/engine/          ← engine source (15 files)
 src/examples/        ← example game implementations
   <name>/            ← one folder per example; each may have its own assets/
 src/lib/             ← third-party libs (Box2D)
@@ -99,9 +150,9 @@ class MyGame extends Game {
     this.Configure({ screenWidth: 800, screenHeight: 600 });
     this.graphicAssets = { ship: { path: 'assets/ship.png', img: null } };
   }
-  Start()            { this.ship = new SpriteObject(new Vector2(400,300), 0, 1, this.graphicAssets.ship.img); }
-  Update(deltaTime)  { this.ship.Update(deltaTime); }
-  Draw()             { this.ship.Draw(this.renderer); }
+  Start()            { this.ship = this.AddGameObject(new SpriteObject(new Vector2(400,300), 0, 1, this.graphicAssets.ship.img)); }
+  Update(deltaTime)  { super.Update(deltaTime); }
+  Draw()             { super.Draw(); }
 }
 // In the last game script (or inline in the HTML):
 window.onload = () => { Init(MyGame); }
@@ -112,13 +163,15 @@ window.onload = () => { Init(MyGame); }
 ## Input API quick-reference (Input namespace)
 | Usage | Call |
 |---|---|
-| Key held | `Input.IsKeyDown(KEY_SPACE)` |
-| Key just pressed | `Input.IsKeyPressed(KEY_SPACE)` |
+| Key held | `Input.IsKeyPressed(KEY_SPACE)` |
+| Key just pressed | `Input.IsKeyDown(KEY_SPACE)` |
+| Key just released | `Input.IsKeyUp(KEY_SPACE)` |
 | Mouse button | `Input.IsMouseButtonDown(0)` |
 | Gamepad raw | `Input.GetGamepad(0)` |
 | Register action | `Input.RegisterAction('Fire', [{type:'key', code:KEY_SPACE}])` |
 | Action held | `Input.GetAction('Fire')` |
 | Action just pressed | `Input.GetActionDown('Fire')` |
+| Action just released | `Input.GetActionUp('Fire')` |
 | Register axis | `Input.RegisterAxis('MoveX', [{type:'key', code:KEY_LEFT, value:-1}, …])` |
 | Read axis | `Input.GetAxis('MoveX')` — returns –1..1 |
 | Any input | `Input.Anything()` — true if any device triggered anything |
@@ -134,7 +187,7 @@ All methods are called on `renderer` (or `this.renderer` inside Game). Colors us
 ### Text rendering
 | Method | Usage |
 |---|---|
-| `DrawFillText(text, x, y, font, color?, align?, baseline?)` | Filled text. Font ex: `"16px Arial"`. Align: `"left"` / `"center"` / `"right"` |
+| `DrawFillText(text, x, y, font, color?, align?, baseline?)` | Filled text. Font ex: `"16px Arial"`. Align: `"center"` / `"left"` / `"right"` |
 | `DrawStrokeText(text, x, y, font, color?, align?, baseline?, lineWidth?)` | Outlined text |
 | `DrawText(text, x, y, font, color?, align?, baseline?, stroke?, lineWidth?)` | Text with optional stroke |
 
@@ -283,6 +336,83 @@ sprites.forEach(sprite => this.gameObjects.push(sprite));
 
 ---
 
+## A* Pathfinding (`ai.js`)
+
+The optional `AStarPathfinder` in `src/engine/ai.js` provides grid-based pathfinding for any game. Load `ai.js` after `game.js` and before `main.js`.
+
+### Grid interface (duck-typed)
+Any object with these members works as a grid:
+```javascript
+IsWalkable(col, row)   // → boolean
+IsInBounds(col, row)   // → boolean
+WorldToGrid(Vector2)   // → {col, row}
+GridToWorld(col, row)  // → Vector2
+width, height          // grid dimensions in cells
+```
+The RTS `GridMap` class satisfies this interface automatically.
+
+### Quick reference
+| Usage | Call |
+|---|---|
+| Create | `new AStarPathfinder(grid)` |
+| Create (4-dir) | `new AStarPathfinder(grid, { allowDiagonals: false })` |
+| Find path | `pathfinder.FindPath(startVec2, endVec2)` → `Vector2[]` |
+| Find path (grid coords) | `pathfinder.FindPathGrid(sc, sr, ec, er)` → `{col,row}[]` |
+| Override heuristic | `new AStarPathfinder(grid, { heuristic: AStarPathfinder.Heuristic.Euclidean })` |
+| Disable smoothing | `new AStarPathfinder(grid, { smoothPath: false })` |
+
+### Heuristics
+| Constant | Best for |
+|---|---|
+| `AStarPathfinder.Heuristic.Manhattan` | 4-directional grids |
+| `AStarPathfinder.Heuristic.Octile` | 8-directional grids — **auto-selected default** |
+| `AStarPathfinder.Heuristic.Euclidean` | Continuous / any-angle movement |
+
+### Notes
+- Returns `[]` if start is fully isolated; always returns the **closest reachable path** when the target is blocked — never throws or loops infinitely.
+- Iteration cap defaults to `20 000`; tune with `options.maxIterations`.
+- Line-of-sight path smoothing is on by default (`smoothPath: true`).
+
+### See also
+- Interactive demo: `pathfinding.html`
+- Full reference: `docs/ai.md`
+
+---
+
+## FSM & HFSM (`fsm.js`)
+
+The optional `FSM` classes in `src/engine/fsm.js` provide Finite State Machines and Hierarchical FSMs. Load `fsm.js` after `game.js` and before `main.js`.
+
+### Quick reference
+| Usage | Call |
+|---|---|
+| Define a state | `class MyState extends FSMState { Enter(o,prev){} Update(dt,o,fsm){} Exit(o,next){} }` |
+| Declarative guard | `state.AddTransition('target', owner => condition)` — checked before Update() each frame |
+| Build & start | `new FSM(this, 'idle').AddState('idle', new IdleState()).AddState('run', new RunState()).Start()` |
+| Tick | `this.fsm.Update(dt)` — call from the owner's Update() every frame |
+| Imperative transition | `fsm.Transition('target')` — called from within a state's Update() |
+| Current state name | `this.fsm.currentStateName` |
+| Current state object | `this.fsm.currentState` |
+| Debug label | `this.fsm.DrawDebug(renderer, x, y)` — renders only when `debugMode` is true |
+| Composite state | extend `FSMCompositeState`, set `this.subFSM = new FSM(owner, 'sub-initial')...` in the constructor |
+
+### Transition model (Millington & Funge)
+1. Declarative guards (`AddTransition`) are evaluated every frame **before** `Update()`. If one fires, `Update()` is skipped.
+2. Imperative `fsm.Transition()` called from inside `Update()` is applied after `Update()` returns.
+
+### Notes
+- `owner` is the object passed to `new FSM(owner, ...)` — all state callbacks receive it as first argument.
+- `FSMCompositeState` starts/stops its `subFSM` automatically via `super.Enter()` / `super.Exit()`.
+- Parent-level guards on a composite state fire **before** the sub-FSM updates, overriding nested behaviour.
+- `DrawDebug` is gated on the global `debugMode` variable.
+
+### See also
+- Guard Patrol demo: `fsm-basic.html` — project [README](../src/examples/fsm_basic/README.md)
+- Sentry AI (HFSM) demo: `fsm-hfsm.html` — project [README](../src/examples/fsm_hfsm/README.md)
+- Full reference: `docs/ai.md`
+
+---
+
 ## Minimal HTML template
 ```html
 <!DOCTYPE html>
@@ -300,6 +430,10 @@ sprites.forEach(sprite => this.gameObjects.push(sprite));
     <script src="src/engine/particlesystem.js"></script>
     <!-- Tiled map loader (optional):
     <script src="src/engine/tiled_loader.js"></script>
+     -->
+    <!-- game-AI tools (optional):
+    <script src="src/engine/ai.js"></script>
+    <script src="src/engine/fsm.js"></script>
      -->
     <script src="src/engine/htmlmenu.js"></script>
     <script src="src/engine/virtualcontrols.js"></script>
@@ -325,6 +459,7 @@ sprites.forEach(sprite => this.gameObjects.push(sprite));
 ---
 
 ## Conventions
+- **Use `game.AddGameObject()`** to add GameObjects — it automatically calls `Start()` and adds to the game loop. Direct `gameObjects.push()` skips initialization.
 - **Color channels are 0–1**, not 0–255. Use `Color.FromRGB(r,g,b)` for 0-255 inputs.
 - **`deltaTime` is seconds.** Multiply all speeds/velocities by `deltaTime` for frame-rate independence.
 - **Object pooling** via `ObjectPool` is the standard pattern for bullets, particles, and other frequently created/destroyed objects.

@@ -169,7 +169,7 @@ class Box2DTriggerDemo extends Box2DGame {
 
         // Three trigger zones at canvas y = 400 (bottom)
         const zoneY = 400;
-        this.gameObjects.push(
+        this.AddGameObject(
             new CountZone  (new Vector2(107, zoneY), this.physicsWorld),
             new TimerZone  (new Vector2(320, zoneY), this.physicsWorld),
             new DestroyZone(new Vector2(533, zoneY), this.physicsWorld)
@@ -184,7 +184,7 @@ class Box2DTriggerDemo extends Box2DGame {
 
         // Spawn a ball where the user clicks/taps, above the zones
         if (Input.IsMouseDown() && Input.mouse.y < 230 && ballCount < MAX_BALLS) {
-            this.gameObjects.push(new DemoBall(
+            this.AddGameObject(new DemoBall(
                 new Vector2(Input.mouse.x, Input.mouse.y),
                 this.physicsWorld
             ));

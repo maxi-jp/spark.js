@@ -953,7 +953,7 @@ class PolygonCollider extends Collider {
     _calculateBoundingRadius() {
         let maxDistSq = 0;
         for (const p of this.points) {
-            const distSq = SqrLength(p); // Distance from origin (0,0) of the polygon's local points
+            const distSq = SqrLengthVector(p); // Distance from origin (0,0) of the polygon's local points
             if (distSq > maxDistSq)
                 maxDistSq = distSq;
         }

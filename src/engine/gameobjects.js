@@ -569,11 +569,12 @@ class SSAnimationObjectComplex extends SpriteObject {
  */
 class Tileset extends GameObject {
     /**
-     * @param {HTMLImageElement} img - The tile sheet image.
+     * @param {HTMLImageElement} img - The tile sheet image (used only if tilesetConfig entries don't have their own image).
      * @param {Vector2} position - Top-left draw position.
      * @param {number|Vector2} scale - Scale factor applied to tiles.
-     * @param {Object.<number, {rect: {x:number, y:number, w:number, h:number}}>} tilesetConfig
-     *   - Maps tile IDs to their source rect in the sheet.
+     * @param {Object.<number, {rect: {x:number, y:number, w:number, h:number}, image?: HTMLImageElement}>} tilesetConfig
+     *   - Maps tile IDs to their source rect in the sheet. For Tiled maps, each tile can have its own image reference.
+     *   - If image is omitted, the constructor's `img` parameter is used as fallback.
      * @param {number[][]} tilesetMap - 2D array of tile IDs (0 = empty).
      * @param {number} tileWidth - Tile width in pixels.
      * @param {number} tileHeight - Tile height in pixels.
@@ -584,7 +585,7 @@ class Tileset extends GameObject {
         this.sprite = new Sprite(img, position, 0, scale);
 
         this.tilesetMap = tilesetMap; // 2D array representing the map layout
-        this.tilesetConfig = tilesetConfig; // Mapping from tile ID to source Rect
+        this.tilesetConfig = tilesetConfig; // Mapping from tile ID to {rect: {...}, image?: HTMLImageElement}
         this.tileWidth = tileWidth;
         this.tileHeight = tileHeight;
     }
@@ -593,7 +594,8 @@ class Tileset extends GameObject {
         // Use batched rendering for WebGL, fallback to per-tile for Canvas2D
         if (renderer.DrawBatchedSprites) {
             this._DrawBatchedWebGL(renderer);
-        } else {
+        }
+        else {
             this._DrawPerTile(renderer);
         }
     }
@@ -696,7 +698,7 @@ class Tileset extends GameObject {
     }
 
     _DrawPerTile(renderer) {
-        // Original per-tile drawing (Canvas2D or fallback)
+        // Per-tile drawing (Canvas2D or fallback for multi-image tilesets)
         const basePosX = this.position.x;
         const basePosY = this.position.y;
         const scaleX = this.sprite.scale.x;
@@ -715,13 +717,15 @@ class Tileset extends GameObject {
                 }
 
                 const sourceRect = tileConfig.rect;
+                // Use tileConfig.image if available (Tiled multi-image maps), otherwise use base sprite image
+                const tileImage = tileConfig.image || this.sprite.img;
 
                 // Calculate the position to draw this tile on the canvas (top-left corner).
                 const drawX = basePosX + (colIndex * this.tileWidth * scaleX);
                 const drawY = basePosY + (rowIndex * this.tileHeight * scaleY);
 
-                // Draw using the specific image for this tile (critical for multi-tileset maps)
-                renderer.DrawImageSectionBasic(tileConfig.image, drawX, drawY, sourceRect.x, sourceRect.y, sourceRect.w, sourceRect.h, scaleX, scaleY, this.sprite.alpha);
+                // Draw the tile using its assigned or fallback image
+                renderer.DrawImageSectionBasic(tileImage, drawX, drawY, sourceRect.x, sourceRect.y, sourceRect.w, sourceRect.h, scaleX, scaleY, this.sprite.alpha);
             });
         });
     }

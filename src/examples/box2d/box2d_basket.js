@@ -66,8 +66,7 @@ class Box2DBasket extends Box2DGame {
 
         // create the ball
         this.ball = new Ball(new Vector2(100, 200), this.graphicAssets.ball.img, this.physicsWorld, new Vector2(0.33, 0.33));
-        this.ball.Start();
-        this.gameObjects.push(this.ball);
+        this.AddGameObject(this.ball);
     }
 
     Update(deltaTime) {

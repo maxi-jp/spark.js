@@ -33,7 +33,7 @@ class MyBox2DGame extends Box2DGame {
     Start() {
         super.Start(); // creates this.physicsWorld
 
-        // this.gameObjects.push(new MyPhysicsBox(new Vector2(100, 100), this.physicsWorld));
+        // this.AddGameObject(new MyPhysicsBox(new Vector2(100, 100), this.physicsWorld));
     }
 }
 ```
@@ -201,7 +201,7 @@ class TimedDestroyZone extends Box2DTrigger {
 
 // In Box2DGame.Start():
 const zone = new TimedDestroyZone(new Vector2(320, 300), this.physicsWorld);
-this.gameObjects.push(zone);
+this.AddGameObject(zone);
 ```
 
 #### Notes

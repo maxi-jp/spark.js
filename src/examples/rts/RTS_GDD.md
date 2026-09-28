@@ -6,6 +6,21 @@ A real-time strategy (RTS) game in the vein of *Age of Empires*. The player gath
 **Core Loop:**
 Explore Map -> Gather Resources -> Expand Base -> Train Army -> Destroy Enemy.
 
+### 1.0 Development Philosophy: Iterative Showcase
+This project is an **engine demonstration**, not a commercial RTS. Development will follow a strict **"simplest functional version first"** approach:
+
+**Iteration Strategy:**
+- **Phase Goal**: Get one vertical slice working before adding breadth
+- **No Placeholder Systems**: Every feature implemented must be fully functional (no "TODO" systems)
+- **Performance Monitoring**: Track FPS/memory, but don't over-optimize until needed
+- **Simplest Rules First**: Start with basic formulas, add complexity only if showcase requires it
+- **Visual First**: If a feature isn't visible/audible, it has lower priority
+
+**Version Markers Used Throughout:**
+- **V1 Core**: Minimum playable RTS (Player vs AI, one match start to finish)
+- **V1.x Polish**: Engine showcase features (particles, audio, minimap, polish)
+- **V2 Future**: Expansions beyond showcase scope (campaigns, more factions, advanced AI)
+
 ### 1.1 Player Fantasy & Design Pillars
 The game aims to capture the nostalgic, methodical pacing of classic 90s RTS games. The first 10 minutes should evoke a feeling of "quiet expansion" — starting with a small group of villagers in an unexplored wilderness, establishing an economic engine, and gradually transitioning into the tension of scouting and early skirmishes.
 
@@ -41,7 +56,7 @@ Because RTS games can easily explode in scope, and this project is primarily an 
 *   **Win Condition:** Destroy the opponent's Town Center.
 *   **Lose Condition:** The player's own Town Center is destroyed.
 *   **Edge Cases & Soft-Locks:**
-    *   *Economic Soft-Lock:* If a player loses all Villagers and lacks the food to train more, they are economically defeated. However, V1 does not force an auto-resign; the match continues until the Town Center is destroyed.
+    *   *Economic Soft-Lock:* If a player loses all Villagers and lacks the food to train more, they are economically defeated. However, V1 does not force an auto-resign; the match continues until the Town Center is destroyed. *(V1.x could add a "You have no Villagers" warning notification).*
     *   *Army Wipe:* If a player loses all military units while the enemy's base stands, they must scramble to train more with their remaining economy.
     *   *Resource Exhaustion:* All map resources are strictly finite. If the map is completely mined out, the match enters a sudden-death attrition phase using only remaining forces.
 *   **Match States:**
@@ -72,6 +87,17 @@ Because RTS games can easily explode in scope, and this project is primarily an 
 *   **Auto-Resume:** After dropping off, Villagers will automatically return to the nearest available node of the same type to continue gathering.
 *   **Node Crowding:** Multiple Villagers can gather from the same node, but they will use the collision system to push each other, inherently creating a small efficiency penalty if too many crowd a single tree or bush.
 *   **Resource Allocation & Reservation:** When a unit, technology, or building placement is queued, its cost is checked and **immediately subtracted** from the player's bank. If the action is canceled before completion, the resources are fully refunded. *(Note: If a building foundation is destroyed by an enemy, the resources are lost).* This strict reservation system prevents double-spending and simplifies the macro-AI logic.
+*   **Death Resource Loss (V1 Simple Rule):** When a Villager dies while carrying resources, those resources disappear entirely. *(V2: Could drop as collectable pickup).*
+
+**Resource Node Quantities (V1 Map Balance):**
+| Node Type | Resources per Node | Nodes per Starting Base | Nodes in Contested Center | Total Map Resources |
+|-----------|-------------------|------------------------|--------------------------|--------------------|
+| **Tree** | 100 Wood | ~30 trees | ~20 trees | ~5000 Wood |
+| **Food Bush** | 150 Food | 4 bushes | 2 bushes | ~900 Food |
+| **Gold Mine** | 800 Gold | 1 mine | 2 mines | ~3200 Gold |
+| **Stone Quarry** | 600 Stone | 1 quarry | 2 quarries | ~2400 Stone |
+
+*Design Note: Total resources allow for approximately 15-20 minutes of continuous economy before exhaustion forces decisive combat.*
 
 ### 2.3 Ages & Progression
 The age factor greatly impacts game progression. Players start in Age 1 and can advance up to Age 4.
@@ -79,6 +105,16 @@ The age factor greatly impacts game progression. Players start in Age 1 and can 
 *   **Trigger:** Age advancement is treated as a major research technology initiated at the main base (Town Center).
 *   **Benefits:** Reaching a new age unlocks advanced units, stronger buildings, and powerful upgrades.
 *   **Tech Tree:** Buildings can research specific upgrades (e.g., Blacksmith for +1 damage, Lumber Camp for +20% wood gathering speed) that apply globally to the player's faction.
+
+**V1 Age Progression (Simplified):**
+| Age | Cost | Build Time | Required Buildings | Key Unlocks |
+|-----|------|-----------|-------------------|-------------|
+| **Age 1** (Dark Age) | — | — | — | Villager, House, Town Center |
+| **Age 2** (Feudal) | 500 Food | 60s | None | Barracks, Lumber Camp, Infantry |
+| **Age 3** (Castle) | 800 Food, 200 Gold | 90s | Barracks | Archery Range, Archer, Infantry Upgrade |
+| **Age 4** (Imperial) | *V1.x Extension* | — | — | Elite units, advanced techs |
+
+*V1 Design Note: Only Ages 1-3 are required for the core loop. Age 4 is reserved for V1.x polish if time permits.*
 
 ### 2.4 Factions
 *(Note: Multiple distinct factions are scoped for future extensions. For V1, we will implement a single base template).*
@@ -107,10 +143,18 @@ The game employs a classic *Age of Empires* style control scheme, emphasizing qu
 **Mouse Controls:**
 *   **Left Click:** Selects a single friendly unit or building. Clicking on empty terrain clears the current selection. *(Note: Enemy entities are not selectable in V1).*
 *   **Double-Click (Left):** Selects all friendly units of the exact same type currently visible on the screen.
-*   **Left Click & Drag (Box Selection):** Exclusively selects friendly mobile units (Villagers and Military) within the drawn box. Buildings are ignored.
+*   **Left Click & Drag (Box Selection):** Exclusively selects friendly mobile units (Villagers and Military) within the drawn box. Buildings are ignored. **V1 Selection Limit:** 60 units max (engine showcase constraint, not a feature).
 *   **Right Click:** Context-sensitive command (Move to terrain, Gather resource, Attack enemy, Build foundation, Repair building).
 *   **Mixed Selection & Right-Click Resolution:** When a mixed group (Villagers + Military) is selected, right-click actions resolve intelligently: clicking an enemy commands all to Attack; clicking a resource or construction site commands Villagers to Gather/Build while Military units execute a Move command to guard the location.
 *   **Shift + Command (Right Click):** Adds the issued command to the unit's task queue (e.g., "Build a house, *then* move to the forest"). Crucial for advanced Villager management.
+
+**Visual Command Feedback (V1.x Polish):**
+*   V1 Core: Basic right-click targeting works, no visual indicators beyond unit movement.
+*   V1.x Additions:
+    *   Green checkmark particles on ground where Move command was issued.
+    *   Red crosshair particles when issuing Attack commands.
+    *   Cursor changes icon when hovering enemies (sword) vs resources (tool) vs terrain (arrow).
+    *   Waypoint trail visualization for Shift-queued commands.
 
 **Keyboard Hotkeys & Shortcuts:**
 | Hotkey | Action | Context / Requirement |
@@ -129,7 +173,9 @@ The game employs a classic *Age of Empires* style control scheme, emphasizing qu
 | **Double-tap `[0-9]`** | Snap to Control Group| Selects the bound group and snaps the camera to their location. |
 | **`Shift` + Click/Drag** | Add to Selection | Adds newly targeted units to the existing selection instead of clearing it. |
 
-### 3.2 Map Structure & Pathfinding
+### 3.2 Map Structure & Pathfinding (V1 Core)
+
+**V1 Simplification Strategy:** Start with basic A* and grid collision. Add optimizations only if performance drops below 60 FPS with 50 units.
 *   **Coordinate System Conventions:**
     *   **Grid Scale:** 1 Grid Cell = 32x32 pixels. Internal pathfinding and map state logic operate on integer coordinates (e.g., `col 5, row 10`), while game objects and rendering operate on pixel coordinates (e.g., `x: 160, y: 320`).
     *   **World Origin:** `(0, 0)` is the absolute top-left corner of the map.
@@ -142,6 +188,13 @@ The game employs a classic *Age of Empires* style control scheme, emphasizing qu
     *   `terrainType`: String/Enum. The underlying base terrain (e.g., grass, water, cliff).
     *   `occupant`: Reference. Points to the specific `Entity` (e.g., `Building` or `ResourceNode`) occupying the cell, enabling instant lookup for interactions.
 *   **A* Algorithm (A-Star):** Pathfinding operates on the square 2D grid. The algorithm calculates the shortest path while avoiding natural obstacles (water, cliffs) and dynamic obstacles (placed buildings). The navigation grid updates dynamically when buildings are constructed or destroyed.
+*   **Path Caching (V1.x Optimization):** Initially, recalculate paths on every blocked node. If performance suffers, add path caching and invalidation on grid changes.
+*   **Pathfinding Edge Cases (V1 Simple Rules):**
+    *   **Dynamic Blocking:** If a unit's path is blocked by a new building, recalculate immediately (no waiting).
+    *   **Unreachable Destination:** If A* fails to find a path, the unit moves to the closest reachable cell and stops (no infinite retry loop).
+    *   **Stuck Unit Recovery:** If a unit hasn't moved in 5 seconds while pathing, clear command and return to Idle. *(Acceptable for V1 showcase).*
+    *   **Chokepoint Congestion:** Units will naturally queue due to collision. No special flow field logic for V1.
+    *   **Path Smoothing:** V1 uses raw A* waypoints (no funnel algorithm). *(V1.x: Add smoothing if paths look too jagged).*
 *   **Local Avoidance:** Simple steering behaviors (like separation) ensure units don't clump perfectly on top of each other when moving in groups or converging on a target.
 *   **Group Movement & Formations (V1):** Moving multiple selected units uses a simple destination allocation strategy. When a group move is issued: *Calculate a basic grid of formation slots around the target destination -> Assign one unique slot per unit -> Each unit independently uses A* to navigate to its slot*. The slots are spaced using the units' `selectionRadius` multiplied by two plus a small padding buffer. Upon arrival, all units snap to face the average direction of travel. Strict maintaining of rigid military formations during transit is excluded for V1.
 *   **Map Specification (V1 Predefined Map):** To faithfully emulate the *Age of Empires* experience while providing a robust testbed for the engine, the V1 map will be designed in Tiled with the following parameters:
@@ -161,9 +214,11 @@ The game employs a classic *Age of Empires* style control scheme, emphasizing qu
     *   *If Attacking:* Units continue attacking their current target unless: the target dies, the target leaves the `leashRange` (typically `aggroRange * 1.5`), or a new player command is issued. If a target is lost, the unit reverts to Idle logic.
     *   *Target Priority:* Military units automatically prioritize enemy military entities over buildings and villagers unless explicitly commanded otherwise by the player.
 *   **Attack Semantics & Range:** Melee units must reach adjacency (colliders touching) to attack. Ranged units fire from within their `attackRange`. Attacks execute on an interval based on the unit's `attackRate`. Issuing a new command (like Move) immediately interrupts the attack cycle.
+*   **Attack Animation Timing (V1):** Damage is applied at the **midpoint** of the attack animation. Use `Invoke()` with half the animation duration to trigger damage/projectile spawn. *(Example: 1.5s attack animation → damage at 0.75s mark).*
+*   **Overkill Prevention (V1.x Polish):** V1 allows overkill (all targeting archers will shoot). V1.x can add target health checking before firing.
 *   **Projectiles:** Use the engine's `Pool` system. They have a fixed `speed` and, for V1, track the moving target perfectly (no missing). Damage is applied when the projectile intersects the target's `CircleCollider`.
-*   **Damage & Armor Formula:** Uses a simple minimum-clamped subtraction system: `Actual Damage = max(1, Base Damage - Target Armor)`.
-*   **Damage Types / Bonus Damage:** Certain units have hidden multipliers against specific armor classes (e.g., Infantry deal +2 bonus damage to Buildings).
+*   **Damage & Armor Formula (V1 Simplified):** Uses a simple minimum-clamped subtraction system: `Actual Damage = max(1, Base Damage - Target Armor + Bonus Damage)`.
+*   **Bonus Damage (V1):** Applied via lookup: `unit.bonusDamage[targetArmorType] || 0`. Example: Infantry have `bonusDamage = { building: 2 }`, so they deal `baseDamage + 2` vs structures.
 
 ### 3.4 Fog of War (Grid-Based Visibility)
 The fog of war operates on a data model utilizing the map grid, demonstrating an efficient grid-based visibility system in `spark.js`. Each cell tracks its visibility state per player:
@@ -212,6 +267,11 @@ Proper grid management is essential for pathfinding and base building.
 *   **Resource Payment:** The full construction cost is deducted from the player's bank the exact moment placement is confirmed.
 *   **Concurrent Orders:** The player (or AI) can place multiple building foundations simultaneously as long as they have the upfront resources.
 *   **Incomplete Structures & Health:** A newly placed building foundation starts at 1 HP. As Villagers work on it, its health increases proportionally with its construction progress until it reaches 100%.
+*   **Multi-Villager Construction (V1):** Multiple Villagers can build the same foundation. Construction speed formula: `progressPerSecond = baseRate * numActiveBuilders`. *(Example: 1 Villager = 30s, 3 Villagers = 10s).* V1 uses linear stacking with no diminishing returns.
+*   **Construction & Repair Mechanics (V1):**
+    *   **Build:** Costs nothing beyond initial placement. Increases both construction progress and current HP simultaneously.
+    *   **Repair:** Costs 50% of original resources proportional to missing HP. Only available on completed buildings. Uses same rate as construction.
+    *   **Visual Feedback:** V1 uses a simple progress bar above the building. *(V1.x: Add scaffolding sprites or particle effects).*
 *   **Attacking Foundations:** Enemies can target and attack unfinished buildings. If the foundation's health drops to 0, it is destroyed, the grid footprint is freed, and the initial cost is **lost entirely** (no refund). This ensures that defending construction sites is economically important.
 *   **Cancellation:** The player can manually select an incomplete building and issue a "Cancel" command. The foundation is instantly destroyed, the grid freed, and the cost fully refunded.
 *   **Damaged Construction:** If a foundation takes damage while being constructed, Villagers will continue their "Build" command until the construction progress reaches 100%. The building will finish incomplete in health (Max Health minus the damage taken) and will require a separate "Repair" command (costing additional resources) to restore to full HP.
@@ -221,7 +281,35 @@ Proper grid management is essential for pathfinding and base building.
 ### 3.8 AI Opponent (Macro-AI)
 To demonstrate that the engine supports fully autonomous players, the computer opponent will utilize a simplified macro-AI state machine. It does not cheat; it interacts with the game by issuing the exact same `Command` objects to its units as a human player would.
 *   **Strict Architectural Separation:** The AI acts purely as an input controller (`Decision making -> Commands -> Normal game systems`). It evaluates the game state to generate commands, but is strictly forbidden from directly manipulating resources, altering entity properties, or bypassing standard game mechanics. This perfectly demonstrates the game architecture's separation of decision-making from execution.
-*   **Macro-AI Loop:** Every few seconds, the AI evaluates its state and issues commands: *Gather* (assign idle villagers), *Build* (place structures if resources allow), *Produce* (queue units), *Research* (queue upgrades), and *Attack*.
+*   **Macro-AI Loop:** Every 3 seconds, the AI evaluates its state and issues commands: *Gather* (assign idle villagers), *Build* (place structures if resources allow), *Produce* (queue units), *Research* (queue upgrades), and *Attack*.
+
+**V1 AI Rules (Simple but Functional):**
+
+*   **Villager Management:**
+    *   Target distribution: 40% Wood, 40% Food, 10% Gold, 10% Stone.
+    *   Assign idle Villagers to nearest underworked resource type.
+    *   Continuously train Villagers until population 30 or military phase begins.
+    
+*   **Building Placement (V1 Simple):**
+    *   Houses: Place adjacent to Town Center in a spiral pattern when population is within 3 of cap.
+    *   Resource Camps: Place at the closest valid cell next to the largest resource cluster.
+    *   Military Buildings: Place in a designated "production zone" near the Town Center (first valid 5x5 grid area).
+    *   No defensive positioning or wall construction in V1.
+    
+*   **Progression Triggers:**
+    1.  **Economy Phase** (0-5 min): Villager count < 20 → Train Villagers, build Houses.
+    2.  **Age 2 Trigger** (5-8 min): Food ≥ 500 → Research Age 2, build Barracks.
+    3.  **Military Phase** (8-12 min): Age 2 complete → Build Archery Range, train Infantry (60%) + Archers (40%) continuously.
+    4.  **Age 3 Trigger** (10-12 min): Food ≥ 800 AND Gold ≥ 200 → Research Age 3.
+    5.  **Attack Phase** (12+ min): Military unit count ≥ 15 → Issue `AttackMoveCommand` to player's last known Town Center location.
+    
+*   **Combat Behavior (V1):**
+    *   No micro-management (units use default aggro/attack logic).
+    *   If entire army is wiped: Return to Military Phase, rebuild to 10 units, attack again.
+    *   No retreating or tactical positioning.
+    
+*   **Scouting (V1.x):** V1 skips dedicated scouts. AI discovers resources naturally via Villager movement. *(V1.x: Send one Villager to explore at game start).*
+
 *   **Progression Flow:**
     1.  **Early Game:** Focus heavily on Food/Wood. Continuous Villager production. Build Houses to avoid population caps.
     2.  **Economy:** Construct Resource Camps. Reach a target Villager threshold.
@@ -327,6 +415,37 @@ A generic command model separates player input from unit execution. The `Selecti
     *   A central publisher/subscriber system to fully decouple game logic from presentation layers and secondary systems.
     *   Instead of hardcoding calls to the audio or particle managers, entities emit events (e.g., `unitDeath`, `buildingCompleted`).
     *   Systems like `AudioPlayer`, `HUD`, `ParticleManager`, and `Macro-AI` subscribe to these events and react independently.
+
+**GameEventBus V1 Implementation:**
+```javascript
+// Event catalog (V1 Core events)
+GameEventBus.Events = {
+    UNIT_CREATED: 'unit_created',       // { entity, playerId }
+    UNIT_DIED: 'unit_died',             // { entity, killerId, position }
+    BUILDING_PLACED: 'building_placed', // { building, playerId }
+    BUILDING_COMPLETED: 'building_completed', // { building, playerId }
+    BUILDING_DESTROYED: 'building_destroyed', // { building, position }
+    RESOURCE_DEPOSITED: 'resource_deposited', // { type, amount, villager }
+    TECH_RESEARCHED: 'tech_researched', // { upgradeId, playerId }
+    AGE_ADVANCED: 'age_advanced',       // { newAge, playerId }
+    MATCH_ENDED: 'match_ended',         // { winnerId, reason }
+    UNIT_SELECTED: 'unit_selected'      // { entities[] }
+};
+
+// Usage example:
+// In Unit.OnDestroy():
+GameEventBus.Emit('unit_died', { entity: this, killerId: attacker?.ownerId, position: this.position });
+
+// In AudioPlayer setup (V1.x):
+GameEventBus.Subscribe('unit_died', (data) => {
+    audioPlayer.PlayAudio(data.entity.deathSound, { pan: CalculatePan(data.position) });
+});
+
+// Subscription cleanup for restart:
+GameEventBus.transientSubscriptions = []; // Cleared on RestartMatch()
+GameEventBus.persistentSubscriptions = []; // UI/Audio systems, survive restarts
+```
+
 *   `SelectionManager`
     *   Reads `Input.mouse` to create a selection box (tracking mouse down to mouse up).
     *   Filters `gameObjects` to strictly select friendly `Unit`s inside the box (ignoring buildings and enemies). Handles the `Shift` modifier for additive selection and clears selection if empty terrain is clicked.
@@ -388,12 +507,25 @@ Since this project serves as a premier showcase for the `spark.js` engine, it mu
 *   **Selection Indicators:** Using basic shape primitives (`DrawStrokeCircle` or `DrawStrokeRectangle`) rendered under units to indicate selection status cleanly.
 *   **Health Bars:** Drawing dynamic, layered UI elements in world-space using `DrawFillBasicRectangle` directly attached to entities.
 *   **Projectiles:** Rendering fast-moving, rotated sprites (e.g., arrows) managed by the engine's `Pool` system.
-*   **Particles:** Integrating the `ParticleSystem` for visual flair (e.g., dust when buildings collapse, blood/sparks in combat, smoke from damaged structures).
+*   **Particles (V1.x):** Integrating the `ParticleSystem` for visual flair (e.g., dust when buildings collapse, blood/sparks in combat, smoke from damaged structures).
 *   **Fog Overlay:** A custom world-space overlay or tile-shading system to obscure unexplored/unseen areas, demonstrating grid-based rendering logic.
 *   **UI Overlay:** Seamless HTML/CSS integration via `HTMLMenu` layered perfectly over the canvas for menus, HUD, and production queues.
-*   **Minimap:** A secondary rendering mechanism (or UI abstraction) showcasing the ability to draw a scaled-down representation of the world state and camera viewport.
+*   **Minimap (V1.x):** A secondary rendering mechanism (or UI abstraction) showcasing the ability to draw a scaled-down representation of the world state and camera viewport.
 
-### 4.9 Audio System Integration
+**V1.x Particle Effects Table:**
+| Event | Particle Effect | Implementation |
+|-------|----------------|----------------|
+| Unit Death (melee) | Blood splatter | 5-8 red particles, gravity, fade |
+| Unit Death (ranged) | Generic collapse | 3-5 dust puffs |
+| Building Destroyed | Debris burst | 10-15 rock particles, radial explosion |
+| Building Completed | Dust poof | Single expanding cloud |
+| Tree Depleted | Wood chips | 5-8 brown particles, short arc |
+| Projectile Impact | Spark/dust | 3-4 yellow/gray particles |
+| Age Advance | Glow aura | Expanding ring from Town Center |
+
+*V1 Core: No particles (focus on gameplay). V1.x: Add after Phase 6 completion.*
+
+### 4.9 Audio System Integration (V1.x Polish)
 The game will utilize the engine's `AudioPlayer` to provide feedback and atmosphere. Rather than being hardcoded into gameplay logic, the audio system will subscribe to the `GameEventBus` to trigger sound effects, demonstrating a clean and decoupled architecture.
 
 **Key Audio Events:**
@@ -410,6 +542,28 @@ The game will utilize the engine's `AudioPlayer` to provide feedback and atmosph
 *   **Looping & Music:** Using `PlayLoop` for continuous background music.
 *   **One-Shot SFX:** Using `PlayFromTheStart` for combat and UI interactions to ensure crisp, overlapping triggers without sudden cutoff.
 
+**V1.x Audio Asset List (Simplified Showcase):**
+| Category | Asset | Quantity | Notes |
+|----------|-------|----------|-------|
+| **Villager** | Selection barks | 3 variations | "Yes?", "Ready", "Awaiting orders" |
+| | Task acknowledgement | 3 variations | "Right away", "I'll get to work" |
+| | Death sound | 1 | Generic grunt |
+| **Infantry** | Selection | 2 variations | Armor clank |
+| | Move command | 2 variations | "On my way" |
+| | Attack | 2 variations | Sword swing/clash |
+| | Death | 1 | Scream |
+| **Archer** | Selection | 2 variations | Bow creak |
+| | Attack | 2 variations | Arrow loose + whistle |
+| | Death | 1 | Scream |
+| **Buildings** | Completed | 1 | Bell toll |
+| | Destroyed | 1 | Collapse crash |
+| **UI/Progression** | Age advance | 1 | Triumphant horn fanfare |
+| | Victory | 1 | Epic choir sting |
+| | Defeat | 1 | Somber low brass |
+| **Ambient** | Background music | 1 loop | Medieval atmospheric (3-5 min loop) |
+
+*V1 Core: No audio. V1.x: Add audio after gameplay is stable.*
+
 ---
 
 ## 5. Testing & Debugging Tools
@@ -425,50 +579,86 @@ When the engine's global `debugMode` flag is active, the `RTSGame` will render t
 *   **AI State:** Display the current Macro-AI state and strategic objectives (e.g., `[AI: ECONOMY | Goal: AGE_UP]`) on the HUD or floating above the enemy Town Center.
 *   **Performance Monitoring:** Ensure the engine's built-in `drawStats` (FPS and frame-time overlay) remains visible to monitor performance during heavy unit counts.
 
+**V1 Performance Targets (Showcase Quality, Not AAA):**
+| Metric | Target | Acceptable | Action if Below Acceptable |
+|--------|--------|------------|---------------------------|
+| **FPS** | 60 | 45 | Profile and optimize hottest code path |
+| **50 Units Moving** | 60 FPS | 50 FPS | Enable pathfinding cache |
+| **100 Total Entities** | 60 FPS | 45 FPS | Add spatial partitioning for queries |
+| **A* Calculation (128x128)** | <5ms | <10ms | Switch to hierarchical A* or flow fields |
+| **Fog of War Update** | <2ms | <5ms | Update every other frame instead |
+| **Memory Growth** | 0 MB/min | <5 MB/min | Fix entity pooling or event leaks |
+| **Restart Test** | 5 clean restarts | 3 restarts | Check timer cleanup and event unsub |
+
+*Philosophy: If performance is acceptable, ship it. Don't over-optimize before proving there's a problem.*
+
 ---
 
-## 6. Development Roadmap
+## 6. Development Roadmap (Iterative Delivery)
 
-**Phase 1: Playable Movement Sandbox**
+**Guiding Principle:** Each phase must produce a **playable, git-committable build**. No placeholder systems.
+
+**Phase 1: Playable Movement Sandbox** *(~2-3 days)*
+*   **Goal:** Prove pathfinding and camera work.
 *   Map renders (using `TiledLoader` and `Tileset`).
-*   Camera works (panning and zooming).
-*   One unit can be selected (click and drag box).
+*   Camera works (edge-panning, arrow keys, zoom).
+*   One unit type (Villager sprite) can be selected (click and drag box).
 *   Unit can move (A* pathfinding and right-click).
+*   **Success Criteria:** Can select 10 units, right-click across map, units navigate around static obstacles. FPS ≥ 60.
 
-**Phase 2: Economy Sandbox**
-*   Resource nodes spawn (Trees, Gold, etc.).
-*   Villager unit implemented.
-*   Gathering and drop-off mechanics working.
-*   Basic HTML HUD with live resource counters.
+**Phase 2: Economy Sandbox** *(~3-4 days)*
+*   **Goal:** Full resource gathering loop functional.
+*   Resource nodes spawn (Trees, Food Bushes, Gold Mines).
+*   Villager `Gathering` state implemented (move to node, extract, auto-return to Town Center).
+*   Town Center building (static sprite, drop-off point).
+*   Basic HTML HUD with live resource counters (Food, Wood, Gold, Stone).
+*   **Success Criteria:** Can assign 6 Villagers to different resources, watch economy grow, resources increment correctly.
 
-**Phase 3: Base Construction**
-*   Building placement preview and grid reservation.
-*   Villager construction state (build/repair).
-*   Town Center and Houses implemented.
-*   Population cap logic working.
-*   Production queues (training new Villagers).
+**Phase 3: Base Construction** *(~4-5 days)*
+*   **Goal:** Build and train new units.
+*   Building placement preview (green/red grid overlay) and grid reservation.
+*   Villager `Building` state (move to foundation, apply construction progress).
+*   Houses implemented (increases pop cap).
+*   Town Center trains Villagers (production queue UI).
+*   Population cap logic working (can't train beyond cap).
+*   **Success Criteria:** Can place House foundation, Villagers auto-build it, train new Villagers from Town Center, population system enforced.
 
-**Phase 4: First Combat Loop**
-*   Military buildings (Barracks/Archery Range).
-*   Melee and ranged combat units (Infantry, Archers).
-*   Attack state, damage calculations, and health bars.
-*   Unit death and corpse removal.
-*   Victory/Defeat condition (Destroying the enemy Town Center ends the match).
+**Phase 4: First Combat Loop** *(~5-6 days)*
+*   **Goal:** Military units kill each other and buildings.
+*   Barracks building (trains Infantry).
+*   Infantry unit (melee, `Attacking` state, deals damage).
+*   Attack command (right-click enemy), aggro logic, health bars.
+*   Unit death and removal.
+*   Victory/Defeat condition (Destroying the enemy Town Center triggers end-game overlay).
+*   **Success Criteria:** Can build Barracks, train Infantry, attack enemy Town Center (placed manually for testing), destroy it, see Victory screen.
 
-**Phase 5: AI Opponent**
-*   Macro-AI state machine implemented.
-*   Enemy faction can autonomously gather, build, train, and attack.
+**Phase 5: AI Opponent** *(~6-7 days)*
+*   **Goal:** Full autonomous enemy that plays the game.
+*   Macro-AI state machine implemented (uses Section 3.8 rules).
+*   Enemy faction spawns with own Town Center + starting Villagers.
+*   AI autonomously gathers, builds Houses/Barracks, trains units.
+*   AI attacks player when threshold reached.
+*   **Success Criteria:** Can start match, do nothing, watch AI build economy and eventually attack. AI can be defeated. Restart button works cleanly (no memory leaks).
 
-**Phase 6: Complete Vertical Slice**
-*   A full match is playable from start to finish.
-*   Flow: Start -> Gather -> Build -> Age Up -> Train Army -> Fight AI -> Destroy Town Center -> Victory/Defeat -> Restart.
-*   Even with only one map, one faction, and a minimal tech tree, the core RTS loop is fully validated.
+**Phase 6: Complete Vertical Slice (V1 Core Done)** *(~3-4 days)*
+*   **Goal:** Polished, balanced, winnable/loseable match.
+*   Age 2 & Age 3 advancement working (Archery Range, Archers).
+*   Fog of War grid logic (unexplored/explored/visible).
+*   Balance pass: resource quantities, unit costs, AI timings.
+*   Bug fixes and edge case handling.
+*   **Success Criteria:** Full match playable from start to finish. Flow: Start -> Gather -> Build -> Age Up -> Train Army -> Fight AI -> Destroy Town Center -> Victory/Defeat -> Restart works perfectly. Match duration 12-20 minutes.
 
-**Phase 7: Showcase & Polish (V1.x)**
-*   Fog of War grid logic.
-*   Particle systems (dust, sparks, blood).
-*   Audio integration (spatial panning, looping BGM).
-*   Minimap implementation.
+**Phase 7: Showcase & Polish (V1.x Extensions)** *(~4-5 days)*
+*   **Goal:** Demonstrate advanced engine features.
+*   Particle systems (building destruction, combat effects, age-up aura).
+*   Audio integration (unit barks, combat sounds, BGM loop, spatial panning).
+*   Minimap implementation (scaled-down map view, clickable, FoW overlay).
+*   Debug visualizations polished (grid overlay, pathfinding display).
+*   **Success Criteria:** Game feels polished. Every major engine feature is demonstrated visibly/audibly.
+
+**Total Estimated Timeline:** ~4-5 weeks of focused development.
+
+**Iteration Safety Net:** If any phase takes >2x estimated time, cut scope from that phase and move complexity to V1.x or V2.
 
 ---
 
@@ -485,7 +675,16 @@ const UnitData = {
         health: 25,
         visionRadius: 160, // 5 cells
         speed: 60,         // pixels per second
-        combat: { damage: 1, range: 10, aggroRange: 0, attackRate: 2.0, type: "melee" }
+        combat: { 
+            damage: 1, 
+            range: 10,        // Effectively melee (must be adjacent)
+            aggroRange: 0,    // Villagers don't auto-aggro
+            attackRate: 2.0,  // 2 seconds between attacks
+            type: "melee",
+            armor: 0,
+            armorType: "light",
+            bonusDamage: {}   // No combat bonuses
+        }
     },
     "human_infantry": {
         name: "Infantry",
@@ -494,7 +693,16 @@ const UnitData = {
         health: 40,
         visionRadius: 160,
         speed: 64,
-        combat: { damage: 4, range: 10, aggroRange: 160, attackRate: 1.5, type: "melee" }
+        combat: { 
+            damage: 4, 
+            range: 10,        // Melee range
+            aggroRange: 160,  // 5 cells auto-aggro
+            attackRate: 1.5,  // Fast attack speed
+            type: "melee",
+            armor: 1,         // Light armor
+            armorType: "infantry",
+            bonusDamage: { building: 2 }  // +2 vs structures
+        }
     },
     "human_archer": {
         name: "Archer",
@@ -503,9 +711,21 @@ const UnitData = {
         health: 30,
         visionRadius: 224, // 7 cells
         speed: 64,
-        combat: { damage: 3, range: 160, aggroRange: 192, attackRate: 2.0, type: "ranged" }
+        combat: { 
+            damage: 3, 
+            range: 160, 
+            aggroRange: 192, 
+            attackRate: 2.0, 
+            type: "ranged",
+            armor: 0,
+            armorType: "light",
+            bonusDamage: {} // No bonuses for archers in V1
+        }
     }
 };
+
+// V1 Note: All units use simplified armor (0 for light units, structures have armor values).
+// Bonus damage system: Infantry get { building: 2 }, meaning +2 damage vs structures.
 ```
 
 ### 7.2 BuildingStats Example
@@ -550,12 +770,29 @@ const BuildingData = {
 ### 7.3 Age Progression Example
 ```javascript
 const AgeData = {
+    "age_1": {
+        ageLevel: 1,
+        name: "Age 1: Dark Age",
+        cost: { food: 0, wood: 0, gold: 0, stone: 0 },
+        requiredBuildings: [],
+        unlocks: ["human_villager", "human_house", "human_lumber_camp", "human_mining_camp"]
+    },
     "age_2": {
         ageLevel: 2,
         name: "Age 2: Feudal Era",
         cost: { food: 500, wood: 0, gold: 0, stone: 0 },
+        researchTime: 60, // seconds
         requiredBuildings: [], // V1 simplifies requirements
-        unlocks: ["human_archer", "human_archery_range", "infantry_weapons_1"]
-    }
+        unlocks: ["human_barracks", "human_infantry"]
+    },
+    "age_3": {
+        ageLevel: 3,
+        name: "Age 3: Castle Era",
+        cost: { food: 800, wood: 0, gold: 200, stone: 0 },
+        researchTime: 90,
+        requiredBuildings: ["human_barracks"], // Must have at least one Barracks
+        unlocks: ["human_archery_range", "human_archer", "infantry_weapons_1"]
+    },
+    // Age 4 reserved for V2 expansion
 };
 ```

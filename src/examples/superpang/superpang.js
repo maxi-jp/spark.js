@@ -179,8 +179,7 @@ class SuperPang extends Game {
 
     _spawnBall(position, sizeIndex, dirX) {
         const ball = new PangBall(position, this.graphicAssets.balloons.img, sizeIndex, dirX);
-        ball.Start();
-        this.gameObjects.push(ball);
+        this.AddGameObject(ball);
         this.balls.push(ball);
     }
 
@@ -202,8 +201,8 @@ class SuperPang extends Game {
             this.screenHalfWidth - 14,
             this.floorLine - 24
         ), this.graphicAssets.player.img);
-        this.player.Start();
-        this.gameObjects.push(this.player);
+
+        this.AddGameObject(this.player);
 
         // Reset timer and state
         this.timer = LEVELS[this.level].time;
@@ -386,8 +385,7 @@ class SuperPang extends Game {
 
     PlayerShot() {
         this.shot = new PangShot(this.player.x);
-        this.shot.Start();
-        this.gameObjects.push(this.shot);
+        this.AddGameObject(this.shot);
     }
 
     _drawOverlay(title, subtitle, bgColor) {

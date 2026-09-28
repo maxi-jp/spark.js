@@ -43,6 +43,10 @@ Include the engine scripts in your `index.html`. The order of script inclusion i
     <script src="engine/audioplayer.js"></script>
     <!-- optional: particle system -->
     <script src="engine/particlesystem.js"></script>
+    <!-- optional: Tiled exported maps -->
+    <script src="engine/tiled_loader.js"></script>
+    <!-- optional: game-AI tools like A* pathfinding -->
+    <script src="engine/engine/ai.js"></script>
     <!-- optional: HTML menus and virtual controls -->
     <script src="engine/htmlmenu.js"></script>
     <script src="engine/virtualcontrols.js"></script>
@@ -136,7 +140,7 @@ window.onload = () => {
 
 ## 5. Create GameObjects
 
-GameObjects are the building blocks of your game — players, enemies, bullets, walls, pickups, etc. Every entity you want to update or draw should be a class that extends `GameObject` (or one of its built-in subclasses) and gets added to `this.gameObjects`.
+GameObjects are the building blocks of your game — players, enemies, bullets, walls, pickups, etc. Every entity you want to update or draw should be a class that extends `GameObject` (or one of its built-in subclasses) and gets added to the game using `game.AddGameObject()`.
 
 ### Built-in subclasses
 
@@ -174,8 +178,8 @@ Add it to your game in `Start()`:
 Start() {
     super.Start();
 
-    // create a new RotatingBox Game Object and add it to the gameObjects array
-    this.gameObjects.push(new RotatingBox(new Vector2(320, 240)));
+    // create a new RotatingBox and add it to the game
+    this.box = this.AddGameObject(new RotatingBox(new Vector2(320, 240)));
 }
 ```
 
@@ -243,9 +247,8 @@ Pass the loaded image when you create the object:
 Start() {
     super.Start();
     // this.graphicAssets.enemy.img must be loaded before Start is called
-    // (normally this is done in the constructor of the Game class)
-    // Create a new Enemy Game Object and add it to the gameObjects array
-    this.gameObjects.push(new Enemy(new Vector2(320, -50), this.graphicAssets.enemy.img));
+    // (normally this is declared in the constructor of the Game class)
+    this.enemy = this.AddGameObject(new Enemy(new Vector2(320, -50), this.graphicAssets.enemy.img));
 }
 ```
 
@@ -362,7 +365,7 @@ Key points:
 
 ### Important tips
 
-- Add objects to `this.gameObjects` in `Start()` — the base `Game.Update` and `Game.Draw` will call `Update`/`Draw` on every active entry automatically.
+- Use `game.AddGameObject(gameObject)` to add objects — it automatically calls `Start()` and adds them to the update/draw loop. The base `Game.Update` and `Game.Draw` will call `Update`/`Draw` on every active entry.
 - Set `this.active = false` on an object to stop it being updated and drawn (useful for pooling or death states). This also automatically disables the object's collider if one is attached.
 - Override `OnCollisionEnter(myCollider, otherCollider)` on a `GameObject` to react to collider intersections (see [Utilities](utilities.md) for the collider API).
 - Use `collider.enabled = false` to temporarily disable collision detection without deactivating the entire GameObject (useful for invincibility frames, phasing, etc.).

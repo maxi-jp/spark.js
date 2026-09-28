@@ -26,6 +26,107 @@ declare var debugMode: boolean;
 /** Bootstraps the engine and starts the game. Call inside `window.onload`. */
 declare function Init(gameClass: new (renderer: Renderer) => Game): void;
 
+// ── Core value types (utils_math.js) ───────────────────────────────────────────
+
+/**
+ * 2D vector. x and y are mutable directly; mutating methods return `this` for chaining.
+ * @example
+ * const dir = Vector2.Copy(target.position);
+ * dir.Sub(this.position);
+ * dir.Normalize();
+ * this.position.x += dir.x * speed * dt;
+ */
+declare class Vector2 {
+    x: number;
+    y: number;
+    constructor(x: number, y: number);
+
+    // Static factories
+    static Zero(): Vector2;
+    static Copy(v: Vector2): Vector2;
+    static Random(): Vector2;
+
+    // Static math
+    /** Euclidean distance between two points (accepts any {x,y} object). */
+    static Magnitude(v1: {x:number, y:number}, v2: {x:number, y:number}): number;
+    /** Squared distance — faster than Magnitude when only comparing distances. */
+    static SqrMagnitude(v1: {x:number, y:number}, v2: {x:number, y:number}): number;
+    static Lerp(v1: Vector2, v2: Vector2, t: number): Vector2;
+
+    // Instance methods (mutate in-place, return this for chaining where noted)
+    Set(x: number, y: number): void;
+    Length(): number;
+    SqrLength(): number;
+    IsZero(): boolean;
+    /** Normalizes to unit length in-place. Returns this. */
+    Normalize(): this;
+    /** Adds other in-place. */
+    Add(other: Vector2): void;
+    /** Subtracts other in-place. */
+    Sub(other: Vector2): void;
+    /** Multiplies both components by scalar in-place. Returns this. */
+    MultiplyScalar(scalar: number): this;
+    DotProduct(other: Vector2): number;
+    /** Angle of this vector in radians from the positive X axis. */
+    Angle(): number;
+    Interpolate(other: Vector2, t: number): void;
+    Randomize(): void;
+    RandomNormalized(): void;
+}
+
+/**
+ * RGBA colour with components in the 0–1 range.
+ * Use Color.FromRGB() for 0–255 inputs.
+ * @example
+ * new Color(1, 0, 0)          // red
+ * Color.FromRGB(255, 128, 0)  // orange
+ * Color.lime                  // static preset
+ */
+declare class Color {
+    r: number; g: number; b: number; a: number;
+    constructor(r: number, g: number, b: number, a?: number);
+    static FromRGB(r: number, g: number, b: number, a?: number): Color;
+    static Copy(c: Color): Color;
+
+    // Named presets
+    static black: Color;  static white: Color;  static red: Color;
+    static green: Color;  static lime: Color;   static blue: Color;
+    static cyan: Color;   static aqua: Color;   static yellow: Color;
+    static orange: Color; static pink: Color;   static purple: Color;
+    static grey: Color;   static transparent: Color;
+}
+
+/** Axis-aligned rectangle. Top-left origin. */
+declare class Rect {
+    x: number; y: number; w: number; h: number;
+    width: number; height: number;
+    halfWidth: number; halfHeight: number;
+    constructor(x: number, y: number, width: number, height: number);
+}
+
+// ── Free utility functions (utils_math.js) ─────────────────────────────────────
+
+/** Clamps value to [min, max]. */
+declare function Clamp(value: number, min: number, max: number): number;
+/** Linear interpolation between start and end. */
+declare function Lerp(start: number, end: number, t: number): number;
+/** Linearly interpolates an angle, always taking the shortest arc. */
+declare function LerpRotation(current: number, target: number, t: number): number;
+/** Steps current toward target by at most `speed` radians, shortest arc. */
+declare function SmoothRotation(current: number, target: number, speed: number): number;
+/** Normalizes an angle to (-π, π]. */
+declare function NormalizeAngle(angle: number): number;
+/** Random integer in [min, max] inclusive. */
+declare function RandomBetweenInt(min: number, max: number): number;
+/** Random float in [min, max). */
+declare function RandomBetweenFloat(min: number, max: number): number;
+/** Magnitude of a 2D vector given its components. */
+declare function Length(x: number, y: number): number;
+/** Squared magnitude (avoids sqrt — use for comparisons). */
+declare function SqrLength(dx: number, dy: number): number;
+/** Squared distance between two points (scalar inputs). */
+declare function DistanceSquaredPointToPoint(p1x: number, p1y: number, p2x: number, p2y: number): number;
+
 // ── Input namespace ──────────────────────────────────────────────────────────
 
 declare namespace Input {
@@ -259,4 +360,175 @@ declare class TiledLoader {
     
     // Create a GameObjectsBackgroundLayer from an object layer with parallax support.
     static CreateGameObjectsBackgroundLayer(tiledJSON: any, mapData: any, layerName: string, position?: Vector2, scale?: number): GameObjectsBackgroundLayer;
+}
+
+// ── AStarPathfinder (ai.js) ──────────────────────────────────────────────────
+
+/** Heuristic function signature: (col, row, endCol, endRow) → estimated cost. */
+type HeuristicFn = (col: number, row: number, ec: number, er: number) => number;
+
+/**
+ * Duck-typed grid interface required by AStarPathfinder.
+ * Any object implementing these members can be used as a pathfinding grid.
+ */
+interface PathfinderGrid {
+    width: number;
+    height: number;
+    IsWalkable(col: number, row: number): boolean;
+    IsInBounds(col: number, row: number): boolean;
+    WorldToGrid(pos: Vector2): { col: number; row: number };
+    GridToWorld(col: number, row: number): Vector2;
+}
+
+/**
+ * General-purpose A* pathfinder. Load `src/engine/ai.js` to use it.
+ *
+ * @example
+ * const pathfinder = new AStarPathfinder(gridMap);
+ * const waypoints  = pathfinder.FindPath(unit.position, targetPos); // Vector2[]
+ */
+declare class AStarPathfinder {
+    grid: PathfinderGrid;
+    allowDiagonals: boolean;
+    maxIterations: number;
+    smoothPath: boolean;
+    heuristic: HeuristicFn;
+
+    /**
+     * @param grid - Any object satisfying the PathfinderGrid interface.
+     * @param options.allowDiagonals - Enable 8-directional movement (default: true).
+     * @param options.maxIterations  - Safety cap to avoid runaway searches (default: 20000).
+     * @param options.smoothPath     - Apply line-of-sight waypoint reduction (default: true).
+     * @param options.heuristic      - Override the distance function. Auto-selects Octile (8-dir) or Manhattan (4-dir).
+     */
+    constructor(grid: PathfinderGrid, options?: {
+        allowDiagonals?: boolean;
+        maxIterations?: number;
+        smoothPath?: boolean;
+        heuristic?: HeuristicFn;
+    });
+
+    /** Find a world-space path. Returns [] if the start cell is fully isolated. */
+    FindPath(startWorld: Vector2, endWorld: Vector2): Vector2[];
+
+    /** Find a path in grid coordinates. Returns [] if unreachable. */
+    FindPathGrid(sc: number, sr: number, ec: number, er: number): { col: number; row: number }[];
+
+    /** Named heuristic presets. */
+    static Heuristic: {
+        /** Optimal for 4-directional grids. */
+        Manhattan: HeuristicFn;
+        /** Optimal for 8-directional grids with diagonal cost √2 (default). */
+        Octile: HeuristicFn;
+        /** Admissible for any movement cost model. */
+        Euclidean: HeuristicFn;
+    };
+}
+
+// ── FSM / HFSM (fsm.js) ──────────────────────────────────────────────────────
+
+/**
+ * Base class for all FSM states. Extend and override Enter(), Update(), Exit().
+ * Register declarative transition guards with AddTransition() — they are evaluated
+ * before Update() each frame (Millington & Funge "AI for Games" model).
+ *
+ * @example
+ * class ChaseState extends FSMState {
+ *   Enter(owner, prev)     { owner.speed = owner.chaseSpeed; }
+ *   Update(dt, owner, fsm) { if (!owner.target) fsm.Transition('idle'); }
+ *   Exit(owner, next)      { }
+ * }
+ */
+declare class FSMState {
+    /** @internal */
+    _transitions: Array<{ target: string; condition: (owner: any) => boolean }>;
+
+    /**
+     * Register a declarative transition guard.
+     * Checked each frame before Update(); first match fires the transition and skips Update().
+     * @param targetStateName  Name of the target state.
+     * @param condition        Returns true to trigger the transition.
+     */
+    AddTransition(targetStateName: string, condition: (owner: any) => boolean): this;
+
+    /** Called once when entering this state. */
+    Enter(owner: any, prevStateName: string | null): void;
+    /** Called every frame while this state is active. */
+    Update(dt: number, owner: any, fsm: FSM): void;
+    /** Called once when exiting this state. */
+    Exit(owner: any, nextStateName: string | null): void;
+}
+
+/**
+ * A Finite State Machine.
+ *
+ * @example
+ * this.fsm = new FSM(this, 'idle')
+ *   .AddState('idle',  new IdleState())
+ *   .AddState('chase', new ChaseState())
+ *   .Start();
+ *
+ * // In Update():  this.fsm.Update(dt);
+ * // In Draw():    this.fsm.DrawDebug(renderer, x, y - 20);
+ */
+declare class FSM {
+    /** Name of the currently active state. */
+    readonly currentStateName: string | null;
+    /** Name of the previously active state. */
+    readonly previousStateName: string | null;
+    /** The active FSMState object. */
+    readonly currentState: FSMState | null;
+
+    /**
+     * @param owner        Object passed as the first arg to all state callbacks.
+     * @param initialState Name of the state to enter when Start() is called.
+     */
+    constructor(owner: any, initialState: string);
+
+    /** Register a state. Returns this for chaining. */
+    AddState(name: string, state: FSMState): this;
+    /** Activate the FSM and enter the initial state. Returns this for chaining. */
+    Start(): this;
+    /** Deactivate the FSM, cleanly exiting the current state. */
+    Stop(): void;
+
+    /**
+     * Request a transition to another state.
+     * If called from within Update(), applied after Update() returns.
+     */
+    Transition(name: string): void;
+
+    /**
+     * Tick the FSM. Call from the owner's Update() every frame.
+     * Declarative guards are evaluated first; if one fires, Update() is skipped.
+     */
+    Update(dt: number): void;
+
+    /**
+     * Draw the current state name near a world-space position.
+     * Only renders when the global `debugMode` is true.
+     */
+    DrawDebug(renderer: Renderer, x: number, y: number, color?: Color): void;
+}
+
+/**
+ * A state that wraps a nested FSM, enabling Hierarchical FSMs (HFSM).
+ * Extend this and assign a configured FSM to `this.subFSM` in the constructor.
+ * The sub-FSM is started on Enter(), ticked on Update(), and stopped on Exit().
+ *
+ * @example
+ * class CombatState extends FSMCompositeState {
+ *   constructor(owner: any) {
+ *     super();
+ *     this.subFSM = new FSM(owner, 'approach')
+ *       .AddState('approach', new ApproachState())
+ *       .AddState('attack',   new AttackState());
+ *   }
+ *   Enter(owner, prev) { super.Enter(owner, prev); }
+ * }
+ */
+declare class FSMCompositeState extends FSMState {
+    /** The nested FSM. Assign in the subclass constructor. */
+    subFSM: FSM | null;
+    constructor();
 }

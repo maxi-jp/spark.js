@@ -156,7 +156,7 @@ class Watermelon extends Box2DGame {
             this.physicsWorld,
             this.physicsScale
         );
-        this.gameObjects.push(this.gameOverZone);
+        this.AddGameObject(this.gameOverZone);
 
         // Reset game state
         this.score = 0;
@@ -330,7 +330,7 @@ class Watermelon extends Box2DGame {
 
     SpawnFruit(step, position, rotation, impulse=0) {
         const newFruit = new Fruit(position, rotation, this.physicsWorld, this.graphicAssets.fruits.img, step);
-        this.gameObjects.push(newFruit);
+        this.AddGameObject(newFruit);
         newFruit.ApplyImpulse(impulse * RandomBetweenFloat(0, 0.2), 0);
     }
 
@@ -369,7 +369,7 @@ class Watermelon extends Box2DGame {
         this.nextFruitId = RandomBetweenInt(0, 4);
         this._lastTouchX = null; // each new fruit starts centred until the player touches
         this.currentFruit = new Fruit(new Vector2(this.screenHalfWidth, this.launchLineY), 0, this.physicsWorld, this.graphicAssets.fruits.img, fruitId, true);
-        this.gameObjects.push(this.currentFruit);
+        this.AddGameObject(this.currentFruit);
         this.ui.UpdateNextFruitPreview();
     }
 }

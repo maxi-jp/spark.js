@@ -105,7 +105,7 @@ class AngryBirdsClone extends Box2DGame {
 
     SpawnBird() {
         this.bird = new Bird(this.slingshotPos, this.physicsWorld);
-        this.gameObjects.push(this.bird);
+        this.AddGameObject(this.bird);
         this.state = BIRD_STATE.IDLE;
 
         this.settleTimer = 1.0;
@@ -118,13 +118,13 @@ class AngryBirdsClone extends Box2DGame {
         for (let b of levelData.blocks) {
             const block = new Block(new Vector2(b.x, b.y), b.w, b.h, this.physicsWorld);
             this.blocks.push(block);
-            this.gameObjects.push(block);
+            this.AddGameObject(block);
         }
 
         for (let p of levelData.pigs) {
             const pig = new Pig(new Vector2(p.x, p.y), this.physicsWorld);
             this.pigs.push(pig);
-            this.gameObjects.push(pig);
+            this.AddGameObject(pig);
         }
     }
 
@@ -331,7 +331,7 @@ class Pig extends Box2DGameObject {
             return;
         game.score += 5000;
 
-        game.gameObjects.push(new PuffExplosion(new Vector2(this.position.x, this.position.y), 5000));
+        game.AddGameObject(new PuffExplosion(new Vector2(this.position.x, this.position.y), 5000));
         game.Destroy(this);
     }
 
@@ -401,7 +401,7 @@ class Block extends Box2DRectangleGO {
             return;
         game.score += 500;
 
-        game.gameObjects.push(new PuffExplosion(new Vector2(this.position.x, this.position.y), 500));
+        game.AddGameObject(new PuffExplosion(new Vector2(this.position.x, this.position.y), 500));
         game.Destroy(this);
     }
 

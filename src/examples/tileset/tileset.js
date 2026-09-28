@@ -51,7 +51,7 @@ class TilesetGame extends Game {
 
         this.box = new RectangleGO(Vector2.Zero(), 16, 24);
         this.box.pivot.y = 12;
-        this.gameObjects.push(this.box);
+        this.AddGameObject(this.box);
 
         // Create the camera
         this.camera = new FollowCameraBasic(Vector2.Zero(), this.box, new Vector2(100, -40));
@@ -149,14 +149,14 @@ class TilesetGame extends Game {
         // Add all tilesets to game objects
         this.tilesets.forEach(tileset => {
             console.log(`Adding layer: ${tileset.layerName}`);
-            this.gameObjects.push(tileset);
+            this.AddGameObject(tileset);
         });
 
         // Extract the Object named "squirrel" and spawn a Squirrel
         const animData = TiledLoader.GetAnimationDataByName(this.tiledAssets.forestMap.data, mapData, "squirrel", new Vector2(0, 0), 2);
         if (animData) {
             this.squirrel = new Squirrel(2, animData);
-            this.gameObjects.push(this.squirrel);
+            this.AddGameObject(this.squirrel);
         }
         else {
             console.error("No squirrel object with valid animation data found in the Tiled project.");
@@ -208,7 +208,7 @@ class TilesetGame extends Game {
         // Add all tilesets to game objects
         this.tilesets.forEach(tileset => {
             console.log(`Adding layer: ${tileset.layerName}`);
-            this.gameObjects.push(tileset);
+            this.AddGameObject(tileset);
         });
 
         // The island map uses Tile Layers for the environment instead of parallax Object Layers

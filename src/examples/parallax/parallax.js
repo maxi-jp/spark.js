@@ -30,7 +30,7 @@ class Parallax extends Game {
         super.Start();
         this.box = new RectangleGO(new Vector2(this.screenHalfWidth, this.floorLevelY), 60, 100);
         this.box.pivot.y = 50;
-        this.gameObjects.push(this.box);
+        this.AddGameObject(this.box);
 
         // create the camera
         this.camera = new FollowCameraBasic(Vector2.Zero(), this.box, new Vector2(100, -146));

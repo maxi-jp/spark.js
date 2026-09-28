@@ -11,8 +11,7 @@ Documentation can be consulted [here](https://maxi-jp.github.io/spark.js/docs/).
 - **Modular Core**: A clean, object-oriented core that's easy to extend.
 - **Rendering Engine**: 2D rendering via HTML5 Canvas with an architecture that supports other renderers (like WebGL).
 - **Game Loop**: A classic, built-in main loop with fixed update and variable draw phases.
-- **Sprite & Animation**: Full support for static sprites, sprite sheets, and complex animations.
-- **Sprite & Animation Support**: Render static sprites, sprite sections, and both basic and complex sprite sheet animations.
+- **Sprite & Animation**: Full support static sprites, sprite sheets, and both basic and complex sprite sheet animations.
 - **Physics Integration**: Box2D physics support with easy-to-use Box2DGameObject classes for rectangles, sprites, and animated objects.
 - **Input Handling**: A powerful, abstract input system that maps actions (e.g., "Jump") and axes (e.g., "MoveHorizontal") to keyboard, mouse, gamepad, and **touch / virtual controls** (on-screen joysticks and buttons for mobile devices).
 - **Mobile Support**: Automatic touch input mirroring, viewport injection, and scroll-prevention — enabled with a single `mobileSupport` config flag (auto-detected on touch devices).
@@ -23,6 +22,8 @@ Documentation can be consulted [here](https://maxi-jp.github.io/spark.js/docs/).
 - **Object Pooling**: An efficient pooling system for reusing objects like bullets or particles to improve performance.
 - **Particle System**: A configurable particle emitter supporting point and area sources, with per-particle control over velocity, direction, opacity, scale, and rotation. Based on [HTML5_ParticleSystem](https://github.com/maxi-jp/HTML5_ParticleSystem).
 - **Tiled Map Editor Integration**: Load maps created in Tiled Map Editor via the `TiledLoader` utility. Export your maps to JSON with embedded tilesets and render them instantly with automatic coordinate calculation.
+- **A\* Pathfinding**: General-purpose `AStarPathfinder` in `ai.js`. Supports 4- and 8-directional movement, swappable heuristics (Manhattan, Octile, Euclidean), line-of-sight path smoothing, and graceful fallbacks for blocked targets. Works with any grid object implementing the duck-typed grid interface.
+- **FSM & HFSM**: Finite State Machine and Hierarchical FSM classes in `fsm.js` (`FSMState`, `FSM`, `FSMCompositeState`). Declarative transition guards (Millington & Funge model) and imperative transitions. Composite states nest a full sub-FSM inside a parent state for hierarchical behaviour. Built-in `DrawDebug` overlay.
 - **Utilities**: A collection of helpers for vector math, collision detection, color manipulation, and more.
 - **Debugging Tools**: Optional debug drawing for physics bodies and an FPS/stats overlay.
 - **Mode 7 Renderer**: Simulate SNES-style pseudo-3D backgrounds (as in F-Zero or Mario Kart).
@@ -43,6 +44,8 @@ Documentation can be consulted [here](https://maxi-jp.github.io/spark.js/docs/).
   - box2d_gameobjects.js  # Box2D-enabled game objects
   - box2d_helper.js       # Box2D utility functions
   - particlesystem.js     # Particle system (Particle, ParticleEmitter, ParticleSystem classes)
+  - ai.js                 # AI utilities: AStarPathfinder with swappable heuristics and path smoothing
+  - fsm.js                # FSM & HFSM: FSMState, FSM, FSMCompositeState
 - examples/
   - audio_test/           # Audio system testing and examples
   - box2d/                # Box2D physics examples
@@ -79,6 +82,9 @@ Documentation can be consulted [here](https://maxi-jp.github.io/spark.js/docs/).
   - performance_test.js   # Performance benchmarking
   - puzzlebobble.js       # Puzzle Bobble clone
   - render_test.js        # Renderer feature testing
+  - pathfinding/          # Interactive A* pathfinding demo (paint walls, switch heuristics live)
+  - fsm_basic/            # FSM demo: guard patrol (Patrol → Alert → Chase → Return)
+  - fsm_hfsm/             # HFSM demo: sentry AI with nested combat sub-FSM (interactive)
   - snake.js              # Snake game implementation
   - timer_test.js         # Timer system demo (Invoke, InvokeRepeating, auto-cleanup)
 
@@ -124,6 +130,10 @@ Documentation can be consulted [here](https://maxi-jp.github.io/spark.js/docs/).
     <script src="engine/particlesystem.js"></script>
     <!-- add this to use Tiled exported maps -->
     <script src="engine/tiled_loader.js"></script>
+    <!-- add this to use game-AI tools like A* pathfinding -->
+    <script src="engine/engine/ai.js"></script>
+    <!-- add this to use FSM -->
+    <script src="engine/engine/fsm.js"></script>
     <!-- add these only if you want to use box2d physics -->
     <script src="lib/Box2D.js"></script>
     <script src="engine/box2d_helper.js"></script>
@@ -377,7 +387,7 @@ class MyGame extends Game {
 MIT License
 
 ## TODO list
-- [x] ~~Example for a Tileset.~~ ✅DONE
+- [x] ~~Example for a Tileset.~~ ✅DONE (see the [tileset example project](https://maxi-jp.github.io/spark.js/tileset.html)).
 - [x] ~~Create an action system for the input (i.e. `Input.Action("move_left")` instead of `Input.IsKeyDown(KEY_LEFT) || Input.IsKeyDown(KEY_A) || Input.IsGamepadButtonDown(0, "DPAD_LEFT") || Input.IsGamepadButtonDown(0, "LS_LEFT")`).~~ ✅DONE
 - [x] Improve the webgl renderer (draw batching).❎half-DONE (only for tilesets for the moment).
 - [ ] Implement other physic engines.
@@ -386,6 +396,8 @@ MIT License
 - [x] ~~Think on a great name for the engine (like **`wat.js`** or something like that).~~ ✅DONE (engine renamed as "spark.js"!!! ✨)
 - [x] ~~Add mobile / touch-screen support with virtual on-screen controls.~~ ✅DONE
 - [ ] Implement a global Event/Signal system (EventBus) for decoupled cross-system communication.
+- [x] ~~Add more game-AI related tools and classes (like FSM, BTs and Fuzzy Logic).~~ ✅DONE (FSM & HFSM in `fsm.js`; BTs and Fuzzy Logic still pending)
+- [ ] Create a RTS game as a more comple example project. 🔜 working on it 👨🏻‍💻  
 
 ## Contributing
 

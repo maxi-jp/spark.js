@@ -52,11 +52,11 @@ class TTS extends Game {
         this.mouseCircle = new Circle(new Vector2(0, 0), 5, Color.red, 1);
 
         this.player = new PlayerShip(new Vector2(this.screenWidth / 2, this.screenHeight / 2), 0, 1, this.graphicAssets.ships.img, this.sceneLimits);
-        this.gameObjects.push(this.player);
 
         this.camera = new FollowCameraBasic(Vector2.Zero(), this.player);
         this.camera.Start();
-        this.player.Start();
+
+        this.AddGameObject(this.player);
 
         // initialize the starting enemies
         this.enemies = [];
@@ -154,7 +154,7 @@ class TTS extends Game {
 
     AddEnemy(enemy) {
         this.enemies.push(enemy);
-        this.gameObjects.push(enemy);
+        this.AddGameObject(enemy);
     }
 
     RemoveEnemy(enemy, index) {

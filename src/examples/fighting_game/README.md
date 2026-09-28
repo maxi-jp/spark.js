@@ -460,7 +460,7 @@ Start() {
     Color.red
   );
   this.rect.pivot.y = 40;
-  this.gameObjects.push(this.rect);
+  this.AddGameObject(this.rect);
   
   // Create FollowCamera that smoothly follows the rect
   this.camera = new FollowCamera(
@@ -763,12 +763,10 @@ Start() {
   
   // Create fighters
   this.player = new Fighter(new Vector2(50, 330), MACK_CONFIG);
-  this.gameObjects.push(this.player);
-  this.player.Start();
+  this.AddGameObject(this.player);
   
   this.enemy = new Fighter(new Vector2(900, 330), KENJI_CONFIG);
-  this.gameObjects.push(this.enemy);
-  this.enemy.Start();
+  this.AddGameObject(this.enemy);
   
   // Start match timer
   this.StartMatchTimer();

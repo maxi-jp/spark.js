@@ -243,7 +243,8 @@ class SimpleTetris extends Game {
             if (this.CheckPieceGridCollision(this.currentPiece)) {
                 // check for game over
                 this.Start();
-            } else {
+            }
+            else {
                 this.nextPiece = this.CreateRandomPiece();
             }
         }
@@ -306,7 +307,8 @@ class SimpleTetris extends Game {
         if (this.CheckPieceGridCollision(this.currentPiece)) {
             // check for game over
             this.Start();
-        } else {
+        }
+        else {
             this.nextPiece = this.CreateRandomPiece();
         }
             

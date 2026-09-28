@@ -162,10 +162,10 @@ class PacMon extends Game {
         // this.ghosts.push(this.inky);
         // this.ghosts.push(this.clyde);
         
-        this.gameObjects.push(this.blinky);
-        // this.gameObjects.push(this.pinky);
-        // this.gameObjects.push(this.inky);
-        // this.gameObjects.push(this.clyde);
+        this.AddGameObject(this.blinky);
+        // this.AddGameObject(this.pinky);
+        // this.AddGameObject(this.inky);
+        // this.AddGameObject(this.clyde);
         
         this.score = 0;
         this.scoreTextLabel = new TextLabel("SCORE: " + this.playerScore, new Vector2(10, 20), "16px Courier New", Color.white, "left", "top"
@@ -177,8 +177,7 @@ class PacMon extends Game {
             0, 1, new Rect(470, 0, 16, 16) // Pac-Man icon (mouth half-open, facing right)
         );
         
-        this.gameObjects.push(this.pacman);
-        this.pacman.Start();
+        this.AddGameObject(this.pacman);
     }
     
     BuildGraph() {
@@ -201,12 +200,12 @@ class PacMon extends Game {
                     // create pills and power pellets
                     if (mazeLayout[y][x] == 2) {
                         const pill = new Pill(node, new Vector2(x * pixelsPerTile + 4 + this.mazePosition.x, y * pixelsPerTile + 4 + this.mazePosition.y), this.graphicAssets.spritesheet.img);
-                        this.gameObjects.push(pill);
+                        this.AddGameObject(pill);
                         this.pills.push(pill);
                     }
                     else if (mazeLayout[y][x] == 3) {
                         const powerPellet = new PowerPellet(node, new Vector2(x * pixelsPerTile + 4 + this.mazePosition.x, y * pixelsPerTile + 4 + this.mazePosition.y), this.graphicAssets.spritesheet.img);
-                        this.gameObjects.push(powerPellet);
+                        this.AddGameObject(powerPellet);
                         this.powerPellets.push(powerPellet);
                     }
 

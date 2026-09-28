@@ -35,7 +35,13 @@ function Length(x, y) {
     return Math.sqrt(x2 + y2);
 }
 
-function SqrLength(v) {
+function SqrLength(dx, dy) {
+    const x2 = dx * dx;
+    const y2 = dy * dy;
+    return x2 + y2;
+}
+
+function SqrLengthVector(v) {
     const x2 = v.x * v.x;
     const y2 = v.y * v.y;
     return x2 + y2;
@@ -234,6 +240,17 @@ function NormalizeAngle(angle) {
         angle += PI2;
     }
     return angle;
+}
+
+/**
+ * Clamps a value to a range [min, max].
+ * @param {number} value - The value to clamp.
+ * @param {number} min - The minimum bound.
+ * @param {number} max - The maximum bound.
+ * @returns {number} The clamped value.
+ */
+function Clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
 }
 
 /**

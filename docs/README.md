@@ -60,6 +60,10 @@ A configurable, image-based particle emitter that supports both **point** and **
 
 Load maps directly from **Tiled Map Editor** using the `TiledLoader` utility. Define tile layers visually in Tiled, export to JSON with embedded tilesets, and instantly render them in your game. The loader handles grid-based and Collection of Images tilesets automatically. See the [Tileset example](../tileset.html) and [Tiled integration guide](./tiled-integration.md) for details.
 
+### A* Pathfinding
+
+General-purpose grid pathfinding via `AStarPathfinder` (`ai.js`). Supports 4- and 8-directional movement, three built-in heuristics (Manhattan, Octile, Euclidean) with automatic selection, line-of-sight path smoothing, and graceful fallbacks for blocked or unreachable targets. Works with any grid object that implements the duck-typed grid interface — no coupling to a specific map format. See the [interactive demo](../pathfinding.html) and [AI utilities reference](./ai.md) for details.
+
 ### Utilities
 
 A collection of helper functions and classes for common tasks: vector math, collision detection, color manipulation, and more.

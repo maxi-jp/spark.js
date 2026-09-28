@@ -56,7 +56,7 @@ class CollidersTest extends Game {
         const rectGO1Collider = new RectangleCollider(Vector2.Zero(), this.rectGO1.rectangle.width, this.rectGO1.rectangle.height, this.rectGO1);
         this.rectGO1.collider = rectGO1Collider;
         this.AddCollider(rectGO1Collider);
-        this.gameObjects.push(this.rectGO1);
+        this.AddGameObject(this.rectGO1);
 
         this.rupee = new SpriteObject(new Vector2(500, 300), 0, 0.5, this.graphicAssets.rupee.img);
         const rupeeCollider = new PolygonCollider(Vector2.Zero(), 0, [
@@ -69,7 +69,7 @@ class CollidersTest extends Game {
         ], this.rupee);
         this.rupee.collider = rupeeCollider;
         this.AddCollider(rupeeCollider);
-        this.gameObjects.push(this.rupee);
+        this.AddGameObject(this.rupee);
 
         this.movingObjects = [
             { name: "box collider", object: this.box },

@@ -75,18 +75,27 @@ class TiledLoader {
                 continue;
             }
             
-            // Try to find the matching image in graphicAssets
-            for (const assetKey in graphicAssets) {
-                const asset = graphicAssets[assetKey];
-                if (asset.path && asset.path.includes(tilesetImagePath.split('/').pop())) {
-                    img = asset.img;
-                    break;
-                }
+            // Check if it's an embedded base64 image (data URI)
+            if (tilesetImagePath.startsWith('data:')) {
+                // Create an Image element for the base64 data
+                img = new Image();
+                img.src = tilesetImagePath;
+                console.log(`TiledLoader: Using embedded base64 image for tileset "${tilesetDef.name}"`);
             }
+            else {
+                // Try to find the matching image in graphicAssets
+                for (const assetKey in graphicAssets) {
+                    const asset = graphicAssets[assetKey];
+                    if (asset.path && asset.path.includes(tilesetImagePath.split('/').pop())) {
+                        img = asset.img;
+                        break;
+                    }
+                }
 
-            if (!img) {
-                console.warn(`TiledLoader: Could not find image for tileset "${tilesetDef.name}" (${tilesetImagePath})`);
-                continue;
+                if (!img) {
+                    console.warn(`TiledLoader: Could not find image for tileset "${tilesetDef.name}" (${tilesetImagePath})`);
+                    continue;
+                }
             }
 
             const tileset = {

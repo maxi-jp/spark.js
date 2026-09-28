@@ -22,13 +22,11 @@ class BrokeOut extends Game {
 
         // initialize the ball
         this.ball = new Ball(new Vector2(this.screenHalfWidth, this.screenHalfHeight), 400, new Vector2(RandomBetweenFloat(-0.5, 0.5), 1));
-        this.ball.Start();
-        this.gameObjects.push(this.ball);
+        this.AddGameObject(this.ball);
 
         // initialize the paddle
         this.playerPaddle = new Paddle(new Vector2(this.screenHalfWidth, this.screenHeight - 50), 70, 20, 300);
-        this.playerPaddle.Start();
-        this.gameObjects.push(this.playerPaddle);
+        this.AddGameObject(this.playerPaddle);
 
         // initialize the bricks
         this.bricks = [];

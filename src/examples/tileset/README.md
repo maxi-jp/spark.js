@@ -60,7 +60,7 @@ const mapData = TiledLoader.Parse(
 this.tilesets = TiledLoader.CreateTilesets(mapData, new Vector2(0, 0), 2);
 
 // 3. Add to game objects
-this.tilesets.forEach(tileset => this.gameObjects.push(tileset));
+this.tilesets.forEach(tileset => this.AddGameObject(tileset));
 ```
 
 ## Switching Maps

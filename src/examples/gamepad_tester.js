@@ -154,7 +154,7 @@ class GamepadTester extends Game {
             this.rumbleCheckboxTextLabel.text = this.rumbleActive ? "Rumble enabled! use L/R triggers to rumble (left = strong, right = weak)." : "<- click to enable rumble";
             this.rumbleCheckBoxRectangle.color = this.rumbleActive ? Color.lime : Color.red;
         }
-        this.gameObjects.push(this.rumbleCheckBoxRectangle);
+        this.AddGameObject(this.rumbleCheckBoxRectangle);
 
         // background gradient
         this.bgGradient = new LinearGradient(this.renderer, new Vector2(this.screenWidth, this.screenHeight).Normalize(), [[0, Color.white], [1, Color.grey]]);

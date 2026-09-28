@@ -8,9 +8,9 @@
  *     this.Configure({ screenWidth: 800, screenHeight: 600 });
  *     this.graphicAssets = { player: { path: 'player.png', img: null } };
  *   }
- *   Start() { this.player = new SpriteObject(...); }
- *   Update(dt) { this.player.Update(dt); }
- *   Draw()    { this.player.Draw(this.renderer); }
+ *   Start() { this.player = this.AddGameObject(new SpriteObject(...)); }
+ *   Update(dt) { super.Update(dt); }
+ *   Draw()    { super.Draw(); }
  * }
  */
 class Game {
@@ -343,6 +343,28 @@ class Game {
                 collider.Draw(this.renderer);
             });
         }
+    }
+
+    /**
+     * Adds a game object to the game and calls its `Start()` method.
+     * This is the preferred way to add objects at runtime — it ensures proper initialization.
+     * 
+     * @param {GameObject} gameObject - The game object to add.
+     * @returns {GameObject} The same game object (for chaining/inline creation).
+     * 
+     * @example
+     * // Basic usage
+     * this.player = this.AddGameObject(new SpriteObject(new Vector2(100, 100), 0, 1, playerImg));
+     * 
+     * @example
+     * // Inline with configuration
+     * this.enemy = this.AddGameObject(new Enemy(spawnPos, enemyImg));
+     * this.enemy.speed = 200;
+     */
+    AddGameObject(gameObject) {
+        this.gameObjects.push(gameObject);
+        gameObject.Start();
+        return gameObject;
     }
 
     /**

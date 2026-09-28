@@ -125,7 +125,7 @@ class PerformanceTestRectangles extends PerformanceTest {
             const color = Color.Random();
             color.a = RandomBetweenFloat(0.5, 1.0); // Test alpha blending
 
-            this.gameObjects.push(new BouncingRectangleGO(position, size, size, color, velocity));
+            this.AddGameObject(new BouncingRectangleGO(position, size, size, color, velocity));
         }
     }
 }
@@ -155,7 +155,7 @@ class PerformanceTestSprites extends PerformanceTest {
             );
             const velocity = new Vector2(RandomBetweenFloat(-150, 150), RandomBetweenFloat(-150, 150));
 
-            this.gameObjects.push(new BouncingSpriteGO(position, this.graphicAssets.snake.img, velocity));
+            this.AddGameObject(new BouncingSpriteGO(position, this.graphicAssets.snake.img, velocity));
         }
     }
 }

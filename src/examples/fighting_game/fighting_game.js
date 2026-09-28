@@ -121,7 +121,7 @@ class FightingGame extends Game {
 
         this.rect = new RectangleGO(new Vector2(this.screenHalfWidth, this.floorY), 40, 80, Color.red);
         this.rect.pivot.y = 40;
-        this.gameObjects.push(this.rect);
+        this.AddGameObject(this.rect);
 
         this.camera = new FollowCamera(Vector2.Copy(this.rect.position), this.rect, -100, 100, 160, 200, 5, new Vector2(0, -this.screenHalfHeight + 96));
         this.camera.Start();
@@ -145,13 +145,11 @@ class FightingGame extends Game {
 
         // Create Player 1 - Samurai Mack
         this.player = new Fighter(new Vector2(50, 330), MACK_CONFIG);
-        this.gameObjects.push(this.player);
-        this.player.Start();
+        this.AddGameObject(this.player);
 
         // Create Player 2 - Kenji
         this.enemy = new Fighter(new Vector2(900, 330), KENJI_CONFIG);
-        this.gameObjects.push(this.enemy);
-        this.enemy.Start();
+        this.AddGameObject(this.enemy);
         
         // Start match timer
         this.StartMatchTimer();

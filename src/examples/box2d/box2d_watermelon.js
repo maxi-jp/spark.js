@@ -64,7 +64,7 @@ class Box2DWatermelon extends Box2DGame {
             this.physicsWorld,
             this.physicsScale
         );
-        this.gameObjects.push(this.gameOverZone);
+        this.AddGameObject(this.gameOverZone);
 
         this.nextFruitId = 0;
         this.currentFruit = null;
@@ -185,7 +185,7 @@ class Box2DWatermelon extends Box2DGame {
 
     SpawnFruit(step, position, impulse=0) {
         const newFruit = new Fruit(position, this.physicsWorld, step);
-        this.gameObjects.push(newFruit);
+        this.AddGameObject(newFruit);
         newFruit.ApplyImpulse(impulse * RandomBetweenFloat(0, 0.2), 0);
     }
 
@@ -194,7 +194,7 @@ class Box2DWatermelon extends Box2DGame {
         // Pick the fruit that will come *after* this one (random from first 3)
         this.nextFruitId = RandomBetweenInt(0, 2);
         this.currentFruit = new Fruit(new Vector2(this.screenHalfWidth, this.launchLineY), this.physicsWorld, fruitId, true);
-        this.gameObjects.push(this.currentFruit);
+        this.AddGameObject(this.currentFruit);
     }
 }
 

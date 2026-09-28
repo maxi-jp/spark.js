@@ -100,8 +100,7 @@ class Box2DPlatformer extends Box2DGame {
 
         // create the player
         this.player = new Player(new Vector2(100, 200), this.graphicAssets.mario.img, this.physicsWorld);
-        this.player.Start();
-        this.gameObjects.push(this.player);
+        this.AddGameObject(this.player);
 
         // create the camera
         this.camera = new FollowCameraBasic(Vector2.Zero(), this.player, new Vector2(100, -160));
@@ -115,8 +114,8 @@ class Box2DPlatformer extends Box2DGame {
 
         // create a coin
         const coin = new Coin(new Vector2(300, 250), this.graphicAssets.blocks.img, this.physicsWorld);
+        this.AddGameObject(coin);
         this.coins.push(coin);
-        this.gameObjects.push(coin);
 
         // scene blocks
         blocks.forEach(block => {
@@ -126,7 +125,7 @@ class Box2DPlatformer extends Box2DGame {
             else if (block.t == 1)
                 newBlock = new BlockSpecial(new Vector2(block.x * blockSize, block.y * blockSize), this.graphicAssets.blocks.img, this.physicsWorld);
             this.blocks.push(newBlock);
-            this.gameObjects.push(newBlock);
+            this.AddGameObject(newBlock);
         });
 
         // UI

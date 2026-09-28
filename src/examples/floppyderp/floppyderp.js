@@ -122,7 +122,7 @@ class FloppyDerp extends Game {
 
         this.initialPlayerPosition.Set(36, this.screenHalfHeight);
         this.player = new FloppyDerpPlayer(this.initialPlayerPosition, this.graphicAssets.player.img);
-        this.gameObjects.push(this.player);
+        this.AddGameObject(this.player);
 
         // reset game state variables
         this.actualScore = 0;

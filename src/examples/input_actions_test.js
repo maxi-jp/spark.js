@@ -17,7 +17,7 @@ class InputActionsTest extends Game {
 
         // 2. Create GameObjects for visualization
         this.player = new RectangleGO(new Vector2(this.screenHalfWidth, this.screenHalfHeight), 50, 50, Color.cyan);
-        this.gameObjects.push(this.player);
+        this.AddGameObject(this.player);
 
         this.jumpIndicator = new TextLabel("Jump!", new Vector2(150, 50), "24px Arial", Color.green, "center");
         this.jumpIndicator.color.a = 0; // Initially invisible

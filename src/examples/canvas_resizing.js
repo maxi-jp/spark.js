@@ -69,7 +69,7 @@ class CanvasResizing extends Game {
         this.bgRectangle2 = new Rectangle(new Vector2(5, this.screenHeight - 135), 310, 130, new Color(0, 0, 0, 0.66));
 
         this.aim = new SpriteObject(Vector2.Zero(), 0, 1, this.graphicAssets.aim.img);
-        this.gameObjects.push(this.aim);
+        this.AddGameObject(this.aim);
     }
 
     Update(deltaTime) {

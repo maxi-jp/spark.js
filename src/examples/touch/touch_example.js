@@ -75,8 +75,7 @@ class TouchDemo extends Game {
 
         // ── Scene ─────────────────────────────────────────────────────────────────
         this.player = new Player(new Vector2(this.screenHalfWidth, this.screenHalfHeight));
-        this.player.Start();
-        this.gameObjects.push(this.player);
+        this.AddGameObject(this.player);
 
         this._score = 0;
         this._spawnCollectibles(initialCollectibles);
@@ -105,7 +104,7 @@ class TouchDemo extends Game {
             )
         )
         this._collectibles.push(newCollectible);
-        this.gameObjects.push(newCollectible);
+        this.AddGameObject(newCollectible);
     }
 
     // ─── Update ─────────────────────────────────────────────────────────────────

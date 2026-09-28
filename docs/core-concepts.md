@@ -39,11 +39,10 @@ class MyGame extends Game {
         super.Start(); // applies config, sets screen size, clears gameObjects/colliders
 
         // Assets are fully loaded here — safe to use this.graphicAssets.*.img
-        this.player = new Player(
+        this.player = this.AddGameObject(new Player(
             new Vector2(this.screenHalfWidth, this.screenHalfHeight),
             this.graphicAssets.player.img
-        );
-        this.gameObjects.push(this.player);
+        ));
     }
 
     Update(deltaTime) {
@@ -254,8 +253,12 @@ Override these in your subclass to inject logic:
 | `SpriteSectionObject` | `(position, rotation, scale, img, sectionRect, alpha)` | A rectangular section of a sprite sheet or image (cropped region) |
 | `SSAnimationObjectBasic` | `(position, rotation, scale, img, frameWidth, frameHeight, frameCount[], framesDuration)` | Regular grid sprite-sheet (all frames same size) |
 | `SSAnimationObjectComplex` | `(position, rotation, scale, img, animationsRectangles[][], framesDurations[])` | Packed-atlas sprite-sheet (arbitrary frame rects per animation) |
-| `Tileset` | `(img, position, scale, tilesetConfig, tilesetMap, tileWidth, tileHeight)` | Tile-map rendering |
+| `Tileset` | `(img, position, scale, tilesetConfig, tilesetMap, tileWidth, tileHeight)` | Tile-map rendering. `img` is a fallback image; `tilesetConfig` tiles can optionally include their own `image` reference (for Tiled multi-image maps) |
 | `GameObjectsBackgroundLayer` | `(position, gameObjects[], speed)` | A parallax background layer that manages a group of game objects and updates their positions with the camera |
+
+**Tileset notes:**
+- **Single-image maps** (traditional): Pass `img` with the tile sheet; each `tilesetConfig[id]` contains only `{rect: {x, y, w, h}}`
+- **Multi-image maps** (Tiled): Each `tilesetConfig[id]` can include `{rect: {...}, image: HTMLImageElement}` to reference a different image per tile
 
 ### Minimal example
 
@@ -331,7 +334,7 @@ Start() {
         5,                  // smoothingSpeed (higher = snappier)
         Vector2.Zero()      // optional offset from target
     );
-    this.gameObjects.push(this.camera);
+    this.AddGameObject(this.camera);
 }
 
 Update(deltaTime) {
@@ -390,7 +393,7 @@ Start() {
     ));
 
     this.bg.Start();
-    this.gameObjects.push(this.bg); // NOT needed — call manually below
+    // Note: If manually calling bg.Update() and bg.Draw(), no need to add to gameObjects
 }
 
 Update(deltaTime) {
@@ -442,12 +445,13 @@ Start() {
 }
 
 // After assets load:
-Update(deltaTime) {
-    super.Update(deltaTime);
+Start() {
+    super.Start();
     
     // Parse and create tilesets from the loaded JSON
-    const tilesets = TiledLoader.Parse(this.tiledAssets.forestMap.data, this.graphicAssets);
-    tilesets.forEach(ts => this.gameObjects.push(ts));
+    const mapData = TiledLoader.Parse(this.tiledAssets.forestMap.data, this.graphicAssets);
+    const tilesets = TiledLoader.CreateTilesets(mapData, new Vector2(0, 0), 1);
+    tilesets.forEach(ts => this.AddGameObject(ts));
 }
 ```
 

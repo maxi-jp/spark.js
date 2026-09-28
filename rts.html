@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>spark.js RTS - Phase 1</title>
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- spark.js Engine Core (in dependency order) -->
+    <script src="src/engine/utils_math.js"></script>
+    <script src="src/engine/utils_classes.js"></script>
+    <script src="src/engine/renderer.js"></script>
+    <script src="src/engine/gameobjects.js"></script>
+    <script src="src/engine/input.js"></script>
+    <script src="src/engine/audioplayer.js"></script>
+    <script src="src/engine/particlesystem.js"></script>
+    <script src="src/engine/htmlmenu.js"></script>
+    <script src="src/engine/virtualcontrols.js"></script>
+    <script src="src/engine/game.js"></script>
+    
+    <!-- Tiled Map Loader -->
+    <script src="src/engine/tiled_loader.js"></script>
+
+    <!-- AI Utilities (A* pathfinding, etc.) -->
+    <script src="src/engine/ai.js"></script>
+    
+    <!-- RTS Game Code -->
+    <script src="src/examples/rts/rts_camera.js"></script>
+    <script src="src/examples/rts/grid_map.js"></script>
+    <script src="src/examples/rts/commands.js"></script>
+    <script src="src/examples/rts/entities.js"></script>
+    <script src="src/examples/rts/selection_manager.js"></script>
+    <script src="src/examples/rts/rts_game.js"></script>
+    
+    <!-- Engine Bootstrap -->
+    <script src="src/engine/main.js"></script>
+</head>
+<body>
+    <div id="canvasContainer">
+        <canvas id="canvas"></canvas>
+    </div>
+    
+    <script>
+        // Initialize the game when page loads
+        window.onload = () => Init(RTSGame, "canvas");
+    </script>
+</body>
+</html>

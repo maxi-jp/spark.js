@@ -200,13 +200,12 @@ class TTSC extends Game {
 
         // initialize the player in the center of the scene limits
         this.player = new TTSCPlayer(new Vector2(this.sceneLimits.width / 2, this.sceneLimits.height / 2), 0, 1, this.graphicAssets.ships.img, this.sceneLimits);
-        this.gameObjects.push(this.player);        
 
         // configure the camera to follow the player
         this.camera = new FollowCamera(Vector2.Zero(), this.player, -200, 140, -100, 40, 5);
         this.camera.Start();
 
-        this.player.Start();   
+        this.AddGameObject(this.player);
             
         // Initialize player lives UI
         for (let i = 0; i < this.lives; i++) {
@@ -410,8 +409,7 @@ class TTSC extends Game {
 
     AddEnemy(enemy) {
         this.enemies.push(enemy);
-        this.gameObjects.push(enemy);
-        enemy.Start();
+        this.AddGameObject(enemy);
     }
 
     SpawnRandomEnemy() {

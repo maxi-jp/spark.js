@@ -37,7 +37,7 @@ class TimerTestGame extends Game {
         
         // Test 3: GameObject with timers
         this.testObject = new TestObject(new Vector2(this.screenHalfWidth, this.screenHalfHeight));
-        this.gameObjects.push(this.testObject);
+        this.AddGameObject(this.testObject);
         
         // Test 4: Multiple one-shot timers
         this.Invoke(() => this.AddMessage("Timer A (1s)"), 1.0);

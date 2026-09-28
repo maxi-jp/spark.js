@@ -156,7 +156,7 @@ const boxCollider = new RectangleCollider(
 );
 box.collider = boxCollider;
 this.AddCollider(boxCollider);
-this.gameObjects.push(box);
+this.AddGameObject(box);
 ```
 
 ### `CircleCollider`
@@ -207,7 +207,7 @@ const rupeeCollider = new PolygonCollider(
 );
 rupee.collider = rupeeCollider;
 this.AddCollider(rupeeCollider);
-this.gameObjects.push(rupee);
+this.AddGameObject(rupee);
 ```
 
 ### Collision callbacks
@@ -347,6 +347,7 @@ Global functions available throughout the engine:
 |---|---|
 | `RandomBetweenInt(min, max)` | Random integer in `[min, max]` inclusive |
 | `RandomBetweenFloat(min, max)` | Random float in `[min, max)` |
+| `Clamp(value, min, max)` | Clamps `value` to the range `[min, max]` |
 | `Lerp(start, end, t)` | Linear interpolation |
 | `LerpRotation(current, target, t)` | Lerp between angles, wrapping correctly through `±π` |
 | `SmoothRotation(current, target, maxStep)` | Steps toward `target` by at most `maxStep` radians; call once per frame |

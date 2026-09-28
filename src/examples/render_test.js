@@ -48,20 +48,20 @@ class BasicGame extends Game {
         // a red 100x100px rectangle game object
         this.redRect = new RectangleGO(new Vector2(this.screenHalfWidth, this.screenHalfHeight), 120, 80);
         this.redRect.pivot = { x: -60, y: -40}; // top-left corner
-        this.gameObjects.push(this.redRect);
+        this.AddGameObject(this.redRect);
 
         // a yellow 50x50px rectangle game object
         this.yellowRect = new RectangleGO(new Vector2(this.screenHalfWidth, this.screenHalfHeight), 50, 50, Color.yellow, true, 4);
         // this.yellowRect.pivot = { x: -25, y: -25}; // top-left corner
-        this.gameObjects.push(this.yellowRect);
+        this.AddGameObject(this.yellowRect);
 
         // SSAnimationObjectBasic
         this.animationObjectBasic1 = new SSAnimationObjectBasic(new Vector2(420, this.screenHalfHeight), 0, 1, this.graphicAssets.floppy.img, 24, 24, [10, 10], 1 / 12);
         this.animationObjectBasic1.pivot = { x: -12, y: 12 };
-        this.gameObjects.push(this.animationObjectBasic1);
+        this.AddGameObject(this.animationObjectBasic1);
 
         this.animationObjectBasic2 = new SSAnimationObjectBasic(new Vector2(560, this.screenHalfHeight), 0, 2, this.graphicAssets.floppy.img, 24, 24, [10, 10], 1 / 8);
-        this.gameObjects.push(this.animationObjectBasic2);
+        this.AddGameObject(this.animationObjectBasic2);
         // this.animationObjectBasic2.pivot = { x: -12, y: 12 };
         this.animationObjectBasic2.PlayAnimationLoop(1);
 
