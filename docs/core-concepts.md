@@ -200,6 +200,7 @@ Some methods that the base `Game` class provides and can be used in your game:
 
 | Method | Description |
 |---|---|
+| `AddGameObject(gameObject)` | Adds a game object to the game, injects this game instance (`gameObject.game = this`), calls `gameObject.Start()`, and registers it in the update and draw loops. Returns the object for inline chaining |
 | `Destroy(gameObject)` | Defers deletion to the end of the frame: instantly marks the object as inactive, then safely removes it from `gameObjects`, fires its `Destroy()` hook, and cleans up its collider |
 | `DestroyAllGameObjects()` | Defers deletion of all current game objects by routing them through `Destroy()` |
 | `MoveGameObjectToEnd(gameObject)` | Moves a game object to the end of the `gameObjects` array so it is drawn last (rendered on top) |
@@ -235,6 +236,7 @@ Override these in your subclass to inject logic:
 
 | Property | Description |
 |---|---|
+| `game` | `Game \| null` — reference to the owning `Game` instance, assigned automatically when registered via `game.AddGameObject(this)`. Allows entities to access game-level systems and dimensions without global singletons. |
 | `active` | `boolean` — when `false` the object is skipped by `Update` and `Draw`. Setting this also enables/disables the attached `collider` automatically. |
 | `position` | `Vector2` — world position |
 | `x` / `y` | Shorthand for `position.x` / `position.y` |

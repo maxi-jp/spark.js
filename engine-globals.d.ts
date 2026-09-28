@@ -269,6 +269,70 @@ declare class Timer {
     Cancel(): void;
 }
 
+// ── GameObject & Game classes ───────────────────────────────────────────────
+
+/**
+ * Base class for all game objects.
+ * When added via `game.AddGameObject(obj)`, `this.game` is automatically populated.
+ */
+declare class GameObject {
+    /** Reference to the owning Game instance, assigned automatically via game.AddGameObject(). */
+    game: Game | null;
+    active: boolean;
+    position: Vector2;
+    rotation: number;
+    scale: Vector2;
+    x: number;
+    y: number;
+    pivot: { x: number; y: number };
+    collider?: Collider;
+
+    constructor(position: Vector2);
+
+    Start(): void;
+    Update(deltaTime: number): void;
+    Draw(renderer: Renderer): void;
+    Destroy(): void;
+
+    OnCollisionEnter?(myCollider: Collider, otherCollider: Collider): void;
+    OnCollisionExit?(myCollider: Collider, otherCollider: Collider): void;
+    OnClick?(): void;
+
+    Invoke(callback: Function, delay: number): Timer;
+    InvokeRepeating(callback: Function, delay: number, interval: number): Timer;
+}
+
+/**
+ * Base game class. Controls the main loop, game objects, timers, and rendering.
+ */
+declare class Game {
+    renderer: Renderer;
+    screenWidth: number;
+    screenHeight: number;
+    screenHalfWidth: number;
+    screenHalfHeight: number;
+    gameObjects: GameObject[];
+    colliders: Collider[];
+    audioActive: boolean;
+    config: any;
+
+    constructor(renderer: Renderer);
+    Configure(config: any): void;
+    Start(): void;
+    Update(deltaTime: number): void;
+    Draw(): void;
+    AddGameObject<T extends GameObject>(gameObject: T): T;
+    Destroy(gameObject: GameObject): void;
+    DestroyAllGameObjects(): void;
+    MoveGameObjectToEnd(gameObject: GameObject): void;
+    AddCollider(collider: Collider): void;
+    RemoveCollider(collider: Collider): void;
+    Invoke(callback: Function, delay: number, owner?: any): Timer;
+    InvokeRepeating(callback: Function, delay: number, interval: number, owner?: any): Timer;
+    CancelInvoke(timer: Timer): void;
+    CancelAllInvokes(owner?: any): void;
+}
+
 // ── Renderer class ───────────────────────────────────────────────────────────
 
 /**
@@ -532,3 +596,157 @@ declare class FSMCompositeState extends FSMState {
     subFSM: FSM | null;
     constructor();
 }
+
+// ── Behavior Trees (bt.js) ────────────────────────────────────────────────────
+
+/** Status results returned by Behavior Tree nodes on Tick. */
+declare const BTStatus: {
+    readonly SUCCESS: 'SUCCESS';
+    readonly FAILURE: 'FAILURE';
+    readonly RUNNING: 'RUNNING';
+};
+type BTStatusType = 'SUCCESS' | 'FAILURE' | 'RUNNING';
+
+/** Shared memory repository for Behavior Tree nodes. */
+declare class BTBlackboard {
+    constructor();
+    Set(key: string, value: any): any;
+    Get(key: string, defaultValue?: any): any;
+    Has(key: string): boolean;
+    Delete(key: string): boolean;
+    Clear(): void;
+    OnChange(key: string, callback: (newVal: any, oldVal: any) => void): () => void;
+}
+
+/** Base class for all Behavior Tree nodes. */
+declare class BTNode {
+    name: string;
+    status: BTStatusType | null;
+    constructor(name?: string);
+    Tick(dt: number, owner: any, blackboard: BTBlackboard): BTStatusType;
+    Enter(owner: any, blackboard: BTBlackboard): void;
+    Update(dt: number, owner: any, blackboard: BTBlackboard): BTStatusType;
+    Exit(owner: any, blackboard: BTBlackboard, status: BTStatusType): void;
+    Abort(owner: any, blackboard: BTBlackboard): void;
+    Reset(): void;
+}
+
+/** Base class for composite nodes with multiple children. */
+declare class BTComposite extends BTNode {
+    children: BTNode[];
+    constructor(name?: string, children?: BTNode[]);
+    AddChild(node: BTNode): this;
+}
+
+/** Fallback / OR logic node. Runs children until one succeeds or runs. */
+declare class BTSelector extends BTComposite {
+    reactive: boolean;
+    constructor(name?: string, children?: BTNode[], options?: { reactive?: boolean });
+}
+
+/** Reactive Selector that evaluates from child 0 every tick, interrupting lower-priority tasks. */
+declare class BTReactiveSelector extends BTSelector {
+    constructor(name?: string, children?: BTNode[]);
+}
+
+/** AND logic node. Runs children sequentially until one fails or runs. */
+declare class BTSequence extends BTComposite {
+    reactive: boolean;
+    constructor(name?: string, children?: BTNode[], options?: { reactive?: boolean });
+}
+
+/** Reactive Sequence that re-evaluates preceding conditions every tick. */
+declare class BTReactiveSequence extends BTSequence {
+    constructor(name?: string, children?: BTNode[]);
+}
+
+/** Concurrently executes all children until completion policy is satisfied. */
+declare class BTParallel extends BTComposite {
+    static Policy: {
+        readonly REQUIRE_ALL: 'REQUIRE_ALL';
+        readonly REQUIRE_ONE: 'REQUIRE_ONE';
+    };
+    constructor(name?: string, children?: BTNode[], options?: { policySuccess?: string; policyFailure?: string });
+}
+
+/** Shuffles children upon entry and executes as a Selector. */
+declare class BTRandomSelector extends BTSelector {}
+
+/** Shuffles children upon entry and executes as a Sequence. */
+declare class BTRandomSequence extends BTSequence {}
+
+/** Base class for single-child decorator nodes. */
+declare class BTDecorator extends BTNode {
+    child: BTNode | null;
+    constructor(name?: string, child?: BTNode | null);
+    SetChild(child: BTNode): this;
+}
+
+/** Inverts child status: SUCCESS <-> FAILURE. */
+declare class BTInverter extends BTDecorator {}
+
+/** Repeats child node count times (-1 for infinite). */
+declare class BTRepeater extends BTDecorator {
+    count: number;
+    constructor(name?: string, child?: BTNode | null, count?: number);
+}
+
+/** Repeats child until it returns FAILURE. */
+declare class BTRepeatUntilFail extends BTDecorator {}
+
+/** Repeats child until it returns SUCCESS. */
+declare class BTRepeatUntilSuccess extends BTDecorator {}
+
+/** Always returns SUCCESS when child finishes. */
+declare class BTSucceeder extends BTDecorator {}
+
+/** Always returns FAILURE when child finishes. */
+declare class BTFailer extends BTDecorator {}
+
+/** Enforces a cooldown between executions of child. */
+declare class BTCooldown extends BTDecorator {
+    cooldownDuration: number;
+    readonly isCoolingDown: boolean;
+    constructor(name?: string, child?: BTNode | null, cooldownDuration?: number);
+}
+
+/** Delays execution of child for specified duration. */
+declare class BTDelay extends BTDecorator {
+    delayDuration: number;
+    constructor(name?: string, child?: BTNode | null, delayDuration?: number);
+}
+
+/** Action leaf node executing custom logic or a function. */
+declare class BTAction extends BTNode {
+    actionFn: ((dt: number, owner: any, bb: BTBlackboard) => BTStatusType | void) | null;
+    constructor(name?: string, actionFn?: ((dt: number, owner: any, bb: BTBlackboard) => BTStatusType | void) | null);
+}
+
+/** Condition leaf node checking a boolean predicate. */
+declare class BTCondition extends BTNode {
+    predicate: ((owner: any, bb: BTBlackboard) => boolean) | null;
+    constructor(name?: string, predicate?: ((owner: any, bb: BTBlackboard) => boolean) | null);
+}
+
+/** Wait timer leaf node. Returns RUNNING until duration expires, then SUCCESS. */
+declare class BTWait extends BTNode {
+    duration: number;
+    constructor(name?: string, duration?: number);
+}
+
+/** Behavior Tree controller and manager. */
+declare class BehaviorTree {
+    owner: any;
+    root: BTNode;
+    blackboard: BTBlackboard;
+    lastStatus: BTStatusType | null;
+    activeLeafNode: BTNode | null;
+    active: boolean;
+    constructor(owner: any, rootNode: BTNode, blackboard?: BTBlackboard);
+    Update(dt: number): BTStatusType | null;
+    Abort(): void;
+    Reset(): void;
+    DrawDebug(renderer: Renderer, x: number, y: number, options?: { showStatus?: boolean; color?: Color; force?: boolean }): void;
+    DrawTreeInspector(renderer: Renderer, startX?: number, startY?: number, options?: { width?: number; title?: string; force?: boolean }): void;
+}
+

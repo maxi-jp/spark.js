@@ -2,6 +2,8 @@
  * Base class for all game objects. Extend this and override `Start()`, `Update()`, and `Draw()`.
  */
 class GameObject {
+    /** @type {Game|null} Reference to the owning Game instance, assigned automatically via game.AddGameObject(). */
+    game = null;
     /** @type {boolean} */
     _active = true;
     /** @type {Vector2} */
@@ -118,7 +120,7 @@ class GameObject {
      * this.Invoke(this.Explode, 2.0);
      */
     Invoke(callback, delay) {
-        return game.Invoke(callback, delay, this);
+        return (this.game || game).Invoke(callback, delay, this);
     }
 
     /**
@@ -134,7 +136,7 @@ class GameObject {
      * this.InvokeRepeating(this.Shoot, 1.0, 0.5);
      */
     InvokeRepeating(callback, delay, interval) {
-        return game.InvokeRepeating(callback, delay, interval, this);
+        return (this.game || game).InvokeRepeating(callback, delay, interval, this);
     }
 
     /**
@@ -990,6 +992,9 @@ class Pool {
         for (let i = maxSize; i > 0; i--) {
             const object = new this.objectConstructor(...constructorParams);
             object.owner = this.owner;
+            if (this.owner && this.owner.game) {
+                object.game = this.owner.game;
+            }
             object.active = false;
 
             this.objects.push(object);
@@ -1039,6 +1044,9 @@ class Pool {
             // lets create a new one
             object = new this.objectConstructor(...this.constructorParams);
             object.owner = this.owner;
+            if (this.owner && this.owner.game) {
+                object.game = this.owner.game;
+            }
 
             this.objects.push(object);
         }

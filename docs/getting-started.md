@@ -142,6 +142,8 @@ window.onload = () => {
 
 GameObjects are the building blocks of your game — players, enemies, bullets, walls, pickups, etc. Every entity you want to update or draw should be a class that extends `GameObject` (or one of its built-in subclasses) and gets added to the game using `game.AddGameObject()`.
 
+When an object is added, the engine automatically injects the game reference into `this.game`, giving you direct, clean access to screen dimensions (`this.game.screenWidth`, `this.game.screenHeight`), game systems, and helper methods without relying on global variables.
+
 ### Built-in subclasses
 
 | Class | Description |
@@ -365,7 +367,7 @@ Key points:
 
 ### Important tips
 
-- Use `game.AddGameObject(gameObject)` to add objects — it automatically calls `Start()` and adds them to the update/draw loop. The base `Game.Update` and `Game.Draw` will call `Update`/`Draw` on every active entry.
+- Use `game.AddGameObject(gameObject)` to add objects — it injects `this.game = this`, automatically calls `Start()`, and adds them to the update/draw loop. The base `Game.Update` and `Game.Draw` will call `Update`/`Draw` on every active entry.
 - Set `this.active = false` on an object to stop it being updated and drawn (useful for pooling or death states). This also automatically disables the object's collider if one is attached.
 - Override `OnCollisionEnter(myCollider, otherCollider)` on a `GameObject` to react to collider intersections (see [Utilities](utilities.md) for the collider API).
 - Use `collider.enabled = false` to temporarily disable collision detection without deactivating the entire GameObject (useful for invincibility frames, phasing, etc.).

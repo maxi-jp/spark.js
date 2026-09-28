@@ -322,6 +322,7 @@ class Game {
                     this.CancelAllInvokes(gameObject);
                     
                     gameObject.Destroy();
+                    gameObject.game = null;
                     this.gameObjects.splice(index, 1);
                 }
             });
@@ -346,7 +347,8 @@ class Game {
     }
 
     /**
-     * Adds a game object to the game and calls its `Start()` method.
+     * Adds a game object to the game, injects the game reference (`gameObject.game = this`),
+     * and calls its `Start()` method.
      * This is the preferred way to add objects at runtime — it ensures proper initialization.
      * 
      * @param {GameObject} gameObject - The game object to add.
@@ -362,6 +364,7 @@ class Game {
      * this.enemy.speed = 200;
      */
     AddGameObject(gameObject) {
+        gameObject.game = this;
         this.gameObjects.push(gameObject);
         gameObject.Start();
         return gameObject;
