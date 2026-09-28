@@ -49,6 +49,7 @@ Documentation can be consulted [here](https://maxi-jp.github.io/spark.js/docs/).
     - angry_birds.js      # Angry Birds clone with Box2D
     - box2d_basic.js      # Basic Box2D physics demo
     - box2d_basket.js     # Basketball-style physics game
+    - box2d_cargame.js    # Car game with Box2D physics (port of [makzan/HTML5-Games-Examples -> box2d-game-car](https://github.com/makzan/HTML5-Games-Examples ':ignore :target=_blank'))
     - box2d_platormer.js  # Platformer with Box2D physics
     - box2d_watermelon.js # Suika Game clone with Box2D
   - brokeout/             # Breakout clone
@@ -64,7 +65,7 @@ Documentation can be consulted [here](https://maxi-jp.github.io/spark.js/docs/).
   - tts/                  # Twin-stick shooter advanced implementation
   - tts_basic/            # Basic Twin-stick shooter game
   - watermelon/           # Watermelon Game (Suika Game clone, extension of the box2d_watermelon example project)
-  - fighting_game/        # 1v1 Fighting Game with camera system, multi-layer parallax, and collision-based combat (port of [chriscourses/fighting-game](https://github.com/chriscourses/fighting-game)).
+  - fighting_game/        # 1v1 Fighting Game with camera system, multi-layer parallax, and collision-based combat (port of [chriscourses/fighting-game](https://github.com/chriscourses/fighting-game))
   - canvas_resizing.js    # Canvas fullscreen and display configuration demo
   - coliders_test.js      # Collision detection testing
   - columns.js            # Columns-style puzzle game
@@ -376,9 +377,9 @@ class MyGame extends Game {
 MIT License
 
 ## TODO list
-- [ ] Example for a Tileset.
+- [x] ~~Example for a Tileset.~~ ✅DONE
 - [x] ~~Create an action system for the input (i.e. `Input.Action("move_left")` instead of `Input.IsKeyDown(KEY_LEFT) || Input.IsKeyDown(KEY_A) || Input.IsGamepadButtonDown(0, "DPAD_LEFT") || Input.IsGamepadButtonDown(0, "LS_LEFT")`).~~ ✅DONE
-- [-] Improve the webgl renderer (draw batching).❎DONE (sort of, for tilesets).
+- [x] Improve the webgl renderer (draw batching).❎half-DONE (only for tilesets for the moment).
 - [ ] Implement other physic engines.
 - [x] ~~Create a documentation page/wiki.~~ ✅DONE (see [the documentation page](https://maxi-jp.github.io/spark.js/docs/).)
 - [ ] Multiplayer with nodejs.
@@ -405,4 +406,4 @@ Thank you for helping make spark.js better!
 
 ---
 
-**Enjoy building games with spark.js!**
+**Enjoy building games with spark.js!** ⚡

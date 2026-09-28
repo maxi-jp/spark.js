@@ -68,6 +68,7 @@ Explore the `src/examples/` directory for practical demonstrations of the engine
 
 - [Box2D basic](../box2d-basic.html ':ignore :target=_blank')
 - [Box2D basket](../box2d-basket.html ':ignore :target=_blank')
+- [Box2D car game](../box2d-cargame.html ':ignore :target=_blank') — a port of an example game by [Thomas Seng Hin Mak](https://github.com/makzan/HTML5-Games-Examples ':ignore :target=_blank') demonstrating wheels, revolute joints, vehicle fuel mechanics, multi-level progression, and contact-based win conditions
 - [Box2D trigger demo](../box2d-trigger.html ':ignore :target=_blank') — three side-by-side `Box2DTrigger` zones demonstrating `OnTriggerEnter`, `OnTriggerStay` with time tracking, and `OnTriggerStay` with deferred destruction
 - [Box2D platformer](../box2d-platformer.html ':ignore :target=_blank') *(WIP)*
 - [Box2D Watermelon Game (Suika Game clone)](../box2d-watermelon.html ':ignore :target=_blank') — A prototype for a physics-based puzzle game demonstrating advanced Box2D integrations, where players drop fruits that merge into larger ones upon contact. Reduced/simplified version of the [Watermelon Game (Suika Game clone)](../watermelon.html ':ignore :target=_blank') (with suspended physics bodies, world manifold extraction, safe destruction, and scale translations implementations).

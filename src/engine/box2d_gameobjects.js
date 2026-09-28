@@ -218,7 +218,7 @@ class Box2DGameObject extends GameObject {
 
 /** A physics rectangle that draws itself as a filled rectangle. Mostly used for debugging. */
 class Box2DRectangleGO extends Box2DGameObject {
-    constructor(position, physicsWorld, type, bodyOptions, width, height, color = "red") {
+    constructor(position, physicsWorld, type, bodyOptions, width, height, color = Color.red) {
         super(position, physicsWorld, type, bodyOptions);
 
         this.width = width;
@@ -229,8 +229,7 @@ class Box2DRectangleGO extends Box2DGameObject {
     }
 
     Draw(renderer) {
-        // TODO get the scale
-        renderer.DrawFillRectangle(this.position.x * 100, this.position.y * 100, this.width * 100, this.height * 100, Color.black, this.rotation);
+        renderer.DrawFillRectangle(this.position.x, this.position.y, this.width, this.height, this.color, this.rotation);
     }
 }
 

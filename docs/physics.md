@@ -211,6 +211,7 @@ this.gameObjects.push(zone);
 - **Body destroyed without exit event**: if a Box2D body is explicitly destroyed while overlapping, an `EndContact` event fires and the trigger handles it correctly.
 
 > **Interactive demo:** [box2d-trigger.html](../box2d-trigger.html) — three side-by-side trigger zones demonstrating `OnTriggerEnter` (count), `OnTriggerStay` with time tracking (timer), and `OnTriggerStay` with destruction.
+> **Interactive demo:** [box2d-cargame.html](../box2d-cargame.html) — car game with wheels, joints, fuel mechanics, and multi-level progression.
 > **Interactive demo:** box2d-watermelon.html — prototype for a Suika Game clone using suspended Box2D bodies and dropping mechanics.
 > **Interactive demo:** watermelon.html — full Suika Game clone showcasing advanced Box2D integration, `b2WorldManifold` contact point extraction, safe merging/destruction of physics bodies, and scale translations.
 > **Interactive demo:** angry-birds.html — playable Angry Birds clone demonstrating mouse dragging, impulses, and complex structure physics.
