@@ -1,11 +1,12 @@
 # Game AI Tools
 
-spark.js ships two optional AI modules. Include only what your game needs.
+spark.js ships three optional AI modules. Include only what your game needs.
 
 | Module | File | What it provides |
 |---|---|---|
 | Pathfinding | `src/engine/ai.js` | `AStarPathfinder` — grid-based A\* with smoothing and fallbacks |
 | State machines | `src/engine/fsm.js` | `FSMState`, `FSM`, `FSMCompositeState` — flat and hierarchical FSMs |
+| Behavior trees | `src/engine/bt.js` | `BehaviorTree`, `BTNode`, composites, decorators, and blackboard memory |
 
 ---
 
@@ -484,6 +485,194 @@ class Sentry extends GameObject {
 
 - [FSM demo — Guard Patrol](../fsm-basic.html ':ignore :target=_blank') — three guards, mouse cursor as intruder; all four transitions with a mix of declarative and imperative styles. See the project's [README](../src/examples/fsm_basic/README.md ':ignore :target=_blank') for a detailed walkthrough.
 - [HFSM demo — Sentry AI](../fsm-hfsm.html ':ignore :target=_blank') — two NPCs, clickable threat; top-level patrol/combat/flee with a nested approach/attack/cooldown sub-FSM. See the project's [README](../src/examples/fsm_hfsm/README.md ':ignore :target=_blank') for a detailed walkthrough.
+
+---
+
+## Behavior Trees (`bt.js`)
+
+A modular, class-based Behavior Tree system designed for complex autonomous game AI. Ideal for stealth guards, resource-gathering workers, squad tactics, and multi-phase boss encounters.
+
+### FSM vs Behavior Tree: When to use which?
+
+| Feature | Finite State Machine (`fsm.js`) | Behavior Tree (`bt.js`) |
+|---|---|---|
+| **Primary focus** | State transitions: *"What state am I in, and when do I transition?"* | Goal execution: *"What should I do right now to satisfy my goals?"* |
+| **Complexity scaling** | Rapid combinatorial explosion of transitions as states grow ($O(N^2)$ connections) | Highly modular; branches can be added, reordered, or reused without rewiring existing nodes |
+| **Interruption model** | Explicit transition guards defined between pairs of states | Reactive selectors (`BTReactiveSelector`) evaluate priorities every tick, naturally interrupting lower-priority actions |
+| **Best suited for** | Simple reactive agents, player controllers, UI flows, menu state | Stealth AI, companions, RTS gatherers, multi-phase bosses |
+
+---
+
+### Node Status (`BTStatus`)
+
+Every node returns one of three discrete status codes during its `Tick`:
+
+```javascript
+BTStatus.SUCCESS  // Task completed successfully
+BTStatus.FAILURE  // Task failed or condition was not met
+BTStatus.RUNNING  // Task is in progress and needs more time across multiple frames
+```
+
+---
+
+### Node Lifecycle
+
+Every node inherits from `BTNode` and implements a clean Template Method pattern:
+
+- **`Enter(owner, bb)`** — Called once when the node begins executing. Initialize timers, animations, or target tracking here.
+- **`Update(dt, owner, bb)`** — Called each frame while the node is running. Must return a `BTStatus`.
+- **`Exit(owner, bb, status)`** — Called once when the node finishes (either `SUCCESS` or `FAILURE`). Clean up temporary states here.
+- **`Abort(owner, bb)`** — Called when a parent reactive node preempts this running task. Ensures safe cancellation.
+- **`Reset()`** — Resets internal timers and running pointers back to initial state.
+
+---
+
+### Blackboard (`BTBlackboard`)
+
+A decoupled memory repository that allows tree nodes to share dynamic data (e.g. current target, last known position, home base) without tight coupling:
+
+```javascript
+const bb = new BTBlackboard();
+
+bb.Set('targetEnemy', playerEntity);
+bb.Get('targetEnemy');       // playerEntity
+bb.Has('targetEnemy');       // true
+bb.Delete('targetEnemy');    // removes key
+bb.Clear();                  // wipes all memory
+
+// Listen to data changes:
+bb.OnChange('targetEnemy', (newVal, oldVal) => {
+    console.log('Target changed to:', newVal);
+});
+```
+
+---
+
+### Composites
+
+Composites contain multiple children and control the flow of execution:
+
+| Composite | Description |
+|---|---|
+| **`BTSelector`** | **OR Logic (Fallback)**. Ticks children from left to right. Succeeds as soon as *one* child succeeds. Remembers running child across frames. |
+| **`BTReactiveSelector`** | **Dynamic Priority Selector**. Evaluates from child 0 on *every frame*. If a higher-priority child becomes ready, it immediately **aborts** the currently running lower-priority child! |
+| **`BTSequence`** | **AND Logic (Procedural)**. Ticks children sequentially. Fails if *any* child fails. Remembers running child across frames. |
+| **`BTReactiveSequence`** | **Continuous Precondition Sequence**. Re-evaluates earlier condition children on every tick. If a continuous condition becomes false, running actions are aborted immediately. |
+| **`BTParallel`** | **Concurrent Execution**. Ticks all children concurrently each frame. Configurable success/failure policies (`REQUIRE_ALL`, `REQUIRE_ONE`). |
+| **`BTRandomSelector`** | Fallback selector with shuffled child evaluation order for ambient variety. |
+| **`BTRandomSequence`** | Procedural sequence with shuffled child execution order. |
+
+---
+
+### Decorators
+
+Decorators wrap a single child node to alter its return status, repeat its execution, or throttle its frequency:
+
+| Decorator | Constructor | Description |
+|---|---|---|
+| **`BTCooldown`** | `new BTCooldown(duration, child)` | Throttles execution. Once child completes, returns `FAILURE` until timer expires. Essential for boss special attacks! |
+| **`BTWait`** | `new BTWait(name, duration)` | Leaf/Decorator timer. Returns `RUNNING` until duration elapses, then returns `SUCCESS`. |
+| **`BTInverter`** | `new BTInverter(child)` | Flips `SUCCESS` $\leftrightarrow$ `FAILURE`. (`RUNNING` remains unchanged). |
+| **`BTRepeater`** | `new BTRepeater(count, child)` | Repeats child $N$ times (or infinitely if count is `0`). |
+| **`BTRepeatUntilFail`** | `new BTRepeatUntilFail(child)` | Repeats child until it returns `FAILURE`. |
+| **`BTRepeatUntilSuccess`**| `new BTRepeatUntilSuccess(child)` | Repeats child until it returns `SUCCESS`. |
+| **`BTSucceeder`** | `new BTSucceeder(child)` | Always returns `SUCCESS` regardless of child outcome. |
+| **`BTFailer`** | `new BTFailer(child)` | Always returns `FAILURE` regardless of child outcome. |
+| **`BTDelay`** | `new BTDelay(delay, child)` | Waits for a delay duration before ticking child. |
+
+---
+
+### Leaves
+
+Leaves are the execution endpoints of the tree:
+
+- **`BTAction(name, actionFn)`** — Executes game actions. `actionFn(dt, owner, bb)` returns a `BTStatus`. Can also be subclassed via OOP (`Enter`, `Update`, `Exit`).
+- **`BTCondition(name, predicateFn)`** — Evaluates a boolean check. Returns `SUCCESS` if true, `FAILURE` if false. Never returns `RUNNING`.
+
+---
+
+### Building and Running a Tree
+
+```javascript
+class GuardAgent extends GameObject {
+    constructor(x, y) {
+        super(new Vector2(x, y));
+        
+        this.blackboard = new BTBlackboard();
+
+        this.bt = new BehaviorTree(this,
+            new BTReactiveSelector('GuardBrain', [
+                
+                // Priority 1: Combat Chase
+                new BTSequence('CombatChase', [
+                    new BTCondition('CanSeePlayer', (g) => g.CanSeePlayer()),
+                    new BTAction('ChasePlayer', (dt, g) => g.ChasePlayer(dt))
+                ]),
+
+                // Priority 2: Patrol Route
+                new BTSequence('PatrolRoutine', [
+                    new BTAction('WalkToWaypoint', (dt, g) => g.WalkToWaypoint(dt)),
+                    new BTWait('LookAround', 1.5)
+                ])
+
+            ]),
+            this.blackboard
+        );
+    }
+
+    Update(dt) {
+        super.Update(dt);
+        this.bt.Update(dt); // Ticks tree
+    }
+
+    Draw(renderer) {
+        // World-space overhead active leaf label
+        this.bt.DrawDebug(renderer, this.position.x, this.position.y - 20);
+
+        // Interactive live tree hierarchy HUD
+        this.bt.DrawTreeInspector(renderer, 20, 50, { width: 300, title: 'Guard AI' });
+    }
+}
+```
+
+---
+
+### Real-Time Tree Inspector (`DrawTreeInspector`)
+
+Behavior Trees feature built-in visual inspection right inside your game canvas:
+
+```javascript
+bt.DrawTreeInspector(renderer, x, y, {
+    width: 320,
+    title: 'Live Behavior Tree Inspector'
+});
+```
+
+- Renders an interactive tree hierarchy showing parent-child indentation.
+- Real-time status badges for every node:
+  - 🟢 `✔` **SUCCESS**
+  - 🔴 `✖` **FAILURE**
+  - 🟡 `⏳` **RUNNING**
+  - ⚪ `○` **IDLE**
+- Highlights active cooldown timers (e.g. `[2.4s]`).
+
+---
+
+### Script Load Order
+
+```html
+<script src="src/engine/game.js"></script>
+<script src="src/engine/bt.js"></script>     <!-- optional Behavior Tree module -->
+<script src="src/engine/main.js"></script>
+```
+
+---
+
+### Demos & Examples
+
+- **[Stealth Guard AI](../bt-guard.html ':ignore :target=_blank')** — Two guards with vision cones, hearing, noise investigation, line-of-sight breaking, and last-known position search routines. See [`src/examples/bt_guard/README.md`](../src/examples/bt_guard/README.md ':ignore :target=_blank').
+- **[Autonomous Resource Worker](../bt-worker.html ':ignore :target=_blank')** — Autonomous miners gather ore, haul cargo to Town Hall, manage fatigue at the campfire, and flee roaming predators using `BTReactiveSequence`. See [`src/examples/bt_worker/README.md`](../src/examples/bt_worker/README.md ':ignore :target=_blank').
+- **[Multiphase Arena Boss](../bt-boss.html ':ignore :target=_blank')** — Titan Mech boss featuring reactive phase shifts, telegraph windups (`BTWait`), ability cooldown throttling (`BTCooldown`), and combo attack sequences. See [`src/examples/bt_boss/README.md`](../src/examples/bt_boss/README.md ':ignore :target=_blank').
 
 ---
 

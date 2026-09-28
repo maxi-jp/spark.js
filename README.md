@@ -24,6 +24,7 @@ Documentation can be consulted [here](https://maxi-jp.github.io/spark.js/docs/).
 - **Tiled Map Editor Integration**: Load maps created in Tiled Map Editor via the `TiledLoader` utility. Export your maps to JSON with embedded tilesets and render them instantly with automatic coordinate calculation.
 - **A\* Pathfinding**: General-purpose `AStarPathfinder` in `ai.js`. Supports 4- and 8-directional movement, swappable heuristics (Manhattan, Octile, Euclidean), line-of-sight path smoothing, and graceful fallbacks for blocked targets. Works with any grid object implementing the duck-typed grid interface.
 - **FSM & HFSM**: Finite State Machine and Hierarchical FSM classes in `fsm.js` (`FSMState`, `FSM`, `FSMCompositeState`). Declarative transition guards (Millington & Funge model) and imperative transitions. Composite states nest a full sub-FSM inside a parent state for hierarchical behaviour. Built-in `DrawDebug` overlay.
+- **Behavior Trees**: Complete class-based Behavior Tree engine in `bt.js` (`BehaviorTree`, `BTNode`, composites, decorators, and `BTBlackboard`). Supports reactive priority interruption (`BTReactiveSelector`), continuous precondition aborts (`BTReactiveSequence`), cooldowns (`BTCooldown`), repeats, and built-in live interactive hierarchy inspection on canvas (`DrawTreeInspector`).
 - **Utilities**: A collection of helpers for vector math, collision detection, color manipulation, and more.
 - **Debugging Tools**: Optional debug drawing for physics bodies and an FPS/stats overlay.
 - **Mode 7 Renderer**: Simulate SNES-style pseudo-3D backgrounds (as in F-Zero or Mario Kart).
@@ -46,6 +47,7 @@ Documentation can be consulted [here](https://maxi-jp.github.io/spark.js/docs/).
   - particlesystem.js     # Particle system (Particle, ParticleEmitter, ParticleSystem classes)
   - ai.js                 # AI utilities: AStarPathfinder with swappable heuristics and path smoothing
   - fsm.js                # FSM & HFSM: FSMState, FSM, FSMCompositeState
+  - bt.js                 # Behavior Trees: BehaviorTree, composites, decorators, leaves, blackboard, live tree inspector
 - examples/
   - audio_test/           # Audio system testing and examples
   - box2d/                # Box2D physics examples
@@ -85,6 +87,9 @@ Documentation can be consulted [here](https://maxi-jp.github.io/spark.js/docs/).
   - pathfinding/          # Interactive A* pathfinding demo (paint walls, switch heuristics live)
   - fsm_basic/            # FSM demo: guard patrol (Patrol → Alert → Chase → Return)
   - fsm_hfsm/             # HFSM demo: sentry AI with nested combat sub-FSM (interactive)
+  - bt_guard/             # BT demo: stealth guard AI with vision cones, hearing, and search routines
+  - bt_worker/            # BT demo: autonomous resource worker with stamina, harvesting, and predator evasion
+  - bt_boss/              # BT demo: multiphase arena boss with phase shifts, cooldowns, and telegraph attacks
   - snake.js              # Snake game implementation
   - timer_test.js         # Timer system demo (Invoke, InvokeRepeating, auto-cleanup)
 
@@ -396,7 +401,7 @@ MIT License
 - [x] ~~Think on a great name for the engine (like **`wat.js`** or something like that).~~ ✅DONE (engine renamed as "spark.js"!!! ✨)
 - [x] ~~Add mobile / touch-screen support with virtual on-screen controls.~~ ✅DONE
 - [ ] Implement a global Event/Signal system (EventBus) for decoupled cross-system communication.
-- [x] ~~Add more game-AI related tools and classes (like FSM, BTs and Fuzzy Logic).~~ ✅DONE (FSM & HFSM in `fsm.js`; BTs and Fuzzy Logic still pending)
+- [x] ~~Add more game-AI related tools and classes (like FSM, BTs and Fuzzy Logic).~~ ✅DONE (FSM & HFSM in `fsm.js`; Behavior Trees in `bt.js`; Fuzzy Logic still pending)
 - [ ] Create a RTS game as a more comple example project. 🔜 working on it 👨🏻‍💻  
 
 ## Contributing
