@@ -164,22 +164,22 @@ class TitanBoss extends GameObject {
                     new BTSelector('BerserkBranch', [
 
                         // Attack 1: Ground Slam Shockwave (Cooldown: 3.2s)
-                        new BTCooldown(3.2,
+                        new BTCooldown('GroundSlamCooldown',
                             new BTSequence('GroundSlamCombo', [
                                 new BTAction('TelegraphSlam', (dt, b) => b.ActionStartSlam(0.9)),
                                 new BTWait('SlamWindup', 0.9),
                                 new BTAction('ReleaseShockwave', (dt, b) => b.ActionReleaseShockwave()),
                                 new BTWait('SlamRecovery', 0.4)
-                            ])
+                            ]), 3.2
                         ),
 
                         // Attack 2: Radial Bullet Barrage (Cooldown: 2.2s)
-                        new BTCooldown(2.2,
+                        new BTCooldown('FrenzyBarrageCooldown',
                             new BTSequence('FrenzyBarrage', [
                                 new BTAction('RadialBurst1', (dt, b) => b.ActionRadialBurst(8)),
                                 new BTWait('BurstGap', 0.35),
                                 new BTAction('RadialBurst2', (dt, b) => b.ActionRadialBurst(10))
-                            ])
+                            ]), 2.2
                         ),
 
                         // Fallback: Aggressive Pursuit
@@ -193,20 +193,20 @@ class TitanBoss extends GameObject {
                     new BTSelector('OverdriveBranch', [
 
                         // Attack 1: Sweeping Plasma Laser (Cooldown: 5.0s)
-                        new BTCooldown(5.0,
+                        new BTCooldown('LaserSweepCooldown',
                             new BTSequence('LaserSweepAttack', [
                                 new BTAction('TelegraphLaser', (dt, b) => b.ActionStartLaser(0.8)),
                                 new BTWait('LaserWindup', 0.8),
                                 new BTAction('ChannelLaserSweep', (dt, b) => b.ActionChannelLaser(dt, 1.4))
-                            ])
+                            ]), 5.0
                         ),
 
                         // Attack 2: Spread Shot Missiles (Cooldown: 2.8s)
-                        new BTCooldown(2.8,
+                        new BTCooldown('SpreadMissileCooldown',
                             new BTSequence('SpreadMissiles', [
                                 new BTAction('FireSpread', (dt, b) => b.ActionSpreadShot(5)),
                                 new BTWait('SpreadCooldown', 0.5)
-                            ])
+                            ]), 2.8
                         ),
 
                         // Fallback: Strafe around Player
@@ -219,21 +219,21 @@ class TitanBoss extends GameObject {
                     new BTSelector('GuardianBranch', [
 
                         // Attack 1: Telegraph Charge Lunge (Cooldown: 4.2s)
-                        new BTCooldown(4.2,
+                        new BTCooldown('ChargeLungeCooldown',
                             new BTSequence('ChargeLungeAttack', [
                                 new BTAction('TelegraphCharge', (dt, b) => b.ActionStartCharge(0.85)),
                                 new BTWait('ChargeWindup', 0.85),
                                 new BTAction('ExecuteLunge', (dt, b) => b.ActionExecuteLunge(dt)),
                                 new BTWait('PostLungeStun', 0.6)
-                            ])
+                            ]), 4.2
                         ),
 
                         // Attack 2: Homing Plasma Orb (Cooldown: 2.2s)
-                        new BTCooldown(2.2,
+                        new BTCooldown('PlasmaBoltCooldown',
                             new BTSequence('PlasmaBolt', [
                                 new BTAction('FireBolt', (dt, b) => b.ActionFireOrb()),
                                 new BTWait('BoltDelay', 0.35)
-                            ])
+                            ]), 2.2
                         ),
 
                         // Fallback: Approach & Patrol

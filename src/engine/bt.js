@@ -52,8 +52,10 @@ class BTBlackboard {
     Set(key, value) {
         const prev = this._data.get(key);
         this._data.set(key, value);
+
         if (prev !== value && this._listeners.has(key)) {
             const list = this._listeners.get(key);
+
             for (let i = 0; i < list.length; i++) {
                 list[i](value, prev);
             }
@@ -104,12 +106,14 @@ class BTBlackboard {
         if (!this._listeners.has(key)) {
             this._listeners.set(key, []);
         }
+
         this._listeners.get(key).push(callback);
         return () => {
             const list = this._listeners.get(key);
             if (list) {
                 const idx = list.indexOf(callback);
-                if (idx !== -1) list.splice(idx, 1);
+                if (idx !== -1)
+                    list.splice(idx, 1);
             }
         };
     }
@@ -523,6 +527,12 @@ class BTParallel extends BTComposite {
             }
         }
     }
+
+    Abort(owner, blackboard) {
+        this._AbortRunningChildren(owner, blackboard);
+        this._childStatuses.clear();
+        super.Abort(owner, blackboard);
+    }
 }
 
 // #endregion
@@ -626,6 +636,7 @@ class BTInverter extends BTDecorator {
 
 /**
  * Repeats its child node a fixed number of times or indefinitely.
+ * If the child returns FAILURE the repeater immediately returns FAILURE (use BTRepeatUntilFail to ignore failures).
  */
 class BTRepeater extends BTDecorator {
     /**
@@ -1096,7 +1107,14 @@ class BehaviorTree {
     _FindActiveLeaf(node) {
         if (!node) return null;
 
-        if (node instanceof BTComposite) {
+        if (node instanceof BTParallel) {
+            for (let i = 0; i < node.children.length; i++) {
+                if (node._childStatuses.get(i) === BTStatus.RUNNING) {
+                    return this._FindActiveLeaf(node.children[i]);
+                }
+            }
+        }
+        else if (node instanceof BTComposite) {
             const idx = node._runningChildIndex;
             if (idx >= 0 && idx < node.children.length) {
                 return this._FindActiveLeaf(node.children[idx]);

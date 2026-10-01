@@ -253,13 +253,13 @@ class WorkerBot extends GameObject {
             new BTReactiveSelector('WorkerBrain', [
 
                 // ── Priority 1: Survival / Evade Threat ──────────────────────────
-                new BTReactiveSequence('EvadeThreat', [
+                new BTSequence('EvadeThreat', [
                     new BTCondition('IsThreatNear', (w) => w.IsPredatorNear()),
                     new BTAction('SprintToSafety', (dt, w, bb) => w.ActionSprintToTower(dt, bb))
                 ]),
 
                 // ── Priority 2: Rest & Recuperate ────────────────────────────────
-                new BTReactiveSequence('RestRoutine', [
+                new BTSequence('RestRoutine', [
                     new BTCondition('NeedsRest', (w) => w.stamina < 20 || w.isResting),
                     new BTAction('WalkToCampfire', (dt, w, bb) => w.ActionWalkToCampfire(dt, bb)),
                     new BTAction('RecoverStamina', (dt, w, bb) => w.ActionRecoverStamina(dt, bb))
