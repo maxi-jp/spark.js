@@ -673,6 +673,7 @@ bt.DrawTreeInspector(renderer, x, y, {
 - **[Stealth Guard AI](../bt-guard.html ':ignore :target=_blank')** — Two guards with vision cones, hearing, noise investigation, line-of-sight breaking, and last-known position search routines. See [`src/examples/bt_guard/README.md`](../src/examples/bt_guard/README.md ':ignore :target=_blank').
 - **[Autonomous Resource Worker](../bt-worker.html ':ignore :target=_blank')** — Autonomous miners gather ore, haul cargo to Town Hall, manage fatigue at the campfire, and flee roaming predators using `BTReactiveSequence`. See [`src/examples/bt_worker/README.md`](../src/examples/bt_worker/README.md ':ignore :target=_blank').
 - **[Multiphase Arena Boss](../bt-boss.html ':ignore :target=_blank')** — Titan Mech boss featuring reactive phase shifts, telegraph windups (`BTWait`), ability cooldown throttling (`BTCooldown`), and combo attack sequences. See [`src/examples/bt_boss/README.md`](../src/examples/bt_boss/README.md ':ignore :target=_blank').
+- **[AI Comparison — Cleaner Bots](../cleaner_bots.html ':ignore :target=_blank')** — Educational sandbox with different bots competing to collect vision-limited rubbish. Demonstrates three contrasting AI architectures running the same domain: hybrid BT+FSM, FSM-only, and BT-only. Shows when and why to use each pattern, emergent competition dynamics, and complementary strengths. Perfect for learning trade-offs between FSM and BT approaches. See the project's [README](../src/examples/cleaner_bots/README.md ':ignore :target=_blank') for a comprehensive walkthrough.
 
 ---
 

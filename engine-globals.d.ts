@@ -26,6 +26,24 @@ declare var debugMode: boolean;
 /** Bootstraps the engine and starts the game. Call inside `window.onload`. */
 declare function Init(gameClass: new (renderer: Renderer) => Game): void;
 
+// ── KEY_* keyboard constants (input.js) ──────────────────────────────────────
+declare var KEY_LEFT: number;  declare var KEY_RIGHT: number;
+declare var KEY_UP: number;    declare var KEY_DOWN: number;
+declare var KEY_SPACE: number; declare var KEY_ENTER: number;
+declare var KEY_ESCAPE: number;declare var KEY_TAB: number;
+declare var KEY_PAUSE: number; declare var KEY_LSHIFT: number; declare var KEY_LCTRL: number;
+declare var KEY_Q: number; declare var KEY_W: number; declare var KEY_E: number;
+declare var KEY_R: number; declare var KEY_T: number; declare var KEY_Y: number;
+declare var KEY_U: number; declare var KEY_I: number; declare var KEY_O: number; declare var KEY_P: number;
+declare var KEY_A: number; declare var KEY_S: number; declare var KEY_D: number;
+declare var KEY_F: number; declare var KEY_G: number; declare var KEY_H: number;
+declare var KEY_J: number; declare var KEY_K: number; declare var KEY_L: number;
+declare var KEY_Z: number; declare var KEY_X: number; declare var KEY_C: number;
+declare var KEY_V: number; declare var KEY_B: number; declare var KEY_N: number; declare var KEY_M: number;
+declare var KEY_0: number; declare var KEY_1: number; declare var KEY_2: number;
+declare var KEY_3: number; declare var KEY_4: number; declare var KEY_5: number;
+declare var KEY_6: number; declare var KEY_7: number; declare var KEY_8: number; declare var KEY_9: number;
+
 // ── Core value types (utils_math.js) ───────────────────────────────────────────
 
 /**
@@ -93,7 +111,8 @@ declare class Color {
     static green: Color;  static lime: Color;   static blue: Color;
     static cyan: Color;   static aqua: Color;   static yellow: Color;
     static orange: Color; static pink: Color;   static purple: Color;
-    static grey: Color;   static transparent: Color;
+    static grey: Color;   static darkGrey: Color; static lightGrey: Color;
+    static transparent: Color;
 }
 
 /** Axis-aligned rectangle. Top-left origin. */
@@ -138,7 +157,24 @@ declare namespace Input {
     /** True every frame the key is held down. */
     function IsKeyPressed(keycode: number): boolean;
 
-    // Mouse
+    // Mouse state object — use Input.mouse for direct polling
+    const mouse: {
+        x: number;
+        y: number;
+        moved: boolean;
+        wheel: number;
+        left:   { down: boolean; up: boolean; pressed: boolean };
+        middle: { down: boolean; up: boolean; pressed: boolean };
+        right:  { down: boolean; up: boolean; pressed: boolean };
+        /** Legacy alias for left.down — true the frame left button was first pressed. */
+        readonly down: boolean;
+        /** Legacy alias for left.up. */
+        readonly up: boolean;
+        /** Legacy alias for left.pressed. */
+        readonly pressed: boolean;
+    };
+
+    // Mouse helper functions (equivalent to polling Input.mouse directly)
     /** True every frame the mouse button is held. 0=left, 1=right, 2=middle. */
     function IsMousePressed(button?: 0 | 1 | 2): boolean;
     /** True on the single frame the mouse button was first pressed. */

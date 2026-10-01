@@ -11,9 +11,9 @@ Scripts are loaded via `<script>` tags in each HTML file in a fixed order.
 Each example HTML file must load engine scripts in this order before any game code:
 
 1. `src/engine/utils_math.js` — math constants and free functions
-2. `src/engine/utils_classes.js` — core value types (Vector2, Color, Rect, ObjectPool, …)
+2. `src/engine/utils_classes.js` — core value types (Vector2, Color, Rect, …)
 3. `src/engine/renderer.js` — Renderer base + Canvas2DRenderer + WebGLRenderer
-4. `src/engine/gameobjects.js` — GameObject, RectangleGO, CircleGO, SpriteObject, SSAnimationObjectBasic, SSAnimationObjectComplex, Tileset, Camera, FollowCamera, FollowCameraBasic, Pool, BackgroundLayer (+ subclasses), BackgroundLayers
+4. `src/engine/gameobjects.js` — GameObject, RectangleGO, CircleGO, SpriteObject, SSAnimationObjectBasic, SSAnimationObjectComplex, Tileset, Camera, FollowCamera, FollowCameraBasic, **Pool** (object pooling), BackgroundLayer (+ subclasses), BackgroundLayers
 5. `src/engine/input.js` — Input namespace, KEY_* / gamepad constants, actions/axes/rumble API
 6. `src/engine/audioplayer.js` — AudioPlayer class
 7. `src/engine/particlesystem.js` — ParticleEmitter, ParticleSystem
@@ -23,7 +23,7 @@ Each example HTML file must load engine scripts in this order before any game co
 11. `src/engine/tiled_loader.js` — TiledLoader *(optional — only if using Tiled maps)*
 12. `src/engine/ai.js` — AStarPathfinder *(optional — only if using pathfinding)*
 13. `src/engine/fsm.js` — FSMState, FSM, FSMCompositeState *(optional — only if using FSM/HFSM)*
-14. `src/engine/bt.js` — BTStatus, BTBlackboard, BTNode, BTSelector, BTSequence, BTParallel, BTAction, BTCondition, BTWait, BehaviorTree *(optional — only if using Behavior Trees)*
+14. `src/engine/bt.js` — BTStatus, BTBlackboard, BTNode, BTSelector, BTSequence, BTParallel, BTAction, BTCondition, BTWait, BehaviorTree; decorators: BTInverter, BTRepeater, BTRepeatUntilFail, BTRepeatUntilSuccess, BTSucceeder, BTFailer, BTCooldown, BTDelay; BTRandomSelector, BTRandomSequence, BTReactiveSelector, BTReactiveSequence *(optional — only if using Behavior Trees)*
 15. `src/lib/Box2D.js` + `src/engine/box2d_helper.js` + `src/engine/box2d_game.js` + `src/engine/box2d_gameobjects.js` *(optional — only for physics games; load `Box2D.js` first)*
 16. `src/engine/main.js` — engine bootstrap (LoadImages, StartGame)
 
@@ -167,7 +167,12 @@ window.onload = () => { Init(MyGame); }
 | Key held | `Input.IsKeyPressed(KEY_SPACE)` |
 | Key just pressed | `Input.IsKeyDown(KEY_SPACE)` |
 | Key just released | `Input.IsKeyUp(KEY_SPACE)` |
-| Mouse button | `Input.IsMouseButtonDown(0)` |
+| Mouse position | `Input.mouse.x` / `Input.mouse.y` — canvas-space coords |
+| Mouse left just pressed | `Input.IsMouseDown()` or `Input.mouse.left.down` |
+| Mouse left held | `Input.IsMousePressed()` or `Input.mouse.left.pressed` |
+| Mouse left just released | `Input.IsMouseUp()` or `Input.mouse.left.up` |
+| Right / middle button | `Input.mouse.right.down` / `Input.mouse.middle.down` etc. |
+| Mouse wheel | `Input.mouse.wheel` — delta this frame (reset each frame) |
 | Gamepad raw | `Input.GetGamepad(0)` |
 | Register action | `Input.RegisterAction('Fire', [{type:'key', code:KEY_SPACE}])` |
 | Action held | `Input.GetAction('Fire')` |
@@ -179,6 +184,17 @@ window.onload = () => { Init(MyGame); }
 | Any gamepad face btn | `Input.IsAnyGamepadFaceButtonDown()` |
 | Rumble preset | `Input.RegisterRumble('hit', 0.8, 0.4, 150)` → `Input.ExecuteRumble('hit', 0)` |
 | Virtual joystick | `Input.RegisterVirtualJoystick('move', x, y, radius)` → `Input.GetAxis('move_x')` |
+
+### Key constants (`KEY_*`)
+All key constants are plain global numbers defined in `input.js`.
+
+| Group | Constants |
+|---|---|
+| Arrows | `KEY_LEFT` `KEY_RIGHT` `KEY_UP` `KEY_DOWN` |
+| Common | `KEY_SPACE` `KEY_ENTER` `KEY_ESCAPE` `KEY_TAB` `KEY_PAUSE` |
+| Modifiers | `KEY_LSHIFT` `KEY_LCTRL` |
+| Letters | `KEY_A` … `KEY_Z` (one per letter, e.g. `KEY_W`, `KEY_S`) |
+| Digits | `KEY_0` … `KEY_9` |
 
 ---
 
@@ -463,7 +479,7 @@ The optional `FSM` classes in `src/engine/fsm.js` provide Finite State Machines 
 - **Use `game.AddGameObject()`** to add GameObjects — it automatically calls `Start()` and adds to the game loop. Direct `gameObjects.push()` skips initialization.
 - **Color channels are 0–1**, not 0–255. Use `Color.FromRGB(r,g,b)` for 0-255 inputs.
 - **`deltaTime` is seconds.** Multiply all speeds/velocities by `deltaTime` for frame-rate independence.
-- **Object pooling** via `ObjectPool` is the standard pattern for bullets, particles, and other frequently created/destroyed objects.
+- **Object pooling** via the `Pool` class (in `gameobjects.js`) is the standard pattern for bullets, particles, and other frequently created/destroyed objects.
 - Engine files use `// #region` / `// #endregion` for code folding.
 - Physics games extend `Box2DGame` instead of `Game`; all Box2D bodies use `physicsScale` (pixels per meter).
 - HTML menus and overlays use `HTMLMenu`; they live in the DOM above the canvas, not on the canvas.

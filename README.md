@@ -90,6 +90,7 @@ Documentation can be consulted [here](https://maxi-jp.github.io/spark.js/docs/).
   - bt_guard/             # BT demo: stealth guard AI with vision cones, hearing, and search routines
   - bt_worker/            # BT demo: autonomous resource worker with stamina, harvesting, and predator evasion
   - bt_boss/              # BT demo: multiphase arena boss with phase shifts, cooldowns, and telegraph attacks
+  - cleaner_bots/         # AI architecture comparison: bots competing with vision-limited rubbish collection (bot types: FSM+BT hybrid, FSM-only, BT-only)
   - snake.js              # Snake game implementation
   - timer_test.js         # Timer system demo (Invoke, InvokeRepeating, auto-cleanup)
 

@@ -64,6 +64,27 @@ Load maps directly from **Tiled Map Editor** using the `TiledLoader` utility. De
 
 General-purpose grid pathfinding via `AStarPathfinder` (`ai.js`). Supports 4- and 8-directional movement, three built-in heuristics (Manhattan, Octile, Euclidean) with automatic selection, line-of-sight path smoothing, and graceful fallbacks for blocked or unreachable targets. Works with any grid object that implements the duck-typed grid interface — no coupling to a specific map format. See the [interactive demo](../pathfinding.html) and [AI utilities reference](./ai.md) for details.
 
+### Finite State Machines (FSM & HFSM)
+
+Organize complex AI and game logic into discrete, manageable states. The engine provides `FSMState`, `FSM`, and `FSMCompositeState` classes (`fsm.js`) supporting both flat and hierarchical state machines. Features include:
+- **Declarative transition guards** — condition functions automatically evaluated each frame (Millington & Funge model)
+- **Imperative transitions** — explicit state changes from within action code
+- **Composite states** — nest sub-FSMs inside parent states for multi-level behavior hierarchies
+- **Built-in debugging** — `DrawDebug()` overlay to visualize active states in real-time
+
+Perfect for character controllers, game modes, NPC behavior, UI flow, and any scenario with discrete states. See the [FSM guard patrol demo](../fsm-basic.html), [HFSM sentry demo](../fsm-hfsm.html), and [FSM reference](./ai.md#fsm--hfsm-fsmjs) for details.
+
+### Behavior Trees
+
+A composable, reactive alternative to FSMs for complex decision-making. The engine provides a full Behavior Tree implementation (`bt.js`) with:
+- **Composites** — `BTSelector` (choose one), `BTSequence` (do all), `BTParallel` (concurrent), and reactive variants (`BTReactiveSelector`, `BTReactiveSequence`) for dynamic re-evaluation and preemption
+- **Decorators** — `BTCooldown`, `BTWait`, `BTDelay`, `BTInverter`, `BTRepeater`, and more for fine-grained behavior control
+- **Leaf nodes** — `BTAction` and `BTCondition` for implementing concrete behaviors and checks
+- **Blackboard memory** — Shared, key-value state store for nodes to coordinate and persist data
+- **Live tree inspector** — `DrawTreeInspector()` displays the entire tree hierarchy with real-time status (SUCCESS, FAILURE, RUNNING, IDLE) and cooldown timers
+
+Ideal for boss AI, autonomous agents, complex multi-stage routines, and systems requiring reactive priority interruption. See the [stealth guard demo](../bt-guard.html), [autonomous worker demo](../bt-worker.html), [multiphase boss demo](../bt-boss.html), and [BT reference](./ai.md#behavior-trees-btjs) for details.
+
 ### Utilities
 
 A collection of helper functions and classes for common tasks: vector math, collision detection, color manipulation, and more.
