@@ -30,7 +30,9 @@ class Enemy extends SpriteObject {
 
     Start() {
         this.collider = new CircleCollider(Vector2.Zero(), this.boundingRadious, this);
-        game.AddCollider(this.collider);
+        this.game.AddCollider(this.collider);
+
+        super.Start();
     }
 
     Update(deltaTime) {
@@ -84,7 +86,7 @@ class Enemy extends SpriteObject {
         bullet.active = false;
 
         if (this.Damage(bullet.damage)) {
-            game.EnemyKilled(this);
+            this.game.EnemyKilled(this);
         }
     }
 }
@@ -129,14 +131,97 @@ const KamikazeState = {
     kamikaze: 1
 }
 
+// #region EnemyKamikaze
+// EnemyKamikaze states
+
+class EnemyLookingState extends FSMState {
+    constructor() {
+        super();
+        
+        this.timer = 0;
+    }
+
+    Enter(owner, prev) {
+        this.timer = 0;
+    }
+
+    Update(dt, owner, fsm) {
+        // look for the player
+        owner.rotation = Math.atan2(
+            owner.player.position.y - owner.position.y,
+            owner.player.position.x - owner.position.x
+        ) + PIH;
+
+        if (owner.IsSpawning())
+            return;
+
+        this.timer += dt;
+
+        // Imperative transition: looking duration elapsed → kamikaze
+        if (this.timer >= owner.lookingTime) {
+            fsm.Transition('kamikaze');
+        }
+    }
+}
+
+class EnemyKamikazeState extends FSMState {
+    constructor() {
+        super();
+
+        this.AddTransition('looking', owner => {
+            if (owner.hasEnteredScene) {
+                // check scene limits
+                // left wall
+                if (owner.position.x < owner.sceneLimits.position.x + owner.boundingRadious) {
+                    owner.position.x = owner.sceneLimits.position.x + owner.boundingRadious;
+                    return true;
+                }
+                // right wall
+                if (owner.position.x > owner.sceneLimits.position.x + owner.sceneLimits.width - owner.boundingRadious) {
+                    owner.position.x = owner.sceneLimits.position.x + owner.sceneLimits.width - owner.boundingRadious;
+                    return true;
+                }
+                // top wall
+                if (owner.position.y < owner.sceneLimits.position.y + owner.boundingRadious) {
+                    owner.position.y = owner.sceneLimits.position.y + owner.boundingRadious;
+                    return true;
+                }
+                // bottom wall
+                if (owner.position.y > owner.sceneLimits.position.y + owner.sceneLimits.height - owner.boundingRadious) {
+                    owner.position.y = owner.sceneLimits.position.y + owner.sceneLimits.height - owner.boundingRadious;
+                    return true;
+                }
+            }
+            return false;
+        });
+    }
+
+    Update(dt, owner, fsm) {
+        // Move forwards
+        owner.position.x += Math.cos(owner.rotation - PIH) * owner.speed * dt;
+        owner.position.y += Math.sin(owner.rotation - PIH) * owner.speed * dt;
+
+        // Check if it has entered the scene
+        if (!owner.hasEnteredScene) {
+            if (owner.position.x >= owner.sceneLimits.position.x + owner.boundingRadious &&
+                owner.position.x <= owner.sceneLimits.position.x + owner.sceneLimits.width - owner.boundingRadious &&
+                owner.position.y >= owner.sceneLimits.position.y + owner.boundingRadious &&
+                owner.position.y <= owner.sceneLimits.position.y + owner.sceneLimits.height - owner.boundingRadious) {
+                owner.hasEnteredScene = true;
+            }
+        }
+    }
+}
+
 class EnemyKamikaze extends Enemy {
     constructor(initialPosition, img, player, sceneLimits) {
         super(initialPosition, img, player, sceneLimits);
 
-        this.state = KamikazeState.looking;
+        this.fsm = new FSM(this, 'looking')
+            .AddState('looking',  new EnemyLookingState())
+            .AddState('kamikaze', new EnemyKamikazeState());
 
         this.lookingTime = 2;
-        this.lookingTimeAux = 0;
 
         this.speed = 850;
         this.score = 2;
@@ -146,6 +231,11 @@ class EnemyKamikaze extends Enemy {
         this.thrustFirePosition = new Vector2(-40, 0);
 
         this.hasEnteredScene = false;
+    }
+
+    Start() {
+        super.Start();
+        this.fsm.Start();
     }
 
     Update(deltaTime) {
@@ -158,65 +248,7 @@ class EnemyKamikaze extends Enemy {
         this.thrustFireSprite.alpha = (Math.cos(totalTime * 20) + 1) / 2;
         this.thrustFireSprite.alpha += (Math.cos(totalTime * 54.67) + 1) / 2;
 
-        switch(this.state) {
-            case KamikazeState.looking:
-                // look for the player
-                this.rotation = Math.atan2(
-                    this.player.position.y - this.position.y,
-                    this.player.position.x - this.position.x
-                ) + PIH;
-
-                if (this.IsSpawning()) return;
-
-                this.lookingTimeAux += deltaTime;
-                if (this.lookingTimeAux >= this.lookingTime) {
-                    // state transition to kamikaze
-                    this.state = KamikazeState.kamikaze;
-                    this.lookingTimeAux = 0;
-                }
-
-                break;
-
-            case KamikazeState.kamikaze:
-                // move forwards
-                this.position.x += Math.cos(this.rotation - PIH) * this.speed * deltaTime;
-                this.position.y += Math.sin(this.rotation - PIH) * this.speed * deltaTime;
-
-                if (!this.hasEnteredScene) {
-                    if (this.position.x >= this.sceneLimits.position.x + this.boundingRadious &&
-                        this.position.x <= this.sceneLimits.position.x + this.sceneLimits.width - this.boundingRadious &&
-                        this.position.y >= this.sceneLimits.position.y + this.boundingRadious &&
-                        this.position.y <= this.sceneLimits.position.y + this.sceneLimits.height - this.boundingRadious) {
-                        this.hasEnteredScene = true;
-                    }
-                }
-
-                if (this.hasEnteredScene) {
-                    // check scene limits
-                    // left wall
-                    if (this.position.x < this.sceneLimits.position.x + this.boundingRadious) {
-                        this.position.x = this.sceneLimits.position.x + this.boundingRadious;
-                        this.state = KamikazeState.looking;
-                    }
-                    // right wall
-                    if (this.position.x > this.sceneLimits.position.x + this.sceneLimits.width - this.boundingRadious) {
-                        this.position.x = this.sceneLimits.position.x + this.sceneLimits.width - this.boundingRadious;
-                        this.state = KamikazeState.looking;
-                    }
-                    // top wall
-                    if (this.position.y < this.sceneLimits.position.y + this.boundingRadious) {
-                        this.position.y = this.sceneLimits.position.y + this.boundingRadious;
-                        this.state = KamikazeState.looking;
-                    }
-                    // bottom wall
-                    if (this.position.y > this.sceneLimits.position.y + this.sceneLimits.height - this.boundingRadious) {
-                        this.position.y = this.sceneLimits.position.y + this.sceneLimits.height - this.boundingRadious;
-                        this.state = KamikazeState.looking;
-                    }
-                }
-
-                break;
-        }
+        this.fsm.Update(deltaTime);
     }
 
     Draw(renderer) {
@@ -227,6 +259,10 @@ class EnemyKamikaze extends Enemy {
         super.Draw(renderer);
     }
 }
+
+// #endregion
+
+// #region EnemyAsteroid
 
 class EnemyAsteroid extends Enemy {
     constructor(initialPosition, img, player, sceneLimits, direction, small) {
@@ -254,7 +290,8 @@ class EnemyAsteroid extends Enemy {
 
         this.rotation += this.rotationSpeed * deltaTime;
 
-        if (this.IsSpawning()) return;
+        if (this.IsSpawning())
+            return;
 
         // move forwards
         this.position.x += this.direction.x * this.speed * deltaTime;
@@ -265,7 +302,7 @@ class EnemyAsteroid extends Enemy {
             (this.position.x > this.sceneLimits.position.x + this.sceneLimits.width + 200) || // east
             (this.position.y < this.sceneLimits.position.y - 200) || // north
             (this.position.y > this.sceneLimits.position.y + this.sceneLimits.height + 200)) { // south
-            game.RemoveEnemy(this);
+            this.game.RemoveEnemy(this);
         }
     }
 
@@ -292,13 +329,17 @@ class EnemyAsteroid extends Enemy {
             // Instantly spawn
             smallAsteroidB.spawnTime = 0;
             
-            game.AddEnemy(smallAsteroidA);
-            game.AddEnemy(smallAsteroidB);
+            this.game.AddEnemy(smallAsteroidA);
+            this.game.AddEnemy(smallAsteroidB);
         }
 
         return dead;
     }
 }
+
+// #endregion
+
+// #region EnemyWaver
 
 class EnemyWaver extends Enemy {
     constructor(initialPosition, img, player, sceneLimits) {
@@ -346,6 +387,10 @@ class EnemyWaver extends Enemy {
     }
 }
 
+// #endregion
+
+// #region EnemyStrafer
+
 class EnemyStrafer extends Enemy {
     constructor(initialPosition, img, player, sceneLimits) {
         super(initialPosition, img, player, sceneLimits);
@@ -389,6 +434,10 @@ class EnemyStrafer extends Enemy {
     }
 }
 
+// #endregion
+
+// #EnemyTank
+
 class EnemyTank extends Enemy {
     constructor(initialPosition, img, player, sceneLimits) {
         super(initialPosition, img, player, sceneLimits);
@@ -418,7 +467,9 @@ class EnemyTank extends Enemy {
 
     Draw(renderer) {
         // Reuse asteroid body as a heavier silhouette for tank enemies.
-        super.DrawSection(renderer, 144, 428, 48, 48);
+        super.DrawSection(renderer, 124, 20, 48, 48);
         super.Draw(renderer);
     }
 }
+
+// #endregion

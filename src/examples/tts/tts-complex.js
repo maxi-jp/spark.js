@@ -101,7 +101,7 @@ class TTSC extends Game {
         super.Start();
 
         this.state = GAME_STATE.MAIN_MENU;
-        this.spawnMode = SPAWN_MODE.JSON_LEVELS; 
+        this.spawnMode = SPAWN_MODE.RANDOM; 
 
         // Player's input configuration --------------------
         this.SetupInput();
@@ -417,6 +417,7 @@ class TTSC extends Game {
         let type = random < 0.33 ? 0 : random < 0.66 ? 1 : 2;
         const spawnPoint = this.enemiesSpawnPoints[RandomBetweenInt(0, this.enemiesSpawnPoints.length - 1)];        
         
+        type = 5;
         this.SpawnEnemy(type, spawnPoint)
 
         this.timeToSpawnEnemy *= 0.97;
@@ -503,5 +504,5 @@ class TTSC extends Game {
 }
 
 window.onload = () => {
-    Init(TTSC);
+    Init(TTSC, "myCanvas");
 }
