@@ -439,7 +439,8 @@ class AttackState extends FSMState {
     
     Update(dt, owner, fsm) {
         this.bt.Update(dt);
-        if (owner.health <= 0) fsm.Transition('flee');
+        if (owner.health <= 0)
+            fsm.Transition('flee');
     }
 }
 ```
@@ -468,7 +469,8 @@ class RedState extends FSMState {
     }
     Update(dt, owner, fsm) {
         this.timer += dt;
-        if (this.timer >= 5.0) fsm.Transition('green');
+        if (this.timer >= 5.0)
+            fsm.Transition('green');
     }
 }
 ```

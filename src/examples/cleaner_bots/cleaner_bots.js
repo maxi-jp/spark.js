@@ -85,7 +85,7 @@ class ChargingPad {
     constructor(x, y) {
         this.position = new Vector2(x, y);
         this.radius   = 26;
-        this.textLabel = new TextLabel('⚡ CHARGE ⚡', new Vector2(this.position.x, this.position.y - 26), 'bold 10px monospace', ChargingPad.labelColor, 'center');
+        this.textLabel = new TextLabel('⚡ CHARGE ⚡', new Vector2(this.position.x, this.position.y - 26), 'bold 12px monospace', ChargingPad.labelColor, 'center');
     }
 
     Draw(renderer) {
@@ -105,14 +105,24 @@ class ChargingPad {
 class CleanerRobot extends GameObject {
     constructor(name, x, y, world) {
         super(new Vector2(x, y), 0, 1);
-        this.name       = name;
-        this.world      = world;
-        this.radius     = 12;
-        this.moveSpeed  = 85;
-        this.battery    = 100;
-        this.score      = 0;
-        this.stateColor = new Color(1, 1, 1);  // subclasses override
+        this.name        = name;
+        this.world       = world;
+
+        this.radius      = 12;
+        this.pickUpRange = this.radius + 2;
         this.visionRange = 200;
+        this.visionRangeSq = this.visionRange * this.visionRange;
+
+        this.moveSpeed   = 85;
+        this.wanderSpeed = this.moveSpeed * 0.5;
+
+        this.battery             = 100;
+        this.batteryDrainRate    = 4;
+        this.batteryChargingRate = 25;
+
+        this.score = 0;
+        
+        this.stateColor = new Color(1, 1, 1);  // subclasses override
     }
 
     _SteerAndMove(targetPos, speed, dt) {
@@ -127,9 +137,48 @@ class CleanerRobot extends GameObject {
         this.position.x = Clamp(this.position.x, 20, this.game.screenWidth - 20);
         this.position.y = Clamp(this.position.y, 60, this.game.screenHeight - 20);
     }
+
+    _DrawVisionSphere(renderer) {
+        // Debug: vision range circle
+        if (debugMode) {
+            renderer.DrawStrokeCircle(this.position.x, this.position.y, this.visionRange, new Color(this.stateColor.r, this.stateColor.g, this.stateColor.b, 0.2), 1);
+        }
+    }
+
+    _DrawVisionNose(renderer) {
+        renderer.DrawLine(
+            this.position.x, this.position.y,
+            this.position.x + Math.cos(this.rotation) * (this.radius + 4),
+            this.position.y + Math.sin(this.rotation) * (this.radius + 4),
+            Color.white, 2
+        );
+    }
+
+    _DrawBatteryBar(renderer) {
+        const bw = 26, bh = 4, bx = this.position.x - 13, by = this.position.y - this.radius - 10;
+        const pct = this.battery / 100;
+
+        renderer.DrawFillBasicRectangle(bx, by, bw, bh, new Color(0.15, 0.15, 0.15, 0.85));
+        renderer.DrawFillBasicRectangle(bx, by, bw * pct, bh,
+            pct > 0.5 ? Color.lime : pct > 0.2 ? Color.yellow : Color.red);
+        renderer.DrawStrokeBasicRectangle(bx, by, bw, bh, Color.black, 1);
+    }
+
+    _DrawNameAndScore(renderer) {
+        const by = this.position.y - this.radius - 10;
+
+        renderer.DrawFillText(
+            `${this.name}  ${this.score}🗑`,
+            this.position.x, by - 13, 'bold 11px monospace', Color.white, 'center'
+        );
+    }
+
+    _DrawLineToTarget(renderer, targetPosition, color) {
+        renderer.DrawLine(this.position.x, this.position.y, targetPosition.x, targetPosition.y, color, 1);
+    }
 }
 
-// region FSM + BT Robot
+// #region FSM + BT Robot
 // ── FSMBTRobot (BT + FSM) ─────────────────────────────────────────────────────────
 // Two-layer AI: FSM controls when BT runs
 
@@ -145,7 +194,7 @@ const FSMBT_BOT_COLORS = {
 class FSMBTActiveState extends FSMState {
     constructor() {
         super();
-        this.AddTransition('lowBattery', owner => owner.battery < 20);
+        this.AddTransition('lowBattery', owner => owner.battery < owner.batteryLowValue);
     }
 
     Enter(owner, prev) {
@@ -159,7 +208,11 @@ class FSMBTActiveState extends FSMState {
             fsm.Transition('broken');
             return;
         }
-        owner.battery = Math.max(0, owner.battery - 4 * dt);
+
+        // battery drain
+        owner.battery -= owner.batteryDrainRate * dt;
+        owner.battery = Math.max(0, owner.battery);
+
         owner.bt.Update(dt);
     }
 
@@ -177,8 +230,13 @@ class FSMBTLowBatteryState extends FSMState {
     }
 
     Update(dt, owner, fsm) {
-        owner.battery = Math.max(0, owner.battery - 1.5 * dt);
+        // battery drain
+        owner.battery -= owner.batteryDrainRate * dt;
+        owner.battery = Math.max(0, owner.battery);
+
+        // go towars the battery charger
         owner._SteerAndMove(owner.world.charger.position, owner.moveSpeed, dt);
+
         if (Vector2.Magnitude(owner.position, owner.world.charger.position) < owner.world.charger.radius) {
             fsm.Transition('charging');
         }
@@ -196,7 +254,9 @@ class FSMBTChargingState extends FSMState {
     }
 
     Update(dt, owner, fsm) {
-        owner.battery = Math.min(100, owner.battery + 28 * dt);
+        // charge the battery
+        owner.battery += owner.batteryChargingRate * dt;
+        owner.battery = Math.min(100, owner.battery);
     }
 }
 
@@ -227,6 +287,8 @@ class FSMBTRobot extends CleanerRobot {
         super(name, x, y, world);
         this.stateColor = FSMBT_BOT_COLORS.active;
 
+        this.batteryLowValue = 20;
+
         this.fsm = null;
         this.blackboard = null;
         this.bt = null;
@@ -248,10 +310,10 @@ class FSMBTRobot extends CleanerRobot {
         this.blackboard = new BTBlackboard();
 
         // ┌──────────────────────────────────────────────────────────────────────┐
-        // │  CleanerBot BT — ticks only while FSM is in 'active' state          │
+        // │  FSMBTRobot BT — ticks only while FSM is in 'active' state           │
         // │                                                                      │
-        // │  BTReactiveSelector re-evaluates top-down every tick.               │
-        // │  BTReactiveSequence makes AcquireTarget re-check each tick so a     │
+        // │  BTReactiveSelector re-evaluates top-down every tick.                │
+        // │  BTReactiveSequence makes AcquireTarget re-check each tick so a      │
         // │  stolen or already-collected target is dropped without waiting.      │
         // └──────────────────────────────────────────────────────────────────────┘
         this.bt = new BehaviorTree(this,
@@ -293,13 +355,12 @@ class FSMBTRobot extends CleanerRobot {
 
         // Claim the nearest unclaimed rubbish item within vision range
         let best = null, bestSq = Infinity;
-        const visionSq = this.visionRange * this.visionRange;
         for (const r of this.world.rubbish) {
             if (r.collected || r.claimedBy)
                 continue;
 
             const sq = Vector2.SqrMagnitude(this.position, r.position);
-            if (sq <= visionSq && sq < bestSq) {
+            if (sq <= this.visionRangeSq && sq < bestSq) {
                 bestSq = sq;
                 best = r;
             }
@@ -321,7 +382,7 @@ class FSMBTRobot extends CleanerRobot {
             return BTStatus.FAILURE;
         }
 
-        if (Vector2.Magnitude(this.position, target.position) < 14) {
+        if (Vector2.Magnitude(this.position, target.position) < this.pickUpRange) {
             return BTStatus.SUCCESS;
         }
 
@@ -337,27 +398,33 @@ class FSMBTRobot extends CleanerRobot {
             target.claimedBy = null;
             this.score++;
         }
+
         bb.Delete('target');
+
         return BTStatus.SUCCESS;
     }
 
     _ActionWander(dt, bb) {
         // Persist wander destination in blackboard to avoid per-frame jitter
         let wp = bb.Get('wanderTarget');
-        if (!wp || Vector2.Magnitude(this.position, wp) < 12) {
+        if (!wp || Vector2.Magnitude(this.position, wp) < this.radius) {
             wp = new Vector2(
                 RandomBetweenFloat(50, this.game.screenWidth - 50),
-                RandomBetweenFloat(70, this.game.screenHeight - 50)
+                RandomBetweenFloat(50, this.game.screenHeight - 50)
             );
             bb.Set('wanderTarget', wp);
         }
-        this._SteerAndMove(wp, this.moveSpeed * 0.38, dt);
+
+        this._SteerAndMove(wp, this.wanderSpeed, dt);
+
         return BTStatus.RUNNING;
     }
 
     _ReleaseClaim() {
         const target = this.blackboard.Get('target');
-        if (target && target.claimedBy === this) target.claimedBy = null;
+        if (target && target.claimedBy === this)
+            target.claimedBy = null;
+        
         this.blackboard.Delete('target');
     }
 
@@ -373,56 +440,43 @@ class FSMBTRobot extends CleanerRobot {
         const { x, y } = this.position;
 
         // Flicker when broken
-        if (this.fsm.currentStateName === 'broken' && Math.floor(Date.now() / 180) % 2 === 0) return;
+        if (this.fsm.currentStateName === 'broken' && Math.floor(Date.now() / 180) % 2 === 0)
+            return;
 
-        // Debug: vision range circle
-        if (debugMode) {
-            renderer.DrawStrokeCircle(x, y, this.visionRange, new Color(0.25, 0.88, 0.45, 0.15), 1);
-        }
+        // Vision range circle
+        this._DrawVisionSphere(renderer);
 
         // Body
         renderer.DrawFillCircle(x, y, this.radius, this.stateColor);
         renderer.DrawStrokeCircle(x, y, this.radius, Color.white, 1.5);
 
         // Direction nose
-        renderer.DrawLine(
-            x, y,
-            x + Math.cos(this.rotation) * (this.radius + 4),
-            y + Math.sin(this.rotation) * (this.radius + 4),
-            Color.white, 2
-        );
+        this._DrawVisionNose(renderer);
 
         // Battery bar
-        const bw = 26, bh = 4, bx = x - 13, by = y - this.radius - 10;
-        const pct = this.battery / 100;
-        renderer.DrawFillBasicRectangle(bx, by, bw, bh, new Color(0.15, 0.15, 0.15, 0.85));
-        renderer.DrawFillBasicRectangle(bx, by, bw * pct, bh,
-            pct > 0.5 ? Color.lime : pct > 0.2 ? Color.yellow : Color.red);
-        renderer.DrawStrokeBasicRectangle(bx, by, bw, bh, Color.black, 1);
-
-        // Name + score
-        renderer.DrawFillText(
-            `${this.name}  ${this.score}🗑`,
-            x, by - 13, 'bold 11px monospace', Color.white, 'center'
-        );
+        this._DrawBatteryBar(renderer);
+        // Name & score
+        this._DrawNameAndScore(renderer);
 
         // Target line: to rubbish or charger
         const target = this.blackboard.Get('target');
         if (target && !target.collected) {
-            renderer.DrawLine(x, y, target.position.x, target.position.y, new Color(0.25, 0.88, 0.45, 0.4), 1);
-        } else if (this.battery < 30) {
-            renderer.DrawLine(x, y, this.world.charger.position.x, this.world.charger.position.y, new Color(1.0, 0.72, 0.1, 0.4), 1);
+            this._DrawLineToTarget(renderer, target.position, this.stateColor);
         }
-
+        else if (this.fsm.currentStateName === 'lowBattery') {
+            this._DrawLineToTarget(renderer, this.world.charger.position,
+                new Color(this.stateColor.r, this.stateColor.g, this.stateColor.b, 0.4));
+        }
+        
         // Debug overlays — FSM state label + BT active-leaf label
         this.fsm.DrawDebug(renderer, x, y + this.radius + 12);
         this.bt.DrawDebug(renderer, x, y + this.radius + 24);
     }
 }
 
-// endregion
+// #endregion FSM + BT Robot
 
-// region FSM Robot
+// #region FSM Robot
 // ── FSM-only Bot ─────────────────────────────────────────────────────────────────
 // One AI layer only: an explicit state machine. Each state owns its logic directly.
 // Shape: square  Color scheme: amber/yellow
@@ -437,67 +491,91 @@ const FSM_BOT_COLORS = {
 class FSMIdleState extends FSMState {
     constructor() {
         super();
-        this.AddTransition('lowBattery', owner => owner.battery < 20);
+        this.AddTransition('lowBattery', owner => owner.battery < owner.batteryLowValue);
     }
 
-    Enter(owner, prev) { owner.stateColor = FSM_BOT_COLORS.idle; }
+    Enter(owner, prev) {
+        owner.stateColor = FSM_BOT_COLORS.idle;
+    }
 
     Update(dt, owner, fsm) {
-        owner.battery = Math.max(0, owner.battery - 3.5 * dt);
+        // Consume battery
+        owner.battery -= owner.batteryDrainRate * dt;
+        owner.battery = Math.max(0, owner.battery);
+
         let best = null, bestSq = Infinity;
-        const visionSq = owner.visionRange * owner.visionRange;
         for (const r of owner.world.rubbish) {
-            if (r.collected || r.claimedBy) continue;
+            if (r.collected || r.claimedBy)
+                continue;
+
             const sq = Vector2.SqrMagnitude(owner.position, r.position);
-            if (sq <= visionSq && sq < bestSq) { bestSq = sq; best = r; }
+            if (sq <= owner.visionRangeSq && sq < bestSq) {
+                bestSq = sq;
+                best = r;
+            }
         }
+
         if (best) {
             best.claimedBy = owner;
             owner._target = best;
             fsm.Transition('seek');
+
             return;
         }
-        // No rubbish visible — explore the arena so new rubbish enters vision range
-        if (!owner._wanderTarget || Vector2.Magnitude(owner.position, owner._wanderTarget) < 12) {
-            owner._wanderTarget = new Vector2(
-                RandomBetweenFloat(50, owner.game.screenWidth - 50),
-                RandomBetweenFloat(70, owner.game.screenHeight - 50)
-            );
+        else {
+            // No rubbish visible — explore the arena so new rubbish enters vision range
+            if (!owner._wanderTarget || Vector2.Magnitude(owner.position, owner._wanderTarget) < owner.radius) {
+                owner._wanderTarget = new Vector2(
+                    RandomBetweenFloat(50, owner.game.screenWidth - 50),
+                    RandomBetweenFloat(50, owner.game.screenHeight - 50)
+                );
+            }
+            owner._SteerAndMove(owner._wanderTarget, owner.wanderSpeed, dt);
         }
-        owner._SteerAndMove(owner._wanderTarget, owner.moveSpeed * 0.38, dt);
     }
 }
 
 class FSMSeekState extends FSMState {
     constructor() {
         super();
-        this.AddTransition('lowBattery', owner => owner.battery < 20);
+        this.AddTransition('lowBattery', owner => owner.battery < owner.batteryLowValue);
     }
 
-    Enter(owner, prev) { owner.stateColor = FSM_BOT_COLORS.seek; }
+    Enter(owner, prev) {
+        owner.stateColor = FSM_BOT_COLORS.seek;
+    }
 
     Update(dt, owner, fsm) {
-        owner.battery = Math.max(0, owner.battery - 3.5 * dt);
+        owner.battery -= owner.batteryDrainRate * dt;
+        owner.battery = Math.max(0, owner.battery);
+        
         const target = owner._target;
         if (!target || target.collected) {
             owner._target = null;
             fsm.Transition('idle');
+
             return;
         }
-        if (Vector2.Magnitude(owner.position, target.position) < 14) {
-            target.collected = true;
-            target.claimedBy = null;
-            owner.score++;
-            owner._target = null;
-            fsm.Transition('idle');
-            return;
+        else {
+            if (Vector2.Magnitude(owner.position, target.position) < owner.pickUpRange) {
+                target.collected = true;
+                target.claimedBy = null;
+                owner.score++;
+                owner._target = null;
+                fsm.Transition('idle');
+
+                return;
+            }
+
+            owner._SteerAndMove(target.position, owner.moveSpeed, dt);
         }
-        owner._SteerAndMove(target.position, owner.moveSpeed, dt);
     }
 
     // Release claim on any exit (low battery, or target gone/picked up)
     Exit(owner, next) {
-        if (owner._target && owner._target.claimedBy === owner) owner._target.claimedBy = null;
+        if (owner._target && owner._target.claimedBy === owner)
+            owner._target.claimedBy = null;
+
         owner._target = null;
     }
 }
@@ -520,19 +598,23 @@ class FSMChargingState extends FSMState {
         this.AddTransition('idle', owner => owner.battery >= 100);
     }
 
-    Enter(owner, prev) { owner.stateColor = FSM_BOT_COLORS.charging; }
+    Enter(owner, prev) {
+        owner.stateColor = FSM_BOT_COLORS.charging;
+    }
 
     Update(dt, owner, fsm) {
-        owner.battery = Math.min(100, owner.battery + 28 * dt);
+        // Recharging battery
+        owner.battery += owner.batteryChargingRate * dt;
+        owner.battery = Math.min(100, owner.battery);
     }
 }
 
 class FSMBot extends CleanerRobot {
     constructor(name, x, y, world) {
         super(name, x, y, world);
-        this.moveSpeed  = 82;
         this.stateColor = FSM_BOT_COLORS.idle;
         this._target    = null;
+        this.batteryLowValue = 20;
 
         this.fsm = new FSM(this, 'idle')
             .AddState('idle',       new FSMIdleState())
@@ -551,37 +633,38 @@ class FSMBot extends CleanerRobot {
     Draw(renderer) {
         const { x, y } = this.position;
         const hw = 11;
+        
+        // Vision range circle
+        this._DrawVisionSphere(renderer);
 
-        // Debug: vision range circle
-        if (debugMode) {
-            renderer.DrawStrokeCircle(x, y, this.visionRange, new Color(0.85, 0.55, 0.2, 0.15), 1);
-        }
-
+        // Body
         renderer.DrawFillBasicRectangle(x - hw, y - hw, hw * 2, hw * 2, this.stateColor);
         renderer.DrawStrokeBasicRectangle(x - hw, y - hw, hw * 2, hw * 2, Color.white, 1.5);
-        renderer.DrawLine(x, y, x + Math.cos(this.rotation) * (hw + 4), y + Math.sin(this.rotation) * (hw + 4), Color.white, 2);
-        const bw = 26, bh = 4, bx = x - 13, by = y - hw - 10;
-        const pct = this.battery / 100;
-        renderer.DrawFillBasicRectangle(bx, by, bw, bh, new Color(0.15, 0.15, 0.15, 0.85));
-        renderer.DrawFillBasicRectangle(bx, by, bw * pct, bh, pct > 0.5 ? Color.lime : pct > 0.2 ? Color.yellow : Color.red);
-        renderer.DrawStrokeBasicRectangle(bx, by, bw, bh, Color.black, 1);
-        renderer.DrawFillText(`${this.name}  ${this.score}🗑`, x, by - 13, 'bold 11px monospace', Color.white, 'center');
-        renderer.DrawFillText('[FSM]', x, by - 24, '9px monospace', FSM_BOT_COLORS.seek, 'center');
 
+        // Direction nose
+        this._DrawVisionNose(renderer);
+
+        // Battery bar
+        this._DrawBatteryBar(renderer);
+        // Name & score
+        this._DrawNameAndScore(renderer);
+        
         // Target line: to rubbish or charger
         if (this._target && !this._target.collected) {
-            renderer.DrawLine(x, y, this._target.position.x, this._target.position.y, new Color(0.95, 0.85, 0.2, 0.4), 1);
-        } else if (this.battery < 30) {
-            renderer.DrawLine(x, y, this.world.charger.position.x, this.world.charger.position.y, new Color(0.85, 0.35, 0.1, 0.4), 1);
+            this._DrawLineToTarget(renderer, this._target.position, this.stateColor);
+        }
+        else if (this.fsm.currentStateName === 'lowBattery') {
+            this._DrawLineToTarget(renderer, this.world.charger.position,
+                new Color(this.stateColor.r, this.stateColor.g, this.stateColor.b, 0.4));
         }
 
         this.fsm.DrawDebug(renderer, x, y + hw + 12);
     }
 }
 
-// endregion
+// #endregion FSM Robot
 
-// region BT Bot
+// #region BT Bot
 // ── BT-only Bot ─────────────────────────────────────────────────────────────────
 // One AI layer only: a reactive behavior tree handles all decisions including
 // battery management. No FSM — mode changes emerge from BT priority.
@@ -596,24 +679,26 @@ const BT_BOT_COLORS = {
 class BTBot extends CleanerRobot {
     constructor(name, x, y, world) {
         super(name, x, y, world);
-        this.moveSpeed  = 80;
+
         this.stateColor = BT_BOT_COLORS.wander;
+
+        this.batteryLowValue = 20;
 
         this.blackboard = new BTBlackboard();
 
         // ┌──────────────────────────────────────────────────────────────────────┐
-        // │  BTBot BT — handles ALL behaviour including battery in one tree.    │
+        // │  BTBot BT — handles ALL behaviour including battery in one tree.     │
         // │                                                                      │
-        // │  ChargeCycle uses plain BTSequence (not reactive) so it commits to  │
-        // │  a full charge once started — NeedsCharge is not re-checked mid-run.│
+        // │  ChargeCycle uses plain BTSequence (not reactive) so it commits to   │
+        // │  a full charge once started — NeedsCharge is not re-checked mid-run. │
         // └──────────────────────────────────────────────────────────────────────┘
         this.bt = new BehaviorTree(this,
             new BTReactiveSelector('BTBotBrain', [
 
                 new BTSequence('ChargeCycle', [
-                    new BTCondition('NeedsCharge', (bot)          => bot.battery < 20),
-                    new BTAction('GoToCharger',    (dt, bot, bb)  => bot._ActionGoToCharger(dt, bb)),
-                    new BTAction('Recharge',        (dt, bot, bb)  => bot._ActionRecharge(dt))
+                    new BTCondition('NeedsCharge', (bot)         => bot.battery < this.batteryLowValue),
+                    new BTAction('GoToCharger',    (dt, bot, bb) => bot._ActionGoToCharger(dt, bb)),
+                    new BTAction('Recharge',       (dt, bot, bb) => bot._ActionRecharge(dt))
                 ]),
 
                 new BTReactiveSequence('Collect', [
@@ -631,19 +716,26 @@ class BTBot extends CleanerRobot {
 
     _ActionGoToCharger(dt, bb) {
         // Release held claim when entering charge mode
-        const t = bb.Get('target');
-        if (t && t.claimedBy === this) t.claimedBy = null;
+        const target = bb.Get('target');
+        if (target && target.claimedBy === this)
+            target.claimedBy = null;
+
         bb.Delete('target');
+
         this.stateColor = BT_BOT_COLORS.charge;
+
         this._SteerAndMove(this.world.charger.position, this.moveSpeed, dt);
+
         return Vector2.Magnitude(this.position, this.world.charger.position) < this.world.charger.radius
             ? BTStatus.SUCCESS : BTStatus.RUNNING;
     }
 
     _ActionRecharge(dt) {
         this.stateColor = BT_BOT_COLORS.charge;
-        // +31.5/s to offset the 3.5/s passive drain in Update() → net +28/s while sitting on pad
-        this.battery = Math.min(100, this.battery + 31.5 * dt);
+
+        this.battery += this.batteryChargingRate * dt;
+        this.battery = Math.min(100, this.battery);
+        
         return this.battery >= 100 ? BTStatus.SUCCESS : BTStatus.RUNNING;
     }
 
@@ -661,13 +753,12 @@ class BTBot extends CleanerRobot {
         }
 
         let best = null, bestSq = Infinity;
-        const visionSq = this.visionRange * this.visionRange;
         for (const r of this.world.rubbish) {
             if (r.collected || r.claimedBy)
                 continue;
 
             const sq = Vector2.SqrMagnitude(this.position, r.position);
-            if (sq <= visionSq && sq < bestSq) {
+            if (sq <= this.visionRangeSq && sq < bestSq) {
                 bestSq = sq;
                 best = r;
             }
@@ -683,38 +774,61 @@ class BTBot extends CleanerRobot {
 
     _ActionNavigateTo(dt, bb) {
         const target = bb.Get('target');
-        if (!target || target.collected) { bb.Delete('target'); return BTStatus.FAILURE; }
+        if (!target || target.collected) {
+            bb.Delete('target');
+            
+            return BTStatus.FAILURE;
+        }
+
         this.stateColor = BT_BOT_COLORS.collect;
-        if (Vector2.Magnitude(this.position, target.position) < 14) return BTStatus.SUCCESS;
+
+        if (Vector2.Magnitude(this.position, target.position) < this.pickUpRange)
+            return BTStatus.SUCCESS;
+
         this._SteerAndMove(target.position, this.moveSpeed, dt);
+
         return BTStatus.RUNNING;
     }
 
     _ActionPickUp(bb) {
         const target = bb.Get('target');
-        if (target && !target.collected) { target.collected = true; target.claimedBy = null; this.score++; }
+        if (target && !target.collected) {
+            target.collected = true;
+            target.claimedBy = null;
+            this.score++;
+        }
+
         bb.Delete('target');
+
         return BTStatus.SUCCESS;
     }
 
     _ActionWander(dt, bb) {
         this.stateColor = BT_BOT_COLORS.wander;
         let wp = bb.Get('wanderTarget');
-        if (!wp || Vector2.Magnitude(this.position, wp) < 12) {
+        if (!wp || Vector2.Magnitude(this.position, wp) < this.radius) {
             wp = new Vector2(
                 RandomBetweenFloat(50, this.game.screenWidth - 50),
                 RandomBetweenFloat(70, this.game.screenHeight - 50)
             );
             bb.Set('wanderTarget', wp);
         }
-        this._SteerAndMove(wp, this.moveSpeed * 0.38, dt);
+
+        this._SteerAndMove(wp, this.wanderSpeed, dt);
+
         return BTStatus.RUNNING;
     }
 
     Update(dt) {
         super.Update(dt);
-        this.battery = Math.max(0, this.battery - 3.5 * dt);
+        
+        // Consume battery
+        this.battery -= this.batteryDrainRate * dt;
+        this.battery = Math.max(0, this.battery);
+
+        // Update the BT
         this.bt.Update(dt);
+
         this._ClampPosition();
     }
 
@@ -723,38 +837,46 @@ class BTBot extends CleanerRobot {
         const d = 15; // half-diagonal of diamond
         const s = d * Math.SQRT2;
 
-        // Debug: vision range circle
-        if (debugMode) {
-            renderer.DrawStrokeCircle(x, y, this.visionRange, new Color(0.45, 0.80, 0.65, 0.15), 1);
-        }
+        // Vision range circle
+        this._DrawVisionSphere(renderer);
 
+        // Body
         renderer.DrawFillRectangle(x, y, s, s, this.stateColor, Math.PI / 4);
         renderer.DrawStrokeRectangle(x, y, s, s, Color.white, 1.5, Math.PI / 4);
-        renderer.DrawLine(x, y, x + Math.cos(this.rotation) * (d + 4), y + Math.sin(this.rotation) * (d + 4), Color.white, 2);
-        const bw = 26, bh = 4, bx = x - 13, by = y - d - 10;
-        const pct = this.battery / 100;
-        renderer.DrawFillBasicRectangle(bx, by, bw, bh, new Color(0.15, 0.15, 0.15, 0.85));
-        renderer.DrawFillBasicRectangle(bx, by, bw * pct, bh, pct > 0.5 ? Color.lime : pct > 0.2 ? Color.yellow : Color.red);
-        renderer.DrawStrokeBasicRectangle(bx, by, bw, bh, Color.black, 1);
-        renderer.DrawFillText(`${this.name}  ${this.score}🗑`, x, by - 13, 'bold 11px monospace', Color.white, 'center');
-        renderer.DrawFillText('[BT]', x, by - 24, '9px monospace', BT_BOT_COLORS.collect, 'center');
+
+        // Direction nose
+        this._DrawVisionNose(renderer);
+
+        // Battery bar
+        this._DrawBatteryBar(renderer);
+        // Name & score
+        this._DrawNameAndScore(renderer);
 
         // Target line: to rubbish or charger
         const target = this.blackboard.Get('target');
         if (target && !target.collected) {
-            renderer.DrawLine(x, y, target.position.x, target.position.y, new Color(0.45, 0.80, 0.65, 0.4), 1);
-        } else if (this.battery < 30) {
-            renderer.DrawLine(x, y, this.world.charger.position.x, this.world.charger.position.y, new Color(0.35, 0.55, 1.0, 0.4), 1);
+            this._DrawLineToTarget(renderer, target.position, this.stateColor);
+        }
+        else if (this.battery < this.batteryLowValue) {
+            this._DrawLineToTarget(renderer, this.world.charger.position,
+                new Color(this.stateColor.r, this.stateColor.g, this.stateColor.b, 0.4));
         }
 
+        // Debug overlays — BT label
         this.bt.DrawDebug(renderer, x, y + d + 12);
     }
 }
 
-// endregion
+// #endregion BT Bot
 
-// region Game
+// #region Game
 // ── Game ──────────────────────────────────────────────────────────────────────
+
+// Game Colors
+const bgColor   = new Color(0.07, 0.09, 0.12);
+const gridColor = new Color(1, 1, 1, 0.032)
+
+// CleanerGame class
 
 class CleanerGame extends Game {
     constructor(renderer) {
@@ -762,52 +884,77 @@ class CleanerGame extends Game {
         this.Configure({ screenWidth: 960, screenHeight: 620 });
         this.graphicAssets = {};
         debugMode = true;
+
+        this.world = null;
+        this.charger = null;
+        this.rubbish = [];
+        this.rubbishClusters = [
+            { x: 160, y: 220 }, { x: 800, y: 200 },
+            { x: 160, y: 500 }, { x: 800, y: 490 },
+            { x: 480, y: 345 }
+        ];
+
+        this.maxRubbishInWorld = 50;
+
+        this.titleTextLabel = null;
+        this.instructionsTextLabel = null;
     }
 
     Start() {
         super.Start();
 
-        this.charger = new ChargingPad(480, 76);
+        this.charger = new ChargingPad(480, 92);
         this.rubbish = [];
+
         this._SpawnRubbish(28);
 
-        const world = { charger: this.charger, rubbish: this.rubbish };
+        const world = {
+            charger: this.charger,
+            rubbish: this.rubbish
+        };
 
         this.bots = [
-            this.AddGameObject(new FSMBTRobot('BOT-A', 200, 310, world)),
-            this.AddGameObject(new FSMBTRobot('BOT-B', 760, 310, world)),
-            this.AddGameObject(new FSMBTRobot('BOT-C', 480, 175, world)),
-            this.AddGameObject(new FSMBTRobot('BOT-D', 480, 455, world)),
-            this.AddGameObject(new FSMBot('FSM-1',  130, 530, world)),
-            this.AddGameObject(new BTBot('BT-1',    830, 530, world)),
+            this.AddGameObject(new FSMBTRobot('FSMBT-A', 200, 310, world)),
+            this.AddGameObject(new FSMBTRobot('FSMBT-B', 760, 310, world)),
+            this.AddGameObject(new FSMBot    ('FSM-1',   130, 530, world)),
+            this.AddGameObject(new FSMBot    ('FSM-2',   480, 175, world)),
+            this.AddGameObject(new BTBot     ('BT-1',    830, 530, world)),
+            this.AddGameObject(new BTBot     ('BT-2',    480, 455, world)),
         ];
 
         // Stagger batteries so bots don't all rush the charger at once
-        this.bots[1].battery = 68;
-        this.bots[2].battery = 45;
-        this.bots[3].battery = 82;
-        this.bots[4].battery = 60;
-        this.bots[5].battery = 75;
+        this.bots.forEach(bot => bot.battery = RandomBetweenInt(50, 80));
 
         this.selectedBot    = this.bots[0];
         this._prevMouseDown = false;
+
+        this.titleTextLabel = new TextLabel(
+            'Cleaner Bots — AI Comparison: ● BT+FSM  ■ FSM-only  ◆ BT-only',
+            new Vector2(this.screenWidth / 2, 20),
+            'bold 16px monospace', Color.cyan, 'center'
+        );
+        this.instructionsTextLabel = new TextLabel(
+            'Click/[SPACE] select  [D] debug  [E] drain battery  [B] break (● only)',
+            new Vector2(this.screenWidth / 2, 38),
+            '12px monospace', new Color(0.55, 0.65, 0.75), 'center'
+        );
     }
 
     _SpawnRubbish(count) {
         // Prune already-collected items to prevent unbounded array growth
         for (let i = this.rubbish.length - 1; i >= 0; i--) {
-            if (this.rubbish[i].collected) this.rubbish.splice(i, 1);
+            if (this.rubbish[i].collected)
+                this.rubbish.splice(i, 1);
         }
 
-        const clusters = [
-            { x: 160, y: 220 }, { x: 800, y: 200 },
-            { x: 160, y: 500 }, { x: 800, y: 490 },
-            { x: 480, y: 345 }
-        ];
-        for (let i = 0; i < count; i++) {
-            const c = clusters[i % clusters.length];
-            const x = Clamp(c.x + RandomBetweenFloat(-110, 110), 40, 920);
-            const y = Clamp(c.y + RandomBetweenFloat(-90, 90), 70, 580);
+        // make sure don't overflow the rubbish amount
+        const rubbishToSpawn = Math.min(this.maxRubbishInWorld - this.rubbish.length, count);
+
+        for (let i = 0; i < rubbishToSpawn; i++) {
+            const c = this.rubbishClusters[i % this.rubbishClusters.length];
+            const x = Clamp(c.x + RandomBetweenFloat(-110, 110), 40, this.screenWidth - 40);
+            const y = Clamp(c.y + RandomBetweenFloat(-90, 90), 70, this.screenHeight - 40);
+
             this.rubbish.push(new RubbishItem(x, y));
         }
     }
@@ -821,15 +968,21 @@ class CleanerGame extends Game {
         }
 
         // Click → select nearest bot for BT inspector
-        const mouseDown = Input.mouse.down || Input.IsMouseDown();
+        const mouseDown = Input.IsMouseDown();
         if (mouseDown && !this._prevMouseDown) {
             let nearest = null, nearestSq = 50 * 50;
             for (const bot of this.bots) {
                 const sq = Vector2.SqrMagnitude(Input.mouse, bot.position);
-                if (sq < nearestSq) { nearestSq = sq; nearest = bot; }
+                if (sq < nearestSq) {
+                    nearestSq = sq;
+                    nearest = bot;
+                }
             }
-            if (nearest) this.selectedBot = nearest;
+
+            if (nearest)
+                this.selectedBot = nearest;
         }
+
         this._prevMouseDown = mouseDown;
 
         // [SPACE] → cycle selection
@@ -839,7 +992,8 @@ class CleanerGame extends Game {
         }
 
         // [D] → toggle debug overhead labels
-        if (Input.IsKeyDown(KEY_D)) debugMode = !debugMode;
+        if (Input.IsKeyDown(KEY_D))
+            debugMode = !debugMode;
 
         // [E] → drain selected bot battery (test LOW_BATT transition)
         if (Input.IsKeyDown(KEY_E) && this.selectedBot) {
@@ -855,88 +1009,83 @@ class CleanerGame extends Game {
 
     Draw() {
         // Background
-        renderer.DrawFillBasicRectangle(0, 0, this.screenWidth, this.screenHeight,
-            new Color(0.07, 0.09, 0.12));
+        renderer.DrawFillBasicRectangle(0, 0, this.screenWidth, this.screenHeight, bgColor);
 
         // Subtle grid
         for (let x = 0; x <= this.screenWidth; x += 60)
-            renderer.DrawLine(x, 0, x, this.screenHeight, new Color(1, 1, 1, 0.032), 1);
+            renderer.DrawLine(x, 0, x, this.screenHeight, gridColor, 1);
         for (let y = 0; y <= this.screenHeight; y += 60)
-            renderer.DrawLine(0, y, this.screenWidth, y, new Color(1, 1, 1, 0.032), 1);
+            renderer.DrawLine(0, y, this.screenWidth, y, gridColor, 1);
 
-        // World
+        // Battery charger
         this.charger.Draw(renderer);
-        for (const r of this.rubbish) r.Draw(renderer);
+
+        // Rubbish
+        for (const r of this.rubbish)
+            r.Draw(renderer);
 
         // Bots (game objects)
         super.Draw();
 
-        // UI
-        this._DrawHeader();
+        // UI - header (Title and instructions)
+        this.titleTextLabel.Draw(this.renderer);
+        this.instructionsTextLabel.Draw(this.renderer);
+
         this._DrawLeaderboard();
         this._DrawInspector();
-    }
-
-    _DrawHeader() {
-        renderer.DrawFillText(
-            'Cleaner Bots — AI Comparison: ● BT+FSM  ■ FSM-only  ◆ BT-only',
-            this.screenWidth / 2, 16,
-            'bold 13px monospace', Color.cyan, 'center'
-        );
-        renderer.DrawFillText(
-            'Click/[SPACE] select  [D] debug  [E] drain battery  [B] break (● only)',
-            this.screenWidth / 2, 30,
-            '10px monospace', new Color(0.55, 0.65, 0.75), 'center'
-        );
     }
 
     _DrawLeaderboard() {
         const sorted = [...this.bots].sort((a, b) => b.score - a.score);
         const px = this.screenWidth - 164, py = 55;
-        const bw = 150, lh = 20;
-        const bh = sorted.length * lh + 30;
+        const bw = 150, lh = 22;
+        const bh = sorted.length * lh + 32;
 
         renderer.DrawFillBasicRectangle(px - 8, py - 8, bw + 16, bh,
             new Color(0.05, 0.08, 0.12, 0.9));
         renderer.DrawStrokeBasicRectangle(px - 8, py - 8, bw + 16, bh,
             new Color(0.2, 0.35, 0.5, 0.8), 1);
-        renderer.DrawFillText('LEADERBOARD', px + bw / 2, py + 6,
-            'bold 11px monospace', Color.cyan, 'center');
+        renderer.DrawFillText('LEADERBOARD', px + bw / 2, py + 8,
+            'bold 14px monospace', Color.cyan, 'center');
 
         sorted.forEach((bot, i) => {
-            const ly = py + 22 + i * lh;
+            const ly = py + 30 + i * lh;
             const isSelected = bot === this.selectedBot;
             const icon = bot instanceof FSMBTRobot ? '●' : bot instanceof FSMBot ? '■' : '◆';
             renderer.DrawFillText(
                 `${i + 1}. ${icon} ${bot.name}`,
-                px + 2, ly, '10px monospace',
+                px + 2, ly, '12px monospace',
                 isSelected ? Color.yellow : bot.stateColor, 'left'
             );
             renderer.DrawFillText(
                 `${bot.score}`,
-                px + bw - 2, ly, '10px monospace', Color.white, 'right'
+                px + bw - 2, ly, '12px monospace', Color.white, 'right'
             );
         });
     }
 
     _DrawInspector() {
-        if (!this.selectedBot) return;
+        if (!this.selectedBot)
+            return;
+
         const bot = this.selectedBot;
         if (bot.bt) {
+            // the bot has a BT
             const fsmPart = bot.fsm ? `  [${(bot.fsm.currentStateName ?? '').toUpperCase()}]` : '';
             const typeLabel = bot.fsm ? '● BT+FSM' : '◆ BT-only';
-            bot.bt.DrawTreeInspector(renderer, 14, 55, {
+            bot.bt.DrawTreeInspector(renderer, 14, 65, {
                 width: 295,
                 title: `${typeLabel} — ${bot.name}${fsmPart}`,
                 force: true
             });
-        } else {
+        }
+        else {
             this._DrawFSMPanel(bot);
         }
     }
 
     _DrawFSMPanel(bot) {
-        const px = 14, py = 55, bw = 240;
+        const px = 14, py = 65, bw = 240;
         const states = ['idle', 'seek', 'lowBattery', 'charging'];
         const bh = states.length * 20 + 46;
         renderer.DrawFillBasicRectangle(px - 6, py - 6, bw + 12, bh, new Color(0.05, 0.08, 0.12, 0.9));
@@ -958,6 +1107,6 @@ class CleanerGame extends Game {
     }
 }
 
-// endregion
+// #endregion Game
 
 window.onload = () => Init(CleanerGame, 'canvas');
