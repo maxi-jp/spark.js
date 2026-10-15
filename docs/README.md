@@ -85,6 +85,16 @@ A composable, reactive alternative to FSMs for complex decision-making. The engi
 
 Ideal for boss AI, autonomous agents, complex multi-stage routines, and systems requiring reactive priority interruption. See the [stealth guard demo](../bt-guard.html), [autonomous worker demo](../bt-worker.html), [multiphase boss demo](../bt-boss.html), and [BT reference](./ai.md#behavior-trees-btjs) for details.
 
+### Fuzzy Logic
+
+Model human-like, continuous reasoning ("somehow close", "fairly low ammo", "very dangerous") without rigid boolean threshold jumps. The engine provides a complete Mamdani Fuzzy Inference System (`fuzzy.js`) based on Mat Buckland's *Programming Game AI by Example* and Millington & Funge's *Artificial Intelligence for Games*:
+- **6 Membership Set Shapes** — `FuzzySetTriangle`, `FuzzySetLeftShoulder`, `FuzzySetRightShoulder`, `FuzzySetTrapezoid`, `FuzzySetSingleton`, and `FuzzySetSCurve`
+- **Composable Rule Operators & Hedges** — `FzAnd` (min), `FzOr` (max), `FzNot` ($1 - \mu$), `FzVery` ($\mu^2$ concentration), and `FzFairly` ($\sqrt{\mu}$ dilation)
+- **Dual Defuzzification** — Choose between fast **Maximum Average (`MaxAv`)** or high-precision **Center of Mass (`Centroid`)** integration
+- **Live Canvas Visualizers** — `DrawFuzzyInspector()` and `DrawVariableGraph()` render real-time membership function curves, crisp input vertical markers, rule firing strengths, and defuzzified outputs directly onto the game canvas
+
+Ideal for weapon utility scoring, smooth autonomous steering, tactical threat evaluation, and hybrid architectures (Fuzzy sensors feeding FSMs or Behavior Trees). See the [Weapon Selection demo](../fuzzy-weapon.html), [Autonomous Driver demo](../fuzzy-driver.html), [Tactical Threat & Hybrid AI demo](../fuzzy-tactical.html), and the dedicated [Fuzzy Logic System Guide](./fuzzy-logic.md) for details.
+
 ### Utilities
 
 A collection of helper functions and classes for common tasks: vector math, collision detection, color manipulation, and more.

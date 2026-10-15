@@ -24,8 +24,9 @@ Each example HTML file must load engine scripts in this order before any game co
 12. `src/engine/ai.js` — AStarPathfinder *(optional — only if using pathfinding)*
 13. `src/engine/fsm.js` — FSMState, FSM, FSMCompositeState *(optional — only if using FSM/HFSM)*
 14. `src/engine/bt.js` — BTStatus, BTBlackboard, BTNode, BTSelector, BTSequence, BTParallel, BTAction, BTCondition, BTWait, BehaviorTree; decorators: BTInverter, BTRepeater, BTRepeatUntilFail, BTRepeatUntilSuccess, BTSucceeder, BTFailer, BTCooldown, BTDelay; BTRandomSelector, BTRandomSequence, BTReactiveSelector, BTReactiveSequence *(optional — only if using Behavior Trees)*
-15. `src/lib/Box2D.js` + `src/engine/box2d_helper.js` + `src/engine/box2d_game.js` + `src/engine/box2d_gameobjects.js` *(optional — only for physics games; load `Box2D.js` first)*
-16. `src/engine/main.js` — engine bootstrap (LoadImages, StartGame)
+15. `src/engine/fuzzy.js` — FuzzyTerm, FuzzySet (FuzzySetTriangle, FuzzySetLeftShoulder, FuzzySetRightShoulder, FuzzySetTrapezoid, FuzzySetSingleton, FuzzySetSCurve), FzSet, FzAnd, FzOr, FzNot, FzVery, FzFairly, FuzzyVariable, FuzzyRule, FuzzyModule *(optional — only if using Fuzzy Logic)*
+16. `src/lib/Box2D.js` + `src/engine/box2d_helper.js` + `src/engine/box2d_game.js` + `src/engine/box2d_gameobjects.js` *(optional — only for physics games; load `Box2D.js` first)*
+17. `src/engine/main.js` — engine bootstrap (LoadImages, StartGame)
 
 ---
 

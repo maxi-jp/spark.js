@@ -25,6 +25,7 @@ Documentation can be consulted [here](https://maxi-jp.github.io/spark.js/docs/).
 - **A\* Pathfinding**: General-purpose `AStarPathfinder` in `ai.js`. Supports 4- and 8-directional movement, swappable heuristics (Manhattan, Octile, Euclidean), line-of-sight path smoothing, and graceful fallbacks for blocked targets. Works with any grid object implementing the duck-typed grid interface.
 - **FSM & HFSM**: Finite State Machine and Hierarchical FSM classes in `fsm.js` (`FSMState`, `FSM`, `FSMCompositeState`). Declarative transition guards (Millington & Funge model) and imperative transitions. Composite states nest a full sub-FSM inside a parent state for hierarchical behaviour. Built-in `DrawDebug` overlay.
 - **Behavior Trees**: Complete class-based Behavior Tree engine in `bt.js` (`BehaviorTree`, `BTNode`, composites, decorators, and `BTBlackboard`). Supports reactive priority interruption (`BTReactiveSelector`), continuous precondition aborts (`BTReactiveSequence`), cooldowns (`BTCooldown`), repeats, and built-in live interactive hierarchy inspection on canvas (`DrawTreeInspector`).
+- **Fuzzy Logic**: Complete Mamdani Fuzzy Inference System in `fuzzy.js` (`FuzzyModule`, `FuzzyVariable`, 6 membership set shapes, `FuzzyRule`, boolean operators `FzAnd`/`FzOr`/`FzNot`, and hedges `FzVery`/`FzFairly`). Supports both `MaxAv` and `Centroid` defuzzification and built-in real-time membership curve and rule firing visualizers (`DrawFuzzyInspector`, `DrawVariableGraph`).
 - **Utilities**: A collection of helpers for vector math, collision detection, color manipulation, and more.
 - **Debugging Tools**: Optional debug drawing for physics bodies and an FPS/stats overlay.
 - **Mode 7 Renderer**: Simulate SNES-style pseudo-3D backgrounds (as in F-Zero or Mario Kart).
@@ -48,6 +49,7 @@ Documentation can be consulted [here](https://maxi-jp.github.io/spark.js/docs/).
   - ai.js                 # AI utilities: AStarPathfinder with swappable heuristics and path smoothing
   - fsm.js                # FSM & HFSM: FSMState, FSM, FSMCompositeState
   - bt.js                 # Behavior Trees: BehaviorTree, composites, decorators, leaves, blackboard, live tree inspector
+  - fuzzy.js              # Fuzzy Logic: FuzzyModule, FuzzyVariable, 6 set shapes, hedges, MaxAv/Centroid, live curve inspector
 - examples/
   - audio_test/           # Audio system testing and examples
   - box2d/                # Box2D physics examples
@@ -91,6 +93,9 @@ Documentation can be consulted [here](https://maxi-jp.github.io/spark.js/docs/).
   - bt_worker/            # BT demo: autonomous resource worker with stamina, harvesting, and predator evasion
   - bt_boss/              # BT demo: multiphase arena boss with phase shifts, cooldowns, and telegraph attacks
   - cleaner_bots/         # AI architecture comparison: bots competing with vision-limited rubbish collection (bot types: FSM+BT hybrid, FSM-only, BT-only)
+  - fuzzy_weapon/         # Fuzzy Logic demo: weapon selection utility advisor (MaxAv vs Centroid, live membership curves)
+  - fuzzy_driver/         # Fuzzy Logic demo: autonomous steering & obstacle avoidance (Fuzzy Car vs Crisp Car comparison)
+  - fuzzy_tactical/       # Fuzzy Logic demo: tactical threat assessment & hybrid AI (Fuzzy + FSM / Behavior Tree)
   - snake.js              # Snake game implementation
   - timer_test.js         # Timer system demo (Invoke, InvokeRepeating, auto-cleanup)
 
@@ -137,9 +142,13 @@ Documentation can be consulted [here](https://maxi-jp.github.io/spark.js/docs/).
     <!-- add this to use Tiled exported maps -->
     <script src="engine/tiled_loader.js"></script>
     <!-- add this to use game-AI tools like A* pathfinding -->
-    <script src="engine/engine/ai.js"></script>
-    <!-- add this to use FSM -->
-    <script src="engine/engine/fsm.js"></script>
+    <script src="engine/ai.js"></script>
+    <!-- add this to use FSM & HFSM -->
+    <script src="engine/fsm.js"></script>
+    <!-- add this to use Behavior Trees -->
+    <script src="engine/bt.js"></script>
+    <!-- add this to use Fuzzy Logic -->
+    <script src="engine/fuzzy.js"></script>
     <!-- add these only if you want to use box2d physics -->
     <script src="lib/Box2D.js"></script>
     <script src="engine/box2d_helper.js"></script>
@@ -402,7 +411,7 @@ MIT License
 - [x] ~~Think on a great name for the engine (like **`wat.js`** or something like that).~~ ✅DONE (engine renamed as "spark.js"!!! ✨)
 - [x] ~~Add mobile / touch-screen support with virtual on-screen controls.~~ ✅DONE
 - [ ] Implement a global Event/Signal system (EventBus) for decoupled cross-system communication.
-- [x] ~~Add more game-AI related tools and classes (like FSM, BTs and Fuzzy Logic).~~ ✅DONE (FSM & HFSM in `fsm.js`; Behavior Trees in `bt.js`; Fuzzy Logic still pending)
+- [x] ~~Add more game-AI related tools and classes (like FSM, BTs and Fuzzy Logic).~~ ✅DONE (FSM & HFSM in `fsm.js`; Behavior Trees in `bt.js`; Fuzzy Logic in `fuzzy.js`)
 - [ ] Create a RTS game as a more comple example project. 🔜 working on it 👨🏻‍💻  
 
 ## Contributing

@@ -1,12 +1,13 @@
 # Game AI Tools
 
-spark.js ships three optional AI modules. Include only what your game needs.
+spark.js ships four optional AI modules. Include only what your game needs.
 
 | Module | File | What it provides |
 |---|---|---|
 | Pathfinding | `src/engine/ai.js` | `AStarPathfinder` — grid-based A\* with smoothing and fallbacks |
 | State machines | `src/engine/fsm.js` | `FSMState`, `FSM`, `FSMCompositeState` — flat and hierarchical FSMs |
 | Behavior trees | `src/engine/bt.js` | `BehaviorTree`, `BTNode`, composites, decorators, and blackboard memory |
+| Fuzzy logic | `src/engine/fuzzy.js` | `FuzzyModule`, `FuzzyVariable`, membership sets, hedges (`FzVery`, `FzFairly`), `MaxAv` & `Centroid` defuzzification, and live curve inspectors ([Full Guide](fuzzy-logic.md)) |
 
 ---
 
@@ -677,6 +678,85 @@ bt.DrawTreeInspector(renderer, x, y, {
 
 ---
 
+## Fuzzy Logic (`fuzzy.js`)
+
+`src/engine/fuzzy.js` provides a complete Mamdani **Fuzzy Logic Inference System** for continuous, human-like reasoning (*"somehow close"*, *"fairly low ammo"*, *"very dangerous"*) without rigid boolean threshold jumps.
+
+> 📖 **Full Documentation:** For an in-depth guide covering fuzzy set theory, the 3-stage inference pipeline, membership curve formulas, hedges, `MaxAv` vs `Centroid` mathematics, worked step-by-step calculations, and hybrid AI patterns, see the dedicated **[Fuzzy Logic System Guide](fuzzy-logic.md)**.
+
+### Core Classes Overview
+
+| Class | Role |
+|---|---|
+| **`FuzzyModule`** | Central controller managing linguistic variables (FLVs), fuzzy rules, `Fuzzify()`, `DeFuzzify()`, and live canvas visualizers (`DrawFuzzyInspector`, `DrawVariableGraph`, `DrawDebug`). |
+| **`FuzzyVariable`** | A Linguistic Variable (e.g. `DistToTarget`, `Desirability`) partitioning a continuous range `[min, max]` into named fuzzy sets. |
+| **`FuzzySet` Subclasses** | 6 membership curve shapes: `FuzzySetTriangle`, `FuzzySetLeftShoulder`, `FuzzySetRightShoulder`, `FuzzySetTrapezoid`, `FuzzySetSingleton`, `FuzzySetSCurve`. |
+| **Operators & Hedges** | Composable `FuzzyTerm` decorators: `FzAnd` ($\min$), `FzOr` ($\max$), `FzNot` ($1 - \mu$), `FzVery` ($\mu^2$ concentration), `FzFairly` ($\sqrt{\mu}$ dilation). |
+| **`FuzzyRule`** | `IF antecedent THEN consequent` implication rule that truncates/clips the consequent set's confidence by the antecedent's firing Degree of Membership. |
+
+---
+
+### Quick Start Example
+
+```javascript
+const fm = new FuzzyModule();
+
+// 1. Create Linguistic Variables (FLVs) & partition into sets
+const dist = fm.CreateFLV('DistToTarget');
+const close  = dist.AddLeftShoulderSet('Close', 0, 25, 150);
+const medium = dist.AddTriangularSet('Medium', 25, 150, 300);
+const far    = dist.AddRightShoulderSet('Far', 150, 300, 400);
+
+const ammo = fm.CreateFLV('AmmoStatus');
+const low  = ammo.AddLeftShoulderSet('Low', 0, 0, 10);
+const okay = ammo.AddTriangularSet('Okay', 0, 10, 30);
+const loads = ammo.AddRightShoulderSet('Loads', 10, 30, 40);
+
+const desirability = fm.CreateFLV('Desirability');
+const undesirable   = desirability.AddLeftShoulderSet('Undesirable', 0, 25, 50);
+const desirable     = desirability.AddTriangularSet('Desirable', 25, 50, 75);
+const veryDesirable = desirability.AddRightShoulderSet('VeryDesirable', 50, 75, 100);
+
+// 2. Define Fuzzy Rules (using FzAnd, FzOr, FzNot, FzVery, FzFairly)
+fm.AddRule(new FzAnd(close, okay), undesirable);
+fm.AddRule(new FzAnd(medium, new FzVery(loads)), veryDesirable);
+fm.AddRule(new FzAnd(medium, okay), veryDesirable);
+fm.AddRule(new FzAnd(far, okay), desirable);
+
+// 3. Evaluate every frame (Fuzzify -> Inference -> DeFuzzify)
+fm.Fuzzify('DistToTarget', 200);
+fm.Fuzzify('AmmoStatus', 8);
+
+const score = fm.DeFuzzify('Desirability', FuzzyModule.DefuzzifyMethod.max_av);
+
+// 4. Live visual inspection on Canvas
+fm.DrawFuzzyInspector(renderer, 20, 50, {
+    width: 340,
+    title: 'Rocket Launcher Fuzzy Inspector'
+});
+```
+
+---
+
+### Script Load Order
+
+```html
+<script src="src/engine/game.js"></script>
+<script src="src/engine/fuzzy.js"></script>  <!-- optional Fuzzy Logic module -->
+<script src="src/engine/main.js"></script>
+```
+
+---
+
+### Demos & Examples
+
+- **[Fuzzy Weapon Selection](../fuzzy-weapon.html ':ignore :target=_blank')** — Classic Mat Buckland Ch. 10 AI utility advisor evaluating 4 weapons across distance and ammo reserves, with live side-by-side comparison of `MaxAv` vs `Centroid` defuzzification and interactive curve plotting. See [`src/examples/fuzzy_weapon/README.md`](../src/examples/fuzzy_weapon/README.md ':ignore :target=_blank').
+- **[Fuzzy Autonomous Driver](../fuzzy-driver.html ':ignore :target=_blank')** — Continuous steering and speed control with 5-ray obstacle avoidance. Races a smooth **Fuzzy Car** against a jerky boolean **Crisp Car** on the same circuit. See [`src/examples/fuzzy_driver/README.md`](../src/examples/fuzzy_driver/README.md ':ignore :target=_blank').
+- **[Fuzzy Tactical Threat & Hybrid AI](../fuzzy-tactical.html ':ignore :target=_blank')** — Multi-agent arena combining continuous **Fuzzy Threat Assessment** + linguistic hedges (`FzVery`, `FzFairly`) with a discrete **FSM** or **Behavior Tree** execution brain (switchable at runtime). See [`src/examples/fuzzy_tactical/README.md`](../src/examples/fuzzy_tactical/README.md ':ignore :target=_blank').
+
+---
+
 ## See also
 
+- [Fuzzy Logic System Guide](fuzzy-logic.md) — comprehensive theoretical and API manual for `fuzzy.js`
 - [Examples](examples.md) — full list of demos

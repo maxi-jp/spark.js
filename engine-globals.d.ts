@@ -786,3 +786,163 @@ declare class BehaviorTree {
     DrawTreeInspector(renderer: Renderer, startX?: number, startY?: number, options?: { width?: number; title?: string; force?: boolean }): void;
 }
 
+// ── Fuzzy Logic (fuzzy.js) ────────────────────────────────────────────────────
+
+/** Base interface for any element that can participate in a FuzzyRule. */
+declare class FuzzyTerm {
+    GetDOM(): number;
+    ClearDOM(): void;
+    ORwithDOM(val: number): void;
+    GetLabel(): string;
+}
+
+/** Base class for all Fuzzy Sets (Membership Functions). */
+declare class FuzzySet extends FuzzyTerm {
+    name: string;
+    representativeValue: number;
+    minBound: number;
+    maxBound: number;
+    dom: number;
+    constructor(name: string, representativeValue: number, minBound?: number, maxBound?: number);
+    CalculateDOM(val: number): number;
+    SetDOM(val: number): void;
+}
+
+/** Triangular membership function defined by (minBound, peak, maxBound). */
+declare class FuzzySetTriangle extends FuzzySet {
+    peakPoint: number;
+    leftOffset: number;
+    rightOffset: number;
+    constructor(name: string, minBound: number, peak: number, maxBound: number);
+}
+
+/** Left-shoulder membership function (saturates at 1.0 on the left of peak). */
+declare class FuzzySetLeftShoulder extends FuzzySet {
+    peakPoint: number;
+    leftOffset: number;
+    rightOffset: number;
+    constructor(name: string, minBound: number, peak: number, maxBound: number);
+}
+
+/** Right-shoulder membership function (saturates at 1.0 on the right of peak). */
+declare class FuzzySetRightShoulder extends FuzzySet {
+    peakPoint: number;
+    leftOffset: number;
+    rightOffset: number;
+    constructor(name: string, minBound: number, peak: number, maxBound: number);
+}
+
+/** Trapezoidal membership function with a flat plateau between leftPeak and rightPeak. */
+declare class FuzzySetTrapezoid extends FuzzySet {
+    leftPeak: number;
+    rightPeak: number;
+    leftOffset: number;
+    rightOffset: number;
+    constructor(name: string, minBound: number, leftPeak: number, rightPeak: number, maxBound: number);
+}
+
+/** Singleton step membership function. */
+declare class FuzzySetSingleton extends FuzzySet {
+    peakPoint: number;
+    constructor(name: string, minBound: number, peak: number, maxBound: number);
+}
+
+/** Smooth cosine S-curve membership function. */
+declare class FuzzySetSCurve extends FuzzySet {
+    rising: boolean;
+    constructor(name: string, minBound: number, peak: number, maxBound: number, rising?: boolean);
+}
+
+/** Optional proxy wrapper around a FuzzySet. */
+declare class FzSet extends FuzzyTerm {
+    set: FuzzySet;
+    constructor(fuzzySet: FuzzySet);
+}
+
+/** Zadeh AND operator: returns minimum DOM of child terms. */
+declare class FzAnd extends FuzzyTerm {
+    terms: FuzzyTerm[];
+    constructor(...terms: FuzzyTerm[]);
+}
+
+/** Zadeh OR operator: returns maximum DOM of child terms. */
+declare class FzOr extends FuzzyTerm {
+    terms: FuzzyTerm[];
+    constructor(...terms: FuzzyTerm[]);
+}
+
+/** Zadeh NOT operator: returns 1 - DOM. */
+declare class FzNot extends FuzzyTerm {
+    term: FuzzyTerm;
+    constructor(term: FuzzyTerm);
+}
+
+/** Linguistic Hedge VERY (concentration): squares DOM (DOM^2). */
+declare class FzVery extends FuzzyTerm {
+    term: FuzzyTerm;
+    constructor(term: FuzzyTerm);
+}
+
+/** Linguistic Hedge FAIRLY (dilation): takes square root of DOM (sqrt(DOM)). */
+declare class FzFairly extends FuzzyTerm {
+    term: FuzzyTerm;
+    constructor(term: FuzzyTerm);
+}
+
+/** Fuzzy Linguistic Variable (FLV) grouping multiple FuzzySets across [minRange, maxRange]. */
+declare class FuzzyVariable {
+    name: string;
+    sets: { [name: string]: FuzzySet };
+    setList: FuzzySet[];
+    minRange: number;
+    maxRange: number;
+    lastCrispInput: number | null;
+    lastCrispOutput: number | null;
+
+    constructor(name: string);
+    AddSet<T extends FuzzySet>(fuzzySet: T): T;
+    AddTriangularSet(name: string, minBound: number, peak: number, maxBound: number): FuzzySetTriangle;
+    AddLeftShoulderSet(name: string, minBound: number, peak: number, maxBound: number): FuzzySetLeftShoulder;
+    AddRightShoulderSet(name: string, minBound: number, peak: number, maxBound: number): FuzzySetRightShoulder;
+    AddTrapezoidSet(name: string, minBound: number, leftPeak: number, rightPeak: number, maxBound: number): FuzzySetTrapezoid;
+    AddSingletonSet(name: string, minBound: number, peak: number, maxBound: number): FuzzySetSingleton;
+    AddSCurveSet(name: string, minBound: number, peak: number, maxBound: number, rising?: boolean): FuzzySetSCurve;
+    GetSet(name: string): FuzzySet | undefined;
+    Fuzzify(val: number): void;
+    DeFuzzifyMaxAv(): number;
+    DeFuzzifyCentroid(numSamples?: number): number;
+}
+
+/** IF <antecedent> THEN <consequent> fuzzy rule. */
+declare class FuzzyRule {
+    antecedent: FuzzyTerm;
+    consequent: FuzzyTerm;
+    label: string;
+    lastFiringStrength: number;
+    constructor(antecedent: FuzzyTerm, consequent: FuzzyTerm, label?: string);
+    SetConfidenceOfConsequentToZero(): void;
+    Calculate(): void;
+}
+
+/** Central Fuzzy Logic controller managing variables, rules, fuzzification, and defuzzification. */
+declare class FuzzyModule {
+    static readonly DefuzzifyMethod: {
+        readonly MaxAv: 'MaxAv';
+        readonly Centroid: 'Centroid';
+    };
+
+    variables: { [name: string]: FuzzyVariable };
+    rules: FuzzyRule[];
+
+    constructor();
+    CreateFLV(varName: string): FuzzyVariable;
+    GetFLV(varName: string): FuzzyVariable | undefined;
+    AddRule(antecedent: FuzzyTerm, consequent: FuzzyTerm, label?: string): FuzzyRule;
+    Fuzzify(flvName: string, val: number): void;
+    DeFuzzify(flvName: string, method?: 'MaxAv' | 'Centroid', centroidSamples?: number): number;
+    DrawDebug(renderer: Renderer, x: number, y: number, text: string, options?: { color?: Color; force?: boolean }): void;
+    DrawVariableGraph(renderer: Renderer, flvName: string, x: number, y: number, width: number, height: number, options?: { isOutput?: boolean; title?: string; samples?: number }): void;
+    DrawFuzzyInspector(renderer: Renderer, startX?: number, startY?: number, options?: { width?: number; title?: string; variables?: string[]; outputs?: string[]; showRules?: boolean; graphHeight?: number; force?: boolean }): void;
+}
+
+
