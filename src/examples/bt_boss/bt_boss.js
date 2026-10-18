@@ -161,7 +161,7 @@ class TitanBoss extends GameObject {
                 // ── Phase 3: Berserk Meltdown (HP <= 300) ────────────────────────
                 new BTSequence('Phase3_Berserk', [
                     new BTCondition('IsPhase3', (b) => b.hp <= 300),
-                    new BTSelector('BerserkBranch', [
+                    new BTReactiveSelector('BerserkBranch', [
 
                         // Attack 1: Ground Slam Shockwave (Cooldown: 3.2s)
                         new BTCooldown('GroundSlamCooldown',
@@ -190,7 +190,7 @@ class TitanBoss extends GameObject {
                 // ── Phase 2: Overdrive Enrage (300 < HP <= 650) ──────────────────
                 new BTSequence('Phase2_Overdrive', [
                     new BTCondition('IsPhase2', (b) => b.hp <= 650),
-                    new BTSelector('OverdriveBranch', [
+                    new BTReactiveSelector('OverdriveBranch', [
 
                         // Attack 1: Sweeping Plasma Laser (Cooldown: 5.0s)
                         new BTCooldown('LaserSweepCooldown',
@@ -216,7 +216,7 @@ class TitanBoss extends GameObject {
 
                 // ── Phase 1: Guardian Mode (HP > 650) ────────────────────────────
                 new BTSequence('Phase1_Guardian', [
-                    new BTSelector('GuardianBranch', [
+                    new BTReactiveSelector('GuardianBranch', [
 
                         // Attack 1: Telegraph Charge Lunge (Cooldown: 4.2s)
                         new BTCooldown('ChargeLungeCooldown',
@@ -225,7 +225,7 @@ class TitanBoss extends GameObject {
                                 new BTWait('ChargeWindup', 0.85),
                                 new BTAction('ExecuteLunge', (dt, b) => b.ActionExecuteLunge(dt)),
                                 new BTWait('PostLungeStun', 0.6)
-                            ]), 4.2
+                            ]), 4.0
                         ),
 
                         // Attack 2: Homing Plasma Orb (Cooldown: 2.2s)
@@ -233,7 +233,7 @@ class TitanBoss extends GameObject {
                             new BTSequence('PlasmaBolt', [
                                 new BTAction('FireBolt', (dt, b) => b.ActionFireOrb()),
                                 new BTWait('BoltDelay', 0.35)
-                            ]), 2.2
+                            ]), 1.8
                         ),
 
                         // Fallback: Approach & Patrol

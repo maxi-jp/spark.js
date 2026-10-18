@@ -340,7 +340,7 @@ var Input = {
      */
     SetupKeyboardEvents: function() {
         AddEvent(document, "keydown", function(e) {
-            console.log(e.keyCode);
+            // console.log(e.keyCode);
             // avoid when the key is being held down such that it is automatically repeating
             if (!e.repeat) {
                 Input.keyboard.keydown[e.keyCode] = true;

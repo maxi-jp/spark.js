@@ -251,3 +251,166 @@ canvas {
         background-position-y: bottom;
     }
 }
+
+/* Debug Menu Styles */
+#debugMenu {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background-color: rgba(0, 0, 0, 0.95);
+    border: 2px solid var(--cyan-300);
+    border-radius: 8px;
+    padding: 15px;
+    color: var(--cyan-300);
+    font-family: monospace;
+    font-size: 12px;
+    max-height: calc(100vh - 40px);
+    max-width: 400px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    box-shadow: 0 0 20px rgba(0, 207, 255, 0.3);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+}
+
+#debugMenu.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.debug-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--cyan-300);
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.debug-header h2 {
+    margin: 0;
+    font-size: 16px;
+    color: var(--cyan-300);
+    text-shadow: 0 0 10px var(--glow-cyan);
+}
+
+.debug-close {
+    color: var(--pink-300);
+    font-size: 11px;
+    font-style: italic;
+}
+
+.debug-content {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+.debug-section {
+    border: 1px solid var(--purple-300);
+    border-radius: 4px;
+    padding: 10px;
+    background-color: rgba(95, 26, 255, 0.05);
+}
+
+.debug-section h3 {
+    margin: 0 0 10px 0;
+    color: var(--purple-200);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.debug-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(53, 220, 255, 0.2);
+}
+
+.debug-row:last-child {
+    border-bottom: none;
+}
+
+.debug-row .label {
+    color: var(--cyan-200);
+    font-weight: bold;
+    min-width: 100px;
+    text-align: left;
+}
+
+.debug-row .value {
+    color: var(--yellow);
+    text-align: right;
+    flex: 1;
+    padding-right: 5px;
+}
+
+.debug-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.debug-btn {
+    padding: 8px 10px;
+    background-color: rgba(0, 207, 255, 0.15);
+    border: 1px solid var(--cyan-300);
+    border-radius: 4px;
+    color: var(--cyan-300);
+    font-family: monospace;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.debug-btn:hover {
+    background-color: rgba(0, 207, 255, 0.3);
+    box-shadow: 0 0 10px var(--glow-cyan);
+}
+
+.debug-btn:active {
+    transform: scale(0.95);
+    background-color: rgba(0, 207, 255, 0.5);
+}
+
+.debug-btn.danger {
+    border-color: var(--pink-300);
+    color: var(--pink-300);
+    background-color: rgba(255, 55, 220, 0.15);
+}
+
+.debug-btn.danger:hover {
+    background-color: rgba(255, 55, 220, 0.3);
+    box-shadow: 0 0 10px var(--glow-pink);
+}
+
+/* Scrollbar styling */
+#debugMenu::-webkit-scrollbar,
+.debug-content::-webkit-scrollbar {
+    width: 12px;
+}
+
+#debugMenu::-webkit-scrollbar-track,
+.debug-content::-webkit-scrollbar-track {
+    background: rgba(0, 207, 255, 0.05);
+    border-radius: 6px;
+}
+
+#debugMenu::-webkit-scrollbar-thumb,
+.debug-content::-webkit-scrollbar-thumb {
+    background: var(--cyan-300);
+    border-radius: 6px;
+    border: 2px solid rgba(0, 0, 0, 0.5);
+}
+
+#debugMenu::-webkit-scrollbar-thumb:hover,
+.debug-content::-webkit-scrollbar-thumb:hover {
+    background: var(--cyan-200);
+}

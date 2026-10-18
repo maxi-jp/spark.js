@@ -10,6 +10,8 @@ const SPAWN_MODE = {
     JSON_LEVELS: 1
 }
 
+const skipIntro = false;
+
 class TTSC extends Game {
 
     _state = GAME_STATE.MAIN_MENU;
@@ -62,6 +64,7 @@ class TTSC extends Game {
         this.player = null;
         this.lives = 5;
         this.enemies = [];
+        this.currentBoss = null;
         this.camera = null;
 
         this.sceneLimits = new Rectangle(Vector2.Zero(), 1200, 640, Color.white, true, 2);
@@ -87,7 +90,7 @@ class TTSC extends Game {
         this.gameOverMenu = null;
 
         this.playerScore = 0;
-        this.playerScoreLabel = new TextLabel("0", new Vector2(this.screenWidth / 2, 50), "30px futuristic", Color.white, "center", "bottom");        
+        this.playerScoreLabel = new TextLabel("0", new Vector2(this.screenHalfWidth, 50), "30px futuristic", Color.white, "center", "bottom");        
         this.gameTimerLabel = new TextLabel("Time: 00:00", new Vector2(20, 50), "30px futuristic", Color.white, "left", "bottom");
 
         this.playerSpeedBar = new SpeedMultBar(new Vector2(this.screenWidth - 120, 20), 100, 20);
@@ -101,18 +104,18 @@ class TTSC extends Game {
         super.Start();
 
         this.state = GAME_STATE.MAIN_MENU;
-        this.spawnMode = SPAWN_MODE.RANDOM; 
+        this.spawnMode = SPAWN_MODE.JSON_LEVELS; 
 
         // Player's input configuration --------------------
         this.SetupInput();
         
         // configure background gradient
         this.bgGrad = new LinearGradient(this.renderer, new Vector2(0, 1), [
-            [0, "#191200"],
-            [0.1, "#000000"],
+            [0,    "#191200"],
+            [0.1,  "#000000"],
             [0.35, "#07073e"],
             [0.95, "#22375e"],
-            [1, "#274f98"]
+            [1,    "#274f98"]
         ]);
 
         // sprites
@@ -132,8 +135,20 @@ class TTSC extends Game {
         this.gameOverMenu.Start();
         this.gameOverMenu.HideMenu();
 
+        this.debugMenu = new DebugMenu(this, canvas);
+        this.debugMenu.Start();
+        this.debugMenu.HideMenu();
+
         if (this.spawnMode == SPAWN_MODE.JSON_LEVELS)
             this.LoadLevelData(0);
+
+        if (skipIntro) {
+            this.mainMenu.StartButton();
+            this.state = GAME_STATE.GAME;
+            this.camera.rotation = 0;
+            this.camera.scale = 1;
+            this.player.active = true;
+        }
     }
 
     SetupInput() {
@@ -165,7 +180,12 @@ class TTSC extends Game {
             { type: 'key', code: KEY_P },
             { type: 'key', code: KEY_ESCAPE },
             { type: 'gamepad', code: 'START' }
-        ]); 
+        ]);
+
+        // Debug Menu toggle
+        Input.RegisterAction("DebugMenu", [
+            { type: 'key', code: KEY_B }
+        ]);
         
         // Virtual on-screen joysticks for touch devices.
         // Left stick  → movement (bound to the 'move' axes in TTSCPlayer).
@@ -263,6 +283,16 @@ class TTSC extends Game {
     }
 
     Update(deltaTime) {
+        // Handle debug menu toggle globally (works in all states)
+        if (Input.GetActionDown("DebugMenu")) {
+            this.debugMenu.Toggle();
+        }
+
+        // Update debug menu if visible
+        if (this.debugMenu.visible) {
+            this.debugMenu.Update();
+        }
+
         switch (this.state) {
             case GAME_STATE.MAIN_MENU:
                 super.Update(deltaTime);
@@ -377,6 +407,11 @@ class TTSC extends Game {
 
                 this.playerLivesLabel.Draw(renderer);
 
+                if (this.currentBoss) {
+                    // draw boss health bar
+                    this.DrawBossHealthBar();
+                }
+
                 // Draw player lives
                 if (this.playerLives.length > 0) {
                     for (let i = 0; i < this.lives; i++) {
@@ -407,6 +442,36 @@ class TTSC extends Game {
         this.sceneLimits.Draw(renderer);
     }
 
+    DrawBossHealthBar() {
+        // TODO move this to an HTML element
+        const barW = 420;
+        const barH = 16;
+        const barX = this.screenWidth / 2 - barW / 2;
+        const barY = this.screenHeight - 80;
+
+        const hpRatio = Math.max(0, this.currentBoss.life / this.currentBoss.maxLife);
+
+        // Bar background
+        renderer.DrawFillBasicRectangle(barX, barY, barW, barH, new Color(0.12, 0.15, 0.2, 0.9));
+
+        // Health fill
+        renderer.DrawFillBasicRectangle(barX, barY, barW * hpRatio, barH, this.currentBoss.phaseColor);
+
+        // Phase divider ticks at 65% (HP 650) and 30% (HP 300)
+        renderer.DrawLine(barX + barW * 0.65, barY, barX + barW * 0.65, barY + barH, Color.white, 2);
+        renderer.DrawLine(barX + barW * 0.30, barY, barX + barW * 0.30, barY + barH, Color.white, 2);
+
+        // Outline
+        renderer.DrawStrokeBasicRectangle(barX, barY, barW, barH, Color.white, 1.5);
+
+        // Label
+        renderer.DrawFillText(
+            `TITAN MECH: ${Math.round(this.currentBoss.life)} / ${this.currentBoss.maxLife} HP`,
+            this.screenWidth / 2, barY + barH / 2,
+            'bold 11px monospace', Color.white, 'center', 'middle'
+        );
+    }
+
     AddEnemy(enemy) {
         this.enemies.push(enemy);
         this.AddGameObject(enemy);
@@ -417,12 +482,13 @@ class TTSC extends Game {
         let type = random < 0.33 ? 0 : random < 0.66 ? 1 : 2;
         const spawnPoint = this.enemiesSpawnPoints[RandomBetweenInt(0, this.enemiesSpawnPoints.length - 1)];        
         
-        type = 5;
-        this.SpawnEnemy(type, spawnPoint)
+        const enemy = this.SpawnEnemy(type, spawnPoint)
 
         this.timeToSpawnEnemy *= 0.97;
         if (this.timeToSpawnEnemy < 0.15)
-            this.timeToSpawnEnemy = 0.15
+            this.timeToSpawnEnemy = 0.15;
+
+        return enemy;
     }
     
     SpawnEnemy(type, spawnPoint){
@@ -446,12 +512,18 @@ class TTSC extends Game {
             case 5: // Tank
                 enemy = new EnemyTank(spawnPoint, this.graphicAssets.ships.img, this.player, this.sceneLimits);
                 break;
+            case 6: // Boss
+                enemy = new EnemyBoss(spawnPoint, this.graphicAssets.ships.img, this.player, this.sceneLimits);
+                this.currentBoss = enemy;
+                break;
             default:
                 break;
         }
 
         if (enemy)
-            this.AddEnemy(enemy)
+            this.AddEnemy(enemy);
+
+        return enemy;
     }
 
     EnemyKilled(enemy) {
@@ -473,6 +545,12 @@ class TTSC extends Game {
     }
 
     EnemyCollidesWithPlayer(enemy) {
+        // Skip damage if player is invincible
+        if (this.player.invincible) {
+            this.RemoveEnemy(enemy);
+            return;
+        }
+
         this.lives--;
 
         if (this.lives <= 0) {
@@ -503,6 +581,4 @@ class TTSC extends Game {
     }
 }
 
-window.onload = () => {
-    Init(TTSC, "myCanvas");
-}
+window.onload = () => Init(TTSC, "myCanvas");

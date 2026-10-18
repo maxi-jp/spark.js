@@ -12,6 +12,7 @@ class TTSCPlayer extends SpriteObject {
         this.speedRotation = 5;
 
         this.life = 100;
+        this.invincible = false;  // Invincibility flag for debugging
 
         this.movement = Vector2.Zero();
 

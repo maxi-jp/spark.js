@@ -207,5 +207,12 @@ const LEVEL_1_DATA = [
             { x: 350, y: -50, type: ENEMY_TYPE.WAVER },
             { x: 850, y: 690, type: ENEMY_TYPE.WAVER }
         ]
+    },
+    {
+        // Wave 16: Boss
+        time: 150,
+        enemies: [
+            {x: 600, y: 360, type: ENEMY_TYPE.BOSS}
+        ]
     }
 ];
