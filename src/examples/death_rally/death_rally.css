@@ -1,0 +1,209 @@
+/* ================================================================
+   Death Rally — UI Stylesheet
+   Covers the HUD overlay and Debug panel layered above the canvas.
+   ================================================================ */
+
+/* ---- Canvas container layout ---------------------------------- */
+
+#canvasContainer {
+    margin: 20px auto;
+    display: block;
+    overflow: hidden;
+}
+
+#canvasContainer canvas {
+    margin: 0;
+    display: block;
+}
+
+/* ---- HUD (full-canvas overlay, pointer-events:none via HTMLMenu) */
+
+#hud {
+    font-family: 'Arial', sans-serif;
+    color: #fff;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+/* Health bar — top-left */
+#hud-health {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    width: 200px;
+}
+
+#hud-health-label {
+    font-size: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.7;
+    margin-bottom: 4px;
+}
+
+#hud-health-track {
+    width: 100%;
+    height: 14px;
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+#hud-hp-fill {
+    height: 100%;
+    width: 100%;
+    background: #4caf50;
+    transition: width 0.06s linear, background 0.2s ease;
+    border-radius: 2px;
+}
+
+/* Timer — top-centre */
+#hud-timer {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    padding: 4px 16px;
+    font-size: 18px;
+    font-weight: bold;
+    letter-spacing: 3px;
+}
+
+/* Money — top-right */
+#hud-money-wrap {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    padding: 5px 12px;
+    font-size: 15px;
+    font-weight: bold;
+    color: #ffd700;
+}
+
+/* Weapon — bottom-left */
+#hud-weapon {
+    position: absolute;
+    bottom: 14px;
+    left: 12px;
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    padding: 6px 12px;
+    min-width: 140px;
+}
+
+#hud-weapon-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.6;
+}
+
+#hud-weapon-row {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+    margin-top: 3px;
+}
+
+#hud-weapon-name { font-size: 15px; font-weight: bold; }
+#hud-ammo        { font-size: 13px; color: #ffdd55; }
+
+/* Speed + Surface — bottom-right */
+#hud-status {
+    position: absolute;
+    bottom: 14px;
+    right: 12px;
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    padding: 6px 12px;
+    text-align: right;
+}
+
+#hud-speed   { font-size: 16px; font-weight: bold; }
+#hud-surface { font-size: 11px; opacity: 0.65; margin-top: 3px; }
+
+/* Race info: lap + position (below timer) */
+#hud-race-info {
+    position: absolute;
+    top: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 14px;
+    background: rgba(0, 0, 0, 0.52);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 6px;
+    padding: 3px 14px;
+    font-size: 13px;
+    font-weight: bold;
+    white-space: nowrap;
+}
+#hud-lap      { color: #fff; }
+#hud-position { color: #ffdd55; }
+
+/* ---- Debug overlay (full-canvas overlay; inner panel top-right) */
+
+#debug-panel {
+    position: absolute;
+    top: 48px;
+    right: 12px;
+    background: rgba(8, 8, 16, 0.90);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 8px;
+    padding: 12px 14px;
+    color: #ddd;
+    font-family: 'Arial', sans-serif;
+    font-size: 12px;
+    min-width: 185px;
+    pointer-events: auto;  /* re-enable inside the pointer-events:none overlay */
+}
+
+#debug-panel h3 {
+    margin: 0 0 10px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #ff9800;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    padding-bottom: 6px;
+}
+
+.dbg-section        { margin-bottom: 9px; }
+.dbg-section-label  {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.5;
+    margin-bottom: 4px;
+}
+.dbg-row { display: flex; gap: 4px; flex-wrap: wrap; }
+
+#debug-panel button {
+    background: rgba(255, 255, 255, 0.09);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #eee;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: background 0.12s ease;
+}
+
+#debug-panel button:hover { background: rgba(255, 255, 255, 0.24); }
+
+.dbg-hint {
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.35);
+    margin-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 6px;
+}

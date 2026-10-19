@@ -39,6 +39,17 @@ Explore the `src/examples/` directory for practical demonstrations of the engine
 
 ## Example Games
 
+- [Death Rally](../death-rally.html ':ignore :target=_blank') — vehicular combat arcade game inspired by the 1996 classic. A fully-featured multi-circuit playground featuring:
+  - **Arcade car physics** — frame-rate-independent lateral-friction drift model; 4 vehicle types with distinct handling profiles
+  - **5 surface types** — asphalt, gravel, dirt, grass and oil slick, each affecting grip and top speed differently
+  - **Circuit system** — `CircuitLoader` normalises both inline JS (`Option A`) and Tiled `.tmj` maps (`Option B`) to the same runtime contract; includes `RaceManager` state machine (countdown → racing → results) and `CheckpointZone` triggers with strict lap validation
+  - **Two circuits** — open cross-shaped Playground and a barrier-enclosed Oval Track; switchable at runtime from the debug menu
+  - **Weapons** — machine gun (×10 rounds), missile (×1), and mine (×3), all as ground pickups; health packs and money pickups also scattered on-track
+  - **Waypoint-following AI** — enemies race the track via an ordered waypoint loop, attack when aimed at the player, and wait for the green light like the player does
+  - **HTMLMenu HUD** — health bar, weapon slot, ammo, lap counter, race position, speed and surface name, and a full debug panel (swap vehicle, equip weapons, restart race, toggle debug/collider overlays, switch track live)
+  - **Split codebase** — `circuit.js`, `death_rally_defs.js`, `game_objects.js`, `cars.js`, `death_rally_game.js`, `circuits/playground.js`, `circuits/oval_track.js`
+  - See the project's [README](../src/examples/death_rally/README.md ':ignore :target=_blank') for implementation notes and design decisions
+
 - [BrokeOut](../brokeout.html ':ignore :target=_blank') — basic Breakout clone
 - [Floppy Derp](../floppyderp.html ':ignore :target=_blank') — Flappy Bird-like game
 - [Twin Stick Shooter](../twin-stick-shooter.html ':ignore :target=_blank')

@@ -51,6 +51,15 @@ Documentation can be consulted [here](https://maxi-jp.github.io/spark.js/docs/).
   - bt.js                 # Behavior Trees: BehaviorTree, composites, decorators, leaves, blackboard, live tree inspector
   - fuzzy.js              # Fuzzy Logic: FuzzyModule, FuzzyVariable, 6 set shapes, hedges, MaxAv/Centroid, live curve inspector
 - examples/
+  - death_rally/          # Vehicular combat arcade (Death Rally inspired)
+    - death_rally_defs.js       # Surface types, vehicle/weapon defs, shared color constants
+    - game_objects.js           # Obstacle, Pickup, Projectile, Mine, Explosion
+    - cars.js                   # Car, PlayerCar, EnemyCar (with waypoint-following AI)
+    - death_rally_game.js       # DeathRallyGame (main class, HUD, track selector)
+    - circuit.js                # Circuit system: RaceProgress, CheckpointZone, RaceManager, CircuitLoader
+    - circuits/playground.js    # Inline cross-shaped open circuit (Option A)
+    - circuits/oval_track.js    # Inline barrier-enclosed oval circuit (Option A)
+    - README.md                 # Design decisions, physics model, and system documentation
   - audio_test/           # Audio system testing and examples
   - box2d/                # Box2D physics examples
     - angry_birds.js      # Angry Birds clone with Box2D
@@ -59,6 +68,7 @@ Documentation can be consulted [here](https://maxi-jp.github.io/spark.js/docs/).
     - box2d_cargame.js    # Car game with Box2D physics (port of [makzan/HTML5-Games-Examples -> box2d-game-car](https://github.com/makzan/HTML5-Games-Examples ':ignore :target=_blank'))
     - box2d_platormer.js  # Platformer with Box2D physics
     - box2d_watermelon.js # Suika Game clone with Box2D
+  - death_rally/          # Vehicular combat arcade (Death Rally inspired) — see directory listing above
   - brokeout/             # Breakout clone
   - floppyderp/           # Flappy Bird-like example
   - menu/                 # HTML + CSS menu examples

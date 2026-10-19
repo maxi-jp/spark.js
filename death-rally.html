@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>spark.js — Death Rally</title>
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="src/examples/death_rally/death_rally.css">
+
+    <script src="src/engine/utils_math.js"></script>
+    <script src="src/engine/utils_classes.js"></script>
+    <script src="src/engine/renderer.js"></script>
+    <script src="src/engine/gameobjects.js"></script>
+    <script src="src/engine/input.js"></script>
+    <script src="src/engine/audioplayer.js"></script>
+    <script src="src/engine/particlesystem.js"></script>
+    <script src="src/engine/htmlmenu.js"></script>
+    <script src="src/engine/virtualcontrols.js"></script>
+    <script src="src/engine/game.js"></script>
+    <script src="src/engine/tiled_loader.js"></script>
+    <script src="src/engine/main.js"></script>
+    <!-- ── Death Rally scripts (dependency order) ── -->
+    <script src="src/examples/death_rally/circuit.js"></script>          <!-- circuit system  -->
+    <script src="src/examples/death_rally/death_rally_defs.js"></script> <!-- constants       -->
+    <script src="src/examples/death_rally/game_objects.js"></script>     <!-- non-car objects -->
+    <script src="src/examples/death_rally/cars.js"></script>             <!-- car classes     -->
+    <script src="src/examples/death_rally/death_rally_game.js"></script> <!-- game class      -->
+    <!-- ── Circuit data (after defs so SURFACE / colors are available) ── -->
+    <script src="src/examples/death_rally/circuits/playground.js"></script>
+    <script src="src/examples/death_rally/circuits/oval_track.js"></script>
+</head>
+<body>
+    <div id="canvasContainer">
+        <canvas id="canvas"></canvas>
+
+        <!-- ═══ HUD overlay ═══ -->
+        <div id="hud">
+            <div id="hud-health">
+                <div id="hud-health-label">Health</div>
+                <div id="hud-health-track">
+                    <div id="hud-hp-fill"></div>
+                </div>
+            </div>
+
+            <div id="hud-timer">
+                <span id="hud-time">0:00</span>
+            </div>
+
+            <!-- Lap counter + race position (below timer) -->
+            <div id="hud-race-info">
+                <span id="hud-lap">Lap 1/3</span>
+                <span id="hud-position"></span>
+            </div>
+
+            <div id="hud-money-wrap">
+                <span id="hud-money">$0</span>
+            </div>
+
+            <div id="hud-weapon">
+                <div id="hud-weapon-label">Weapon</div>
+                <div id="hud-weapon-row">
+                    <span id="hud-weapon-name">None</span>
+                    <span id="hud-ammo"></span>
+                </div>
+            </div>
+
+            <div id="hud-status">
+                <div id="hud-speed">0 km/h</div>
+                <div id="hud-surface">Asphalt</div>
+            </div>
+        </div>
+
+        <!-- ═══ Debug overlay (Tab to toggle) ═══ -->
+        <div id="debug-overlay">
+            <div id="debug-panel">
+                <h3>⚙ Debug</h3>
+
+                <div class="dbg-section">
+                    <div class="dbg-section-label">Vehicle</div>
+                    <div class="dbg-row">
+                        <button id="dbg-sports">Sports</button>
+                        <button id="dbg-muscle">Muscle</button>
+                        <button id="dbg-truck">Truck</button>
+                        <button id="dbg-buggy">Buggy</button>
+                    </div>
+                </div>
+
+                <div class="dbg-section">
+                    <div class="dbg-section-label">Weapon</div>
+                    <div class="dbg-row">
+                        <button id="dbg-give-mg">Machine Gun</button>
+                        <button id="dbg-give-msl">Missile</button>
+                        <button id="dbg-give-mine">Mine</button>
+                    </div>
+                </div>
+
+                <div class="dbg-section">
+                    <div class="dbg-section-label">Misc</div>
+                    <div class="dbg-row">
+                        <button id="dbg-heal">Heal</button>
+                        <button id="dbg-money">+$500</button>
+                        <button id="dbg-spawn">Spawn Enemy</button>
+                    </div>
+                </div>
+
+                <div class="dbg-section">
+                    <div class="dbg-section-label">Track</div>
+                    <div class="dbg-row">
+                        <button id="dbg-track-playground">Playground</button>
+                        <button id="dbg-track-oval">Oval</button>
+                    </div>
+                </div>
+
+                <div class="dbg-section">
+                    <div class="dbg-section-label">Race</div>
+                    <div class="dbg-row">
+                        <button id="dbg-restart">Restart Race</button>
+                    </div>
+                </div>
+
+                <div class="dbg-section">
+                    <div class="dbg-section-label">View</div>
+                    <div class="dbg-row">
+                        <button id="dbg-colliders">Colliders</button>
+                        <button id="dbg-debug">Debug Mode</button>
+                    </div>
+                </div>
+
+                <div class="dbg-hint">Tab — toggle this panel</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
