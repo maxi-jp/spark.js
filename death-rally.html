@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>spark.js — Death Rally</title>
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="src/examples/death_rally/death_rally.css">
+
+    <script src="src/engine/utils_math.js"></script>
+    <script src="src/engine/utils_classes.js"></script>
+    <script src="src/engine/renderer.js"></script>
+    <script src="src/engine/gameobjects.js"></script>
+    <script src="src/engine/input.js"></script>
+    <script src="src/engine/audioplayer.js"></script>
+    <script src="src/engine/particlesystem.js"></script>
+    <script src="src/engine/htmlmenu.js"></script>
+    <script src="src/engine/virtualcontrols.js"></script>
+    <script src="src/engine/game.js"></script>
+    <script src="src/engine/tiled_loader.js"></script>
+    <script src="src/engine/main.js"></script>
+    <!-- ── Death Rally (dependency order) ─────────────────────── -->
+    <script src="src/examples/death_rally/circuit.js"></script>
+    <script src="src/examples/death_rally/death_rally_defs.js"></script>
+    <script src="src/examples/death_rally/game_objects.js"></script>
+    <script src="src/examples/death_rally/cars.js"></script>
+    <script src="src/examples/death_rally/game_state.js"></script>
+    <!-- Menus (after game_state, before game class) -->
+    <script src="src/examples/death_rally/menus/main_menu.js"></script>
+    <script src="src/examples/death_rally/menus/credits_menu.js"></script>
+    <script src="src/examples/death_rally/menus/hub_menu.js"></script>
+    <script src="src/examples/death_rally/menus/race_summary_menu.js"></script>
+    <!-- Game class -->
+    <script src="src/examples/death_rally/death_rally_game.js"></script>
+    <!-- Circuit data (after defs so SURFACE / C_* constants exist) -->
+    <script src="src/examples/death_rally/circuits/playground.js"></script>
+    <script src="src/examples/death_rally/circuits/oval_track.js"></script>
+    <script src="src/examples/death_rally/circuits/figure_eight.js"></script>
+    <script src="src/examples/death_rally/circuits/final_circuit.js"></script>
+</head>
+<body>
+    <div id="canvasContainer">
+        <canvas id="canvas"></canvas>
+
+        <!-- ═══ Main Menu ═══ -->
+        <div id="main-menu">
+            <div class="menu-panel main-menu-panel">
+                <div class="menu-logo">💀 DEATH RALLY</div>
+                <div class="menu-tagline">Vehicular Combat Racing</div>
+                <button id="btn-start-game" class="menu-btn menu-btn-primary">Start Game</button>
+                <button id="btn-playground" class="menu-btn">Playground</button>
+                <button id="btn-main-credits" class="menu-btn menu-btn-small">Credits</button>
+            </div>
+        </div>
+
+        <!-- ═══ Credits ═══ -->
+        <div id="credits-panel">
+            <div class="menu-panel credits-panel">
+                <h2>Credits</h2>
+                <p>Built with <strong>spark.js</strong></p>
+                <p>Inspired by <em>Death Rally (1996)</em><br>by Remedy Entertainment</p>
+                <p style="margin-top:1.5rem;opacity:.6;font-size:.8rem">
+                    Physics model: custom lateral-friction arcade system<br>
+                    No external physics engine required.
+                </p>
+                <button id="btn-credits-back" class="menu-btn" style="margin-top:2rem">← Back</button>
+            </div>
+        </div>
+
+        <!-- ═══ Campaign Hub ═══ -->
+        <div id="hub-menu">
+            <div class="hub-layout">
+                <div class="hub-header">
+                    <div class="hub-title">CAMPAIGN HUB</div>
+                    <div class="hub-header-right">
+                        <span class="hub-funds-label">Funds:</span>
+                        <span id="hub-funds" class="hub-funds-value">$1000</span>
+                        <span id="hub-next-race" class="hub-next-race">Next Race: —</span>
+                    </div>
+                </div>
+
+                <div class="hub-body">
+                    <!-- Garage -->
+                    <div class="hub-section garage-section">
+                        <div class="hub-section-title">🏎 Garage</div>
+                        <div id="garage-car-list" class="garage-car-list"></div>
+                    </div>
+
+                    <!-- Car detail -->
+                    <div class="hub-section car-detail-section">
+                        <div class="hub-section-title">Selected Car</div>
+                        <div id="garage-car-detail" class="garage-car-detail">
+                            <p class="hub-empty-msg">No cars owned — visit the Dealership.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hub-footer">
+                    <button id="btn-hub-main-menu" class="menu-btn menu-btn-small">← Main Menu</button>
+                    <button id="btn-hub-credits"   class="menu-btn menu-btn-small">Credits</button>
+                    <div class="hub-footer-right">
+                        <button id="btn-dealership"  class="menu-btn">🚘 Dealership</button>
+                        <button id="btn-start-race"  class="menu-btn menu-btn-primary" disabled>Start Next Race ▶</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dealership (overlay inside hub) -->
+            <div id="dealership-panel" class="dealership-overlay">
+                <div class="dealership-inner">
+                    <div class="dealer-title">🚘 DEALERSHIP</div>
+                    <div id="dealership-car-list" class="dealership-car-list"></div>
+                    <div class="dealer-footer">
+                        <button id="btn-dealership-close" class="menu-btn">← Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ Race Summary ═══ -->
+        <div id="race-summary">
+            <div class="summary-panel">
+                <div id="race-summary-title" class="summary-title">Race Summary</div>
+                <table class="summary-table">
+                    <thead>
+                        <tr>
+                            <th>Pos</th><th>Driver</th><th>HP</th>
+                            <th>HP Lost</th><th>Dmg Dealt</th><th>Earnings</th>
+                        </tr>
+                    </thead>
+                    <tbody id="race-summary-tbody"></tbody>
+                </table>
+                <div class="summary-footer">
+                    <button id="btn-race-summary-next" class="menu-btn menu-btn-primary">View Standings ▶</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ Competition Summary ═══ -->
+        <div id="competition-summary">
+            <div class="summary-panel">
+                <div class="summary-title">Championship Standings</div>
+                <table class="summary-table">
+                    <thead id="comp-thead"></thead>
+                    <tbody id="comp-tbody"></tbody>
+                </table>
+                <div id="comp-next-info" class="comp-next-info"></div>
+                <div class="summary-footer">
+                    <button id="btn-competition-continue" class="menu-btn menu-btn-primary">Continue ▶</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ Race HUD ═══ -->
+        <div id="hud" style="display:none">
+            <div id="hud-health">
+                <div id="hud-health-label">Health</div>
+                <div id="hud-health-track"><div id="hud-hp-fill"></div></div>
+            </div>
+            <div id="hud-timer"><span id="hud-time">0:00</span></div>
+            <div id="hud-race-info">
+                <span id="hud-lap">Lap 1/3</span>
+                <span id="hud-position"></span>
+            </div>
+            <div id="hud-money-wrap"><span id="hud-money">$0</span></div>
+            <div id="hud-weapon">
+                <div id="hud-weapon-label">Weapon</div>
+                <div id="hud-weapon-row">
+                    <span id="hud-weapon-name">None</span>
+                    <span id="hud-ammo"></span>
+                </div>
+            </div>
+            <div id="hud-status">
+                <div id="hud-speed">0 km/h</div>
+                <div id="hud-surface">Asphalt</div>
+            </div>
+        </div>
+
+        <!-- ═══ Debug overlay ═══ -->
+        <div id="debug-overlay" style="display:none">
+            <div id="debug-panel">
+                <h3>⚙ Debug</h3>
+                <div class="dbg-section">
+                    <div class="dbg-section-label">Vehicle</div>
+                    <div class="dbg-row">
+                        <button id="dbg-sports">Sports</button>
+                        <button id="dbg-muscle">Muscle</button>
+                        <button id="dbg-truck">Truck</button>
+                        <button id="dbg-buggy">Buggy</button>
+                    </div>
+                </div>
+                <div class="dbg-section">
+                    <div class="dbg-section-label">Weapon</div>
+                    <div class="dbg-row">
+                        <button id="dbg-give-mg">Machine Gun</button>
+                        <button id="dbg-give-msl">Missile</button>
+                        <button id="dbg-give-mine">Mine</button>
+                    </div>
+                </div>
+                <div class="dbg-section">
+                    <div class="dbg-section-label">Misc</div>
+                    <div class="dbg-row">
+                        <button id="dbg-heal">Heal</button>
+                        <button id="dbg-money">+$500</button>
+                        <button id="dbg-spawn">Spawn Enemy</button>
+                    </div>
+                </div>
+                <div class="dbg-section">
+                    <div class="dbg-section-label">Track</div>
+                    <div class="dbg-row">
+                        <button id="dbg-track-playground">Playground</button>
+                        <button id="dbg-track-oval">Oval</button>
+                        <button id="dbg-track-figure8">Figure 8</button>
+                        <button id="dbg-track-final">Final</button>
+                    </div>
+                </div>
+                <div class="dbg-section">
+                    <div class="dbg-section-label">Race</div>
+                    <div class="dbg-row">
+                        <button id="dbg-restart">Restart Race</button>
+                    </div>
+                </div>
+                <div class="dbg-section">
+                    <div class="dbg-section-label">View</div>
+                    <div class="dbg-row">
+                        <button id="dbg-colliders">Colliders</button>
+                        <button id="dbg-debug">Debug Mode</button>
+                    </div>
+                </div>
+                <div class="dbg-hint">Tab — toggle this panel</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

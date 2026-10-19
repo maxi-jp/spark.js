@@ -1,0 +1,336 @@
+/* ================================================================
+   Death Rally — UI Stylesheet
+   Covers the HUD, Debug panel, and all game menus.
+   ================================================================ */
+
+/* ── Shared vars ────────────────────────────────────────────────── */
+:root {
+    --dr-bg:       #10100e;
+    --dr-panel:    rgba(10, 10, 14, 0.95);
+    --dr-border:   rgba(255, 255, 255, 0.14);
+    --dr-accent:   #ff6a00;
+    --dr-gold:     #ffd700;
+    --dr-text:     #ddd;
+    --dr-muted:    rgba(255,255,255,0.45);
+    --dr-radius:   10px;
+}
+
+/* ── Canvas container ───────────────────────────────────────────── */
+#canvasContainer { margin: 20px auto; display: block; overflow: hidden; }
+#canvasContainer canvas { margin: 0; display: block; }
+
+/* ── Shared button style ────────────────────────────────────────── */
+.menu-btn {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid var(--dr-border);
+    color: var(--dr-text);
+    padding: 10px 22px;
+    border-radius: 6px;
+    font-family: 'Arial', sans-serif;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    pointer-events: auto;
+}
+.menu-btn:hover  { background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.35); }
+.menu-btn:disabled { opacity: 0.4; cursor: default; }
+.menu-btn-primary {
+    background: var(--dr-accent);
+    border-color: var(--dr-accent);
+    color: #fff;
+}
+.menu-btn-primary:hover { background: #ff8a30; }
+.menu-btn-small { font-size: 12px; padding: 7px 14px; }
+
+/* ── Full-canvas overlay helper ─────────────────────────────────── */
+/* All menu containers are sized/positioned by HTMLMenu.Start().
+   They use display:flex to centre their panel content.           */
+#main-menu, #credits-panel, #hub-menu,
+#race-summary, #competition-summary {
+    display: none;                /* Start hidden; Show() sets display:flex */
+    align-items: center;
+    justify-content: center;
+    font-family: 'Arial', sans-serif;
+    color: var(--dr-text);
+}
+
+/* ── Shared inner panel ─────────────────────────────────────────── */
+.menu-panel {
+    background: var(--dr-panel);
+    border: 1px solid var(--dr-border);
+    border-radius: var(--dr-radius);
+    padding: 40px 50px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    pointer-events: auto;
+    backdrop-filter: blur(4px);
+    max-height: 90%;
+    overflow-y: auto;
+}
+
+/* ── Main Menu ───────────────────────────────────────────────────── */
+.main-menu-panel { max-width: 380px; text-align: center; }
+.menu-logo {
+    font-size: 38px;
+    font-weight: 900;
+    letter-spacing: 4px;
+    color: var(--dr-accent);
+    text-shadow: 0 0 20px rgba(255,106,0,0.5);
+    margin-bottom: 4px;
+}
+.menu-tagline { font-size: 12px; color: var(--dr-muted); letter-spacing: 3px; margin-bottom: 18px; }
+
+/* ── Credits ─────────────────────────────────────────────────────── */
+.credits-panel { max-width: 420px; text-align: center; }
+.credits-panel h2 { font-size: 22px; letter-spacing: 3px; color: var(--dr-accent); margin: 0 0 18px; }
+.credits-panel p { opacity: 0.75; line-height: 1.7; }
+
+/* ── Campaign Hub ────────────────────────────────────────────────── */
+#hub-menu {
+    align-items: stretch;
+    justify-content: stretch;
+    padding: 0;
+}
+
+.hub-layout {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    pointer-events: auto;
+    overflow: hidden;
+}
+
+.hub-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(0,0,0,0.7);
+    border-bottom: 1px solid var(--dr-border);
+    padding: 12px 22px;
+    flex-shrink: 0;
+}
+.hub-title { font-size: 16px; font-weight: bold; letter-spacing: 4px; color: var(--dr-accent); }
+.hub-header-right { display: flex; gap: 18px; align-items: center; }
+.hub-funds-label { font-size: 12px; opacity: 0.6; }
+.hub-funds-value { font-size: 20px; font-weight: bold; color: var(--dr-gold); }
+.hub-next-race   { font-size: 12px; color: var(--dr-muted); border-left: 1px solid var(--dr-border); padding-left: 18px; }
+
+.hub-body {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    gap: 0;
+}
+
+.hub-section {
+    padding: 18px 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+.hub-section + .hub-section { border-left: 1px solid var(--dr-border); }
+.hub-section-title {
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--dr-accent);
+    margin-bottom: 14px;
+    opacity: 0.9;
+}
+
+.hub-footer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px;
+    background: rgba(0,0,0,0.6);
+    border-top: 1px solid var(--dr-border);
+    flex-shrink: 0;
+}
+.hub-footer-right { margin-left: auto; display: flex; gap: 10px; }
+.hub-empty-msg { color: var(--dr-muted); font-size: 13px; font-style: italic; }
+
+/* Garage car cards */
+.garage-car-list { display: flex; flex-direction: column; gap: 8px; }
+.garage-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--dr-border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: border-color 0.12s, background 0.12s;
+}
+.garage-card:hover   { background: rgba(255,255,255,0.10); border-color: rgba(255,255,255,0.3); }
+.garage-card.selected { border-color: var(--dr-accent); background: rgba(255,106,0,0.10); }
+.gc-name  { font-size: 14px; font-weight: bold; margin-bottom: 5px; }
+.gc-hp-bar { height: 5px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; margin-bottom: 3px; }
+.gc-hp-fill { height: 100%; background: #4caf50; border-radius: 3px; }
+.gc-hp-label { font-size: 11px; color: var(--dr-muted); }
+
+/* Car detail panel */
+.garage-car-detail { font-size: 13px; }
+.cd-title { font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #fff; }
+.cd-hp-row {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+}
+.cd-hp-bar { flex: 1; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; }
+.cd-hp-fill { height: 100%; background: #4caf50; border-radius: 4px; transition: width 0.2s; }
+.cd-armour { font-size: 12px; color: #80a0ff; margin-bottom: 8px; }
+.cd-stats {
+    display: flex; flex-wrap: wrap; gap: 8px; 
+    background: rgba(255,255,255,0.04); 
+    border-radius: 6px; padding: 8px 10px;
+    margin-bottom: 12px; font-size: 12px;
+}
+.cd-stats span { flex: 1 1 45%; }
+.cd-upgrades {
+    width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 12px;
+}
+.cd-upgrades td { padding: 5px 6px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.cd-upgrades td:first-child { color: var(--dr-muted); }
+.ug-level { color: var(--dr-accent); font-weight: bold; text-align: center; }
+.hub-upgrade-btn {
+    background: rgba(255,106,0,0.15);
+    border: 1px solid rgba(255,106,0,0.4);
+    color: var(--dr-accent);
+    padding: 3px 8px; border-radius: 4px;
+    font-size: 11px; cursor: pointer; white-space: nowrap;
+}
+.hub-upgrade-btn:hover { background: rgba(255,106,0,0.30); }
+.upgrade-maxed { font-size: 11px; color: #4caf50; }
+.cd-repair { margin-top: 4px; }
+#btn-repair-car {
+    background: rgba(255,50,50,0.15);
+    border: 1px solid rgba(255,80,80,0.4);
+    color: #ff8888; padding: 5px 14px;
+    border-radius: 5px; font-size: 12px; cursor: pointer;
+}
+#btn-repair-car:hover { background: rgba(255,50,50,0.30); }
+
+/* ── Dealership overlay ─────────────────────────────────────────── */
+.dealership-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(3px);
+    pointer-events: auto;
+    z-index: 10;
+}
+.dealership-inner {
+    background: var(--dr-panel);
+    border: 1px solid var(--dr-border);
+    border-radius: var(--dr-radius);
+    padding: 28px 32px;
+    max-width: 700px;
+    width: 90%;
+    max-height: 85%;
+    overflow-y: auto;
+}
+.dealer-title {
+    font-size: 18px; font-weight: bold; letter-spacing: 3px;
+    color: var(--dr-accent); margin-bottom: 20px; text-align: center;
+}
+.dealership-car-list { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 20px; }
+.dealer-card {
+    flex: 1 1 160px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--dr-border);
+    border-radius: 8px;
+    padding: 14px;
+    text-align: center;
+    transition: border-color 0.12s;
+}
+.dealer-card:hover { border-color: rgba(255,255,255,0.3); }
+.dealer-card.owned  { opacity: 0.5; }
+.dealer-card.locked { opacity: 0.45; filter: grayscale(0.5); }
+.dc-name  { font-size: 14px; font-weight: bold; margin-bottom: 5px; }
+.dc-stats { font-size: 11px; color: var(--dr-muted); margin-bottom: 5px; line-height: 1.5; }
+.dc-price { font-size: 16px; color: var(--dr-gold); font-weight: bold; margin-bottom: 10px; }
+.dealer-btn {
+    background: rgba(255,106,0,0.2);
+    border: 1px solid var(--dr-accent);
+    color: var(--dr-accent); font-size: 12px; font-weight: bold;
+    padding: 5px 14px; border-radius: 5px; cursor: pointer;
+    transition: background 0.12s;
+}
+.dealer-btn:hover:not(:disabled) { background: rgba(255,106,0,0.4); }
+.dealer-btn:disabled { opacity: 0.5; cursor: default; border-color: var(--dr-border); color: var(--dr-muted); }
+.dealer-footer { text-align: right; }
+
+/* ── Summary panels ─────────────────────────────────────────────── */
+.summary-panel {
+    background: var(--dr-panel);
+    border: 1px solid var(--dr-border);
+    border-radius: var(--dr-radius);
+    padding: 28px 36px;
+    max-width: 720px;
+    width: 92%;
+    pointer-events: auto;
+    max-height: 90%;
+    overflow-y: auto;
+}
+.summary-title {
+    font-size: 20px; font-weight: bold; letter-spacing: 3px;
+    color: var(--dr-accent); margin-bottom: 20px; text-align: center;
+    text-transform: uppercase;
+}
+.summary-table {
+    width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 18px;
+}
+.summary-table th {
+    text-align: left; padding: 6px 10px; font-size: 11px; text-transform: uppercase;
+    letter-spacing: 1px; color: var(--dr-muted);
+    border-bottom: 1px solid var(--dr-border);
+}
+.summary-table td { padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.summary-player-row td { background: rgba(255,106,0,0.08); font-weight: bold; }
+.pos-cell    { font-weight: bold; font-size: 15px; color: var(--dr-gold); }
+.dmg-taken   { color: #ff8888; }
+.dmg-dealt   { color: #88ddff; }
+.money-cell  { color: var(--dr-gold); font-weight: bold; }
+.total-pts   { font-size: 15px; font-weight: bold; color: var(--dr-accent); }
+.summary-footer  { display: flex; justify-content: flex-end; }
+.comp-next-info  { font-size: 13px; color: var(--dr-muted); margin-bottom: 14px; text-align: center; }
+
+/* ── HUD (race overlay) ─────────────────────────────────────────── */
+#hud {
+    font-family: 'Arial', sans-serif;
+    color: #fff;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+}
+#hud-health { position: absolute; top: 12px; left: 12px; width: 200px; }
+#hud-health-label { font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; opacity: 0.7; margin-bottom: 4px; }
+#hud-health-track { width: 100%; height: 14px; background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.25); border-radius: 3px; overflow: hidden; }
+#hud-hp-fill      { height: 100%; width: 100%; background: #4caf50; transition: width 0.06s linear, background 0.2s ease; border-radius: 2px; }
+#hud-timer        { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 4px 16px; font-size: 18px; font-weight: bold; letter-spacing: 3px; }
+#hud-money-wrap   { position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 5px 12px; font-size: 15px; font-weight: bold; color: #ffd700; }
+#hud-weapon       { position: absolute; bottom: 14px; left: 12px; background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 6px 12px; min-width: 140px; }
+#hud-weapon-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.6; }
+#hud-weapon-row   { display: flex; align-items: baseline; gap: 7px; margin-top: 3px; }
+#hud-weapon-name  { font-size: 15px; font-weight: bold; }
+#hud-ammo         { font-size: 13px; color: #ffdd55; }
+#hud-status       { position: absolute; bottom: 14px; right: 12px; background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 6px 12px; text-align: right; }
+#hud-speed   { font-size: 16px; font-weight: bold; }
+#hud-surface { font-size: 11px; opacity: 0.65; margin-top: 3px; }
+#hud-race-info { position: absolute; top: 50px; left: 50%; transform: translateX(-50%); display: flex; gap: 14px; background: rgba(0,0,0,0.52); border: 1px solid rgba(255,255,255,0.18); border-radius: 6px; padding: 3px 14px; font-size: 13px; font-weight: bold; white-space: nowrap; }
+#hud-lap      { color: #fff; }
+#hud-position { color: #ffdd55; }
+
+/* ── Debug overlay ──────────────────────────────────────────────── */
+#debug-panel { position: absolute; top: 48px; right: 12px; background: rgba(8,8,16,0.90); border: 1px solid rgba(255,255,255,0.22); border-radius: 8px; padding: 12px 14px; color: #ddd; font-family: 'Arial', sans-serif; font-size: 12px; min-width: 185px; pointer-events: auto; }
+#debug-panel h3 { margin: 0 0 10px; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: #ff9800; border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 6px; }
+.dbg-section { margin-bottom: 9px; }
+.dbg-section-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.5; margin-bottom: 4px; }
+.dbg-row { display: flex; gap: 4px; flex-wrap: wrap; }
+#debug-panel button { background: rgba(255,255,255,0.09); border: 1px solid rgba(255,255,255,0.18); color: #eee; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; transition: background 0.12s; }
+#debug-panel button:hover { background: rgba(255,255,255,0.24); }
+.dbg-hint { font-size: 9px; color: rgba(255,255,255,0.35); margin-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 6px; }
