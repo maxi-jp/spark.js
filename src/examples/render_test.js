@@ -40,6 +40,12 @@ class BasicGame extends Game {
 
         // auxiliar
         this.grey = new Color(0.5, 0.5, 0.5, 1);
+        this.cyan = new Color(0.0, 0.85, 1.0, 1.0);
+        this.tealFill = new Color(0.0, 0.75, 0.85, 0.45);
+        this.coneFill = new Color(0.2, 1.0, 0.45, 0.32);
+        this.pillBg = new Color(0.12, 0.16, 0.26, 0.9);
+        this.ellipseRot = 0;
+        this.radarAngle = 0;
     }
     
     Start() {
@@ -110,12 +116,20 @@ class BasicGame extends Game {
         const newPosY = Math.sin(totalTime) * 20;
         this.animationObjectBasic2.position.Set(this.animationObjectBasic2.x, this.screenHalfHeight + newPosY);
         this.animationObjectBasic2.rotation += 0.2 * deltaTime;
+
+        // animate ellipse rotation and radar arc sweep
+        this.ellipseRot += 0.8 * deltaTime;
+        this.radarAngle += 1.4 * deltaTime;
     }
 
     Draw() {
         this.blackRect.Draw(this.renderer);
         this.renderer.DrawLine(this.screenHalfWidth, 0, this.screenHalfWidth, this.screenHeight, this.grey);
         this.renderer.DrawLine(0, this.screenHalfHeight, this.screenWidth, this.screenHalfHeight, this.grey);
+
+        // Dashed lines (DrawDashedLine)
+        this.renderer.DrawDashedLine(200, 400, 400, 100, this.cyan, 2, [8, 6]);
+        this.renderer.DrawDashedLine(340, 305, 620, 305, Color.yellow, 1, [10, 4, 2, 4]);
 
         super.Draw();
 
@@ -127,6 +141,33 @@ class BasicGame extends Game {
         this.pinkCircle.Draw(this.renderer);
         this.greenCircle.Draw(this.renderer);
 
+        // Ellipses (DrawFillEllipse & DrawStrokeEllipse)
+        this.renderer.DrawFillEllipse(535, 100, 48, 22, this.tealFill, this.ellipseRot);
+        this.renderer.DrawStrokeEllipse(535, 100, 50, 24, Color.orange, 2, -this.ellipseRot);
+
+        // Circular Arcs / Sectors (DrawFillArc & DrawStrokeArc)
+        const coneSpan = 0.85;
+        this.renderer.DrawFillArc(410, 375, 52, this.radarAngle - coneSpan * 0.5, this.radarAngle + coneSpan * 0.5, this.coneFill);
+        this.renderer.DrawStrokeArc(410, 375, 52, this.radarAngle - coneSpan * 0.5, this.radarAngle + coneSpan * 0.5, Color.lime, 2);
+        const progressEnd = -PIH + ((Math.sin(totalTime) + 1) * 0.5) * PI2;
+        this.renderer.DrawStrokeArc(410, 375, 60, -PIH, progressEnd, this.cyan, 3);
+
+        // Rounded rectangles (DrawFillRoundRectangle, DrawStrokeRoundRectangle, DrawFillBasicRoundRectangle, DrawStrokeBasicRoundRectangle)
+        this.renderer.DrawFillRoundRectangle(555, 325, 76, 36, 8, this.tealFill, this.ellipseRot * 0.5);
+        this.renderer.DrawStrokeRoundRectangle(555, 325, 76, 36, 8, Color.yellow, 2, this.ellipseRot * 0.5);
+
+        // Dynamic rounded pill sized with MeasureText
+        const pillFont = "14px Comic Sans MS";
+        const pillText = `MeasureText: ${Math.round(this.ellipseRot * 57.3)}°`;
+        const textW = this.renderer.MeasureText(pillText, pillFont);
+        const pillW = textW + 16;
+        const pillH = 26;
+        const pillX = 555 - pillW * 0.5;
+        const pillY = 362;
+        this.renderer.DrawFillBasicRoundRectangle(pillX, pillY, pillW, pillH, 6, this.pillBg);
+        this.renderer.DrawStrokeBasicRoundRectangle(pillX, pillY, pillW, pillH, 6, this.cyan, 1);
+        this.renderer.DrawFillText(pillText, 555, pillY + pillH * 0.5, pillFont, Color.white, "center", "middle");
+
         this.renderer.DrawFillText("Watson!!! O_O", this.screenHalfWidth, 20, "20px Comic Sans MS");
         this.renderer.DrawFillText("Top-left corner", 0, 0, "16px Comic Sans MS", Color.green, "left", "top");
         this.renderer.DrawFillText("Top-right corner", this.screenWidth, 0, "16px Comic Sans MS", Color.pink, "right", "top");
@@ -135,6 +176,6 @@ class BasicGame extends Game {
         this.renderer.DrawFillText("Bottom-left corner", 0, this.screenHeight, "16px Comic Sans MS", Color.lime, "left", "bottom");
         this.renderer.DrawFillText("Bottom-right corner", this.screenWidth, this.screenHeight, "16px Comic Sans MS", Color.aqua, "right", "bottom");
 
-        this.textLabel.Draw(renderer);
+        this.textLabel.Draw(this.renderer);
     }
 }

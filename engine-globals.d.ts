@@ -398,35 +398,94 @@ declare class Renderer {
     RestoreCameraTransform(): void;
 
     // Primitives
+    /** Draws a straight line from (x1, y1) to (x2, y2). */
     DrawLine(x1: number, y1: number, x2: number, y2: number, color?: Color, lineWidth?: number): void;
+    /** Draws a dashed line from (x1, y1) to (x2, y2) with a custom [dashLength, gapLength, ...] pattern in pixels. */
+    DrawDashedLine(x1: number, y1: number, x2: number, y2: number, color?: Color, lineWidth?: number, dash?: number[]): void;
+    /** Draws a closed polygon through the given vertices. */
     DrawPolygon(points: {x: number, y: number}[], strokeColor?: Color, lineWidth?: number, fill?: boolean, fillColor?: Color): void;
     
     // Rectangles
+    /** Draws a rectangle centered on (x, y) with optional rotation. */
     DrawRectangle(x: number, y: number, w: number, h: number, color?: Color, stroke?: boolean, lineWidth?: number, rot?: number, pivot?: {x: number, y: number}): void;
+    /** Draws a stroked rectangle centered on (x, y) with optional rotation. */
     DrawStrokeRectangle(x: number, y: number, w: number, h: number, color?: Color, lineWidth?: number, rot?: number, pivot?: {x: number, y: number}): void;
+    /** Draws a filled rectangle centered on (x, y) with optional rotation. */
     DrawFillRectangle(x: number, y: number, w: number, h: number, color?: Color, rot?: number, pivot?: {x: number, y: number}): void;
+    /** Draws a rectangle with top-left at (x, y). No rotation — fast path for UI and backgrounds. */
     DrawBasicRectangle(x: number, y: number, w: number, h: number, color?: Color, stroke?: boolean, lineWidth?: number): void;
+    /** Draws a stroked rectangle with top-left at (x, y). No rotation. */
     DrawStrokeBasicRectangle(x: number, y: number, w: number, h: number, color?: Color, lineWidth?: number): void;
+    /** Draws a filled rectangle with top-left at (x, y). No rotation — fastest rectangle call. */
     DrawFillBasicRectangle(x: number, y: number, w: number, h: number, color?: Color): void;
+    /** Draws a rounded rectangle centered on (x, y) with optional rotation (falls back to DrawRectangle in WebGL). */
+    DrawRoundRectangle(x: number, y: number, w: number, h: number, radius?: number | number[], color?: Color, stroke?: boolean, lineWidth?: number, rot?: number, pivot?: {x: number, y: number}): void;
+    /** Draws a stroked rounded rectangle centered on (x, y) with optional rotation (falls back to DrawStrokeRectangle in WebGL). */
+    DrawStrokeRoundRectangle(x: number, y: number, w: number, h: number, radius?: number | number[], color?: Color, lineWidth?: number, rot?: number, pivot?: {x: number, y: number}): void;
+    /** Draws a filled rounded rectangle centered on (x, y) with optional rotation (falls back to DrawFillRectangle in WebGL). */
+    DrawFillRoundRectangle(x: number, y: number, w: number, h: number, radius?: number | number[], color?: Color, rot?: number, pivot?: {x: number, y: number}): void;
+    /** Draws a rounded rectangle with top-left at (x, y). No rotation (falls back to DrawBasicRectangle in WebGL). */
+    DrawBasicRoundRectangle(x: number, y: number, w: number, h: number, radius?: number | number[], color?: Color, stroke?: boolean, lineWidth?: number): void;
+    /** Draws a stroked rounded rectangle with top-left at (x, y). No rotation (falls back to DrawStrokeBasicRectangle in WebGL). */
+    DrawStrokeBasicRoundRectangle(x: number, y: number, w: number, h: number, radius?: number | number[], color?: Color, lineWidth?: number): void;
+    /** Draws a filled rounded rectangle with top-left at (x, y). No rotation (falls back to DrawFillBasicRectangle in WebGL). */
+    DrawFillBasicRoundRectangle(x: number, y: number, w: number, h: number, radius?: number | number[], color?: Color): void;
 
-    // Circles
+    // Circles, Ellipses & Arcs
+    /** Draws a circle centered on (x, y). */
     DrawCircle(x: number, y: number, radius: number, color?: Color, stroke?: boolean, lineWidth?: number): void;
+    /** Draws a filled circle centered on (x, y). */
     DrawFillCircle(x: number, y: number, radius: number, color?: Color): void;
+    /** Draws a stroked circle centered on (x, y). */
     DrawStrokeCircle(x: number, y: number, radius: number, color?: Color, lineWidth?: number): void;
+    /** Draws an ellipse centered on (x, y) with horizontal/vertical radii and optional rotation. */
+    DrawEllipse(x: number, y: number, radiusX: number, radiusY: number, color?: Color, stroke?: boolean, lineWidth?: number, rot?: number): void;
+    /** Draws a filled ellipse centered on (x, y) with horizontal/vertical radii and optional rotation. */
+    DrawFillEllipse(x: number, y: number, radiusX: number, radiusY: number, color?: Color, rot?: number): void;
+    /** Draws a stroked ellipse centered on (x, y) with horizontal/vertical radii and optional rotation. */
+    DrawStrokeEllipse(x: number, y: number, radiusX: number, radiusY: number, color?: Color, lineWidth?: number, rot?: number): void;
+    /** Draws a circular arc or filled sector (pie wedge / vision cone) from startAngle to endAngle in radians. */
+    DrawArc(x: number, y: number, radius: number, startAngle: number, endAngle: number, color?: Color, stroke?: boolean, lineWidth?: number): void;
+    /** Draws a filled circular sector (pie wedge / vision cone) from (x, y) across [startAngle, endAngle]. */
+    DrawFillArc(x: number, y: number, radius: number, startAngle: number, endAngle: number, color?: Color): void;
+    /** Draws a stroked circular arc along [startAngle, endAngle]. */
+    DrawStrokeArc(x: number, y: number, radius: number, startAngle: number, endAngle: number, color?: Color, lineWidth?: number): void;
     
     // Text
+    /** Draws text, optionally with a stroke outline. */
     DrawText(text: string, x: number, y: number, font: string, color?: Color, align?: "left" | "center" | "right", baseline?: "top" | "middle" | "alphabetic" | "bottom", stroke?: boolean, lineWidth?: number): void;
+    /** Draws filled text. */
     DrawFillText(text: string, x: number, y: number, font: string, color?: Color, align?: "left" | "center" | "right", baseline?: "top" | "middle" | "alphabetic" | "bottom"): void;
+    /** Draws stroked (outline) text. */
     DrawStrokeText(text: string, x: number, y: number, font: string, color?: Color, align?: "left" | "center" | "right", baseline?: "top" | "middle" | "alphabetic" | "bottom", lineWidth?: number): void;
+    /** Measures the pixel width of a text string rendered with the given CSS font. */
+    MeasureText(text: string, font?: string): number;
     
     // Images
+    /** Draws an image centered on (x, y) with scale, rotation, and alpha. */
     DrawImage(img: HTMLImageElement, x: number, y: number, scaleX: number, scaleY: number, rot?: number, pivot?: {x: number, y: number}, alpha?: number): void;
+    /** Draws an image with top-left at (x, y). No rotation — fast path for backgrounds and UI. */
     DrawImageBasic(img: HTMLImageElement, x: number, y: number, w?: number, h?: number, alpha?: number): void;
+    /** Draws a rectangular sub-region of an image centered on (x, y) with scale, rotation, and alpha. */
     DrawImageSection(img: HTMLImageElement, x: number, y: number, sx: number, sy: number, sw: number, sh: number, scaleX: number, scaleY: number, rot?: number, pivot?: {x: number, y: number}, alpha?: number): void;
+    /** Draws a rectangular sub-region of an image with top-left at (x, y). No rotation. */
     DrawImageSectionBasic(img: HTMLImageElement, x: number, y: number, sx: number, sy: number, sw: number, sh: number, scaleX: number, scaleY: number, alpha?: number): void;
     
     // Other
+    /** Draws a rectangle with a LinearGradient fill, top-left at (x, y). */
     DrawGradientRectangle(x: number, y: number, w: number, h: number, gradient: any): void;
+}
+
+/** Canvas 2D renderer implementation. */
+declare class Canvas2DRenderer extends Renderer {
+    ctx: CanvasRenderingContext2D;
+    constructor(canvas: HTMLCanvasElement, config?: any);
+}
+
+/** WebGL renderer implementation. */
+declare class WebGLRenderer extends Renderer {
+    gl: WebGLRenderingContext;
+    constructor(canvas: HTMLCanvasElement, config?: any);
 }
 
 // ── TiledLoader utility ──────────────────────────────────────────────────────
@@ -1071,7 +1130,7 @@ declare class GOAPAgent {
     AbortPlan(reason?: string): void;
     Replan(reason?: string): boolean;
     Update(dt: number): void;
-    DrawDebug(renderer: Renderer, x: number, y: number, color?: Color, forceDraw?: boolean): void;
+    DrawDebug(renderer: Renderer, x: number, y: number, color?: Color): void;
     DrawGOAPInspector(renderer: Renderer, x: number, y: number, options?: { width?: number; title?: string; showWorldState?: boolean; showGoals?: boolean; showPlan?: boolean }): number;
 }
 

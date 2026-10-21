@@ -134,6 +134,12 @@ class Renderer {
      */
     DrawLine(x1, y1, x2, y2, color=Color.black, lineWidth=1) {}
     /**
+     * Draws a dashed line segment.
+     * @param {number} x1 @param {number} y1 @param {number} x2 @param {number} y2
+     * @param {Color} [color] @param {number} [lineWidth=1] @param {number[]} [dash=[5, 5]]
+     */
+    DrawDashedLine(x1, y1, x2, y2, color=Color.black, lineWidth=1, dash=[5, 5]) {}
+    /**
      * Draws a closed polygon.
      * @param {{x:number,y:number}[]} points @param {Color} [strokeColor]
      * @param {number} [lineWidth=1] @param {boolean} [fill=false] @param {Color} [fillColor]
@@ -176,6 +182,52 @@ class Renderer {
      */
     DrawFillBasicRectangle(x, y, w, h, color=Color.black) {}
     /**
+     * Draws a rounded rectangle centered on (x, y) with optional rotation.
+     * Falls back to a standard rectangle in WebGL.
+     * @param {number} x @param {number} y @param {number} w @param {number} h
+     * @param {number|number[]} [radius=4] - Corner radius in pixels.
+     * @param {Color} [color] @param {boolean} [stroke=false] @param {number} [lineWidth=1]
+     * @param {number} [rot=0] @param {{x:number,y:number}} [pivot]
+     */
+    DrawRoundRectangle(x, y, w, h, radius=4, color=Color.black, stroke=false, lineWidth=1, rot=0, pivot=coord) {}
+    /**
+     * Draws a stroked rounded rectangle centered on (x, y) with optional rotation.
+     * Falls back to a standard stroked rectangle in WebGL.
+     * @param {number} x @param {number} y @param {number} w @param {number} h
+     * @param {number|number[]} [radius=4] @param {Color} [color] @param {number} [lineWidth=1]
+     * @param {number} [rot=0] @param {{x:number,y:number}} [pivot]
+     */
+    DrawStrokeRoundRectangle(x, y, w, h, radius=4, color=Color.black, lineWidth=1, rot=0, pivot=coord) {}
+    /**
+     * Draws a filled rounded rectangle centered on (x, y) with optional rotation.
+     * Falls back to a standard filled rectangle in WebGL.
+     * @param {number} x @param {number} y @param {number} w @param {number} h
+     * @param {number|number[]} [radius=4] @param {Color} [color]
+     * @param {number} [rot=0] @param {{x:number,y:number}} [pivot]
+     */
+    DrawFillRoundRectangle(x, y, w, h, radius=4, color=Color.black, rot=0, pivot=coord) {}
+    /**
+     * Draws a rounded rectangle with top-left at (x, y). No rotation.
+     * Falls back to a standard basic rectangle in WebGL.
+     * @param {number} x @param {number} y @param {number} w @param {number} h
+     * @param {number|number[]} [radius=4] @param {Color} [color] @param {boolean} [stroke=false] @param {number} [lineWidth=1]
+     */
+    DrawBasicRoundRectangle(x, y, w, h, radius=4, color=Color.black, stroke=false, lineWidth=1) {}
+    /**
+     * Draws a stroked rounded rectangle with top-left at (x, y). No rotation.
+     * Falls back to a standard stroked basic rectangle in WebGL.
+     * @param {number} x @param {number} y @param {number} w @param {number} h
+     * @param {number|number[]} [radius=4] @param {Color} [color] @param {number} [lineWidth=1]
+     */
+    DrawStrokeBasicRoundRectangle(x, y, w, h, radius=4, color=Color.black, lineWidth=1) {}
+    /**
+     * Draws a filled rounded rectangle with top-left at (x, y). No rotation.
+     * Falls back to a standard filled basic rectangle in WebGL.
+     * @param {number} x @param {number} y @param {number} w @param {number} h
+     * @param {number|number[]} [radius=4] @param {Color} [color]
+     */
+    DrawFillBasicRoundRectangle(x, y, w, h, radius=4, color=Color.black) {}
+    /**
      * Draws a circle.
      * @param {number} x @param {number} y @param {number} radius
      * @param {Color} [color] @param {boolean} [stroke=false] @param {number} [lineWidth=1]
@@ -191,6 +243,44 @@ class Renderer {
      * @param {number} x @param {number} y @param {number} radius @param {Color} [color] @param {number} [lineWidth=1]
      */
     DrawStrokeCircle(x, y, radius, color=Color.black, lineWidth=1) {}
+    /**
+     * Draws an ellipse centered on (x, y) with optional rotation.
+     * @param {number} x @param {number} y @param {number} radiusX @param {number} radiusY
+     * @param {Color} [color] @param {boolean} [stroke=false] @param {number} [lineWidth=1] @param {number} [rot=0]
+     */
+    DrawEllipse(x, y, radiusX, radiusY, color=Color.black, stroke=false, lineWidth=1, rot=0) {}
+    /**
+     * Draws a filled ellipse centered on (x, y) with optional rotation.
+     * @param {number} x @param {number} y @param {number} radiusX @param {number} radiusY
+     * @param {Color} [color] @param {number} [rot=0]
+     */
+    DrawFillEllipse(x, y, radiusX, radiusY, color=Color.black, rot=0) {}
+    /**
+     * Draws a stroked ellipse centered on (x, y) with optional rotation.
+     * @param {number} x @param {number} y @param {number} radiusX @param {number} radiusY
+     * @param {Color} [color] @param {number} [lineWidth=1] @param {number} [rot=0]
+     */
+    DrawStrokeEllipse(x, y, radiusX, radiusY, color=Color.black, lineWidth=1, rot=0) {}
+    /**
+     * Draws a circular arc or filled sector (pie wedge / vision cone).
+     * @param {number} x @param {number} y @param {number} radius
+     * @param {number} startAngle - Start angle in radians.
+     * @param {number} endAngle - End angle in radians.
+     * @param {Color} [color] @param {boolean} [stroke=false] @param {number} [lineWidth=1]
+     */
+    DrawArc(x, y, radius, startAngle, endAngle, color=Color.black, stroke=false, lineWidth=1) {}
+    /**
+     * Draws a filled circular sector (pie wedge / vision cone) from (x, y) across [startAngle, endAngle].
+     * @param {number} x @param {number} y @param {number} radius
+     * @param {number} startAngle @param {number} endAngle @param {Color} [color]
+     */
+    DrawFillArc(x, y, radius, startAngle, endAngle, color=Color.black) {}
+    /**
+     * Draws a stroked circular arc along [startAngle, endAngle].
+     * @param {number} x @param {number} y @param {number} radius
+     * @param {number} startAngle @param {number} endAngle @param {Color} [color] @param {number} [lineWidth=1]
+     */
+    DrawStrokeArc(x, y, radius, startAngle, endAngle, color=Color.black, lineWidth=1) {}
 
     // Draw text
     /**
@@ -213,6 +303,12 @@ class Renderer {
      * @param {Color} [color] @param {string} [align="center"] @param {string} [baseline="alphabetic"]
      */
     DrawStrokeText(text, x, y, font, color=Color.black, align="center", baseline="alphabetic") {}
+    /**
+     * Measures the pixel width of a text string rendered with the given CSS font.
+     * @param {string} text @param {string} [font] - CSS font string, e.g. `"16px Arial"`.
+     * @returns {number} Width in pixels.
+     */
+    MeasureText(text, font) { return 0; }
 
     // Draw sprites
     /**
@@ -525,6 +621,18 @@ class Canvas2DRenderer extends Renderer {
         this.ctx.stroke();
     }
 
+    DrawDashedLine(x1, y1, x2, y2, color=Color.black, lineWidth=1, dash=[5, 5]) {
+        this.ctx.save();
+        this.ctx.strokeStyle = color;
+        this.ctx.lineWidth = lineWidth;
+        this.ctx.setLineDash(dash);
+        this.ctx.beginPath();
+        this.ctx.moveTo(x1, y1);
+        this.ctx.lineTo(x2, y2);
+        this.ctx.stroke();
+        this.ctx.restore();
+    }
+
     DrawPolygon(points, strokeColor=Color.black, lineWidth=1, fill=false, fillColor=Color.black) {
         this.ctx.strokeStyle = strokeColor;
         this.ctx.lineWidth = lineWidth;
@@ -598,6 +706,74 @@ class Canvas2DRenderer extends Renderer {
         this.ctx.fillStyle = color;
         this.ctx.fillRect(x, y, w, h);
     }
+
+    DrawRoundRectangle(x, y, w, h, radius=4, color=Color.black, stroke=false, lineWidth=1, rot=0, pivot=coord) {
+        if (stroke) {
+            this.DrawStrokeRoundRectangle(x, y, w, h, radius, color, lineWidth, rot, pivot);
+        }
+        else {
+            this.DrawFillRoundRectangle(x, y, w, h, radius, color, rot, pivot);
+        }
+    }
+
+    DrawStrokeRoundRectangle(x, y, w, h, radius=4, color=Color.black, lineWidth=1, rot=0, pivot=coord) {
+        this.ctx.strokeStyle = color;
+        this.ctx.lineWidth = lineWidth;
+        this.ctx.beginPath();
+        if (rot !== 0) {
+            this.ctx.save();
+            this.ctx.translate(x, y);
+            this.ctx.rotate(rot);
+            this.ctx.roundRect(-w / 2 - pivot.x, -h / 2 - pivot.y, w, h, radius);
+            this.ctx.stroke();
+            this.ctx.restore();
+        }
+        else {
+            this.ctx.roundRect(x - pivot.x - w / 2, y - pivot.y - h / 2, w, h, radius);
+            this.ctx.stroke();
+        }
+    }
+
+    DrawFillRoundRectangle(x, y, w, h, radius=4, color=Color.black, rot=0, pivot=coord) {
+        this.ctx.fillStyle = color;
+        this.ctx.beginPath();
+        if (rot !== 0) {
+            this.ctx.save();
+            this.ctx.translate(x, y);
+            this.ctx.rotate(rot);
+            this.ctx.roundRect(-w / 2 - pivot.x, -h / 2 - pivot.y, w, h, radius);
+            this.ctx.fill();
+            this.ctx.restore();
+        }
+        else {
+            this.ctx.roundRect(x - pivot.x - w / 2, y - pivot.y - h / 2, w, h, radius);
+            this.ctx.fill();
+        }
+    }
+
+    DrawBasicRoundRectangle(x, y, w, h, radius=4, color=Color.black, stroke=false, lineWidth=1) {
+        if (stroke) {
+            this.DrawStrokeBasicRoundRectangle(x, y, w, h, radius, color, lineWidth);
+        }
+        else {
+            this.DrawFillBasicRoundRectangle(x, y, w, h, radius, color);
+        }
+    }
+
+    DrawStrokeBasicRoundRectangle(x, y, w, h, radius=4, color=Color.black, lineWidth=1) {
+        this.ctx.strokeStyle = color;
+        this.ctx.lineWidth = lineWidth;
+        this.ctx.beginPath();
+        this.ctx.roundRect(x, y, w, h, radius);
+        this.ctx.stroke();
+    }
+
+    DrawFillBasicRoundRectangle(x, y, w, h, radius=4, color=Color.black) {
+        this.ctx.fillStyle = color;
+        this.ctx.beginPath();
+        this.ctx.roundRect(x, y, w, h, radius);
+        this.ctx.fill();
+    }
     
     DrawCircle(x, y, radius, color=Color.black, stroke=false, lineWidth=1) {
         if (stroke) {
@@ -625,6 +801,58 @@ class Canvas2DRenderer extends Renderer {
         this.ctx.closePath();
     }
 
+    DrawEllipse(x, y, radiusX, radiusY, color=Color.black, stroke=false, lineWidth=1, rot=0) {
+        if (stroke) {
+            this.DrawStrokeEllipse(x, y, radiusX, radiusY, color, lineWidth, rot);
+        }
+        else {
+            this.DrawFillEllipse(x, y, radiusX, radiusY, color, rot);
+        }
+    }
+
+    DrawFillEllipse(x, y, radiusX, radiusY, color=Color.black, rot=0) {
+        this.ctx.fillStyle = color;
+        this.ctx.beginPath();
+        this.ctx.ellipse(x, y, radiusX, radiusY, rot, 0, PI2);
+        this.ctx.fill();
+        this.ctx.closePath();
+    }
+
+    DrawStrokeEllipse(x, y, radiusX, radiusY, color=Color.black, lineWidth=1, rot=0) {
+        this.ctx.strokeStyle = color;
+        this.ctx.lineWidth = lineWidth;
+        this.ctx.beginPath();
+        this.ctx.ellipse(x, y, radiusX, radiusY, rot, 0, PI2);
+        this.ctx.stroke();
+        this.ctx.closePath();
+    }
+
+    DrawArc(x, y, radius, startAngle, endAngle, color=Color.black, stroke=false, lineWidth=1) {
+        if (stroke) {
+            this.DrawStrokeArc(x, y, radius, startAngle, endAngle, color, lineWidth);
+        }
+        else {
+            this.DrawFillArc(x, y, radius, startAngle, endAngle, color);
+        }
+    }
+
+    DrawFillArc(x, y, radius, startAngle, endAngle, color=Color.black) {
+        this.ctx.fillStyle = color;
+        this.ctx.beginPath();
+        this.ctx.moveTo(x, y);
+        this.ctx.arc(x, y, radius, startAngle, endAngle, false);
+        this.ctx.closePath();
+        this.ctx.fill();
+    }
+
+    DrawStrokeArc(x, y, radius, startAngle, endAngle, color=Color.black, lineWidth=1) {
+        this.ctx.strokeStyle = color;
+        this.ctx.lineWidth = lineWidth;
+        this.ctx.beginPath();
+        this.ctx.arc(x, y, radius, startAngle, endAngle, false);
+        this.ctx.stroke();
+    }
+
     DrawText(text, x, y, font, color=Color.black, align="center", baseline="alphabetic", stroke=false, lineWidth=1) {
         if (stroke) {
             this.DrawStrokeText(text, x, y, font, color, align, baseline, lineWidth);
@@ -649,6 +877,13 @@ class Canvas2DRenderer extends Renderer {
         this.ctx.strokeStyle = color;
         this.ctx.lineWidth = lineWidth;
         this.ctx.strokeText(text, x, y);
+    }
+
+    MeasureText(text, font) {
+        if (font) {
+            this.ctx.font = font;
+        }
+        return this.ctx.measureText(text).width;
     }
 
     DrawImage(img, x, y, scaleX, scaleY, rot=0, pivot=coord, alpha=1.0) {
@@ -932,6 +1167,53 @@ class WebGLRenderer extends Renderer {
         gl.drawArrays(gl.LINES, 0, 2);
     }
 
+    DrawDashedLine(x1, y1, x2, y2, color=Color.black, lineWidth=1, dash=[5, 5]) {
+        if (!dash || dash.length === 0) {
+            this.DrawLine(x1, y1, x2, y2, color, lineWidth);
+            return;
+        }
+
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        const totalDist = Math.hypot(dx, dy);
+        if (totalDist === 0) return;
+
+        const ux = dx / totalDist;
+        const uy = dy / totalDist;
+
+        const coords = [];
+        let dist = 0;
+        let stepIdx = 0;
+        let drawSegment = true;
+
+        while (dist < totalDist) {
+            const stepLen = Math.max(0.5, dash[stepIdx % dash.length]);
+            const nextDist = Math.min(dist + stepLen, totalDist);
+            if (drawSegment) {
+                coords.push(
+                    x1 + ux * dist,     y1 + uy * dist,
+                    x1 + ux * nextDist, y1 + uy * nextDist
+                );
+            }
+            dist = nextDist;
+            stepIdx++;
+            drawSegment = !drawSegment;
+        }
+
+        if (coords.length === 0)
+            return;
+
+        const gl = this.gl;
+        const vertices = new Float32Array(coords);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.polygonBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STREAM_DRAW);
+
+        this.basicRectShader.UseForCustomBuffer(gl, this.polygonBuffer);
+        this.basicRectShader.SetUniforms(gl, this.canvas.width, this.canvas.height, 0, 0, 0, 1, 1, 0, 0, color.rgba);
+        gl.lineWidth(lineWidth);
+        gl.drawArrays(gl.LINES, 0, coords.length / 2);
+    }
+
     DrawPolygon(points, strokeColor=Color.black, lineWidth=1, fill=false, fillColor=Color.black) {
         // for (let i = 0; i < points.length; i++) {
         //     const p1 = points[i];
@@ -968,7 +1250,8 @@ class WebGLRenderer extends Renderer {
     DrawRectangle(x, y, w, h, color, stroke=false, lineWidth=1, rot=0, pivot=coord) {
         if (stroke) {
             this.DrawStrokeRectangle(x, y, w, h, color, lineWidth, rot, pivot);
-        } else {
+        }
+        else {
             this.DrawFillRectangle(x, y, w, h, color, rot, pivot);
         }
     }
@@ -1035,11 +1318,36 @@ class WebGLRenderer extends Renderer {
         // Draw
         gl.drawArrays(gl.TRIANGLES, 0, 6);
     }
+
+    DrawRoundRectangle(x, y, w, h, radius=4, color=Color.black, stroke=false, lineWidth=1, rot=0, pivot=coord) {
+        this.DrawRectangle(x, y, w, h, color, stroke, lineWidth, rot, pivot);
+    }
+
+    DrawStrokeRoundRectangle(x, y, w, h, radius=4, color=Color.black, lineWidth=1, rot=0, pivot=coord) {
+        this.DrawStrokeRectangle(x, y, w, h, color, lineWidth, rot, pivot);
+    }
+
+    DrawFillRoundRectangle(x, y, w, h, radius=4, color=Color.black, rot=0, pivot=coord) {
+        this.DrawFillRectangle(x, y, w, h, color, rot, pivot);
+    }
+
+    DrawBasicRoundRectangle(x, y, w, h, radius=4, color=Color.black, stroke=false, lineWidth=1) {
+        this.DrawBasicRectangle(x, y, w, h, color, stroke, lineWidth);
+    }
+
+    DrawStrokeBasicRoundRectangle(x, y, w, h, radius=4, color=Color.black, lineWidth=1) {
+        this.DrawStrokeBasicRectangle(x, y, w, h, color, lineWidth);
+    }
+
+    DrawFillBasicRoundRectangle(x, y, w, h, radius=4, color=Color.black) {
+        this.DrawFillBasicRectangle(x, y, w, h, color);
+    }
     
     DrawCircle(x, y, radius, color=Color.black, stroke=false, lineWidth=1) {
         if (stroke) {
             this.DrawStrokeCircle(x, y, radius, color, lineWidth);
-        } else {
+        }
+        else {
             this.DrawFillCircle(x, y, radius, color);
         }
     }
@@ -1089,6 +1397,132 @@ class WebGLRenderer extends Renderer {
         gl.drawArrays(gl.LINE_STRIP, 0, this.circleNumSegments);
     }
 
+    DrawEllipse(x, y, radiusX, radiusY, color=Color.black, stroke=false, lineWidth=1, rot=0) {
+        if (stroke) {
+            this.DrawStrokeEllipse(x, y, radiusX, radiusY, color, lineWidth, rot);
+        }
+        else {
+            this.DrawFillEllipse(x, y, radiusX, radiusY, color, rot);
+        }
+    }
+
+    DrawFillEllipse(x, y, radiusX, radiusY, color=Color.black, rot=0) {
+        const gl = this.gl;
+        const cosR = Math.cos(rot);
+        const sinR = Math.sin(rot);
+
+        for (let s = 0; s < this.circleNumSegments; s++) {
+            const angle = (s / this.circleNumSegments) * PI2;
+            const lx = Math.cos(angle) * radiusX;
+            const ly = Math.sin(angle) * radiusY;
+            this.circleVerts[s * 2]     = x + (lx * cosR - ly * sinR);
+            this.circleVerts[s * 2 + 1] = y + (lx * sinR + ly * cosR);
+        }
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.circleBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, this.circleVerts, gl.STREAM_DRAW);
+
+        this.basicRectShader.UseForCustomBuffer(gl, this.circleBuffer);
+        this.basicRectShader.SetUniforms(gl, this.canvas.width, this.canvas.height, 0, 0, 0, 1, 1, 0, 0, color.rgba);
+
+        gl.drawArrays(gl.TRIANGLE_FAN, 0, this.circleNumSegments);
+    }
+
+    DrawStrokeEllipse(x, y, radiusX, radiusY, color=Color.black, lineWidth=1, rot=0) {
+        const gl = this.gl;
+        const cosR = Math.cos(rot);
+        const sinR = Math.sin(rot);
+
+        for (let s = 0; s < this.circleNumSegments; s++) {
+            const angle = (s / this.circleNumSegments) * PI2;
+            const lx = Math.cos(angle) * radiusX;
+            const ly = Math.sin(angle) * radiusY;
+            this.circleVerts[s * 2]     = x + (lx * cosR - ly * sinR);
+            this.circleVerts[s * 2 + 1] = y + (lx * sinR + ly * cosR);
+        }
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.circleBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, this.circleVerts, gl.STREAM_DRAW);
+
+        this.basicRectShader.UseForCustomBuffer(gl, this.circleBuffer);
+        this.basicRectShader.SetUniforms(gl, this.canvas.width, this.canvas.height, 0, 0, 0, 1, 1, 0, 0, color.rgba);
+
+        gl.lineWidth(lineWidth);
+        gl.drawArrays(gl.LINE_LOOP, 0, this.circleNumSegments);
+    }
+
+    DrawArc(x, y, radius, startAngle, endAngle, color=Color.black, stroke=false, lineWidth=1) {
+        if (stroke) {
+            this.DrawStrokeArc(x, y, radius, startAngle, endAngle, color, lineWidth);
+        }
+        else {
+            this.DrawFillArc(x, y, radius, startAngle, endAngle, color);
+        }
+    }
+
+    DrawFillArc(x, y, radius, startAngle, endAngle, color=Color.black) {
+        let sweep = endAngle - startAngle;
+        if (sweep >= PI2) {
+            sweep = PI2;
+        }
+        else if (sweep < 0) {
+            sweep = (sweep % PI2) + PI2;
+        }
+
+        if (sweep === 0)
+            return;
+
+        const steps = Math.max(8, Math.ceil((sweep / PI2) * this.circleNumSegments));
+        const vertices = new Float32Array((steps + 2) * 2);
+        vertices[0] = x;
+        vertices[1] = y;
+        for (let s = 0; s <= steps; s++) {
+            const angle = startAngle + (s / steps) * sweep;
+            vertices[(s + 1) * 2]     = x + Math.cos(angle) * radius;
+            vertices[(s + 1) * 2 + 1] = y + Math.sin(angle) * radius;
+        }
+
+        const gl = this.gl;
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.polygonBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STREAM_DRAW);
+
+        this.basicRectShader.UseForCustomBuffer(gl, this.polygonBuffer);
+        this.basicRectShader.SetUniforms(gl, this.canvas.width, this.canvas.height, 0, 0, 0, 1, 1, 0, 0, color.rgba);
+
+        gl.drawArrays(gl.TRIANGLE_FAN, 0, steps + 2);
+    }
+
+    DrawStrokeArc(x, y, radius, startAngle, endAngle, color=Color.black, lineWidth=1) {
+        let sweep = endAngle - startAngle;
+        if (sweep >= PI2) {
+            sweep = PI2;
+        }
+        else if (sweep < 0) {
+            sweep = (sweep % PI2) + PI2;
+        }
+
+        if (sweep === 0)
+            return;
+
+        const steps = Math.max(8, Math.ceil((sweep / PI2) * this.circleNumSegments));
+        const vertices = new Float32Array((steps + 1) * 2);
+        for (let s = 0; s <= steps; s++) {
+            const angle = startAngle + (s / steps) * sweep;
+            vertices[s * 2]     = x + Math.cos(angle) * radius;
+            vertices[s * 2 + 1] = y + Math.sin(angle) * radius;
+        }
+
+        const gl = this.gl;
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.polygonBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STREAM_DRAW);
+
+        this.basicRectShader.UseForCustomBuffer(gl, this.polygonBuffer);
+        this.basicRectShader.SetUniforms(gl, this.canvas.width, this.canvas.height, 0, 0, 0, 1, 1, 0, 0, color.rgba);
+
+        gl.lineWidth(lineWidth);
+        gl.drawArrays(gl.LINE_STRIP, 0, steps + 1);
+    }
+
     DrawText(text, x, y, font, color=Color.black, align="center", baseline="alphabetic", stroke=false, lineWidth=1) {
         // TODO rethink this method
         // Prepare the text in the auxiliar Canvas
@@ -1117,6 +1551,13 @@ class WebGLRenderer extends Renderer {
 
     DrawStrokeText(text, x, y, font, color=Color.black, align="center", baseline="alphabetic", lineWidth=1) {
         this.DrawText(text, x, y, font, color, align, baseline, true, lineWidth);
+    }
+
+    MeasureText(text, font) {
+        if (font) {
+            this.textCanvasCtx.font = font;
+        }
+        return this.textCanvasCtx.measureText(text).width;
     }
 
     DrawTextCached(texture, x, y, width, height) {

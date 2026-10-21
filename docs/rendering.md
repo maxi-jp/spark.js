@@ -39,6 +39,9 @@ Draw(renderer) {
     // Line from (x1,y1) to (x2,y2)
     renderer.DrawLine(0, 0, 200, 200, Color.red, 2);
 
+    // Dashed line (custom dash/gap pattern in pixels)
+    renderer.DrawDashedLine(0, 50, 200, 50, Color.yellow, 2, [6, 4]);
+
     // Closed polygon (fill + stroke)
     renderer.DrawPolygon(
         [{ x: 100, y: 50 }, { x: 150, y: 150 }, { x: 50, y: 150 }],
@@ -53,6 +56,7 @@ Draw(renderer) {
 | Method | Signature |
 |---|---|
 | `DrawLine` | `(x1, y1, x2, y2, color, lineWidth=1)` |
+| `DrawDashedLine` | `(x1, y1, x2, y2, color=Color.black, lineWidth=1, dash=[5, 5])` |
 | `DrawPolygon` | `(points, strokeColor, lineWidth=1, fill=false, fillColor)` |
 
 ---
@@ -83,6 +87,11 @@ Draw(renderer) {
 
     // Basic stroke (top-left anchor)
     renderer.DrawStrokeBasicRectangle(10, 10, 200, 50, Color.red, 1);
+
+    // Rounded rectangles (Canvas2D uses roundRect; WebGL falls back to standard rectangles)
+    renderer.DrawFillRoundRectangle(200, 150, 120, 60, 8, Color.blue, this.rotation);
+    renderer.DrawFillBasicRoundRectangle(10, 70, 200, 40, 6, Color.black);
+    renderer.DrawStrokeBasicRoundRectangle(10, 70, 200, 40, 6, Color.white, 1.5);
 }
 ```
 
@@ -94,17 +103,32 @@ Draw(renderer) {
 | `DrawFillBasicRectangle` | `(x, y, w, h, color)` |
 | `DrawStrokeBasicRectangle` | `(x, y, w, h, color, lineWidth=1)` |
 | `DrawBasicRectangle` | `(x, y, w, h, color, stroke=false, lineWidth=1)` |
+| `DrawFillRoundRectangle` | `(x, y, w, h, radius=4, color, rot=0, pivot=coord)` |
+| `DrawStrokeRoundRectangle` | `(x, y, w, h, radius=4, color, lineWidth=1, rot=0, pivot=coord)` |
+| `DrawRoundRectangle` | `(x, y, w, h, radius=4, color, stroke=false, lineWidth=1, rot=0, pivot=coord)` |
+| `DrawFillBasicRoundRectangle` | `(x, y, w, h, radius=4, color)` |
+| `DrawStrokeBasicRoundRectangle` | `(x, y, w, h, radius=4, color, lineWidth=1)` |
+| `DrawBasicRoundRectangle` | `(x, y, w, h, radius=4, color, stroke=false, lineWidth=1)` |
 
-> `coord` is the engine's default zero-pivot constant `{ x: 0, y: 0 }`.
+> `coord` is the engine's default zero-pivot constant `{ x: 0, y: 0 }`. In `WebGLRenderer`, rounded rectangle methods automatically fall back to their standard rectangle equivalents.
 
 ---
 
-### Circles
+### Circles, Ellipses & Arcs
 
 ```javascript
 Draw(renderer) {
+    // Circles
     renderer.DrawFillCircle(this.x, this.y, this.radius, Color.green);
     renderer.DrawStrokeCircle(this.x, this.y, this.radius + 4, Color.white, 1);
+
+    // Ellipses (e.g., ground shadows or rotated ovals)
+    renderer.DrawFillEllipse(this.x, this.y + 12, 16, 6, new Color(0, 0, 0, 0.35), this.rotation);
+    renderer.DrawStrokeEllipse(this.x, this.y + 12, 16, 6, Color.white, 1, this.rotation);
+
+    // Arcs / Wedges (e.g., AI vision cones, radar sweeps, radial gauges)
+    renderer.DrawFillArc(this.x, this.y, 80, -0.4, 0.4, new Color(1, 1, 0, 0.25));
+    renderer.DrawStrokeArc(this.x, this.y, 80, -0.4, 0.4, Color.yellow, 2);
 }
 ```
 
@@ -113,6 +137,12 @@ Draw(renderer) {
 | `DrawFillCircle` | `(x, y, radius, color)` |
 | `DrawStrokeCircle` | `(x, y, radius, color, lineWidth=1)` |
 | `DrawCircle` | `(x, y, radius, color, stroke=false, lineWidth=1)` |
+| `DrawFillEllipse` | `(x, y, radiusX, radiusY, color=Color.black, rot=0)` |
+| `DrawStrokeEllipse` | `(x, y, radiusX, radiusY, color=Color.black, lineWidth=1, rot=0)` |
+| `DrawEllipse` | `(x, y, radiusX, radiusY, color=Color.black, stroke=false, lineWidth=1, rot=0)` |
+| `DrawFillArc` | `(x, y, radius, startAngle, endAngle, color=Color.black)` |
+| `DrawStrokeArc` | `(x, y, radius, startAngle, endAngle, color=Color.black, lineWidth=1)` |
+| `DrawArc` | `(x, y, radius, startAngle, endAngle, color=Color.black, stroke=false, lineWidth=1)` |
 
 ---
 
@@ -128,6 +158,10 @@ Draw(renderer) {
 
     // Combined (stroke=true adds an outline)
     renderer.DrawText("Hello", x, y, font, color, align, baseline, stroke=false, lineWidth=1);
+
+    // Measure text width (e.g., for auto-sized UI pills or tooltips)
+    const textWidth = renderer.MeasureText("Dynamic Label", "bold 12px monospace");
+    const boxWidth = textWidth + 16;
 }
 ```
 
@@ -141,6 +175,7 @@ Draw(renderer) {
 | `DrawFillText` | `(text, x, y, font, color, align="center", baseline="alphabetic")` |
 | `DrawStrokeText` | `(text, x, y, font, color, align="center", baseline="alphabetic", lineWidth=1)` |
 | `DrawText` | `(text, x, y, font, color, align, baseline, stroke=false, lineWidth=1)` |
+| `MeasureText` | `(text, font)` → returns `number` (width in pixels) |
 
 ---
 
