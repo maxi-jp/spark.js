@@ -10,6 +10,7 @@
 - [Tiled Map Editor](tiled-integration.md)
 - [Game AI Tools](ai.md)
 - [Fuzzy Logic](fuzzy-logic.md)
+- [GOAP Planner](goap.md)
 - [Utilities](utilities.md)
 - [Particle System](particles.md)
 - [Debugging Tools](debugging.md)

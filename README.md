@@ -26,6 +26,7 @@ Documentation can be consulted [here](https://maxi-jp.github.io/spark.js/docs/).
 - **FSM & HFSM**: Finite State Machine and Hierarchical FSM classes in `fsm.js` (`FSMState`, `FSM`, `FSMCompositeState`). Declarative transition guards (Millington & Funge model) and imperative transitions. Composite states nest a full sub-FSM inside a parent state for hierarchical behaviour. Built-in `DrawDebug` overlay.
 - **Behavior Trees**: Complete class-based Behavior Tree engine in `bt.js` (`BehaviorTree`, `BTNode`, composites, decorators, and `BTBlackboard`). Supports reactive priority interruption (`BTReactiveSelector`), continuous precondition aborts (`BTReactiveSequence`), cooldowns (`BTCooldown`), repeats, and built-in live interactive hierarchy inspection on canvas (`DrawTreeInspector`).
 - **Fuzzy Logic**: Complete Mamdani Fuzzy Inference System in `fuzzy.js` (`FuzzyModule`, `FuzzyVariable`, 6 membership set shapes, `FuzzyRule`, boolean operators `FzAnd`/`FzOr`/`FzNot`, and hedges `FzVery`/`FzFairly`). Supports both `MaxAv` and `Centroid` defuzzification and built-in real-time membership curve and rule firing visualizers (`DrawFuzzyInspector`, `DrawVariableGraph`).
+- **Goal-Oriented Action Planning (GOAP)**: Complete forward state-space $A^*$ planner in `goap.js` (`GOAPState`, `GOAPGoal`, `GOAPAction`, `GOAPPlanner`, `GOAPAgent`) inspired by *F.E.A.R.* (Orkin, 2006) and Millington & Funge. Supports symbolic preconditions & effects, procedural world checks, dynamic action costs, automatic replanning on world changes or action failures, $A^*$ search telemetry, and built-in live canvas HUD inspection (`DrawGOAPInspector`).
 - **Utilities**: A collection of helpers for vector math, collision detection, color manipulation, and more.
 - **Debugging Tools**: Optional debug drawing for physics bodies and an FPS/stats overlay.
 - **Mode 7 Renderer**: Simulate SNES-style pseudo-3D backgrounds (as in F-Zero or Mario Kart).
@@ -50,6 +51,7 @@ Documentation can be consulted [here](https://maxi-jp.github.io/spark.js/docs/).
   - fsm.js                # FSM & HFSM: FSMState, FSM, FSMCompositeState
   - bt.js                 # Behavior Trees: BehaviorTree, composites, decorators, leaves, blackboard, live tree inspector
   - fuzzy.js              # Fuzzy Logic: FuzzyModule, FuzzyVariable, 6 set shapes, hedges, MaxAv/Centroid, live curve inspector
+  - goap.js               # GOAP: GOAPState, GOAPGoal, GOAPAction, GOAPPlanner (A* state-space search), GOAPAgent, live plan inspector
 - examples/
   - death_rally/          # Vehicular combat arcade (Death Rally inspired)
     - death_rally_defs.js       # Surface types, vehicle/weapon defs, shared color constants
@@ -106,6 +108,9 @@ Documentation can be consulted [here](https://maxi-jp.github.io/spark.js/docs/).
   - fuzzy_weapon/         # Fuzzy Logic demo: weapon selection utility advisor (MaxAv vs Centroid, live membership curves)
   - fuzzy_driver/         # Fuzzy Logic demo: autonomous steering & obstacle avoidance (Fuzzy Car vs Crisp Car comparison)
   - fuzzy_tactical/       # Fuzzy Logic demo: tactical threat assessment & hybrid AI (Fuzzy + FSM / Behavior Tree)
+  - goap_survival/        # GOAP demo: autonomous survival crafter & economy (12 actions, dynamic tool crafting vs bare-hands cost trade-off)
+  - goap_combat/          # GOAP demo: F.E.A.R.-style tactical combat squad (cover, flanking, grenades, GOAP vs FSM Grunt comparison)
+  - goap_dungeon/         # GOAP demo: multi-room dungeon heist & deep A* chaining (7-step causal chains, dynamic shortcut bomb replanning)
   - snake.js              # Snake game implementation
   - timer_test.js         # Timer system demo (Invoke, InvokeRepeating, auto-cleanup)
 
@@ -159,6 +164,8 @@ Documentation can be consulted [here](https://maxi-jp.github.io/spark.js/docs/).
     <script src="engine/bt.js"></script>
     <!-- add this to use Fuzzy Logic -->
     <script src="engine/fuzzy.js"></script>
+    <!-- add this to use Goal-Oriented Action Planning (GOAP) -->
+    <script src="engine/goap.js"></script>
     <!-- add these only if you want to use box2d physics -->
     <script src="lib/Box2D.js"></script>
     <script src="engine/box2d_helper.js"></script>
@@ -421,7 +428,7 @@ MIT License
 - [x] ~~Think on a great name for the engine (like **`wat.js`** or something like that).~~ ✅DONE (engine renamed as "spark.js"!!! ✨)
 - [x] ~~Add mobile / touch-screen support with virtual on-screen controls.~~ ✅DONE
 - [ ] Implement a global Event/Signal system (EventBus) for decoupled cross-system communication.
-- [x] ~~Add more game-AI related tools and classes (like FSM, BTs and Fuzzy Logic).~~ ✅DONE (FSM & HFSM in `fsm.js`; Behavior Trees in `bt.js`; Fuzzy Logic in `fuzzy.js`)
+- [x] ~~Add more game-AI related tools and classes (like FSM, BTs, Fuzzy Logic and GOAP).~~ ✅DONE (FSM & HFSM in `fsm.js`; Behavior Trees in `bt.js`; Fuzzy Logic in `fuzzy.js`; GOAP in `goap.js`)
 - [ ] Create a RTS game as a more comple example project. 🔜 working on it 👨🏻‍💻  
 
 ## Contributing

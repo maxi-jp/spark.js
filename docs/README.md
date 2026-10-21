@@ -95,6 +95,17 @@ Model human-like, continuous reasoning ("somehow close", "fairly low ammo", "ver
 
 Ideal for weapon utility scoring, smooth autonomous steering, tactical threat evaluation, and hybrid architectures (Fuzzy sensors feeding FSMs or Behavior Trees). See the [Weapon Selection demo](../fuzzy-weapon.html), [Autonomous Driver demo](../fuzzy-driver.html), [Tactical Threat & Hybrid AI demo](../fuzzy-tactical.html), and the dedicated [Fuzzy Logic System Guide](./fuzzy-logic.md) for details.
 
+### Goal-Oriented Action Planning (GOAP)
+
+Decouple *what* an agent wants to achieve (**Goals**) from *how* to achieve it (**Actions**) and let a real-time state-space $A^*$ planner synthesize multi-step action sequences dynamically. Based on Jeff Orkin's GDC 2006 paper (*"Three States and a Plan: The A.I. of F.E.A.R."*) and Millington & Funge's *Artificial Intelligence for Games*, `goap.js` provides:
+- **Symbolic World State (`GOAPState`)** — Lightweight key-value state representation with canonical hashing, goal satisfaction checks (`satisfies`), heuristic mismatch counting (`mismatchCount`), and state mutation (`apply`)
+- **Priority Goals (`GOAPGoal`)** — Declarative desired world states with static or dynamic runtime priority callbacks and optional deactivation predicates (`isValid`)
+- **Modular Actions (`GOAPAction`)** — Self-contained action primitives with symbolic preconditions, symbolic effects, dynamic costs, procedural environment checks (`checkProcedural`), and execution lifecycles (`onEnter`, `onUpdate`, `onExit`) supporting OOP subclassing, fluent builders, or inline config objects
+- **Forward State-Space $A^*$ Planner (`GOAPPlanner`)** — Searches from current world state to goal satisfaction while recording search telemetry (`lastPlanCost`, `lastNodesExpanded`, `lastSearchTrace`) for educational inspection
+- **Autonomous Agent Orchestrator (`GOAPAgent` & `DrawGOAPInspector`)** — Manages perception sensors, automatic replanning on world changes or action failures, plan execution, and real-time canvas HUD visualization of world state, goals, active plans, and $A^*$ metrics
+
+Ideal for survival crafting economies, tactical squad combat, multi-room puzzle solving, and emergent NPC behaviors without brittle transition graphs. See the [Autonomous Survival Crafter demo](../goap-survival.html), [Tactical Combat Squad demo](../goap-combat.html), [Multi-Room Dungeon Heist demo](../goap-dungeon.html), and the dedicated [GOAP System Guide](./goap.md) for details.
+
 ### Utilities
 
 A collection of helper functions and classes for common tasks: vector math, collision detection, color manipulation, and more.

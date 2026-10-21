@@ -945,4 +945,138 @@ declare class FuzzyModule {
     DrawFuzzyInspector(renderer: Renderer, startX?: number, startY?: number, options?: { width?: number; title?: string; variables?: string[]; outputs?: string[]; showRules?: boolean; graphHeight?: number; force?: boolean }): void;
 }
 
+// ── Goal-Oriented Action Planning (goap.js) ──────────────────────────────────
+
+/** Status results returned by GOAPAction.Update(). */
+declare const GOAPStatus: {
+    readonly SUCCESS: 'SUCCESS';
+    readonly FAILURE: 'FAILURE';
+    readonly RUNNING: 'RUNNING';
+    readonly IDLE: 'IDLE';
+};
+type GOAPStatusType = 'SUCCESS' | 'FAILURE' | 'RUNNING' | 'IDLE';
+
+/** Symbolic world-state representation as a key-value fact dictionary. */
+declare class GOAPState {
+    values: { [key: string]: any };
+    constructor(initialValues?: { [key: string]: any } | GOAPState);
+    Set(key: string, value: any): this;
+    Get(key: string, defaultValue?: any): any;
+    Has(key: string): boolean;
+    Delete(key: string): void;
+    Clear(): void;
+    Assign(source: { [key: string]: any } | GOAPState): this;
+    ToObject(): { [key: string]: any };
+    Clone(): GOAPState;
+    static ValueMatches(actualValue: any, expectedCondition: any): boolean;
+    Matches(conditions: { [key: string]: any } | GOAPState): boolean;
+    Apply(effects: { [key: string]: any } | GOAPState): this;
+    CountDifferences(desired: { [key: string]: any } | GOAPState): number;
+    GetSignature(): string;
+}
+
+/** Represents a desired world state and priority for a GOAPAgent. */
+declare class GOAPGoal {
+    name: string;
+    desiredState: { [key: string]: any };
+    lastEvaluatedPriority: number;
+    constructor(name: string, desiredState?: { [key: string]: any } | GOAPState, priority?: number | ((owner: any, worldState: GOAPState) => number), options?: { isValid?: (owner: any, worldState: GOAPState) => boolean });
+    GetPriority(owner: any, worldState: GOAPState): number;
+    IsValid(owner: any, worldState: GOAPState): boolean;
+    IsSatisfied(worldState: GOAPState | { [key: string]: any }): boolean;
+}
+
+/** Atomic GOAP action with preconditions, effects, cost, and execution lifecycle. */
+declare class GOAPAction {
+    name: string;
+    cost: number;
+    preconditions: { [key: string]: any };
+    effects: { [key: string]: any };
+    status: GOAPStatusType;
+    isEntered: boolean;
+    constructor(name: string, config?: {
+        cost?: number;
+        getCost?: (owner: any, worldState: GOAPState) => number;
+        preconditions?: { [key: string]: any };
+        effects?: { [key: string]: any };
+        checkProcedural?: (owner: any, worldState: GOAPState, action: GOAPAction) => boolean;
+        proceduralPrecondition?: (owner: any, worldState: GOAPState, action: GOAPAction) => boolean;
+        onEnter?: (owner: any, worldState: GOAPState, action: GOAPAction) => void;
+        onUpdate?: (dt: number, owner: any, worldState: GOAPState, action: GOAPAction) => GOAPStatusType;
+        onExit?: (owner: any, worldState: GOAPState, status: GOAPStatusType, action: GOAPAction) => void;
+    });
+    Pre(key: string, value: any): this;
+    SetPreconditions(preconditions: { [key: string]: any }): this;
+    Effect(key: string, value: any): this;
+    SetEffects(effects: { [key: string]: any }): this;
+    SetCost(costOrFn: number | ((owner: any, worldState: GOAPState) => number)): this;
+    SetProceduralCheck(fn: (owner: any, worldState: GOAPState, action: GOAPAction) => boolean): this;
+    GetCost(owner: any, worldState: GOAPState): number;
+    CheckProceduralPrecondition(owner: any, worldState: GOAPState): boolean;
+    ArePreconditionsMet(worldState: GOAPState | { [key: string]: any }): boolean;
+    ApplyEffects(worldState: GOAPState | { [key: string]: any }): void;
+    HasEffectOnState(state: GOAPState): boolean;
+    Enter(owner: any, worldState: GOAPState): void;
+    Update(dt: number, owner: any, worldState: GOAPState): GOAPStatusType;
+    Exit(owner: any, worldState: GOAPState, status: GOAPStatusType): void;
+    Reset(): void;
+}
+
+/** Forward state-space A* planner synthesizing optimal sequences of GOAPActions. */
+declare class GOAPPlanner {
+    maxIterations: number;
+    maxPlanDepth: number;
+    heuristicWeight: number;
+    lastPlanCost: number;
+    lastNodesExpanded: number;
+    lastConsideredActions: number;
+    lastSearchTrace: Array<{ actionName: string; g: number; h: number; f: number; depth: number }>;
+    constructor(options?: { maxIterations?: number; maxPlanDepth?: number; heuristicWeight?: number });
+    Plan(owner: any, startState: GOAPState | { [key: string]: any }, goal: GOAPGoal, availableActions: GOAPAction[]): GOAPAction[] | null;
+}
+
+/** High-level GOAP controller managing world state, goals, actions, and plan execution. */
+declare class GOAPAgent {
+    owner: any;
+    worldState: GOAPState;
+    actions: GOAPAction[];
+    goals: GOAPGoal[];
+    planner: GOAPPlanner;
+    currentGoal: GOAPGoal | null;
+    currentPlan: GOAPAction[];
+    currentStepIndex: number;
+    readonly currentPlanIndex: number;
+    stepStatuses: GOAPStatusType[];
+    stepCosts: number[];
+    replanCount: number;
+    lastPlanReason: string;
+    lastCompletedGoalName: string | null;
+    constructor(owner: any, options?: {
+        initialState?: { [key: string]: any } | GOAPState;
+        onUpdateSensors?: (owner: any, worldState: GOAPState, agent: GOAPAgent) => void;
+        autoPreempt?: boolean;
+        replanCooldown?: number;
+        plannerOptions?: { maxIterations?: number; maxPlanDepth?: number; heuristicWeight?: number };
+    });
+    AddAction(action: GOAPAction): this;
+    AddActions(actions: GOAPAction[]): this;
+    AddGoal(goal: GOAPGoal): this;
+    AddGoals(goals: GOAPGoal[]): this;
+    SetSensor(fn: (owner: any, worldState: GOAPState, agent: GOAPAgent) => void): this;
+    AddSensor(fn: (owner: any, worldState: GOAPState, agent: GOAPAgent) => void): this;
+    Plan(reason?: string): boolean;
+    SetState(key: string, value: any): this;
+    GetState(key: string, defaultValue?: any): any;
+    GetCurrentAction(): GOAPAction | null;
+    AbortPlan(reason?: string): void;
+    Replan(reason?: string): boolean;
+    Update(dt: number): void;
+    DrawDebug(renderer: Renderer, x: number, y: number, color?: Color, forceDraw?: boolean): void;
+    DrawGOAPInspector(renderer: Renderer, x: number, y: number, options?: { width?: number; title?: string; showWorldState?: boolean; showGoals?: boolean; showPlan?: boolean }): number;
+}
+
+/** Standalone helper to render a GOAPAgent's inspector panel onto the canvas. */
+declare function DrawGOAPInspector(renderer: Renderer, agent: GOAPAgent, x: number, y: number, options?: { width?: number; title?: string; showWorldState?: boolean; showGoals?: boolean; showPlan?: boolean }): number;
+
+
 

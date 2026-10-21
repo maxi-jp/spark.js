@@ -1,6 +1,6 @@
 # Game AI Tools
 
-spark.js ships four optional AI modules. Include only what your game needs.
+spark.js ships five optional AI modules. Include only what your game needs.
 
 | Module | File | What it provides |
 |---|---|---|
@@ -8,6 +8,7 @@ spark.js ships four optional AI modules. Include only what your game needs.
 | State machines | `src/engine/fsm.js` | `FSMState`, `FSM`, `FSMCompositeState` — flat and hierarchical FSMs |
 | Behavior trees | `src/engine/bt.js` | `BehaviorTree`, `BTNode`, composites, decorators, and blackboard memory |
 | Fuzzy logic | `src/engine/fuzzy.js` | `FuzzyModule`, `FuzzyVariable`, membership sets, hedges (`FzVery`, `FzFairly`), `MaxAv` & `Centroid` defuzzification, and live curve inspectors ([Full Guide](fuzzy-logic.md)) |
+| GOAP planner | `src/engine/goap.js` | `GOAPAgent`, `GOAPPlanner`, `GOAPAction`, `GOAPGoal`, `GOAPState` — STRIPS / *F.E.A.R.*-style state-space A\* action planning and live plan inspector ([Full Guide](goap.md)) |
 
 ---
 
@@ -756,7 +757,95 @@ fm.DrawFuzzyInspector(renderer, 20, 50, {
 
 ---
 
+## Goal-Oriented Action Planning (`goap.js`)
+
+`src/engine/goap.js` provides a complete STRIPS / *F.E.A.R.*-style **Goal-Oriented Action Planning (GOAP)** architecture. Instead of hardcoding state transitions (`FSM`) or rigid priority trees (`BehaviorTree`), agents declare **Goals** (desired world states) and decoupled **Actions** (preconditions, effects, and costs), and `GOAPPlanner` automatically synthesizes the lowest-cost multi-step action plan via **Forward State-Space A\* Search**.
+
+> 📖 **Full Documentation:** For an in-depth guide covering STRIPS formalisms, state-space A\* search ($f = g + h$), symbolic vs. procedural preconditions, worked step-by-step cost traces, and paradigm comparisons (FSM vs. BT vs. Fuzzy Logic vs. GOAP), see the dedicated **[GOAP Planner Guide](goap.md)**.
+
+### Core Classes Overview
+
+| Class | Role |
+|---|---|
+| **`GOAPState`** | Symbolic world state dictionary (`{ hasAxe: true, isHungry: false }`) supporting `Matches()`, `Apply()`, `CountDifferences()`, and `GetSignature()`. |
+| **`GOAPGoal`** | Desired target state and static or dynamic priority callback `(owner, worldState) => number`. |
+| **`GOAPAction`** | Atomic action with `preconditions`, `effects`, static/dynamic `GetCost()`, `CheckProceduralPrecondition()`, and `Enter`/`Update`/`Exit` lifecycle. |
+| **`GOAPPlanner`** | Forward State-Space A\* search engine synthesizing the lowest-cost valid action chain (`Plan()`), with search telemetry (`lastPlanCost`, `lastNodesExpanded`). |
+| **`GOAPAgent`** | High-level controller managing `worldState`, sensors, goal preemption, step-by-step plan execution, and live canvas visualizers (`DrawGOAPInspector`, `DrawDebug`). |
+
+---
+
+### Quick Start Example
+
+```javascript
+this.goap = new GOAPAgent(this, {
+    onUpdateSensors: (soldier, ws) => {
+        ws.Set('targetDead', soldier.target.hp <= 0);
+        ws.Set('targetInCover', soldier.target.inCover);
+        ws.Set('weaponLoaded', soldier.clip > 0);
+        ws.Set('hasAmmo', soldier.clip > 0 || soldier.reserveAmmo > 0);
+        ws.Set('hasGrenade', soldier.grenades > 0);
+    }
+});
+
+// 1. Register Goals
+this.goap.AddGoal(new GOAPGoal('EliminateTarget', { targetDead: true }, 80));
+
+// 2. Register Decoupled Actions
+this.goap.AddActions([
+    new GOAPAction('ShootTarget', {
+        cost: 2,
+        preconditions: { weaponLoaded: true, targetInCover: false },
+        effects: { targetDead: true },
+        onUpdate: (dt, s) => s.FireAtTarget(dt)
+    }),
+    new GOAPAction('FlushWithGrenade', {
+        cost: 2,
+        preconditions: { targetInCover: true, hasGrenade: true },
+        effects: { targetInCover: false },
+        onUpdate: (dt, s) => s.ThrowGrenade(dt)
+    }),
+    new GOAPAction('FlankTarget', {
+        cost: 5,
+        preconditions: { targetInCover: true },
+        effects: { targetInCover: false },
+        onUpdate: (dt, s) => s.FlankAroundCover(dt)
+    }),
+    new GOAPAction('ReloadWeapon', {
+        cost: 2,
+        preconditions: { hasAmmo: true, weaponLoaded: false },
+        effects: { weaponLoaded: true },
+        onUpdate: (dt, s) => s.Reload(dt)
+    })
+]);
+
+// 3. Tick & Render Inspector
+this.goap.Update(dt);
+this.goap.DrawGOAPInspector(renderer, 530, 55, { width: 430, title: 'Tactical GOAP Inspector' });
+```
+
+---
+
+### Script Load Order
+
+```html
+<script src="src/engine/game.js"></script>
+<script src="src/engine/goap.js"></script>   <!-- optional GOAP Planner module -->
+<script src="src/engine/main.js"></script>
+```
+
+---
+
+### Demos & Examples
+
+- **[GOAP Survival Crafter & Economy](../goap-survival.html ':ignore :target=_blank')** — Autonomous wilderness survivor synthesizing multi-hop crafting chains (`GrabSpareAxe` vs `MineIronOre -> ForgeIronAxe` vs `ForageWildBerries`) and dynamically preempting goals during rainstorms. See [`src/examples/goap_survival/README.md`](../src/examples/goap_survival/README.md ':ignore :target=_blank').
+- **[GOAP Tactical Combat Squad](../goap-combat.html ':ignore :target=_blank')** — *F.E.A.R.*-inspired tactical soldier coordinating cover, grenades (`cost 2`) vs. wide flanking (`cost 5`), ammo crate resupply, and emergency trauma healing. See [`src/examples/goap_combat/README.md`](../src/examples/goap_combat/README.md ':ignore :target=_blank').
+- **[GOAP Dungeon Heist Planner](../goap-dungeon.html ':ignore :target=_blank')** — Multi-room dungeon puzzle where the planner discovers an 8-step causal dependency chain to steal the Golden Idol, with interactive lockpick fallbacks and teleporter shortcuts. See [`src/examples/goap_dungeon/README.md`](../src/examples/goap_dungeon/README.md ':ignore :target=_blank').
+
+---
+
 ## See also
 
 - [Fuzzy Logic System Guide](fuzzy-logic.md) — comprehensive theoretical and API manual for `fuzzy.js`
+- [GOAP Planner Guide](goap.md) — comprehensive theoretical and API manual for `goap.js`
 - [Examples](examples.md) — full list of demos
