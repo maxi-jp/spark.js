@@ -546,7 +546,8 @@ class GOAPPlanner {
         this.lastConsideredActions = 0;
         this.lastSearchTrace = [];
 
-        if (!goal || !availableActions) return null;
+        if (!goal || !availableActions)
+            return null;
 
         const rootState = startState instanceof GOAPState
             ? startState.Clone()
@@ -608,7 +609,7 @@ class GOAPPlanner {
             const current = openList.splice(bestIdx, 1)[0];
             this.lastNodesExpanded = iterations;
 
-            if ( current.action ) {
+            if (current.action) {
                 this.lastSearchTrace.push({
                     actionName: current.action.name,
                     g: current.g,
@@ -639,13 +640,16 @@ class GOAPPlanner {
                 const action = usableActions[i];
 
                 // Avoid repeating the exact same action consecutively unless state changed meaningfully
-                if (current.action === action) continue;
+                if (current.action === action)
+                    continue;
 
                 // 1. Symbolic preconditions must hold in current.state
-                if (!action.ArePreconditionsMet(current.state)) continue;
+                if (!action.ArePreconditionsMet(current.state))
+                    continue;
 
                 // 2. Action must actually change at least one fact in current.state
-                if (!action.HasEffectOnState(current.state)) continue;
+                if (!action.HasEffectOnState(current.state))
+                    continue;
 
                 // 3. Simulate next state
                 const nextState = current.state.Clone();
@@ -852,6 +856,7 @@ class GOAPAgent {
             activeAction.Exit(this.owner, this.worldState, GOAPStatus.FAILURE);
             activeAction.Reset();
         }
+
         this.currentGoal = null;
         this.currentPlan = [];
         this.currentStepIndex = 0;
@@ -919,6 +924,7 @@ class GOAPAgent {
         this.currentStepIndex = 0;
         this.stepStatuses = [];
         this.stepCosts = [];
+
         return false;
     }
 
@@ -979,7 +985,8 @@ class GOAPAgent {
 
         // 5. Execute active action step
         const action = this.GetCurrentAction();
-        if (!action) return;
+        if (!action)
+            return;
 
         if (!action.isEntered) {
             // Verify symbolic & procedural preconditions still hold before entering
@@ -1011,7 +1018,8 @@ class GOAPAgent {
             if (this.currentStepIndex >= this.currentPlan.length && this.currentGoal) {
                 this.lastCompletedGoalName = this.currentGoal.name;
             }
-        } else if (status === GOAPStatus.FAILURE) {
+        }
+        else if (status === GOAPStatus.FAILURE) {
             action.Exit(this.owner, this.worldState, GOAPStatus.FAILURE);
             action.isEntered = false;
             this._replanTimer = this.replanCooldown;
@@ -1022,6 +1030,43 @@ class GOAPAgent {
     // ========================================================================
     // 6. Visual Debugging Tools (DrawDebug & DrawGOAPInspector)
     // ========================================================================
+
+    static _debugColors = {
+        debugBg:        new Color(0.04, 0.055, 0.094, 0.82),
+        debugText:      Color.FromHex('#f8fafc'),
+        panelBg:        new Color(0.05, 0.07, 0.12, 0.92),
+        panelBorder:    new Color(0.22, 0.74, 0.97, 0.45),
+        headerBg:       new Color(0.12, 0.16, 0.23, 0.95),
+        headerTitle:    Color.FromHex('#38bdf8'),
+        subText:        Color.FromHex('#94a3b8'),
+        sectionTitle:   Color.FromHex('#cbd5e1'),
+        factTrueBg:     new Color(0.13, 0.77, 0.37, 0.16),
+        factTrueBorder: new Color(0.13, 0.77, 0.37, 0.50),
+        factTrueText:   Color.FromHex('#4ade80'),
+        factFalseBg:    new Color(0.39, 0.45, 0.55, 0.18),
+        factFalseBorder:new Color(0.39, 0.45, 0.55, 0.35),
+        factOtherBg:    new Color(0.22, 0.74, 0.97, 0.16),
+        factOtherBorder:new Color(0.22, 0.74, 0.97, 0.50),
+        factKeyText:    Color.FromHex('#e2e8f0'),
+        goalActiveBg:   new Color(0.98, 0.80, 0.08, 0.16),
+        goalIdleBg:     new Color(0.12, 0.16, 0.23, 0.65),
+        goalActiveBorder: Color.FromHex('#facc15'),
+        goalSatBorder:  new Color(0.13, 0.77, 0.37, 0.45),
+        goalIdleBorder: new Color(0.28, 0.33, 0.41, 0.40),
+        goalBarActive:  new Color(0.98, 0.80, 0.08, 0.35),
+        goalBarIdle:    new Color(0.22, 0.74, 0.97, 0.25),
+        goalTextActive: Color.FromHex('#fef08a'),
+        goalTextIdle:   Color.FromHex('#f1f5f9'),
+        stepIdleBg:     new Color(0.12, 0.16, 0.23, 0.55),
+        stepIdleBorder: new Color(0.28, 0.33, 0.41, 0.45),
+        stepDoneBg:     new Color(0.09, 0.40, 0.20, 0.32),
+        stepDoneBorder: new Color(0.29, 0.87, 0.50, 0.60),
+        stepDoneText:   Color.FromHex('#86efac'),
+        stepRunBg:      new Color(0.63, 0.38, 0.03, 0.38),
+        stepFailBg:     new Color(0.60, 0.11, 0.11, 0.38),
+        stepFailBorder: Color.FromHex('#f87171'),
+        stepFailText:   Color.FromHex('#fca5a5')
+    };
 
     /**
      * Draw a compact world-space label above the agent showing `[Goal] ▶ Action (step/total)`.
@@ -1034,29 +1079,23 @@ class GOAPAgent {
      * @param {boolean} [forceDraw=false]
      */
     DrawDebug(renderer, x, y, color = Color.yellow, forceDraw = false) {
-        if (!forceDraw && (typeof debugMode === 'undefined' || !debugMode)) return;
-        const ctx = renderer.ctx;
-        if (!ctx) return;
+        if (!forceDraw && (typeof debugMode === 'undefined' || !debugMode))
+            return;
 
+        const c = GOAPAgent._debugColors;
         const goalText = this.currentGoal ? this.currentGoal.name : 'Idle';
         const act = this.GetCurrentAction();
         const actText = act
             ? ` ▶ ${act.name} (${this.currentStepIndex + 1}/${this.currentPlan.length})`
             : '';
         const label = `[${goalText}]${actText}`;
+        const font = 'bold 11px monospace';
 
-        ctx.save();
-        ctx.font = 'bold 11px monospace';
-        const w = ctx.measureText(label).width + 12;
-        ctx.fillStyle = 'rgba(10, 14, 24, 0.82)';
-        ctx.fillRect(x - w / 2, y - 13, w, 18);
-        ctx.strokeStyle = color && color.ToString ? color.ToString() : String(color || '#facc15');
-        ctx.lineWidth = 1;
-        ctx.strokeRect(x - w / 2, y - 13, w, 18);
-        ctx.fillStyle = '#f8fafc';
-        ctx.textAlign = 'center';
-        ctx.fillText(label, x, y);
-        ctx.restore();
+        const w = renderer.MeasureText(label, font) + 12;
+        const borderCol = color instanceof Color ? color : c.goalActiveBorder;
+        renderer.DrawFillBasicRoundRectangle(x - w / 2, y - 13, w, 18, 4, c.debugBg);
+        renderer.DrawStrokeBasicRoundRectangle(x - w / 2, y - 13, w, 18, 4, borderCol, 1);
+        renderer.DrawFillText(label, x, y, font, c.debugText, 'center', 'alphabetic');
     }
 
     /**
@@ -1078,9 +1117,7 @@ class GOAPAgent {
      * @returns {number} Total height of the rendered panel in pixels.
      */
     DrawGOAPInspector(renderer, x, y, options = {}) {
-        const ctx = renderer.ctx;
-        if (!ctx) return 0;
-
+        const c = GOAPAgent._debugColors;
         const width = options.width || 350;
         const title = options.title || 'GOAP Planner Inspector';
         const showWorldState = options.showWorldState !== false;
@@ -1094,51 +1131,40 @@ class GOAPAgent {
 
         // Calculate dynamic panel height
         let totalHeight = 52; // Title + telemetry subheader
-        if (showWorldState) totalHeight += 24 + stateRows * 20 + 8;
-        if (showGoals) totalHeight += 24 + goalRows * 22 + 8;
-        if (showPlan) totalHeight += 28 + planSteps * 24 + 10;
+        if (showWorldState)
+            totalHeight += 24 + stateRows * 20 + 8;
 
-        ctx.save();
+        if (showGoals)
+            totalHeight += 24 + goalRows * 22 + 8;
 
-        // Panel background
-        ctx.fillStyle = 'rgba(13, 18, 30, 0.92)';
-        ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        if (ctx.roundRect) {
-            ctx.roundRect(x, y, width, totalHeight, 8);
-        } else {
-            ctx.rect(x, y, width, totalHeight);
-        }
-        ctx.fill();
-        ctx.stroke();
+        if (showPlan)
+            totalHeight += 28 + planSteps * 24 + 10;
+
+        // Panel background & border
+        renderer.DrawFillBasicRoundRectangle(x, y, width, totalHeight, 6, c.panelBg);
+        renderer.DrawStrokeBasicRoundRectangle(x, y, width, totalHeight, 6, c.panelBorder, 1.5);
 
         // Header bar
-        ctx.fillStyle = 'rgba(30, 41, 59, 0.95)';
-        ctx.fillRect(x + 1, y + 1, width - 2, 44);
-
-        ctx.font = 'bold 13px monospace';
-        ctx.fillStyle = '#38bdf8';
-        ctx.textAlign = 'left';
-        ctx.fillText(`🧠 ${title}`, x + 10, y + 19);
+        renderer.DrawFillBasicRoundRectangle(x + 1, y + 1, width - 2, 44, [6, 6, 0, 0], c.headerBg);
+        renderer.DrawFillText(`🧠 ${title}`, x + 10, y + 19, 'bold 13px monospace', c.headerTitle, 'left', 'alphabetic');
 
         // Telemetry line
-        ctx.font = '11px monospace';
-        ctx.fillStyle = '#94a3b8';
         const costStr = this.planner.lastPlanCost.toFixed(1);
-        ctx.fillText(
+        renderer.DrawFillText(
             `A* Nodes: ${this.planner.lastNodesExpanded} | Plan Cost: ${costStr} | Replans: ${this.replanCount}`,
             x + 10,
-            y + 37
+            y + 37,
+            '11px monospace',
+            c.subText,
+            'left',
+            'alphabetic'
         );
 
         let curY = y + 54;
 
         // ── Section 1: Symbolic World State ─────────────────────────────
         if (showWorldState) {
-            ctx.font = 'bold 11px monospace';
-            ctx.fillStyle = '#cbd5e1';
-            ctx.fillText('WORLD STATE (FACTS)', x + 10, curY + 11);
+            renderer.DrawFillText('WORLD STATE (FACTS)', x + 10, curY + 11, 'bold 11px monospace', c.sectionTitle, 'left', 'alphabetic');
             curY += 18;
 
             const colWidth = (width - 26) / 2;
@@ -1150,41 +1176,23 @@ class GOAPAgent {
                 const cellX = x + 10 + col * (colWidth + 6);
                 const cellY = curY + row * 20;
 
-                // Fact pill
-                ctx.fillStyle = val === true
-                    ? 'rgba(34, 197, 94, 0.16)'
-                    : val === false
-                        ? 'rgba(100, 116, 139, 0.18)'
-                        : 'rgba(56, 189, 248, 0.16)';
-                ctx.strokeStyle = val === true
-                    ? 'rgba(34, 197, 94, 0.5)'
-                    : val === false
-                        ? 'rgba(100, 116, 139, 0.35)'
-                        : 'rgba(56, 189, 248, 0.5)';
-                ctx.lineWidth = 1;
-                ctx.fillRect(cellX, cellY, colWidth, 17);
-                ctx.strokeRect(cellX, cellY, colWidth, 17);
+                const pillBg = val === true ? c.factTrueBg : val === false ? c.factFalseBg : c.factOtherBg;
+                const pillBorder = val === true ? c.factTrueBorder : val === false ? c.factFalseBorder : c.factOtherBorder;
+                const valColor = val === true ? c.factTrueText : val === false ? c.subText : c.headerTitle;
 
-                ctx.font = '10px monospace';
-                ctx.fillStyle = '#e2e8f0';
-                ctx.textAlign = 'left';
+                renderer.DrawFillBasicRoundRectangle(cellX, cellY, colWidth, 17, 3, pillBg);
+                renderer.DrawStrokeBasicRoundRectangle(cellX, cellY, colWidth, 17, 3, pillBorder, 1);
+
                 const shortKey = key.length > 15 ? key.slice(0, 14) + '…' : key;
-                ctx.fillText(shortKey, cellX + 5, cellY + 12);
-
-                ctx.textAlign = 'right';
-                ctx.fillStyle = val === true ? '#4ade80' : val === false ? '#94a3b8' : '#38bdf8';
-                ctx.font = 'bold 10px monospace';
-                ctx.fillText(String(val), cellX + colWidth - 5, cellY + 12);
+                renderer.DrawFillText(shortKey, cellX + 5, cellY + 12, '10px monospace', c.factKeyText, 'left', 'alphabetic');
+                renderer.DrawFillText(String(val), cellX + colWidth - 5, cellY + 12, 'bold 10px monospace', valColor, 'right', 'alphabetic');
             }
             curY += stateRows * 20 + 8;
         }
 
         // ── Section 2: Goals Ranked by Priority ─────────────────────────
         if (showGoals) {
-            ctx.textAlign = 'left';
-            ctx.font = 'bold 11px monospace';
-            ctx.fillStyle = '#cbd5e1';
-            ctx.fillText('GOALS (PRIORITY & SATISFACTION)', x + 10, curY + 11);
+            renderer.DrawFillText('GOALS (PRIORITY & SATISFACTION)', x + 10, curY + 11, 'bold 11px monospace', c.sectionTitle, 'left', 'alphabetic');
             curY += 18;
 
             const sortedGoals = this.goals.slice().sort(
@@ -1197,43 +1205,35 @@ class GOAPAgent {
                 const isSat = g.IsSatisfied(this.worldState);
                 const prio = Math.max(0, Math.min(100, g.lastEvaluatedPriority));
 
-                // Goal row box
-                ctx.fillStyle = isActive
-                    ? 'rgba(250, 204, 21, 0.16)'
-                    : 'rgba(30, 41, 59, 0.65)';
-                ctx.strokeStyle = isActive
-                    ? '#facc15'
-                    : isSat
-                        ? 'rgba(34, 197, 94, 0.45)'
-                        : 'rgba(71, 85, 105, 0.4)';
-                ctx.lineWidth = isActive ? 1.5 : 1;
-                ctx.fillRect(x + 10, curY, width - 20, 19);
-                ctx.strokeRect(x + 10, curY, width - 20, 19);
+                const rowBg = isActive ? c.goalActiveBg : c.goalIdleBg;
+                const rowBorder = isActive ? c.goalActiveBorder : isSat ? c.goalSatBorder : c.goalIdleBorder;
+
+                renderer.DrawFillBasicRoundRectangle(x + 10, curY, width - 20, 19, 4, rowBg);
+                renderer.DrawStrokeBasicRoundRectangle(x + 10, curY, width - 20, 19, 4, rowBorder, isActive ? 1.5 : 1);
 
                 // Priority bar fill
                 const barMaxW = 90;
                 const barW = (prio / 100) * barMaxW;
-                ctx.fillStyle = isActive
-                    ? 'rgba(250, 204, 21, 0.35)'
-                    : 'rgba(56, 189, 248, 0.25)';
-                ctx.fillRect(x + 11, curY + 1, barW, 17);
+                renderer.DrawFillBasicRoundRectangle(x + 11, curY + 1, barW, 17, 3, isActive ? c.goalBarActive : c.goalBarIdle);
 
-                ctx.font = isActive ? 'bold 11px monospace' : '11px monospace';
-                ctx.fillStyle = isActive ? '#fef08a' : '#f1f5f9';
-                ctx.textAlign = 'left';
-                ctx.fillText(`${isActive ? '▶ ' : '  '}${g.name}`, x + 14, curY + 13);
+                renderer.DrawFillText(
+                    `${isActive ? '▶ ' : '  '}${g.name}`,
+                    x + 14,
+                    curY + 13,
+                    isActive ? 'bold 11px monospace' : '11px monospace',
+                    isActive ? c.goalTextActive : c.goalTextIdle,
+                    'left',
+                    'alphabetic'
+                );
 
-                ctx.textAlign = 'right';
-                ctx.font = 'bold 10px monospace';
                 if (isSat) {
-                    ctx.fillStyle = '#4ade80';
-                    ctx.fillText(`✔ SATISFIED (P:${Math.round(g.lastEvaluatedPriority)})`, x + width - 15, curY + 13);
-                } else if (isActive) {
-                    ctx.fillStyle = '#facc15';
-                    ctx.fillText(`ACTIVE (P:${Math.round(g.lastEvaluatedPriority)})`, x + width - 15, curY + 13);
-                } else {
-                    ctx.fillStyle = '#94a3b8';
-                    ctx.fillText(`P:${Math.round(g.lastEvaluatedPriority)}`, x + width - 15, curY + 13);
+                    renderer.DrawFillText(`✔ SATISFIED (P:${Math.round(g.lastEvaluatedPriority)})`, x + width - 15, curY + 13, 'bold 10px monospace', c.factTrueText, 'right', 'alphabetic');
+                }
+                else if (isActive) {
+                    renderer.DrawFillText(`ACTIVE (P:${Math.round(g.lastEvaluatedPriority)})`, x + width - 15, curY + 13, 'bold 10px monospace', c.goalActiveBorder, 'right', 'alphabetic');
+                }
+                else {
+                    renderer.DrawFillText(`P:${Math.round(g.lastEvaluatedPriority)}`, x + width - 15, curY + 13, 'bold 10px monospace', c.subText, 'right', 'alphabetic');
                 }
 
                 curY += 22;
@@ -1243,72 +1243,71 @@ class GOAPAgent {
 
         // ── Section 3: Synthesized A* Action Plan Pipeline ──────────────
         if (showPlan) {
-            ctx.textAlign = 'left';
-            ctx.font = 'bold 11px monospace';
-            ctx.fillStyle = '#cbd5e1';
             const goalLabel = this.currentGoal ? ` → ${this.currentGoal.name}` : '';
-            ctx.fillText(`ACTIVE A* ACTION PLAN${goalLabel}`, x + 10, curY + 11);
+            renderer.DrawFillText(`ACTIVE A* ACTION PLAN${goalLabel}`, x + 10, curY + 11, 'bold 11px monospace', c.sectionTitle, 'left', 'alphabetic');
             curY += 18;
 
             if (this.currentPlan.length === 0) {
-                ctx.fillStyle = 'rgba(30, 41, 59, 0.5)';
-                ctx.fillRect(x + 10, curY, width - 20, 22);
-                ctx.font = 'italic 11px monospace';
-                ctx.fillStyle = '#94a3b8';
-                ctx.fillText('  (No active plan — all valid goals satisfied)', x + 14, curY + 15);
+                renderer.DrawFillBasicRoundRectangle(x + 10, curY, width - 20, 22, 4, c.stepIdleBg);
+                renderer.DrawFillText('  (No active plan — all valid goals satisfied)', x + 14, curY + 15, 'italic 11px monospace', c.subText, 'left', 'alphabetic');
                 curY += 24;
-            } else {
+            }
+            else {
                 for (let i = 0; i < this.currentPlan.length; i++) {
                     const act = this.currentPlan[i];
                     const st = this.stepStatuses[i] || GOAPStatus.IDLE;
                     const cost = this.stepCosts[i] !== undefined ? this.stepCosts[i] : act.cost;
                     const isCurrent = i === this.currentStepIndex;
 
-                    let bg = 'rgba(30, 41, 59, 0.55)';
-                    let border = 'rgba(71, 85, 105, 0.45)';
+                    let bg = c.stepIdleBg;
+                    let border = c.stepIdleBorder;
                     let badge = '○';
-                    let textColor = '#cbd5e1';
+                    let textColor = c.sectionTitle;
 
                     if (st === GOAPStatus.SUCCESS) {
-                        bg = 'rgba(22, 101, 52, 0.32)';
-                        border = 'rgba(74, 222, 128, 0.6)';
+                        bg = c.stepDoneBg;
+                        border = c.stepDoneBorder;
                         badge = '✔';
-                        textColor = '#86efac';
-                    } else if (st === GOAPStatus.RUNNING || isCurrent) {
-                        bg = 'rgba(161, 98, 7, 0.38)';
-                        border = '#facc15';
+                        textColor = c.stepDoneText;
+                    }
+                    else if (st === GOAPStatus.RUNNING || isCurrent) {
+                        bg = c.stepRunBg;
+                        border = c.goalActiveBorder;
                         badge = '⏳';
-                        textColor = '#fef08a';
-                    } else if (st === GOAPStatus.FAILURE) {
-                        bg = 'rgba(153, 27, 27, 0.38)';
-                        border = '#f87171';
+                        textColor = c.goalTextActive;
+                    }
+                    else if (st === GOAPStatus.FAILURE) {
+                        bg = c.stepFailBg;
+                        border = c.stepFailBorder;
                         badge = '✖';
-                        textColor = '#fca5a5';
+                        textColor = c.stepFailText;
                     }
 
-                    ctx.fillStyle = bg;
-                    ctx.strokeStyle = border;
-                    ctx.lineWidth = isCurrent ? 1.5 : 1;
-                    ctx.fillRect(x + 10, curY, width - 20, 21);
-                    ctx.strokeRect(x + 10, curY, width - 20, 21);
+                    renderer.DrawFillBasicRoundRectangle(x + 10, curY, width - 20, 21, 4, bg);
+                    renderer.DrawStrokeBasicRoundRectangle(x + 10, curY, width - 20, 21, 4, border, isCurrent ? 1.5 : 1);
 
-                    ctx.font = isCurrent ? 'bold 11px monospace' : '11px monospace';
-                    ctx.fillStyle = textColor;
-                    ctx.textAlign = 'left';
-                    ctx.fillText(`${i + 1}. ${badge} ${act.name}`, x + 16, curY + 14);
+                    renderer.DrawFillText(
+                        `${i + 1}. ${badge} ${act.name}`,
+                        x + 16,
+                        curY + 14,
+                        isCurrent ? 'bold 11px monospace' : '11px monospace',
+                        textColor,
+                        'left',
+                        'alphabetic'
+                    );
 
-                    // Show cost + primary effect
                     const effKeys = Object.keys(act.effects);
                     const effPreview = effKeys.length > 0
                         ? `${effKeys[0]}:${act.effects[effKeys[0]]}`
                         : '';
-                    ctx.font = '10px monospace';
-                    ctx.fillStyle = '#94a3b8';
-                    ctx.textAlign = 'right';
-                    ctx.fillText(
+                    renderer.DrawFillText(
                         `${effPreview ? '[' + effPreview + '] ' : ''}cost:${cost.toFixed(1)}`,
                         x + width - 16,
-                        curY + 14
+                        curY + 14,
+                        '10px monospace',
+                        c.subText,
+                        'right',
+                        'alphabetic'
                     );
 
                     curY += 24;
@@ -1316,7 +1315,6 @@ class GOAPAgent {
             }
         }
 
-        ctx.restore();
         return totalHeight;
     }
 }
@@ -1331,7 +1329,9 @@ class GOAPAgent {
  * @returns {number}
  */
 function DrawGOAPInspector(renderer, agent, x, y, options = {}) {
-    if (!agent || typeof agent.DrawGOAPInspector !== 'function') return 0;
+    if (!agent || typeof agent.DrawGOAPInspector !== 'function')
+        return 0;
+    
     return agent.DrawGOAPInspector(renderer, x, y, options);
 }
 

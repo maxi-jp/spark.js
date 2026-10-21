@@ -21,7 +21,7 @@ debugMode = true;
 class SurvivorAgent extends GameObject {
     constructor(gameInstance) {
         super(new Vector2(380, 390), 0, 1);
-        this.game = gameInstance;
+        
         this.speed = 155;
         this.radius = 16;
 
@@ -49,7 +49,9 @@ class SurvivorAgent extends GameObject {
 
     LogEvent(msg) {
         this.eventLog.unshift(msg);
-        if (this.eventLog.length > 5) this.eventLog.pop();
+
+        if (this.eventLog.length > 5)
+            this.eventLog.pop();
     }
 
     /**
@@ -57,7 +59,8 @@ class SurvivorAgent extends GameObject {
      */
     _moveAndWork(dt, stationKey, workSeconds, onComplete) {
         const st = this.game.stations[stationKey];
-        if (!st) return GOAPStatus.FAILURE;
+        if (!st)
+            return GOAPStatus.FAILURE;
 
         this.targetStation = st;
         const dx = st.x - this.position.x;
@@ -69,6 +72,7 @@ class SurvivorAgent extends GameObject {
             this.position.x += (dx / dist) * step;
             this.position.y += (dy / dist) * step;
             this.actionDuration = workSeconds;
+
             return GOAPStatus.RUNNING;
         }
 
@@ -78,8 +82,10 @@ class SurvivorAgent extends GameObject {
         if (this.actionTimer >= workSeconds) {
             this.actionTimer = 0;
             onComplete();
+
             return GOAPStatus.SUCCESS;
         }
+
         return GOAPStatus.RUNNING;
     }
 
@@ -136,7 +142,9 @@ class SurvivorAgent extends GameObject {
             checkProcedural: (owner) => owner.game.rackHasAxe,
             onEnter: (owner) => { owner.actionTimer = 0; },
             onUpdate: (dt, owner) => owner._moveAndWork(dt, 'rack', 0.6, () => {
-                if (!owner.game.rackHasAxe) return;
+                if (!owner.game.rackHasAxe)
+                    return;
+
                 owner.game.rackHasAxe = false;
                 owner.hasAxe = true;
                 owner.axeDurability = 3;
@@ -176,14 +184,17 @@ class SurvivorAgent extends GameObject {
             effects: { hasFirewood: true },
             onEnter: (owner) => { owner.actionTimer = 0; },
             onUpdate: (dt, owner) => {
-                if (!owner.hasAxe) return GOAPStatus.FAILURE;
+                if (!owner.hasAxe)
+                    return GOAPStatus.FAILURE;
+
                 return owner._moveAndWork(dt, 'forest', 1.0, () => {
                     owner.hasFirewood = true;
                     owner.axeDurability--;
                     if (owner.axeDurability <= 0) {
                         owner.hasAxe = false;
                         owner.LogEvent('Axe broke after chopping firewood!');
-                    } else {
+                    }
+                    else {
                         owner.LogEvent(`Chopped firewood with Axe (${owner.axeDurability} uses left)`);
                     }
                 });
@@ -223,7 +234,9 @@ class SurvivorAgent extends GameObject {
             effects: { isCold: false },
             onEnter: (owner) => { owner.actionTimer = 0; },
             onUpdate: (dt, owner) => {
-                if (!owner.game.campfireLit) return GOAPStatus.FAILURE;
+                if (!owner.game.campfireLit)
+                    return GOAPStatus.FAILURE;
+
                 return owner._moveAndWork(dt, 'campfire', 1.1, () => {
                     owner.warmth = 100;
                     owner.LogEvent('Warmed up by the roaring Campfire (+Warmth)');
@@ -249,7 +262,9 @@ class SurvivorAgent extends GameObject {
             effects: { isHungry: false, hasRawMeat: false },
             onEnter: (owner) => { owner.actionTimer = 0; },
             onUpdate: (dt, owner) => {
-                if (!owner.game.campfireLit) return GOAPStatus.FAILURE;
+                if (!owner.game.campfireLit)
+                    return GOAPStatus.FAILURE;
+
                 return owner._moveAndWork(dt, 'campfire', 1.0, () => {
                     owner.hasRawMeat = false;
                     owner.fullness = 100;
@@ -267,7 +282,9 @@ class SurvivorAgent extends GameObject {
             checkProcedural: (owner) => owner.game.berriesAvailable,
             onEnter: (owner) => { owner.actionTimer = 0; },
             onUpdate: (dt, owner) => {
-                if (!owner.game.berriesAvailable) return GOAPStatus.FAILURE;
+                if (!owner.game.berriesAvailable)
+                    return GOAPStatus.FAILURE;
+
                 return owner._moveAndWork(dt, 'berries', 1.8, () => {
                     owner.fullness = 85;
                     owner.LogEvent('Foraged raw Wild Berries (fallback cost: 9.5)');
@@ -282,15 +299,21 @@ class SurvivorAgent extends GameObject {
             effects: { cabinBuilt: true, hasFirewood: false },
             onEnter: (owner) => { owner.actionTimer = 0; },
             onUpdate: (dt, owner) => {
-                if (!owner.hasAxe || !owner.hasFirewood) return GOAPStatus.FAILURE;
+                if (!owner.hasAxe || !owner.hasFirewood)
+                    return GOAPStatus.FAILURE;
+
                 return owner._moveAndWork(dt, 'cabin', 1.3, () => {
                     owner.hasFirewood = false;
                     owner.cabinProgress = Math.min(100, owner.cabinProgress + 50);
                     owner.axeDurability--;
-                    if (owner.axeDurability <= 0) owner.hasAxe = false;
+
+                    if (owner.axeDurability <= 0)
+                        owner.hasAxe = false;
+
                     if (owner.cabinProgress >= 100) {
                         owner.LogEvent('Completed the Log Cabin shelter! (100%)');
-                    } else {
+                    }
+                    else {
                         owner.LogEvent(`Built Cabin framework (${owner.cabinProgress}%)`);
                     }
                 });
@@ -334,57 +357,40 @@ class SurvivorAgent extends GameObject {
     }
 
     Draw(renderer) {
-        const ctx = renderer.ctx;
         const x = this.position.x;
         const y = this.position.y;
 
-        ctx.save();
-
         // Draw dashed movement line to target station
         if (this.targetStation) {
-            ctx.strokeStyle = 'rgba(250, 204, 21, 0.45)';
-            ctx.lineWidth = 2;
-            ctx.setLineDash([5, 5]);
-            ctx.beginPath();
-            ctx.moveTo(x, y);
-            ctx.lineTo(this.targetStation.x, this.targetStation.y);
-            ctx.stroke();
-            ctx.setLineDash([]);
+            renderer.DrawDashedLine(x, y, this.targetStation.x, this.targetStation.y, new Color(0.98, 0.80, 0.08, 0.45), 2, [5, 5]);
         }
 
         // Survivor shadow & body
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
-        ctx.beginPath();
-        ctx.ellipse(x, y + 14, 15, 7, 0, 0, Math.PI * 2);
-        ctx.fill();
+        renderer.DrawFillEllipse(x, y + 14, 15, 7, new Color(0, 0, 0, 0.35));
 
-        ctx.fillStyle = this.warmth < 45 ? '#38bdf8' : '#f59e0b';
-        ctx.strokeStyle = '#fef08a';
-        ctx.lineWidth = 2.5;
-        ctx.beginPath();
-        ctx.arc(x, y, this.radius, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
+        const bodyColor = this.warmth < 45 ? Color.FromHex('#38bdf8') : Color.FromHex('#f59e0b');
+        const ringColor = Color.FromHex('#fef08a');
+        renderer.DrawFillCircle(x, y, this.radius, bodyColor);
+        renderer.DrawStrokeCircle(x, y, this.radius, ringColor, 2.5);
 
         // Carried item badges around survivor
-        ctx.font = '13px sans-serif';
-        ctx.textAlign = 'center';
-        if (this.hasAxe) ctx.fillText('🪓', x + 18, y - 8);
-        if (this.hasFirewood) ctx.fillText('🪵', x - 18, y - 8);
-        if (this.hasRawMeat) ctx.fillText('🥩', x + 18, y + 14);
-        if (this.hasIronOre) ctx.fillText('🪨', x - 18, y + 14);
+        const badgeFont = '13px sans-serif';
+        if (this.hasAxe)
+            renderer.DrawFillText('🪓', x + 18, y - 8, badgeFont, Color.white, 'center', 'alphabetic');
+        if (this.hasFirewood)
+            renderer.DrawFillText('🪵', x - 18, y - 8, badgeFont, Color.white, 'center', 'alphabetic');
+        if (this.hasRawMeat)
+            renderer.DrawFillText('🥩', x + 18, y + 14, badgeFont, Color.white, 'center', 'alphabetic');
+        if (this.hasIronOre)
+            renderer.DrawFillText('🪨', x - 18, y + 14, badgeFont, Color.white, 'center', 'alphabetic');
 
         // Work progress bar when working at a station
         if (this.actionTimer > 0 && this.actionDuration > 0) {
             const pct = Math.min(1, this.actionTimer / this.actionDuration);
             const bw = 44;
-            ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-            ctx.fillRect(x - bw / 2, y - 38, bw, 7);
-            ctx.fillStyle = '#4ade80';
-            ctx.fillRect(x - bw / 2 + 1, y - 37, (bw - 2) * pct, 5);
+            renderer.DrawFillBasicRectangle(x - bw / 2, y - 38, bw, 7, new Color(0.06, 0.09, 0.16, 0.85));
+            renderer.DrawFillBasicRectangle(x - bw / 2 + 1, y - 37, (bw - 2) * pct, 5, Color.FromHex('#4ade80'));
         }
-
-        ctx.restore();
 
         // Draw overhead GOAP `[Goal] ▶ Action` debug tag
         this.goap.DrawDebug(renderer, x, y - 24, Color.yellow, true);
@@ -422,14 +428,14 @@ class GOAPSurvivalGame extends Game {
 
         // Interactive world stations
         this.stations = {
-            anvil:    { x: 130, y: 155, icon: '⚒️', name: 'Anvil Forge',    sub: 'ForgeIronAxe (c:2)', color: '#94a3b8' },
-            rack:     { x: 300, y: 145, icon: '🪓', name: 'Tool Rack',      sub: 'GrabSpareAxe (c:1)', color: '#fbbf24' },
-            forest:   { x: 585, y: 160, icon: '🌲', name: 'Pine Forest',    sub: 'Axe(c:2) / Hand(c:8)', color: '#22c55e' },
-            mine:     { x: 125, y: 345, icon: '⛏️', name: 'Iron Quarry',    sub: 'MineIronOre (c:2)', color: '#64748b' },
-            campfire: { x: 385, y: 335, icon: '🔥', name: 'Campfire Pit',   sub: 'Light / Cook / Warm', color: '#f97316' },
-            hunting:  { x: 625, y: 365, icon: '🦌', name: 'Hunting Grounds',sub: 'HuntRawMeat (c:2)', color: '#ef4444' },
-            berries:  { x: 155, y: 515, icon: '🫐', name: 'Berry Thicket',  sub: 'ForageBerries (c:9.5)', color: '#a855f7' },
-            cabin:    { x: 485, y: 520, icon: '🛖', name: 'Cabin Site',     sub: 'ConstructCabin (c:2)', color: '#d97706' }
+            anvil:    { x: 130, y: 155, icon: '⚒️', name: 'Anvil Forge',    sub: 'ForgeIronAxe (c:2)', color: Color.FromHex('#94a3b8') },
+            rack:     { x: 300, y: 145, icon: '🪓', name: 'Tool Rack',      sub: 'GrabSpareAxe (c:1)', color: Color.FromHex('#fbbf24') },
+            forest:   { x: 585, y: 160, icon: '🌲', name: 'Pine Forest',    sub: 'Axe(c:2) / Hand(c:8)', color: Color.FromHex('#22c55e') },
+            mine:     { x: 125, y: 345, icon: '⛏️', name: 'Iron Quarry',    sub: 'MineIronOre (c:2)', color: Color.FromHex('#64748b') },
+            campfire: { x: 385, y: 335, icon: '🔥', name: 'Campfire Pit',   sub: 'Light / Cook / Warm', color: Color.FromHex('#f97316') },
+            hunting:  { x: 625, y: 365, icon: '🦌', name: 'Hunting Grounds',sub: 'HuntRawMeat (c:2)', color: Color.FromHex('#ef4444') },
+            berries:  { x: 155, y: 515, icon: '🫐', name: 'Berry Thicket',  sub: 'ForageBerries (c:9.5)', color: Color.FromHex('#a855f7') },
+            cabin:    { x: 485, y: 520, icon: '🛖', name: 'Cabin Site',     sub: 'ConstructCabin (c:2)', color: Color.FromHex('#d97706') }
         };
 
         this.survivor = new SurvivorAgent(this);
@@ -500,12 +506,12 @@ class GOAPSurvivalGame extends Game {
         }
 
         // Keyboard shortcuts
-        if (Input.IsKeyDown(KEY_1)) this.buttons[0].action();
-        if (Input.IsKeyDown(KEY_2)) this.buttons[1].action();
-        if (Input.IsKeyDown(KEY_3)) this.buttons[2].action();
-        if (Input.IsKeyDown(KEY_4)) this.buttons[3].action();
-        if (Input.IsKeyDown(KEY_5)) this.buttons[4].action();
-        if (Input.IsKeyDown(KEY_R)) this.Start();
+        if (Input.IsKeyDown(KEY_1))this.buttons[0].action();
+        if (Input.IsKeyDown(KEY_2))this.buttons[1].action();
+        if (Input.IsKeyDown(KEY_3))this.buttons[2].action();
+        if (Input.IsKeyDown(KEY_4))this.buttons[3].action();
+        if (Input.IsKeyDown(KEY_5))this.buttons[4].action();
+        if (Input.IsKeyDown(KEY_R))this.Start();
 
         // Mouse clicks on sandbox buttons
         if (Input.IsMouseDown(0)) {
@@ -523,88 +529,62 @@ class GOAPSurvivalGame extends Game {
     }
 
     Draw() {
-        const ctx = this.renderer.ctx;
+        const r = this.renderer;
 
         // 1. Wilderness background
-        this.renderer.DrawFillBasicRectangle(0, 0, this.screenWidth, this.screenHeight, new Color(15, 23, 34, 1));
-        ctx.save();
-        ctx.fillStyle = '#13221c';
-        ctx.fillRect(12, 54, this.arenaWidth - 20, 568);
-        ctx.strokeStyle = 'rgba(74, 222, 128, 0.25)';
-        ctx.lineWidth = 1.5;
-        ctx.strokeRect(12, 54, this.arenaWidth - 20, 568);
+        r.DrawFillBasicRectangle(0, 0, this.screenWidth, this.screenHeight, Color.FromRGBA(15, 23, 34, 1));
+        r.DrawFillBasicRoundRectangle(12, 54, this.arenaWidth - 20, 568, 8, Color.FromHex('#13221c'));
+        r.DrawStrokeBasicRoundRectangle(12, 54, this.arenaWidth - 20, 568, 8, new Color(0.29, 0.87, 0.50, 0.25), 1.5);
 
         // Subtle grid lines
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
-        ctx.lineWidth = 1;
+        const gridColor = new Color(1, 1, 1, 0.03);
         for (let gx = 40; gx < this.arenaWidth - 20; gx += 40) {
-            ctx.beginPath();
-            ctx.moveTo(gx, 54);
-            ctx.lineTo(gx, 622);
-            ctx.stroke();
+            r.DrawLine(gx, 54, gx, 622, gridColor, 1);
         }
         for (let gy = 80; gy < 622; gy += 40) {
-            ctx.beginPath();
-            ctx.moveTo(12, gy);
-            ctx.lineTo(this.arenaWidth - 8, gy);
-            ctx.stroke();
+            r.DrawLine(12, gy, this.arenaWidth - 8, gy, gridColor, 1);
         }
 
         // Top Title Banner
-        ctx.fillStyle = '#f8fafc';
-        ctx.font = 'bold 16px monospace';
-        ctx.fillText('⚡ GOAP Demo 1: Autonomous Survival Crafter (A* Action Planning)', 16, 26);
-        ctx.font = '12px monospace';
-        ctx.fillStyle = '#94a3b8';
-        ctx.fillText('Break tools, douse the fire, or toggle resources to see the A* Planner synthesize new multi-step chains!', 16, 44);
+        r.DrawFillText('⚡ GOAP Demo 1: Autonomous Survival Crafter (A* Action Planning)', 16, 26, 'bold 16px monospace', Color.FromHex('#f8fafc'), 'left', 'alphabetic');
+        r.DrawFillText('Break tools, douse the fire, or toggle resources to see the A* Planner synthesize new multi-step chains!', 16, 44, '12px monospace', Color.FromHex('#94a3b8'), 'left', 'alphabetic');
 
         // 2. Draw World Stations
+        const stAvailBg = new Color(0.12, 0.16, 0.23, 0.9);
+        const stUnavailBg = new Color(0.12, 0.16, 0.23, 0.35);
+        const stUnavailBorder = Color.FromHex('#475569');
+        const stTargetRing = new Color(0.98, 0.80, 0.08, 0.7);
+        const stTitleAvail = Color.FromHex('#f1f5f9');
+        const stTitleUnavail = Color.FromHex('#64748b');
+        const stSubAvail = Color.FromHex('#94a3b8');
+        const stSubUnavail = Color.FromHex('#ef4444');
+
         const stKeys = Object.keys(this.stations);
         for (let i = 0; i < stKeys.length; i++) {
             const key = stKeys[i];
             const st = this.stations[key];
             const isAvailable = (key === 'rack' ? this.rackHasAxe : key === 'berries' ? this.berriesAvailable : true);
 
+            // Campfire warm aura when lit
+            if (key === 'campfire' && this.campfireLit) {
+                r.DrawFillCircle(st.x, st.y, 75, new Color(0.98, 0.57, 0.24, 0.14));
+                r.DrawFillCircle(st.x, st.y, 50, new Color(0.98, 0.57, 0.24, 0.22));
+            }
+
             // Glow ring if active target
             if (this.survivor.targetStation === st) {
-                ctx.strokeStyle = 'rgba(250, 204, 21, 0.7)';
-                ctx.lineWidth = 2.5;
-                ctx.beginPath();
-                ctx.arc(st.x, st.y, 40, 0, Math.PI * 2);
-                ctx.stroke();
+                r.DrawStrokeCircle(st.x, st.y, 40, stTargetRing, 2.5);
             }
 
             // Station circle
-            ctx.fillStyle = isAvailable ? 'rgba(30, 41, 59, 0.9)' : 'rgba(30, 41, 59, 0.35)';
-            ctx.strokeStyle = isAvailable ? st.color : '#475569';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.arc(st.x, st.y, 32, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
+            r.DrawFillCircle(st.x, st.y, 32, isAvailable ? stAvailBg : stUnavailBg);
+            r.DrawStrokeCircle(st.x, st.y, 32, isAvailable ? st.color : stUnavailBorder, 2);
 
-            // Campfire warm aura when lit
-            if (key === 'campfire' && this.campfireLit) {
-                const grad = ctx.createRadialGradient(st.x, st.y, 8, st.x, st.y, 75);
-                grad.addColorStop(0, 'rgba(251, 146, 60, 0.38)');
-                grad.addColorStop(1, 'rgba(251, 146, 60, 0)');
-                ctx.fillStyle = grad;
-                ctx.beginPath();
-                ctx.arc(st.x, st.y, 75, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
-            ctx.font = '22px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText(key === 'campfire' && !this.campfireLit ? '🪵' : st.icon, st.x, st.y + 8);
+            r.DrawFillText(key === 'campfire' && !this.campfireLit ? '🪵' : st.icon, st.x, st.y + 8, '22px sans-serif', Color.white, 'center', 'alphabetic');
 
             // Station title + cost subtitle
-            ctx.font = 'bold 11px monospace';
-            ctx.fillStyle = isAvailable ? '#f1f5f9' : '#64748b';
-            ctx.fillText(st.name, st.x, st.y + 47);
+            r.DrawFillText(st.name, st.x, st.y + 47, 'bold 11px monospace', isAvailable ? stTitleAvail : stTitleUnavail, 'center', 'alphabetic');
 
-            ctx.font = '10px monospace';
-            ctx.fillStyle = isAvailable ? '#94a3b8' : '#ef4444';
             const statusSuffix = key === 'rack'
                 ? (this.rackHasAxe ? ' [READY]' : ' [EMPTY]')
                 : key === 'berries'
@@ -614,121 +594,87 @@ class GOAPSurvivalGame extends Game {
                         : key === 'cabin'
                             ? ` [${this.survivor.cabinProgress}%]`
                             : '';
-            ctx.fillText(st.sub + statusSuffix, st.x, st.y + 60);
+            r.DrawFillText(st.sub + statusSuffix, st.x, st.y + 60, '10px monospace', isAvailable ? stSubAvail : stSubUnavail, 'center', 'alphabetic');
         }
 
         // Rain visual effect
         if (this.isRaining) {
-            ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
-            ctx.lineWidth = 1.5;
+            const rainColor = new Color(0.22, 0.74, 0.97, 0.35);
             const t = performance.now() * 0.4;
-            for (let r = 0; r < 35; r++) {
-                const rx = 25 + ((r * 97 + t) % (this.arenaWidth - 50));
-                const ry = 60 + ((r * 61 + t * 1.7) % 540);
-                ctx.beginPath();
-                ctx.moveTo(rx, ry);
-                ctx.lineTo(rx - 6, ry + 16);
-                ctx.stroke();
+            for (let ri = 0; ri < 35; ri++) {
+                const rx = 25 + ((ri * 97 + t) % (this.arenaWidth - 50));
+                const ry = 60 + ((ri * 61 + t * 1.7) % 540);
+                r.DrawLine(rx, ry, rx - 6, ry + 16, rainColor, 1.5);
             }
         }
-
-        ctx.restore();
 
         // 3. Draw GameObjects (SurvivorAgent)
         super.Draw();
 
         // 4. Draw Vitals Bar + Event Log inside top-left of Arena
-        this._drawSurvivorVitals(ctx);
+        this._drawSurvivorVitals(r);
 
         // 5. Draw Interactive Sandbox Buttons at bottom
-        this._drawSandboxButtons(ctx);
+        this._drawSandboxButtons(r);
 
         // 6. Draw Right-Side Live GOAP Inspector Panel
-        this.survivor.goap.DrawGOAPInspector(this.renderer, 775, 14, {
+        this.survivor.goap.DrawGOAPInspector(r, 775, 14, {
             width: 390,
             title: 'Survivor GOAP Inspector'
         });
 
         // 7. Draw Cost Comparison Cheat-Sheet below the GOAP Inspector
-        this._drawCostComparisonBox(ctx, 775, 505, 390, 160);
+        this._drawCostComparisonBox(r, 775, 505, 390, 160);
     }
 
-    _drawSurvivorVitals(ctx) {
-        ctx.save();
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.86)';
-        ctx.strokeStyle = 'rgba(148, 163, 184, 0.3)';
-        ctx.fillRect(22, 62, 250, 62);
-        ctx.strokeRect(22, 62, 250, 62);
+    _drawSurvivorVitals(r) {
+        r.DrawFillBasicRoundRectangle(22, 62, 250, 62, 5, new Color(0.06, 0.09, 0.16, 0.86));
+        r.DrawStrokeBasicRoundRectangle(22, 62, 250, 62, 5, new Color(0.58, 0.64, 0.72, 0.3), 1);
+
+        const whiteText = Color.FromHex('#f8fafc');
+        const trackBg = Color.FromHex('#334155');
 
         // Fullness bar
-        ctx.font = 'bold 11px monospace';
-        ctx.fillStyle = '#f8fafc';
-        ctx.fillText(`🥩 Fullness: ${Math.round(this.survivor.fullness)}%`, 30, 80);
-        ctx.fillStyle = '#334155';
-        ctx.fillRect(150, 70, 110, 11);
-        ctx.fillStyle = this.survivor.fullness < 45 ? '#ef4444' : '#22c55e';
-        ctx.fillRect(150, 70, 1.1 * this.survivor.fullness, 11);
+        r.DrawFillText(`🥩 Fullness: ${Math.round(this.survivor.fullness)}%`, 30, 80, 'bold 11px monospace', whiteText, 'left', 'alphabetic');
+        r.DrawFillBasicRoundRectangle(150, 70, 110, 11, 3, trackBg);
+        r.DrawFillBasicRoundRectangle(150, 70, 1.1 * this.survivor.fullness, 11, 3, this.survivor.fullness < 45 ? Color.FromHex('#ef4444') : Color.FromHex('#22c55e'));
 
         // Warmth bar
-        ctx.fillStyle = '#f8fafc';
-        ctx.fillText(`🔥 Warmth:   ${Math.round(this.survivor.warmth)}%`, 30, 99);
-        ctx.fillStyle = '#334155';
-        ctx.fillRect(150, 89, 110, 11);
-        ctx.fillStyle = this.survivor.warmth < 45 ? '#38bdf8' : '#f97316';
-        ctx.fillRect(150, 89, 1.1 * this.survivor.warmth, 11);
+        r.DrawFillText(`🔥 Warmth:   ${Math.round(this.survivor.warmth)}%`, 30, 99, 'bold 11px monospace', whiteText, 'left', 'alphabetic');
+        r.DrawFillBasicRoundRectangle(150, 89, 110, 11, 3, trackBg);
+        r.DrawFillBasicRoundRectangle(150, 89, 1.1 * this.survivor.warmth, 11, 3, this.survivor.warmth < 45 ? Color.FromHex('#38bdf8') : Color.FromHex('#f97316'));
 
         // Axe durability & inventory summary
-        ctx.font = '10px monospace';
-        ctx.fillStyle = '#cbd5e1';
         const axeInfo = this.survivor.hasAxe ? `Axe(${this.survivor.axeDurability} uses)` : 'No Axe';
-        ctx.fillText(`Inv: ${axeInfo} | Wood:${this.survivor.hasFirewood ? 'Yes' : 'No'} | Meat:${this.survivor.hasRawMeat ? 'Yes' : 'No'}`, 30, 116);
+        r.DrawFillText(`Inv: ${axeInfo} | Wood:${this.survivor.hasFirewood ? 'Yes' : 'No'} | Meat:${this.survivor.hasRawMeat ? 'Yes' : 'No'}`, 30, 116, '10px monospace', Color.FromHex('#cbd5e1'), 'left', 'alphabetic');
 
         // Recent Event Log at bottom-left of arena
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.82)';
-        ctx.fillRect(22, 558, 430, 56);
-        ctx.font = 'bold 10px monospace';
-        ctx.fillStyle = '#38bdf8';
-        ctx.fillText('RECENT PLANNER & ACTION LOG:', 30, 571);
-        ctx.font = '10px monospace';
-        ctx.fillStyle = '#e2e8f0';
+        r.DrawFillBasicRoundRectangle(22, 558, 430, 56, 5, new Color(0.06, 0.09, 0.16, 0.82));
+        r.DrawFillText('RECENT PLANNER & ACTION LOG:', 30, 571, 'bold 10px monospace', Color.FromHex('#38bdf8'), 'left', 'alphabetic');
+        const logColor = Color.FromHex('#e2e8f0');
         for (let i = 0; i < Math.min(3, this.survivor.eventLog.length); i++) {
-            ctx.fillText(`• ${this.survivor.eventLog[i]}`, 30, 584 + i * 12);
+            r.DrawFillText(`• ${this.survivor.eventLog[i]}`, 30, 584 + i * 12, '10px monospace', logColor, 'left', 'alphabetic');
         }
-        ctx.restore();
     }
 
-    _drawSandboxButtons(ctx) {
-        ctx.save();
+    _drawSandboxButtons(r) {
+        const btnBg = Color.FromHex('#1e293b');
+        const btnBorder = Color.FromHex('#38bdf8');
+        const btnText = Color.FromHex('#f8fafc');
         for (let i = 0; i < this.buttons.length; i++) {
             const b = this.buttons[i];
-            ctx.fillStyle = '#1e293b';
-            ctx.strokeStyle = '#38bdf8';
-            ctx.lineWidth = 1.2;
-            ctx.fillRect(b.x, b.y, b.w, b.h);
-            ctx.strokeRect(b.x, b.y, b.w, b.h);
-
-            ctx.font = 'bold 11px monospace';
-            ctx.fillStyle = '#f8fafc';
-            ctx.textAlign = 'center';
-            ctx.fillText(b.label, b.x + b.w / 2, b.y + 21);
+            r.DrawFillBasicRoundRectangle(b.x, b.y, b.w, b.h, 5, btnBg);
+            r.DrawStrokeBasicRoundRectangle(b.x, b.y, b.w, b.h, 5, btnBorder, 1.2);
+            r.DrawFillText(b.label, b.x + b.w / 2, b.y + 21, 'bold 11px monospace', btnText, 'center', 'alphabetic');
         }
-        ctx.restore();
     }
 
-    _drawCostComparisonBox(ctx, x, y, w, h) {
-        ctx.save();
-        ctx.fillStyle = 'rgba(13, 18, 30, 0.92)';
-        ctx.strokeStyle = 'rgba(250, 204, 21, 0.4)';
-        ctx.lineWidth = 1.2;
-        ctx.fillRect(x, y, w, h);
-        ctx.strokeRect(x, y, w, h);
+    _drawCostComparisonBox(r, x, y, w, h) {
+        r.DrawFillBasicRoundRectangle(x, y, w, h, 6, new Color(0.05, 0.07, 0.12, 0.92));
+        r.DrawStrokeBasicRoundRectangle(x, y, w, h, 6, new Color(0.98, 0.80, 0.08, 0.4), 1.2);
 
-        ctx.font = 'bold 11px monospace';
-        ctx.fillStyle = '#facc15';
-        ctx.fillText('📊 WHY GOAP? COMPETING PATH COSTS FOR [StayFed]', x + 10, y + 18);
+        r.DrawFillText('📊 WHY GOAP? COMPETING PATH COSTS FOR [StayFed]', x + 10, y + 18, 'bold 11px monospace', Color.FromHex('#facc15'), 'left', 'alphabetic');
 
-        ctx.font = '10px monospace';
-        ctx.fillStyle = '#e2e8f0';
         const lines = [
             'Path 1 (Rack Axe): GrabAxe(1)+Chop(2)+Light(1)+Hunt(2)+Cook(1) = 7.0',
             'Path 2 (Has Fire): HuntRawMeat(2) + CookAndEatSteak(1)         = 3.0',
@@ -739,11 +685,11 @@ class GOAPSurvivalGame extends Game {
             '💡 Try pressing [1] & [4] to remove the Rack Axe: watch A* switch',
             '   from Path 1 (cost 7.0) to Path 4 (ForageBerries, cost 9.5 < 10)!'
         ];
+        const pathColor = Color.FromHex('#cbd5e1');
+        const tipColor = Color.FromHex('#38bdf8');
         for (let i = 0; i < lines.length; i++) {
-            ctx.fillStyle = i >= 6 ? '#38bdf8' : '#cbd5e1';
-            ctx.fillText(lines[i], x + 10, y + 36 + i * 15);
+            r.DrawFillText(lines[i], x + 10, y + 36 + i * 15, '10px monospace', i >= 6 ? tipColor : pathColor, 'left', 'alphabetic');
         }
-        ctx.restore();
     }
 }
 

@@ -81,8 +81,11 @@ class TacticalSoldier extends GameObject {
             onEnter: (s) => { s.workTimer = 0; },
             onUpdate: (dt, s) => {
                 const target = scene.target;
-                if (target.inCover) return GOAPStatus.FAILURE; // Target ducked into cover! Replan!
-                if (s.clip <= 0) return GOAPStatus.FAILURE;
+                if (target.inCover)
+                    return GOAPStatus.FAILURE; // Target ducked into cover! Replan!
+
+                if (s.clip <= 0)
+                    return GOAPStatus.FAILURE;
 
                 s.workTimer += dt;
                 s.workProgress = Math.min(1, s.workTimer / 0.55);
@@ -95,9 +98,11 @@ class TacticalSoldier extends GameObject {
                     target.TakeDamage(35);
                     if (target.hp <= 0) {
                         s.workProgress = 0;
+                        
                         return GOAPStatus.SUCCESS;
                     }
                 }
+
                 return GOAPStatus.RUNNING;
             }
         });
@@ -121,8 +126,10 @@ class TacticalSoldier extends GameObject {
                     scene.SpawnGrenade(s.position.x, s.position.y, target.position.x, target.position.y);
                     target.FlushFromCover();
                     target.TakeDamage(20);
+
                     return GOAPStatus.SUCCESS;
                 }
+
                 return GOAPStatus.RUNNING;
             }
         });
@@ -140,8 +147,10 @@ class TacticalSoldier extends GameObject {
                 s.statusBanner = "Flanking wide to negate target cover...";
                 if (s.MoveTowards(s.flankSpot, dt)) {
                     scene.target.inCover = false; // Flanking angle exposes target
+
                     return GOAPStatus.SUCCESS;
                 }
+
                 return GOAPStatus.RUNNING;
             }
         });
@@ -158,8 +167,10 @@ class TacticalSoldier extends GameObject {
                 s.statusBanner = "Moving to tactical barricade cover...";
                 if (s.MoveTowards(s.targetCover, dt)) {
                     s.inCover = true;
+
                     return GOAPStatus.SUCCESS;
                 }
+
                 return GOAPStatus.RUNNING;
             }
         });
@@ -182,8 +193,10 @@ class TacticalSoldier extends GameObject {
                     s.reserveAmmo -= loaded;
                     s.workProgress = 0;
                     scene.SpawnFloatingText("RELOADED!", s.position.x, s.position.y - 25, '#66ccff');
+                    
                     return GOAPStatus.SUCCESS;
                 }
+
                 return GOAPStatus.RUNNING;
             }
         });
@@ -196,7 +209,9 @@ class TacticalSoldier extends GameObject {
             proceduralPrecondition: () => scene.ammoCratesAvailable,
             onEnter: (s) => { s.workTimer = 0; },
             onUpdate: (dt, s) => {
-                if (!scene.ammoCratesAvailable) return GOAPStatus.FAILURE;
+                if (!scene.ammoCratesAvailable)
+                    return GOAPStatus.FAILURE;
+
                 s.inCover = false;
                 s.statusBanner = "Sprinting to Ammo Crate to resupply...";
                 if (s.MoveTowards(scene.landmarks.ammoCrate, dt)) {
@@ -206,9 +221,11 @@ class TacticalSoldier extends GameObject {
                         s.reserveAmmo = 12;
                         s.workProgress = 0;
                         scene.SpawnFloatingText("+12 AMMO", s.position.x, s.position.y - 25, '#ffcc44');
+                        
                         return GOAPStatus.SUCCESS;
                     }
                 }
+
                 return GOAPStatus.RUNNING;
             }
         });
@@ -225,8 +242,10 @@ class TacticalSoldier extends GameObject {
                 if (s.MoveTowards(target.position, dt, 26)) {
                     target.TakeDamage(100);
                     scene.SpawnFloatingText("MELEE TAKEDOWN!", target.position.x, target.position.y - 25, '#ff5555');
+                    
                     return GOAPStatus.SUCCESS;
                 }
+
                 return GOAPStatus.RUNNING;
             }
         });
@@ -247,9 +266,11 @@ class TacticalSoldier extends GameObject {
                         s.hp = s.maxHp;
                         s.workProgress = 0;
                         scene.SpawnFloatingText("+100 HP HEALED", s.position.x, s.position.y - 25, '#55ff88');
+                        
                         return GOAPStatus.SUCCESS;
                     }
                 }
+
                 return GOAPStatus.RUNNING;
             }
         });
@@ -268,8 +289,10 @@ class TacticalSoldier extends GameObject {
                     scene.target.cloaked = false;
                     s.workProgress = 0;
                     scene.SpawnFloatingText("TARGET SPOTTED!", s.position.x, s.position.y - 25, '#66e0ff');
+                    
                     return GOAPStatus.SUCCESS;
                 }
+
                 return GOAPStatus.RUNNING;
             }
         });
@@ -288,6 +311,7 @@ class TacticalSoldier extends GameObject {
                 if (s.MoveTowards(wp, dt)) {
                     s.patrolIdx = ((s.patrolIdx || 0) + 1) % scene.patrolWaypoints.length;
                 }
+
                 return GOAPStatus.RUNNING;
             }
         });
@@ -312,7 +336,8 @@ class TacticalSoldier extends GameObject {
         const dx = targetPos.x - this.position.x;
         const dy = targetPos.y - this.position.y;
         const dist = Math.hypot(dx, dy);
-        if (dist <= stopDist) return true;
+        if (dist <= stopDist)
+            return true;
 
         const step = Math.min(dist, this.speed * dt);
         this.position.x += (dx / dist) * step;
@@ -326,49 +351,53 @@ class TacticalSoldier extends GameObject {
     }
 
     Draw(renderer) {
-        const ctx = renderer.ctx;
-        ctx.save();
+        if (!TacticalSoldier._colors) {
+            TacticalSoldier._colors = {
+                shadow: new Color(0, 0, 0, 0.35),
+                visionFill: new Color(96, 165, 250, 0.08),
+                visionStroke: new Color(96, 165, 250, 0.22),
+                coverHalo: new Color(80, 200, 255, 0.65),
+                bodyNormal: Color.FromHex('#3b82f6'),
+                bodyLowHp: Color.FromHex('#ff6655'),
+                visor: Color.FromHex('#93c5fd'),
+                hpBg: new Color(0, 0, 0, 0.7),
+                hpOk: Color.FromHex('#44dd88'),
+                hpLow: Color.FromHex('#ff5555'),
+                progress: Color.FromHex('#ffcc33')
+            };
+        }
+        const c = TacticalSoldier._colors;
+
+        // Ground shadow ellipse
+        renderer.DrawFillEllipse(this.position.x, this.position.y + 11, 14, 5, c.shadow);
+
+        // Tactical FOV vision cone toward target
+        const target = this.scene.target;
+        const angle = Math.atan2(target.position.y - this.position.y, target.position.x - this.position.x);
+        renderer.DrawFillArc(this.position.x, this.position.y, 85, angle - 0.38, angle + 0.38, c.visionFill);
+        renderer.DrawStrokeArc(this.position.x, this.position.y, 85, angle - 0.38, angle + 0.38, c.visionStroke, 1);
 
         // Cover shield halo
         if (this.inCover) {
-            ctx.strokeStyle = 'rgba(80, 200, 255, 0.65)';
-            ctx.lineWidth = 2.5;
-            ctx.beginPath();
-            ctx.arc(this.position.x, this.position.y, 20, 0, Math.PI * 2);
-            ctx.stroke();
+            renderer.DrawStrokeCircle(this.position.x, this.position.y, 20, c.coverHalo, 2.5);
         }
 
         // Soldier body
-        ctx.fillStyle = this.hp <= 40 ? '#ff6655' : '#3b82f6';
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(this.position.x, this.position.y, 13, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
+        renderer.DrawFillCircle(this.position.x, this.position.y, 13, this.hp <= 40 ? c.bodyLowHp : c.bodyNormal);
+        renderer.DrawStrokeCircle(this.position.x, this.position.y, 13, Color.white, 2);
 
         // Visor facing target
-        const target = this.scene.target;
-        const angle = Math.atan2(target.position.y - this.position.y, target.position.x - this.position.x);
-        ctx.fillStyle = '#93c5fd';
-        ctx.beginPath();
-        ctx.arc(this.position.x + Math.cos(angle) * 6, this.position.y + Math.sin(angle) * 6, 4.5, 0, Math.PI * 2);
-        ctx.fill();
+        renderer.DrawFillCircle(this.position.x + Math.cos(angle) * 6, this.position.y + Math.sin(angle) * 6, 4.5, c.visor);
 
         // HP bar above soldier
         const bw = 34;
-        ctx.fillStyle = 'rgba(0,0,0,0.7)';
-        ctx.fillRect(this.position.x - bw / 2, this.position.y - 26, bw, 5);
-        ctx.fillStyle = this.hp <= 40 ? '#ff5555' : '#44dd88';
-        ctx.fillRect(this.position.x - bw / 2, this.position.y - 26, bw * (this.hp / this.maxHp), 5);
+        renderer.DrawFillBasicRectangle(this.position.x - bw / 2, this.position.y - 26, bw, 5, c.hpBg);
+        renderer.DrawFillBasicRectangle(this.position.x - bw / 2, this.position.y - 26, bw * (this.hp / this.maxHp), 5, this.hp <= 40 ? c.hpLow : c.hpOk);
 
         // Progress bar if performing timed action
         if (this.workProgress > 0 && this.workProgress < 1) {
-            ctx.fillStyle = '#ffcc33';
-            ctx.fillRect(this.position.x - bw / 2, this.position.y - 33, bw * this.workProgress, 4);
+            renderer.DrawFillBasicRectangle(this.position.x - bw / 2, this.position.y - 33, bw * this.workProgress, 4, c.progress);
         }
-
-        ctx.restore();
 
         // GOAP Floating Label
         this.goap.DrawDebug(renderer, this.position.x, this.position.y - 36);
@@ -376,6 +405,19 @@ class TacticalSoldier extends GameObject {
 }
 
 class TacticalTarget {
+    static _colors = {
+        shadow: new Color(0, 0, 0, 0.35),
+        deadCross: Color.FromHex('#774444'),
+        deadText: Color.FromHex('#aa6666'),
+        coverHalo: new Color(1, 0.745, 0.235, 0.8),
+        bodyNormal: new Color(0.937, 0.27, 0.27, 1.0),
+        bodyCloaked: new Color(0.937, 0.27, 0.27, 0.35),
+        strokeCloaked: new Color(1, 1, 1, 0.35),
+        hpBg: new Color(0, 0, 0, 0.75),
+        hpFill: Color.FromHex('#ff6666'),
+        label: Color.FromHex('#fca5a5')
+    };
+
     constructor(x, y) {
         this.position = new Vector2(x, y);
         this.hp = 100;
@@ -393,70 +435,66 @@ class TacticalTarget {
     }
 
     Draw(renderer) {
-        const ctx = renderer.ctx;
-        ctx.save();
+        const c = TacticalTarget._colors;
 
         if (this.hp <= 0) {
-            ctx.strokeStyle = '#774444';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(this.position.x - 10, this.position.y - 10);
-            ctx.lineTo(this.position.x + 10, this.position.y + 10);
-            ctx.moveTo(this.position.x + 10, this.position.y - 10);
-            ctx.lineTo(this.position.x - 10, this.position.y + 10);
-            ctx.stroke();
-            ctx.fillStyle = '#aa6666';
-            ctx.font = 'bold 10px monospace';
-            ctx.textAlign = 'center';
-            ctx.fillText('TARGET DOWN ([R] Respawn)', this.position.x, this.position.y + 24);
-            ctx.restore();
+            renderer.DrawLine(this.position.x - 10, this.position.y - 10, this.position.x + 10, this.position.y + 10, c.deadCross, 3);
+            renderer.DrawLine(this.position.x + 10, this.position.y - 10, this.position.x - 10, this.position.y + 10, c.deadCross, 3);
+            renderer.DrawFillText('TARGET DOWN ([R] Respawn)', this.position.x, this.position.y + 24, 'bold 10px monospace', c.deadText, 'center', 'alphabetic');
             return;
         }
 
+        renderer.DrawFillEllipse(this.position.x, this.position.y + 11, 14, 5, c.shadow);
+
         if (this.inCover) {
-            ctx.strokeStyle = 'rgba(255, 190, 60, 0.8)';
-            ctx.setLineDash([4, 3]);
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.arc(this.position.x, this.position.y, 21, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.setLineDash([]);
+            renderer.DrawStrokeCircle(this.position.x, this.position.y, 21, c.coverHalo, 2);
         }
 
-        ctx.globalAlpha = this.cloaked ? 0.35 : 1.0;
-        ctx.fillStyle = '#ef4444';
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(this.position.x, this.position.y, 13, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
+        const bodyCol = this.cloaked ? c.bodyCloaked : c.bodyNormal;
+        const strokeCol = this.cloaked ? c.strokeCloaked : Color.white;
+        renderer.DrawFillCircle(this.position.x, this.position.y, 13, bodyCol);
+        renderer.DrawStrokeCircle(this.position.x, this.position.y, 13, strokeCol, 2);
 
         // HP bar
         const bw = 34;
-        ctx.fillStyle = 'rgba(0,0,0,0.75)';
-        ctx.fillRect(this.position.x - bw / 2, this.position.y - 25, bw, 5);
-        ctx.fillStyle = '#ff6666';
-        ctx.fillRect(this.position.x - bw / 2, this.position.y - 25, bw * (this.hp / this.maxHp), 5);
+        renderer.DrawFillBasicRectangle(this.position.x - bw / 2, this.position.y - 25, bw, 5, c.hpBg);
+        renderer.DrawFillBasicRectangle(this.position.x - bw / 2, this.position.y - 25, bw * (this.hp / this.maxHp), 5, c.hpFill);
 
-        ctx.fillStyle = '#fca5a5';
-        ctx.font = 'bold 10px monospace';
-        ctx.textAlign = 'center';
         const tag = this.inCover ? 'TARGET [IN COVER]' : (this.cloaked ? 'TARGET [CLOAKED]' : 'TARGET [EXPOSED]');
-        ctx.fillText(tag, this.position.x, this.position.y + 26);
-
-        ctx.restore();
+        renderer.DrawFillText(tag, this.position.x, this.position.y + 26, 'bold 10px monospace', c.label, 'center', 'alphabetic');
     }
 }
 
 class GOAPCombatScene extends Game {
+    static _colors = {
+        bg: Color.FromHex('#0b101b'),
+        headerBg: Color.FromHex('#111927'),
+        headerTitle: Color.FromHex('#60a5fa'),
+        headerSub: Color.FromHex('#94a3b8'),
+        arenaBg: Color.FromHex('#141e30'),
+        arenaBorder: Color.FromHex('#2d3f5e'),
+        barricadeFill: Color.FromHex('#334155'),
+        barricadeStroke: Color.FromHex('#64748b'),
+        crateReady: Color.FromHex('#f59e0b'),
+        crateEmpty: Color.FromHex('#475569'),
+        medkit: Color.FromHex('#10b981'),
+        landmarkText: Color.FromHex('#e2e8f0'),
+        grenadeBlast: new Color(1, 0.55, 0.16, 0.55),
+        hudBg: new Color(0.04, 0.06, 0.1, 0.85),
+        btnBg: Color.FromHex('#1e293b'),
+        btnStroke: Color.FromHex('#475569'),
+        btnText: Color.FromHex('#f8fafc')
+    };
+
     constructor(renderer) {
         super(renderer);
+
         this.Configure({
             screenWidth: 980,
             screenHeight: 560,
             fillWindow: false
         });
+
         this.landmarks = {
             ammoCrate: { x: 100, y: 425, label: 'Ammo Crate', color: '#f59e0b' },
             medkit:    { x: 425, y: 425, label: 'Medkit Station', color: '#10b981' }
@@ -549,7 +587,9 @@ class GOAPCombatScene extends Game {
     }
 
     ToggleTargetCover() {
-        if (this.target.hp <= 0) this.target.hp = 100;
+        if (this.target.hp <= 0)
+            this.target.hp = 100;
+
         this.target.inCover = !this.target.inCover;
         this.SpawnFloatingText(this.target.inCover ? "TARGET IN COVER" : "TARGET EXPOSED", this.target.position.x, this.target.position.y - 25, '#ffbb33');
         this.soldier.goap.Plan();
@@ -582,7 +622,8 @@ class GOAPCombatScene extends Game {
     }
 
     SpawnBullet(x1, y1, x2, y2, color) {
-        this.projectiles.push({ type: 'bullet', x1, y1, x2, y2, color, timer: 0.18 });
+        const col = typeof color === 'string' ? Color.FromHex(color) : color;
+        this.projectiles.push({ type: 'bullet', x1, y1, x2, y2, color: col, timer: 0.18 });
     }
 
     SpawnGrenade(x1, y1, x2, y2) {
@@ -590,7 +631,8 @@ class GOAPCombatScene extends Game {
     }
 
     SpawnFloatingText(text, x, y, color = '#ffffff') {
-        this.floatingTexts.push({ text, x, y, color, timer: 1.2 });
+        const col = typeof color === 'string' ? Color.FromHex(color) : color;
+        this.floatingTexts.push({ text, x, y, color: col, timer: 1.2 });
     }
 
     Update(dt) {
@@ -617,120 +659,83 @@ class GOAPCombatScene extends Game {
         // Update visual effects
         for (let i = this.projectiles.length - 1; i >= 0; i--) {
             this.projectiles[i].timer -= dt;
-            if (this.projectiles[i].timer <= 0) this.projectiles.splice(i, 1);
+            if (this.projectiles[i].timer <= 0)
+                this.projectiles.splice(i, 1);
         }
         for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
             this.floatingTexts[i].y -= 22 * dt;
             this.floatingTexts[i].timer -= dt;
-            if (this.floatingTexts[i].timer <= 0) this.floatingTexts.splice(i, 1);
+            if (this.floatingTexts[i].timer <= 0)
+                this.floatingTexts.splice(i, 1);
         }
     }
 
     Draw() {
-        const ctx = this.renderer.ctx;
-        ctx.save();
+        const r = this.renderer;
+        const c = GOAPCombatScene._colors;
 
         // Background
-        ctx.fillStyle = '#0b101b';
-        ctx.fillRect(0, 0, this.screenWidth, this.screenHeight);
+        r.DrawFillBasicRectangle(0, 0, this.screenWidth, this.screenHeight, c.bg);
 
         // Header bar
-        ctx.fillStyle = '#111927';
-        ctx.fillRect(0, 0, this.screenWidth, 46);
-        ctx.fillStyle = '#60a5fa';
-        ctx.font = 'bold 15px monospace';
-        ctx.fillText('GOAP DEMO 2: F.E.A.R. Tactical Combat Squad (Forward State-Space A*)', 20, 20);
-        ctx.fillStyle = '#94a3b8';
-        ctx.font = '11px monospace';
-        ctx.fillText(this.soldier.statusBanner, 20, 38);
+        r.DrawFillBasicRectangle(0, 0, this.screenWidth, 46, c.headerBg);
+        r.DrawFillText('GOAP DEMO 2: F.E.A.R. Tactical Combat Squad (Forward State-Space A*)', 20, 20, 'bold 15px monospace', c.headerTitle, 'left', 'alphabetic');
+        r.DrawFillText(this.soldier.statusBanner, 20, 38, '11px monospace', c.headerSub, 'left', 'alphabetic');
 
         // Tactical Arena viewport
-        ctx.fillStyle = '#141e30';
-        ctx.strokeStyle = '#2d3f5e';
-        ctx.lineWidth = 2;
-        ctx.fillRect(20, 55, 495, 440);
-        ctx.strokeRect(20, 55, 495, 440);
+        r.DrawFillBasicRoundRectangle(20, 55, 495, 440, 6, c.arenaBg);
+        r.DrawStrokeBasicRoundRectangle(20, 55, 495, 440, 6, c.arenaBorder, 2);
 
         // Draw Barricades
         for (const b of this.barricades) {
-            ctx.fillStyle = '#334155';
-            ctx.strokeStyle = '#64748b';
-            ctx.fillRect(b.x, b.y, b.w, b.h);
-            ctx.strokeRect(b.x, b.y, b.w, b.h);
+            r.DrawFillBasicRoundRectangle(b.x, b.y, b.w, b.h, 4, c.barricadeFill);
+            r.DrawStrokeBasicRoundRectangle(b.x, b.y, b.w, b.h, 4, c.barricadeStroke, 1);
         }
 
         // Draw Landmarks (Ammo Crate & Medkit)
         const crate = this.landmarks.ammoCrate;
-        ctx.fillStyle = this.ammoCratesAvailable ? '#f59e0b' : '#475569';
-        ctx.fillRect(crate.x - 14, crate.y - 12, 28, 24);
-        ctx.fillStyle = '#e2e8f0';
-        ctx.font = '10px monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText(this.ammoCratesAvailable ? 'Ammo Crate' : 'Crate Empty', crate.x, crate.y + 24);
+        r.DrawFillBasicRoundRectangle(crate.x - 14, crate.y - 12, 28, 24, 4, this.ammoCratesAvailable ? c.crateReady : c.crateEmpty);
+        r.DrawFillText(this.ammoCratesAvailable ? 'Ammo Crate' : 'Crate Empty', crate.x, crate.y + 24, '10px monospace', c.landmarkText, 'center', 'alphabetic');
 
         const med = this.landmarks.medkit;
-        ctx.fillStyle = '#10b981';
-        ctx.fillRect(med.x - 14, med.y - 12, 28, 24);
-        ctx.fillStyle = '#e2e8f0';
-        ctx.fillText('Medkit', med.x, med.y + 24);
+        r.DrawFillBasicRoundRectangle(med.x - 14, med.y - 12, 28, 24, 4, c.medkit);
+        r.DrawFillText('Medkit', med.x, med.y + 24, '10px monospace', c.landmarkText, 'center', 'alphabetic');
 
         // Draw Target & Soldier
-        this.target.Draw(this.renderer);
+        this.target.Draw(r);
         super.Draw();
 
         // Draw Projectiles
         for (const p of this.projectiles) {
             if (p.type === 'bullet') {
-                ctx.strokeStyle = p.color;
-                ctx.lineWidth = 2.5;
-                ctx.beginPath();
-                ctx.moveTo(p.x1, p.y1);
-                ctx.lineTo(p.x2, p.y2);
-                ctx.stroke();
-            } else if (p.type === 'grenade') {
-                ctx.fillStyle = 'rgba(255, 140, 40, 0.55)';
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, 36 * (1 - p.timer), 0, Math.PI * 2);
-                ctx.fill();
+                r.DrawLine(p.x1, p.y1, p.x2, p.y2, p.color, 2.5);
+            }
+            else if (p.type === 'grenade') {
+                r.DrawFillCircle(p.x, p.y, 36 * (1 - p.timer), c.grenadeBlast);
             }
         }
 
         // Draw Floating Texts
         for (const ft of this.floatingTexts) {
-            ctx.fillStyle = ft.color;
-            ctx.font = 'bold 11px monospace';
-            ctx.textAlign = 'center';
-            ctx.fillText(ft.text, ft.x, ft.y);
+            r.DrawFillText(ft.text, ft.x, ft.y, 'bold 11px monospace', ft.color, 'center', 'alphabetic');
         }
 
         // Soldier Equipment Bar inside Arena
-        ctx.textAlign = 'left';
-        ctx.fillStyle = 'rgba(10, 15, 28, 0.85)';
-        ctx.fillRect(28, 62, 478, 28);
-        ctx.fillStyle = '#e2e8f0';
-        ctx.font = '11px monospace';
-        ctx.fillText(
+        r.DrawFillBasicRoundRectangle(28, 62, 478, 28, 4, c.hudBg);
+        r.DrawFillText(
             `SOLDIER HP: ${this.soldier.hp}/100 | CLIP: ${this.soldier.clip}/${this.soldier.maxClip} | RESERVE: ${this.soldier.reserveAmmo} | GRENADES: ${this.soldier.grenades} | CRATE: ${this.ammoCratesAvailable ? 'READY' : 'EMPTY'}`,
-            36, 80
+            36, 80, '11px monospace', c.landmarkText, 'left', 'alphabetic'
         );
 
         // Draw Interactive Sandbox Buttons
         for (const btn of this.buttons) {
-            ctx.fillStyle = '#1e293b';
-            ctx.strokeStyle = '#475569';
-            ctx.lineWidth = 1.5;
-            ctx.fillRect(btn.x, btn.y, btn.w, btn.h);
-            ctx.strokeRect(btn.x, btn.y, btn.w, btn.h);
-            ctx.fillStyle = '#f8fafc';
-            ctx.font = '11px monospace';
-            ctx.textAlign = 'center';
-            ctx.fillText(btn.label, btn.x + btn.w / 2, btn.y + 21);
+            r.DrawFillBasicRoundRectangle(btn.x, btn.y, btn.w, btn.h, 5, c.btnBg);
+            r.DrawStrokeBasicRoundRectangle(btn.x, btn.y, btn.w, btn.h, 5, c.btnStroke, 1.5);
+            r.DrawFillText(btn.label, btn.x + btn.w / 2, btn.y + 21, '11px monospace', c.btnText, 'center', 'alphabetic');
         }
 
-        ctx.restore();
-
         // Draw GOAP Inspector Panel on the Right
-        DrawGOAPInspector(this.renderer, this.soldier.goap, 530, 55, {
+        DrawGOAPInspector(r, this.soldier.goap, 530, 55, {
             width: 430,
             title: 'GOAP TACTICAL INSPECTOR (F.E.A.R. AI)'
         });

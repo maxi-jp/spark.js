@@ -329,50 +329,77 @@ class DungeonRogue extends GameObject {
     }
 
     Draw(renderer) {
-        const ctx = renderer.ctx;
-        ctx.save();
+        if (!DungeonRogue._colors) {
+            DungeonRogue._colors = {
+                shadow: new Color(0, 0, 0, 0.35),
+                bodyIdol: Color.FromHex('#facc15'),
+                bodyNormal: Color.FromHex('#a855f7'),
+                progBg: new Color(0, 0, 0, 0.75),
+                progFill: Color.FromHex('#fde047')
+            };
+        }
+        const c = DungeonRogue._colors;
+
+        // Ground shadow ellipse
+        renderer.DrawFillEllipse(this.position.x, this.position.y + 10, 12, 5, c.shadow);
 
         // Rogue cloak & body
-        ctx.fillStyle = this.hasIdol ? '#facc15' : '#a855f7';
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(this.position.x, this.position.y, 12, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
+        renderer.DrawFillCircle(this.position.x, this.position.y, 12, this.hasIdol ? c.bodyIdol : c.bodyNormal);
+        renderer.DrawStrokeCircle(this.position.x, this.position.y, 12, Color.white, 2);
 
         // Progress bar
         if (this.workProgress > 0 && this.workProgress < 1) {
             const bw = 32;
-            ctx.fillStyle = 'rgba(0,0,0,0.75)';
-            ctx.fillRect(this.position.x - bw / 2, this.position.y - 25, bw, 4);
-            ctx.fillStyle = '#fde047';
-            ctx.fillRect(this.position.x - bw / 2, this.position.y - 25, bw * this.workProgress, 4);
+            renderer.DrawFillBasicRectangle(this.position.x - bw / 2, this.position.y - 25, bw, 4, c.progBg);
+            renderer.DrawFillBasicRectangle(this.position.x - bw / 2, this.position.y - 25, bw * this.workProgress, 4, c.progFill);
         }
 
-        ctx.restore();
         this.goap.DrawDebug(renderer, this.position.x, this.position.y - 30);
     }
 }
 
 class GOAPDungeonScene extends Game {
+    static _colors = {
+        bg: Color.FromHex('#090d16'),
+        headerBg: Color.FromHex('#111827'),
+        headerTitle: Color.FromHex('#facc15'),
+        headerSub: Color.FromHex('#cbd5e1'),
+        floorBg: Color.FromHex('#131c2e'),
+        floorBorder: Color.FromHex('#334155'),
+        corridor: Color.FromHex('#1e293b'),
+        roomBg: Color.FromHex('#1e293b'),
+        yellow: Color.FromHex('#fde047'),
+        muted: Color.FromHex('#64748b'),
+        purple: Color.FromHex('#d8b4fe'),
+        green: Color.FromHex('#4ade80'),
+        red: Color.FromHex('#f87171'),
+        orange: Color.FromHex('#fdba74'),
+        blue: Color.FromHex('#38bdf8'),
+        planLine: new Color(0.98, 0.8, 0.08, 0.35),
+        hudBg: new Color(0.035, 0.051, 0.086, 0.88),
+        hudText: Color.FromHex('#f8fafc'),
+        btnBg: Color.FromHex('#1e293b'),
+        btnStroke: Color.FromHex('#475569')
+    }
+
     constructor(renderer) {
         super(renderer);
         this.Configure({
             screenWidth: 980,
-            screenHeight: 560,
+            screenHeight: 600,
             fillWindow: false
         });
+
         this.rooms = {
-            exit:       { x: 95,  y: 125, label: '1. Entry / Exit', color: '#34d399' },
-            guardRoom:  { x: 255, y: 125, label: '2. Guard Room (Rusty Key)', color: '#fbbf24' },
-            teleporter: { x: 420, y: 125, label: 'Arcane Teleporter', color: '#c084fc' },
-            armoryDoor: { x: 115, y: 270, label: '3. Armory Door', color: '#60a5fa' },
-            armory:     { x: 255, y: 270, label: '4. Armory (Bomb)', color: '#f97316' },
-            console:    { x: 420, y: 270, label: '5. Security Console', color: '#4ade80' },
-            boulder:    { x: 115, y: 415, label: '6. Crypt Boulder', color: '#ef4444' },
-            crypt:      { x: 255, y: 415, label: '7. Crypt (Vault Key)', color: '#38bdf8' },
-            vault:      { x: 420, y: 415, label: '8. Golden Idol Vault', color: '#fde047' }
+            exit:       { x: 95,  y: 125, label: '1. Entry / Exit', color: Color.FromHex('#34d399') },
+            guardRoom:  { x: 255, y: 125, label: '2. Guard Room (Rusty Key)', color: Color.FromHex('#fbbf24') },
+            teleporter: { x: 420, y: 125, label: 'Arcane Teleporter', color: Color.FromHex('#c084fc') },
+            armoryDoor: { x: 115, y: 270, label: '3. Armory Door', color: Color.FromHex('#60a5fa') },
+            armory:     { x: 255, y: 270, label: '4. Armory (Bomb)', color: Color.FromHex('#f97316') },
+            console:    { x: 420, y: 270, label: '5. Security Console', color: Color.FromHex('#4ade80') },
+            boulder:    { x: 115, y: 415, label: '6. Crypt Boulder', color: Color.FromHex('#ef4444') },
+            crypt:      { x: 255, y: 415, label: '7. Crypt (Vault Key)', color: Color.FromHex('#38bdf8') },
+            vault:      { x: 420, y: 415, label: '8. Golden Idol Vault', color: Color.FromHex('#fde047') }
         };
         this.dungeon = {
             rustyKeyAvailable: true,
@@ -393,14 +420,14 @@ class GOAPDungeonScene extends Game {
     }
 
     SetupButtons() {
-        const y = 510;
+        const y = this.screenHeight - 34 - 12;
         const h = 34;
         this.buttons = [
-            { label: '[1] Toggle Rusty Key (Lockpick Fallback)', x: 20,  y, w: 220, h, action: () => this.ToggleRustyKey() },
-            { label: '[2] Grant Bomb Directly',                  x: 248, y, w: 150, h, action: () => this.GrantBomb() },
-            { label: '[3] Re-Arm Laser Grid',                    x: 406, y, w: 145, h, action: () => this.ToggleLaserTrap() },
-            { label: '[4] Toggle Teleporter Shortcut',           x: 559, y, w: 185, h, action: () => this.ToggleTeleporter() },
-            { label: '[R] Reset Dungeon Heist',                  x: 752, y, w: 208, h, action: () => this.ResetHeist() }
+            { label: '[1] Toggle Rusty Key (Lockpick Fallback)', x: 20,  y, w: 260, h, action: () => this.ToggleRustyKey() },
+            { label: '[2] Grant Bomb Directly',                  x: 288, y, w: 150, h, action: () => this.GrantBomb() },
+            { label: '[3] Re-Arm Laser Grid',                    x: 446, y, w: 145, h, action: () => this.ToggleLaserTrap() },
+            { label: '[4] Toggle Teleporter Shortcut',           x: 599, y, w: 195, h, action: () => this.ToggleTeleporter() },
+            { label: '[R] Reset Dungeon Heist',                  x: 802, y, w: 158, h, action: () => this.ResetHeist() }
         ];
     }
 
@@ -420,7 +447,9 @@ class GOAPDungeonScene extends Game {
 
     ToggleRustyKey() {
         this.dungeon.rustyKeyAvailable = !this.dungeon.rustyKeyAvailable;
-        if (!this.dungeon.rustyKeyAvailable) this.rogue.hasRustyKey = false;
+        if (!this.dungeon.rustyKeyAvailable)
+            this.rogue.hasRustyKey = false;
+
         this.SpawnFloatingText(
             this.dungeon.rustyKeyAvailable ? "RUSTY KEY PRESENT" : "KEY REMOVED -> LOCKPICK PLAN!",
             this.rooms.guardRoom.x, this.rooms.guardRoom.y - 20, '#fbbf24'
@@ -453,7 +482,8 @@ class GOAPDungeonScene extends Game {
     }
 
     SpawnFloatingText(text, x, y, color = '#ffffff') {
-        this.floatingTexts.push({ text, x, y, color, timer: 1.35 });
+        const col = typeof color === 'string' ? Color.FromHex(color) : color;
+        this.floatingTexts.push({ text, x, y, color: col, timer: 1.35 });
     }
 
     Update(dt) {
@@ -483,90 +513,87 @@ class GOAPDungeonScene extends Game {
     }
 
     Draw() {
-        const ctx = this.renderer.ctx;
-        ctx.save();
+        const r = this.renderer;
+        const c = GOAPDungeonScene._colors;
 
         // Background
-        ctx.fillStyle = '#090d16';
-        ctx.fillRect(0, 0, this.screenWidth, this.screenHeight);
+        r.DrawFillBasicRectangle(0, 0, this.screenWidth, this.screenHeight, c.bg);
 
         // Header
-        ctx.fillStyle = '#111827';
-        ctx.fillRect(0, 0, this.screenWidth, 46);
-        ctx.fillStyle = '#facc15';
-        ctx.font = 'bold 15px monospace';
-        ctx.fillText('GOAP DEMO 3: Multi-Room Dungeon Heist (8-Step Deep A* Dependency Chain)', 20, 20);
-        ctx.fillStyle = '#cbd5e1';
-        ctx.font = '11px monospace';
-        ctx.fillText(this.rogue.statusBanner, 20, 38);
+        r.DrawFillBasicRectangle(0, 0, this.screenWidth, 46, c.headerBg);
+        r.DrawFillText('GOAP DEMO 3: Multi-Room Dungeon Heist (8-Step Deep A* Dependency Chain)', 20, 20, 'bold 15px monospace', c.headerTitle, 'left', 'alphabetic');
+        r.DrawFillText(this.rogue.statusBanner, 20, 38, '11px monospace', c.headerSub, 'left', 'alphabetic');
 
         // Dungeon Floor
-        ctx.fillStyle = '#131c2e';
-        ctx.strokeStyle = '#334155';
-        ctx.lineWidth = 2;
-        ctx.fillRect(20, 55, 495, 440);
-        ctx.strokeRect(20, 55, 495, 440);
+        r.DrawFillBasicRoundRectangle(20, 55, 495, 440, 6, c.floorBg);
+        r.DrawStrokeBasicRoundRectangle(20, 55, 495, 440, 6, c.floorBorder, 2);
 
         // Draw corridors connecting rooms
-        ctx.strokeStyle = '#1e293b';
-        ctx.lineWidth = 18;
-        ctx.beginPath();
-        ctx.moveTo(95, 125); ctx.lineTo(420, 125);
-        ctx.moveTo(255, 125); ctx.lineTo(255, 415);
-        ctx.moveTo(115, 270); ctx.lineTo(420, 270);
-        ctx.moveTo(115, 415); ctx.lineTo(420, 415);
-        ctx.stroke();
+        r.DrawLine(95, 125, 420, 125, c.corridor, 18);
+        r.DrawLine(255, 125, 255, 415, c.corridor, 18);
+        r.DrawLine(115, 270, 420, 270, c.corridor, 18);
+        r.DrawLine(115, 415, 420, 415, c.corridor, 18);
 
         // Draw Each Room Node
         for (const key of Object.keys(this.rooms)) {
             const rm = this.rooms[key];
-            ctx.fillStyle = '#1e293b';
-            ctx.strokeStyle = rm.color;
-            ctx.lineWidth = 2;
-            ctx.fillRect(rm.x - 58, rm.y - 34, 116, 68);
-            ctx.strokeRect(rm.x - 58, rm.y - 34, 116, 68);
-
-            ctx.fillStyle = rm.color;
-            ctx.font = 'bold 10px monospace';
-            ctx.textAlign = 'center';
-            ctx.fillText(rm.label, rm.x, rm.y - 16);
+            r.DrawFillBasicRoundRectangle(rm.x - 58, rm.y - 34, 116, 68, 8, c.roomBg);
+            r.DrawStrokeBasicRoundRectangle(rm.x - 58, rm.y - 34, 116, 68, 8, rm.color, 2);
+            r.DrawFillText(rm.label, rm.x, rm.y - 16, 'bold 10px monospace', rm.color, 'center', 'alphabetic');
         }
 
         // Room status badges
-        ctx.font = '10px monospace';
-        ctx.textAlign = 'center';
-        ctx.fillStyle = this.dungeon.rustyKeyAvailable && !this.rogue.hasRustyKey ? '#fde047' : '#64748b';
-        ctx.fillText(this.dungeon.rustyKeyAvailable ? (this.rogue.hasRustyKey ? 'TAKEN' : 'KEY READY') : 'NO KEY', this.rooms.guardRoom.x, this.rooms.guardRoom.y + 14);
+        r.DrawFillText(
+            this.dungeon.rustyKeyAvailable ? (this.rogue.hasRustyKey ? 'TAKEN' : 'KEY READY') : 'NO KEY',
+            this.rooms.guardRoom.x, this.rooms.guardRoom.y + 14, '10px monospace',
+            this.dungeon.rustyKeyAvailable && !this.rogue.hasRustyKey ? c.yellow : c.muted, 'center', 'alphabetic'
+        );
 
-        ctx.fillStyle = this.dungeon.teleporterActive ? '#d8b4fe' : '#64748b';
-        ctx.fillText(this.dungeon.teleporterActive ? 'ONLINE (COST 1)' : 'OFFLINE', this.rooms.teleporter.x, this.rooms.teleporter.y + 14);
+        r.DrawFillText(
+            this.dungeon.teleporterActive ? 'ONLINE (COST 1)' : 'OFFLINE',
+            this.rooms.teleporter.x, this.rooms.teleporter.y + 14, '10px monospace',
+            this.dungeon.teleporterActive ? c.purple : c.muted, 'center', 'alphabetic'
+        );
 
-        ctx.fillStyle = this.dungeon.armoryUnlocked ? '#4ade80' : '#f87171';
-        ctx.fillText(this.dungeon.armoryUnlocked ? 'UNLOCKED' : 'LOCKED', this.rooms.armoryDoor.x, this.rooms.armoryDoor.y + 14);
+        r.DrawFillText(
+            this.dungeon.armoryUnlocked ? 'UNLOCKED' : 'LOCKED',
+            this.rooms.armoryDoor.x, this.rooms.armoryDoor.y + 14, '10px monospace',
+            this.dungeon.armoryUnlocked ? c.green : c.red, 'center', 'alphabetic'
+        );
 
-        ctx.fillStyle = !this.rogue.hasBomb ? '#fdba74' : '#64748b';
-        ctx.fillText(this.rogue.hasBomb ? 'BOMB TAKEN' : 'BOMB CRATE', this.rooms.armory.x, this.rooms.armory.y + 14);
+        r.DrawFillText(
+            this.rogue.hasBomb ? 'BOMB TAKEN' : 'BOMB CRATE',
+            this.rooms.armory.x, this.rooms.armory.y + 14, '10px monospace',
+            !this.rogue.hasBomb ? c.orange : c.muted, 'center', 'alphabetic'
+        );
 
-        ctx.fillStyle = this.dungeon.trapDisabled ? '#4ade80' : '#f87171';
-        ctx.fillText(this.dungeon.trapDisabled ? 'LASERS OFF' : 'LASERS ARMED', this.rooms.console.x, this.rooms.console.y + 14);
+        r.DrawFillText(
+            this.dungeon.trapDisabled ? 'LASERS OFF' : 'LASERS ARMED',
+            this.rooms.console.x, this.rooms.console.y + 14, '10px monospace',
+            this.dungeon.trapDisabled ? c.green : c.red, 'center', 'alphabetic'
+        );
 
-        ctx.fillStyle = this.dungeon.boulderCleared ? '#4ade80' : '#f87171';
-        ctx.fillText(this.dungeon.boulderCleared ? 'CLEARED' : 'BLOCKED', this.rooms.boulder.x, this.rooms.boulder.y + 14);
+        r.DrawFillText(
+            this.dungeon.boulderCleared ? 'CLEARED' : 'BLOCKED',
+            this.rooms.boulder.x, this.rooms.boulder.y + 14, '10px monospace',
+            this.dungeon.boulderCleared ? c.green : c.red, 'center', 'alphabetic'
+        );
 
-        ctx.fillStyle = !this.rogue.hasVaultKey ? '#38bdf8' : '#64748b';
-        ctx.fillText(this.rogue.hasVaultKey ? 'KEY TAKEN' : 'VAULT KEY', this.rooms.crypt.x, this.rooms.crypt.y + 14);
+        r.DrawFillText(
+            this.rogue.hasVaultKey ? 'KEY TAKEN' : 'VAULT KEY',
+            this.rooms.crypt.x, this.rooms.crypt.y + 14, '10px monospace',
+            !this.rogue.hasVaultKey ? c.blue : c.muted, 'center', 'alphabetic'
+        );
 
-        ctx.fillStyle = !this.rogue.hasIdol ? '#fde047' : '#64748b';
-        ctx.fillText(this.rogue.hasIdol ? 'STOLEN!' : 'GOLDEN IDOL', this.rooms.vault.x, this.rooms.vault.y + 14);
+        r.DrawFillText(
+            this.rogue.hasIdol ? 'STOLEN!' : 'GOLDEN IDOL',
+            this.rooms.vault.x, this.rooms.vault.y + 14, '10px monospace',
+            !this.rogue.hasIdol ? c.yellow : c.muted, 'center', 'alphabetic'
+        );
 
         // Draw planned path preview lines on dungeon map
         const plan = this.rogue.goap.currentPlan;
         if (plan.length > 0) {
-            ctx.strokeStyle = 'rgba(250, 204, 21, 0.35)';
-            ctx.setLineDash([5, 4]);
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(this.rogue.position.x, this.rogue.position.y);
             const actionToRoom = {
                 PickupRustyKey: this.rooms.guardRoom,
                 UnlockArmory: this.rooms.armoryDoor,
@@ -579,12 +606,16 @@ class GOAPDungeonScene extends Game {
                 StealGoldenIdol: this.rooms.vault,
                 EscapeDungeon: this.rooms.exit
             };
+            let prevX = this.rogue.position.x;
+            let prevY = this.rogue.position.y;
             for (let i = this.rogue.goap.currentPlanIndex; i < plan.length; i++) {
                 const targetRm = actionToRoom[plan[i].name];
-                if (targetRm) ctx.lineTo(targetRm.x, targetRm.y);
+                if (targetRm) {
+                    r.DrawDashedLine(prevX, prevY, targetRm.x, targetRm.y, c.planLine, 2, [5, 4]);
+                    prevX = targetRm.x;
+                    prevY = targetRm.y;
+                }
             }
-            ctx.stroke();
-            ctx.setLineDash([]);
         }
 
         // Draw Rogue
@@ -592,40 +623,25 @@ class GOAPDungeonScene extends Game {
 
         // Floating texts
         for (const ft of this.floatingTexts) {
-            ctx.fillStyle = ft.color;
-            ctx.font = 'bold 11px monospace';
-            ctx.textAlign = 'center';
-            ctx.fillText(ft.text, ft.x, ft.y);
+            r.DrawFillText(ft.text, ft.x, ft.y, 'bold 11px monospace', ft.color, 'center', 'alphabetic');
         }
 
         // Rogue Inventory HUD inside Dungeon
-        ctx.textAlign = 'left';
-        ctx.fillStyle = 'rgba(9, 13, 22, 0.88)';
-        ctx.fillRect(28, 462, 478, 26);
-        ctx.fillStyle = '#f8fafc';
-        ctx.font = '11px monospace';
-        ctx.fillText(
+        r.DrawFillBasicRoundRectangle(28, 462, 478, 26, 4, c.hudBg);
+        r.DrawFillText(
             `INVENTORY: RustyKey:${this.rogue.hasRustyKey ? 'YES' : 'NO'} | Bomb:${this.rogue.hasBomb ? 'YES' : 'NO'} | VaultKey:${this.rogue.hasVaultKey ? 'YES' : 'NO'} | Idol:${this.rogue.hasIdol ? 'YES' : 'NO'} | Heists:${this.heistsCompleted}`,
-            36, 479
+            36, 479, '11px monospace', c.hudText, 'left', 'alphabetic'
         );
 
         // Draw Interactive Sandbox Buttons
         for (const btn of this.buttons) {
-            ctx.fillStyle = '#1e293b';
-            ctx.strokeStyle = '#475569';
-            ctx.lineWidth = 1.5;
-            ctx.fillRect(btn.x, btn.y, btn.w, btn.h);
-            ctx.strokeRect(btn.x, btn.y, btn.w, btn.h);
-            ctx.fillStyle = '#f8fafc';
-            ctx.font = '11px monospace';
-            ctx.textAlign = 'center';
-            ctx.fillText(btn.label, btn.x + btn.w / 2, btn.y + 21);
+            r.DrawFillBasicRoundRectangle(btn.x, btn.y, btn.w, btn.h, 5, c.btnBg);
+            r.DrawStrokeBasicRoundRectangle(btn.x, btn.y, btn.w, btn.h, 5, c.btnStroke, 1.5);
+            r.DrawFillText(btn.label, btn.x + btn.w / 2, btn.y + 21, '11px monospace', c.hudText, 'center', 'alphabetic');
         }
 
-        ctx.restore();
-
         // Draw GOAP Inspector on the Right
-        DrawGOAPInspector(this.renderer, this.rogue.goap, 530, 55, {
+        DrawGOAPInspector(r, this.rogue.goap, 530, 55, {
             width: 430,
             title: 'GOAP HEIST PLANNER (8-STEP CHAIN)'
         });
