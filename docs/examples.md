@@ -18,6 +18,7 @@ Explore the `src/examples/` directory for practical demonstrations of the engine
 - [Rumble Test (HTML UI)](../rumble-test-html.html ':ignore :target=_blank') — same rumble tester rebuilt with an `HTMLMenu` overlay (`coverCanvas=true`); all controls are HTML/CSS while the canvas runs a ring-burst animation in the background. This example has a more [advance standalone version including a ring-burst animation in the background plus a real-time oscilloscope wave strip to the canvas](https://maxi-jp.github.io/Super-GamepadRumble-Tester/ ':ignore :target=_blank')
 
 ### Other systems
+- [Sprite Atlas Editor](../sprite-atlas-editor.html ':ignore :target=_blank') — standalone dev tool for defining named crop rectangles on sprite sheets and exporting them as JSON. Load a sprite sheet image, drag to draw named rects (with optional grid snapping), zoom and pan, edit coords numerically, then export a `SpriteAtlas`-compatible JSON file. Use `atlasAssets` to preload the JSON and `new SpriteAtlas(data).get('id')` to retrieve a `{x,y,w,h}` rect at runtime — pass it directly to `DrawImageSection`.
 - [Audio system test](../audiotest.html ':ignore :target=_blank')
 - [Colliders test](../colliders.html ':ignore :target=_blank')
 - [Timer System test](../timer-test.html ':ignore :target=_blank') — one-shot and repeating timers, GameObject-owned timers, and automatic cleanup on destruction

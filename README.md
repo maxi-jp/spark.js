@@ -28,6 +28,8 @@ Documentation can be consulted [here](https://maxi-jp.github.io/spark.js/docs/).
 - **Fuzzy Logic**: Complete Mamdani Fuzzy Inference System in `fuzzy.js` (`FuzzyModule`, `FuzzyVariable`, 6 membership set shapes, `FuzzyRule`, boolean operators `FzAnd`/`FzOr`/`FzNot`, and hedges `FzVery`/`FzFairly`). Supports both `MaxAv` and `Centroid` defuzzification and built-in real-time membership curve and rule firing visualizers (`DrawFuzzyInspector`, `DrawVariableGraph`).
 - **Goal-Oriented Action Planning (GOAP)**: Complete forward state-space $A^*$ planner in `goap.js` (`GOAPState`, `GOAPGoal`, `GOAPAction`, `GOAPPlanner`, `GOAPAgent`) inspired by *F.E.A.R.* (Orkin, 2006) and Millington & Funge. Supports symbolic preconditions & effects, procedural world checks, dynamic action costs, automatic replanning on world changes or action failures, $A^*$ search telemetry, and built-in live canvas HUD inspection (`DrawGOAPInspector`).
 - **Utilities**: A collection of helpers for vector math, collision detection, color manipulation, and more.
+- **Sprite Atlas**: `SpriteAtlas` class in `utils_classes.js` wraps a named-rect JSON file and returns `{x,y,w,h}` crop rectangles by id — use with `DrawImageSection` to render individual frames from a sprite sheet. Declare `atlasAssets` in the game constructor (same pattern as `graphicAssets`) and the engine preloads the JSON before `Start()` is called.
+- **Sprite Atlas Editor**: Standalone browser dev tool (`sprite-atlas-editor.html`) for defining named crop rectangles on sprite-sheet images — drag to draw, grid-snap, zoom/pan, numeric editing, import/export JSON.
 - **Debugging Tools**: Optional debug drawing for physics bodies and an FPS/stats overlay.
 - **Mode 7 Renderer**: Simulate SNES-style pseudo-3D backgrounds (as in F-Zero or Mario Kart).
 
@@ -118,6 +120,9 @@ Documentation can be consulted [here](https://maxi-jp.github.io/spark.js/docs/).
     - goap_hospital.js    # Main scene, queue/restroom managers, telemetry & GOAP/FSM HUD
   - snake.js              # Snake game implementation
   - timer_test.js         # Timer system demo (Invoke, InvokeRepeating, auto-cleanup)
+  - sprite_atlas_editor/  # Standalone sprite-sheet crop-rect editor (no engine dependency)
+    - sprite_atlas_editor.js   # Interactive canvas editor — draw, name, snap, export JSON
+    - sprite_atlas_editor.css
 
 ## Getting Started
 

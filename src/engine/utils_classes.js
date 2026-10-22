@@ -1162,3 +1162,58 @@ class Timer {
 }
 
 // #endregion
+
+// #region SpriteAtlas
+
+/**
+ * Wraps a sprite-atlas JSON file (produced by the Sprite Atlas Editor tool)
+ * and provides fast named-rectangle lookups for use with `DrawImageSection`.
+ *
+ * Load the JSON via `atlasAssets`, then construct an atlas in `Start()`:
+ * ```js
+ * // In constructor:
+ * this.atlasAssets = { ui: { path: 'assets/ui.json', data: null } };
+ *
+ * // In Start():
+ * this.uiAtlas = new SpriteAtlas(this.atlasAssets.ui.data);
+ * const r = this.uiAtlas.get('coin');
+ * renderer.DrawImageSection(img, x, y, r.x, r.y, r.w, r.h, 1, 1);
+ * ```
+ *
+ * Atlas JSON format (output of the Sprite Atlas Editor):
+ * ```json
+ * {
+ *   "image": "optional/path/hint.png",
+ *   "sprites": {
+ *     "coin":  { "x":  0, "y": 0, "w": 32, "h": 32 },
+ *     "heart": { "x": 32, "y": 0, "w": 32, "h": 32 }
+ *   }
+ * }
+ * ```
+ */
+class SpriteAtlas {
+    /**
+     * @param {object} atlasData  Parsed JSON from `atlasAssets.*`.data.
+     *   Accepts both `{sprites:{…}}` (editor format) and a flat `{id:{x,y,w,h}}` object.
+     */
+    constructor(atlasData) {
+        this._sprites = atlasData?.sprites ?? atlasData ?? {};
+    }
+
+    /**
+     * Returns the crop rectangle for the given sprite id, or `null` if not found.
+     * @param {string} id
+     * @returns {{x:number, y:number, w:number, h:number}|null}
+     */
+    get(id) {
+        return this._sprites[id] ?? null;
+    }
+
+    /** All sprite ids defined in this atlas. @type {string[]} */
+    get ids() { return Object.keys(this._sprites); }
+
+    /** Number of sprites in this atlas. @type {number} */
+    get count() { return Object.keys(this._sprites).length; }
+}
+
+// #endregion

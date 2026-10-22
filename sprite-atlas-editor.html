@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>spark.js — Sprite Atlas Editor</title>
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="stylesheet" href="src/examples/sprite_atlas_editor/sprite_atlas_editor.css">
+</head>
+<body>
+
+    <!-- ── Toolbar ── -->
+    <div id="toolbar">
+        <h1>🖼 SPRITE ATLAS EDITOR</h1>
+        <div class="tb-sep"></div>
+
+        <!-- Image -->
+        <button id="btn-load-img" class="tb-btn">Load Image</button>
+        <input type="file" id="file-img" accept="image/*" style="display:none">
+        <span id="tb-image-name" class="tb-label">no image</span>
+
+        <div class="tb-sep"></div>
+
+        <!-- Atlas JSON -->
+        <button id="btn-load-json" class="tb-btn">Load JSON</button>
+        <input type="file" id="file-json" accept=".json" style="display:none">
+        <button id="btn-export"   class="tb-btn primary">Export JSON ↓</button>
+        <button id="btn-clear"    class="tb-btn danger">Clear All</button>
+
+        <div class="tb-sep"></div>
+
+        <!-- Zoom -->
+        <button id="btn-zoom-out" class="tb-btn">−</button>
+        <span id="zoom-display">100%</span>
+        <button id="btn-zoom-in"  class="tb-btn">+</button>
+        <button id="btn-fit"      class="tb-btn">Fit</button>
+
+        <div class="tb-sep"></div>
+
+        <!-- Grid snap -->
+        <input  id="snap-check" type="checkbox" title="Enable grid snapping">
+        <label for="snap-check" class="tb-label" style="cursor:pointer">Snap</label>
+        <input  id="grid-size"  type="number" value="16" min="1" max="256"
+                class="tb-input" title="Grid size (px)">
+        <span class="tb-label">px grid</span>
+    </div>
+
+    <!-- ── Main ── -->
+    <div id="main">
+
+        <!-- Canvas area -->
+        <div id="canvas-wrap" class="no-image">
+            <canvas id="editor-canvas"></canvas>
+            <div id="drop-hint">
+                <span class="dh-icon">🖼</span>
+                <p>Drag an image here, or click <strong>Load Image</strong></p>
+                <p style="font-size:12px;opacity:.6">Also accepts a .json atlas file to continue editing</p>
+            </div>
+            <div id="coord-bar"></div>
+        </div>
+
+        <!-- Right panel -->
+        <div id="side-panel">
+
+            <!-- New sprite -->
+            <div class="panel-section">
+                <div class="panel-title">New Sprite Name</div>
+                <div id="new-sprite-form">
+                    <input id="new-name" type="text" placeholder="e.g. coin_idle"
+                           autocomplete="off" spellcheck="false">
+                    <button id="btn-add" class="tb-btn primary">Add</button>
+                </div>
+                <p style="font-size:10px;color:var(--muted);margin-top:7px;line-height:1.5">
+                    Type a name, then <b>drag</b> on the canvas to define the crop rect.
+                    Click an existing rect to select and rename it.<br>
+                    <b>Middle-click</b> or <b>Alt + drag</b> to pan &nbsp;·&nbsp; <b>Wheel</b> to zoom.
+                </p>
+            </div>
+
+            <!-- Selected sprite editor -->
+            <div class="panel-section" id="selected-panel">
+                <div class="panel-title">Selected Sprite</div>
+                <div id="selected-name-row">
+                    <input id="sel-name" type="text" placeholder="name"
+                           autocomplete="off" spellcheck="false">
+                </div>
+                <div class="coord-grid">
+                    <div class="coord-field">
+                        <label>X</label>
+                        <input id="sel-x" type="number" min="0">
+                    </div>
+                    <div class="coord-field">
+                        <label>Y</label>
+                        <input id="sel-y" type="number" min="0">
+                    </div>
+                    <div class="coord-field">
+                        <label>Width</label>
+                        <input id="sel-w" type="number" min="1">
+                    </div>
+                    <div class="coord-field">
+                        <label>Height</label>
+                        <input id="sel-h" type="number" min="1">
+                    </div>
+                </div>
+                <p style="font-size:10px;color:var(--muted);margin-top:7px">
+                    Delete — press <b>Del</b> key
+                </p>
+            </div>
+
+            <!-- Sprite list -->
+            <div class="panel-section" style="padding-bottom:4px">
+                <div class="panel-title">Sprites</div>
+            </div>
+            <div id="sprite-list-wrap">
+                <p class="empty-msg">No sprites yet — drag to define one.</p>
+            </div>
+
+        </div><!-- /side-panel -->
+    </div><!-- /main -->
+
+    <script src="src/examples/sprite_atlas_editor/sprite_atlas_editor.js"></script>
+</body>
+</html>

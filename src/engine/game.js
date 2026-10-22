@@ -99,6 +99,14 @@ class Game {
          */
         this.tiledAssets = null;
 
+        /**
+         * Sprite-atlas JSON assets to preload. Assign in the constructor before the engine calls `Start()`.
+         * Format: `{ key: { path: 'path/to/atlas.json', data: null } }`
+         * After loading, wrap with `new SpriteAtlas(this.atlasAssets.key.data)`.
+         * @type {Object.<string, {path: string, data: *}>|null}
+         */
+        this.atlasAssets = null;
+
         /** @type {Renderer} The active renderer (Canvas2D or WebGL). */
         this.renderer = renderer;
 

@@ -180,18 +180,22 @@ function Init(GameClass, canvasId = null) {
         
         LoadJSON(game.tiledAssets, () => {
             console.log(`All Tiled JSON files loaded.`);
-            
-            if (game.config.audioAnalyzer) {
-                audioPlayer = new AudioPlayer(true, game.config.analyzerfftSize, game.config.analyzerSmoothing);
-            }
-            else {
-                audioPlayer = new AudioPlayer();
-            }
-            audioPlayer.LoadAudio(game.audioAssets, () => {
-                console.log("All audio files loaded.");
-                console.log("Starting the game...");
-                Start();
-                Loop();
+
+            LoadJSON(game.atlasAssets, () => {
+                console.log(`All sprite-atlas JSON files loaded.`);
+
+                if (game.config.audioAnalyzer) {
+                    audioPlayer = new AudioPlayer(true, game.config.analyzerfftSize, game.config.analyzerSmoothing);
+                }
+                else {
+                    audioPlayer = new AudioPlayer();
+                }
+                audioPlayer.LoadAudio(game.audioAssets, () => {
+                    console.log("All audio files loaded.");
+                    console.log("Starting the game...");
+                    Start();
+                    Loop();
+                });
             });
         });
     });
