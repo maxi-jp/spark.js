@@ -287,12 +287,20 @@ Draw(renderer) {
    - **Symbolic World State Grid:** Color-coded live key-value pills (`true` in green, `false` in slate, numbers/strings in cyan).
    - **Ranked Goals Panel:** Real-time priority bars (`0..100`) with `ACTIVE` and `✔ SATISFIED` badges.
    - **Active A\* Action Plan Pipeline:** Numbered step-by-step action queue with status icons (`✔` completed, `⏳` running, `○` queued, `✖` failed), primary effect tags, and individual step costs.
+   - **Configurable `options`:**
+     - `width` (`number`, default `370`): Panel width in pixels.
+     - `title` (`string`, default `'GOAP Planner Inspector'`): Header title text.
+     - `subtitle` (`string`, default `''`): Optional second header line for agent metadata (e.g., role, ailment, active FSM state, or physiological needs).
+     - `compact` (`boolean`, default `false`): Uses tighter vertical spacing and compact rows so the inspector can be stacked alongside other dashboards on a single canvas.
+     - `showWorldState` (`boolean`, default `true`): Toggle the Symbolic World State section.
+     - `showGoals` (`boolean`, default `true`): Toggle the Ranked Goals section.
+     - `showPlan` (`boolean`, default `true`): Toggle the Active Action Plan Pipeline section.
 
 ---
 
 ## 6. Interactive University Demos
 
-Explore the three interactive GOAP laboratories included in the repository:
+Explore the four interactive GOAP laboratories included in the repository:
 
 1. **[Demo 1 — Autonomous Survival Crafter & Economy (`goap-survival.html`)](../src/examples/goap_survival/README.md)**
    - **Source:** [`src/examples/goap_survival/goap_survival.js`](../src/examples/goap_survival/goap_survival.js)
@@ -303,4 +311,7 @@ Explore the three interactive GOAP laboratories included in the repository:
 3. **[Demo 3 — Multi-Room Dungeon Heist & Deep A\* Chaining (`goap-dungeon.html`)](../src/examples/goap_dungeon/README.md)**
    - **Source:** [`src/examples/goap_dungeon/goap_dungeon.js`](../src/examples/goap_dungeon/goap_dungeon.js)
    - **Concepts:** Deep 8-step causal dependency resolution (`PickupRustyKey -> UnlockArmory -> PickupBomb -> BlowUpBoulder -> GrabVaultKey -> DisableLaserTrap -> StealGoldenIdol -> EscapeDungeon`), lockpick fallbacks, and real-time shortcut discovery (`WarpToCryptKey`).
+4. **[Demo 4 — Autonomous Hospital Simulation (`goap-hospital.html`)](../src/examples/goap_hospital/README.md)**
+   - **Source:** [`hospital_defs.js`](../src/examples/goap_hospital/hospital_defs.js), [`hospital_npc_base.js`](../src/examples/goap_hospital/hospital_npc_base.js), [`hospital_agents.js`](../src/examples/goap_hospital/hospital_agents.js), [`goap_hospital.js`](../src/examples/goap_hospital/goap_hospital.js)
+   - **Concepts:** Multi-agent simulation combining **GOAP** (high-level planning for Patients, Receptionist, and 4 Specialist Doctors), a **3-state FSM** (`Waiting`, `MovingTo`, `PerformingAction`) for locomotion and timed tasks, and **A\* Pathfinding** through hospital corridors. Features reception triage, an **X-Ray diagnostic sub-workflow**, post-consultation **medical record logging at office computers**, shared restroom needs (`bladder` preemption), live hospital telemetry, and click-to-inspect NPC debugging.
 

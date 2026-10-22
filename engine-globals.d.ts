@@ -1131,11 +1131,11 @@ declare class GOAPAgent {
     Replan(reason?: string): boolean;
     Update(dt: number): void;
     DrawDebug(renderer: Renderer, x: number, y: number, color?: Color): void;
-    DrawGOAPInspector(renderer: Renderer, x: number, y: number, options?: { width?: number; title?: string; showWorldState?: boolean; showGoals?: boolean; showPlan?: boolean }): number;
+    DrawGOAPInspector(renderer: Renderer, x: number, y: number, options?: { width?: number; title?: string; subtitle?: string; compact?: boolean; showWorldState?: boolean; showGoals?: boolean; showPlan?: boolean }): number;
 }
 
 /** Standalone helper to render a GOAPAgent's inspector panel onto the canvas. */
-declare function DrawGOAPInspector(renderer: Renderer, agent: GOAPAgent, x: number, y: number, options?: { width?: number; title?: string; showWorldState?: boolean; showGoals?: boolean; showPlan?: boolean }): number;
+declare function DrawGOAPInspector(renderer: Renderer, agent: GOAPAgent, x: number, y: number, options?: { width?: number; title?: string; subtitle?: string; compact?: boolean; showWorldState?: boolean; showGoals?: boolean; showPlan?: boolean }): number;
 
 
 

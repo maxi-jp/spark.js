@@ -111,6 +111,11 @@ Documentation can be consulted [here](https://maxi-jp.github.io/spark.js/docs/).
   - goap_survival/        # GOAP demo: autonomous survival crafter & economy (12 actions, dynamic tool crafting vs bare-hands cost trade-off)
   - goap_combat/          # GOAP demo: F.E.A.R.-style tactical combat squad (cover, flanking, grenades, GOAP vs FSM Grunt comparison)
   - goap_dungeon/         # GOAP demo: multi-room dungeon heist & deep A* chaining (7-step causal chains, dynamic shortcut bomb replanning)
+  - goap_hospital/        # GOAP demo: multi-agent autonomous hospital simulation (GOAP + FSM + A* pathfinding, reception triage, X-ray, 4 specialists, restrooms, live telemetry)
+    - hospital_defs.js    # Departments, ailments, HospitalNavGrid, and floorplan builder
+    - hospital_npc_base.js # 3-state movement/action FSM and shared HospitalNPC base class
+    - hospital_agents.js  # ReceptionistNPC, DoctorNPC, and PatientNPC GOAP brains
+    - goap_hospital.js    # Main scene, queue/restroom managers, telemetry & GOAP/FSM HUD
   - snake.js              # Snake game implementation
   - timer_test.js         # Timer system demo (Invoke, InvokeRepeating, auto-cleanup)
 

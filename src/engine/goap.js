@@ -1101,6 +1101,7 @@ class GOAPAgent {
     /**
      * Render a comprehensive, real-time GOAP Inspector HUD panel on the Canvas:
      *   1. Header with Planner Telemetry (Replans, A* Nodes Expanded, Total Cost)
+     *      and optional `subtitle` (e.g. role, FSM state, vitals)
      *   2. Symbolic World State Table (live key-value badges)
      *   3. Ranked Goals with dynamic priority bars & Satisfied/Active indicators
      *   4. Active A* Synthesized Action Plan Pipeline with step statuses & costs
@@ -1111,6 +1112,8 @@ class GOAPAgent {
      * @param {Object} [options={}]
      * @param {number} [options.width=350]
      * @param {string} [options.title='GOAP Planner Inspector']
+     * @param {string} [options.subtitle=''] - Optional extra info line inside header (e.g., FSM state / agent status).
+     * @param {boolean} [options.compact=false] - Tighter vertical spacing for multi-panel dashboards.
      * @param {boolean} [options.showWorldState=true]
      * @param {boolean} [options.showGoals=true]
      * @param {boolean} [options.showPlan=true]
@@ -1120,85 +1123,111 @@ class GOAPAgent {
         const c = GOAPAgent._debugColors;
         const width = options.width || 350;
         const title = options.title || 'GOAP Planner Inspector';
+        const subtitle = options.subtitle || '';
+        const compact = options.compact === true;
         const showWorldState = options.showWorldState !== false;
         const showGoals = options.showGoals !== false;
         const showPlan = options.showPlan !== false;
+
+        const stateRowH = compact ? 17 : 20;
+        const goalRowH = compact ? 19 : 22;
+        const planRowH = compact ? 20 : 24;
+        const sectionHeaderH = compact ? 15 : 18;
+        const sectionGap = compact ? 5 : 8;
 
         const stateKeys = Object.keys(this.worldState.values);
         const stateRows = showWorldState ? Math.ceil(stateKeys.length / 2) : 0;
         const goalRows = showGoals ? this.goals.length : 0;
         const planSteps = showPlan ? Math.max(1, this.currentPlan.length) : 0;
 
+        const headerH = subtitle ? 58 : 44;
+
         // Calculate dynamic panel height
-        let totalHeight = 52; // Title + telemetry subheader
+        let totalHeight = headerH + 8;
         if (showWorldState)
-            totalHeight += 24 + stateRows * 20 + 8;
+            totalHeight += sectionHeaderH + stateRows * stateRowH + sectionGap;
 
         if (showGoals)
-            totalHeight += 24 + goalRows * 22 + 8;
+            totalHeight += sectionHeaderH + goalRows * goalRowH + sectionGap;
 
         if (showPlan)
-            totalHeight += 28 + planSteps * 24 + 10;
+            totalHeight += sectionHeaderH + planSteps * planRowH + (compact ? 6 : 10);
 
         // Panel background & border
         renderer.DrawFillBasicRoundRectangle(x, y, width, totalHeight, 6, c.panelBg);
         renderer.DrawStrokeBasicRoundRectangle(x, y, width, totalHeight, 6, c.panelBorder, 1.5);
 
         // Header bar
-        renderer.DrawFillBasicRoundRectangle(x + 1, y + 1, width - 2, 44, [6, 6, 0, 0], c.headerBg);
-        renderer.DrawFillText(`🧠 ${title}`, x + 10, y + 19, 'bold 13px monospace', c.headerTitle, 'left', 'alphabetic');
+        renderer.DrawFillBasicRoundRectangle(x + 1, y + 1, width - 2, headerH, [6, 6, 0, 0], c.headerBg);
+        renderer.DrawFillText(`🧠 ${title}`, x + 10, y + 18, 'bold 13px monospace', c.headerTitle, 'left', 'alphabetic');
 
         // Telemetry line
         const costStr = this.planner.lastPlanCost.toFixed(1);
         renderer.DrawFillText(
             `A* Nodes: ${this.planner.lastNodesExpanded} | Plan Cost: ${costStr} | Replans: ${this.replanCount}`,
             x + 10,
-            y + 37,
+            y + 34,
             '11px monospace',
             c.subText,
             'left',
             'alphabetic'
         );
 
-        let curY = y + 54;
+        if (subtitle) {
+            renderer.DrawFillText(
+                subtitle,
+                x + 10,
+                y + 50,
+                '10px monospace',
+                c.goalTextActive,
+                'left',
+                'alphabetic'
+            );
+        }
+
+        let curY = y + headerH + 8;
 
         // ── Section 1: Symbolic World State ─────────────────────────────
         if (showWorldState) {
             renderer.DrawFillText('WORLD STATE (FACTS)', x + 10, curY + 11, 'bold 11px monospace', c.sectionTitle, 'left', 'alphabetic');
-            curY += 18;
+            curY += sectionHeaderH;
 
             const colWidth = (width - 26) / 2;
+            const pillH = compact ? 15 : 17;
+            const textOffsetY = compact ? 11 : 12;
             for (let i = 0; i < stateKeys.length; i++) {
                 const key = stateKeys[i];
                 const val = this.worldState.values[key];
                 const col = i % 2;
                 const row = Math.floor(i / 2);
                 const cellX = x + 10 + col * (colWidth + 6);
-                const cellY = curY + row * 20;
+                const cellY = curY + row * stateRowH;
 
                 const pillBg = val === true ? c.factTrueBg : val === false ? c.factFalseBg : c.factOtherBg;
                 const pillBorder = val === true ? c.factTrueBorder : val === false ? c.factFalseBorder : c.factOtherBorder;
                 const valColor = val === true ? c.factTrueText : val === false ? c.subText : c.headerTitle;
 
-                renderer.DrawFillBasicRoundRectangle(cellX, cellY, colWidth, 17, 3, pillBg);
-                renderer.DrawStrokeBasicRoundRectangle(cellX, cellY, colWidth, 17, 3, pillBorder, 1);
+                renderer.DrawFillBasicRoundRectangle(cellX, cellY, colWidth, pillH, 3, pillBg);
+                renderer.DrawStrokeBasicRoundRectangle(cellX, cellY, colWidth, pillH, 3, pillBorder, 1);
 
-                const shortKey = key.length > 15 ? key.slice(0, 14) + '…' : key;
-                renderer.DrawFillText(shortKey, cellX + 5, cellY + 12, '10px monospace', c.factKeyText, 'left', 'alphabetic');
-                renderer.DrawFillText(String(val), cellX + colWidth - 5, cellY + 12, 'bold 10px monospace', valColor, 'right', 'alphabetic');
+                const shortKey = key.length > 16 ? key.slice(0, 15) + '…' : key;
+                renderer.DrawFillText(shortKey, cellX + 5, cellY + textOffsetY, '10px monospace', c.factKeyText, 'left', 'alphabetic');
+                renderer.DrawFillText(String(val), cellX + colWidth - 5, cellY + textOffsetY, 'bold 10px monospace', valColor, 'right', 'alphabetic');
             }
-            curY += stateRows * 20 + 8;
+            curY += stateRows * stateRowH + sectionGap;
         }
 
         // ── Section 2: Goals Ranked by Priority ─────────────────────────
         if (showGoals) {
             renderer.DrawFillText('GOALS (PRIORITY & SATISFACTION)', x + 10, curY + 11, 'bold 11px monospace', c.sectionTitle, 'left', 'alphabetic');
-            curY += 18;
+            curY += sectionHeaderH;
 
             const sortedGoals = this.goals.slice().sort(
                 (a, b) => b.lastEvaluatedPriority - a.lastEvaluatedPriority
             );
 
+            const boxH = compact ? 17 : 19;
+            const textY = compact ? 12 : 13;
             for (let i = 0; i < sortedGoals.length; i++) {
                 const g = sortedGoals[i];
                 const isActive = this.currentGoal === g;
@@ -1208,18 +1237,18 @@ class GOAPAgent {
                 const rowBg = isActive ? c.goalActiveBg : c.goalIdleBg;
                 const rowBorder = isActive ? c.goalActiveBorder : isSat ? c.goalSatBorder : c.goalIdleBorder;
 
-                renderer.DrawFillBasicRoundRectangle(x + 10, curY, width - 20, 19, 4, rowBg);
-                renderer.DrawStrokeBasicRoundRectangle(x + 10, curY, width - 20, 19, 4, rowBorder, isActive ? 1.5 : 1);
+                renderer.DrawFillBasicRoundRectangle(x + 10, curY, width - 20, boxH, 4, rowBg);
+                renderer.DrawStrokeBasicRoundRectangle(x + 10, curY, width - 20, boxH, 4, rowBorder, isActive ? 1.5 : 1);
 
                 // Priority bar fill
                 const barMaxW = 90;
                 const barW = (prio / 100) * barMaxW;
-                renderer.DrawFillBasicRoundRectangle(x + 11, curY + 1, barW, 17, 3, isActive ? c.goalBarActive : c.goalBarIdle);
+                renderer.DrawFillBasicRoundRectangle(x + 11, curY + 1, barW, boxH - 2, 3, isActive ? c.goalBarActive : c.goalBarIdle);
 
                 renderer.DrawFillText(
                     `${isActive ? '▶ ' : '  '}${g.name}`,
                     x + 14,
-                    curY + 13,
+                    curY + textY,
                     isActive ? 'bold 11px monospace' : '11px monospace',
                     isActive ? c.goalTextActive : c.goalTextIdle,
                     'left',
@@ -1227,30 +1256,33 @@ class GOAPAgent {
                 );
 
                 if (isSat) {
-                    renderer.DrawFillText(`✔ SATISFIED (P:${Math.round(g.lastEvaluatedPriority)})`, x + width - 15, curY + 13, 'bold 10px monospace', c.factTrueText, 'right', 'alphabetic');
+                    renderer.DrawFillText(`✔ SATISFIED (P:${Math.round(g.lastEvaluatedPriority)})`, x + width - 15, curY + textY, 'bold 10px monospace', c.factTrueText, 'right', 'alphabetic');
                 }
                 else if (isActive) {
-                    renderer.DrawFillText(`ACTIVE (P:${Math.round(g.lastEvaluatedPriority)})`, x + width - 15, curY + 13, 'bold 10px monospace', c.goalActiveBorder, 'right', 'alphabetic');
+                    renderer.DrawFillText(`ACTIVE (P:${Math.round(g.lastEvaluatedPriority)})`, x + width - 15, curY + textY, 'bold 10px monospace', c.goalActiveBorder, 'right', 'alphabetic');
                 }
                 else {
-                    renderer.DrawFillText(`P:${Math.round(g.lastEvaluatedPriority)}`, x + width - 15, curY + 13, 'bold 10px monospace', c.subText, 'right', 'alphabetic');
+                    renderer.DrawFillText(`P:${Math.round(g.lastEvaluatedPriority)}`, x + width - 15, curY + textY, 'bold 10px monospace', c.subText, 'right', 'alphabetic');
                 }
 
-                curY += 22;
+                curY += goalRowH;
             }
-            curY += 6;
+            curY += sectionGap - 2;
         }
 
         // ── Section 3: Synthesized A* Action Plan Pipeline ──────────────
         if (showPlan) {
             const goalLabel = this.currentGoal ? ` → ${this.currentGoal.name}` : '';
             renderer.DrawFillText(`ACTIVE A* ACTION PLAN${goalLabel}`, x + 10, curY + 11, 'bold 11px monospace', c.sectionTitle, 'left', 'alphabetic');
-            curY += 18;
+            curY += sectionHeaderH;
+
+            const stepBoxH = compact ? 18 : 21;
+            const stepTextY = compact ? 13 : 14;
 
             if (this.currentPlan.length === 0) {
-                renderer.DrawFillBasicRoundRectangle(x + 10, curY, width - 20, 22, 4, c.stepIdleBg);
-                renderer.DrawFillText('  (No active plan — all valid goals satisfied)', x + 14, curY + 15, 'italic 11px monospace', c.subText, 'left', 'alphabetic');
-                curY += 24;
+                renderer.DrawFillBasicRoundRectangle(x + 10, curY, width - 20, stepBoxH + 1, 4, c.stepIdleBg);
+                renderer.DrawFillText('  (No active plan — all valid goals satisfied)', x + 14, curY + stepTextY, 'italic 11px monospace', c.subText, 'left', 'alphabetic');
+                curY += planRowH;
             }
             else {
                 for (let i = 0; i < this.currentPlan.length; i++) {
@@ -1283,13 +1315,13 @@ class GOAPAgent {
                         textColor = c.stepFailText;
                     }
 
-                    renderer.DrawFillBasicRoundRectangle(x + 10, curY, width - 20, 21, 4, bg);
-                    renderer.DrawStrokeBasicRoundRectangle(x + 10, curY, width - 20, 21, 4, border, isCurrent ? 1.5 : 1);
+                    renderer.DrawFillBasicRoundRectangle(x + 10, curY, width - 20, stepBoxH, 4, bg);
+                    renderer.DrawStrokeBasicRoundRectangle(x + 10, curY, width - 20, stepBoxH, 4, border, isCurrent ? 1.5 : 1);
 
                     renderer.DrawFillText(
                         `${i + 1}. ${badge} ${act.name}`,
                         x + 16,
-                        curY + 14,
+                        curY + stepTextY,
                         isCurrent ? 'bold 11px monospace' : '11px monospace',
                         textColor,
                         'left',
@@ -1303,14 +1335,14 @@ class GOAPAgent {
                     renderer.DrawFillText(
                         `${effPreview ? '[' + effPreview + '] ' : ''}cost:${cost.toFixed(1)}`,
                         x + width - 16,
-                        curY + 14,
+                        curY + stepTextY,
                         '10px monospace',
                         c.subText,
                         'right',
                         'alphabetic'
                     );
 
-                    curY += 24;
+                    curY += planRowH;
                 }
             }
         }
