@@ -486,6 +486,7 @@ document.getElementById('btn-zoom-out').addEventListener('click', () => setZoom(
 
 const gridInput = document.getElementById('grid-size');
 const snapCheck = document.getElementById('snap-check');
+snapGrid = parseInt(gridInput.value) || 1;
 gridInput.addEventListener('input', () => { snapGrid = parseInt(gridInput.value) || 1; redraw(); });
 snapCheck.addEventListener('change', () => { snapEnabled = snapCheck.checked; redraw(); });
 
