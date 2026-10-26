@@ -81,8 +81,8 @@ class Game {
 
         /**
          * Graphic assets to preload. Assign in the constructor before the engine calls `Start()`.
-         * Format: `{ key: { path: 'path/to/image.png', img: null } }`
-         * @type {Object.<string, {path: string, img: HTMLImageElement|null}>|null}
+         * Format: `{ key: { path: 'path/to/image.png', img: null, atlasJsonPath: 'path/to/textureatlas.json', atlas: null } }`
+         * @type {Object.<string, {path: string, img: HTMLImageElement|null, atlasJsonPath: string, atlas: Object|null}>|null}
          */
         this.graphicAssets = null;
 
@@ -98,14 +98,6 @@ class Game {
          * Format: `{ key: { path: 'path/to/map.json', data: null } }`
          */
         this.tiledAssets = null;
-
-        /**
-         * Sprite-atlas JSON assets to preload. Assign in the constructor before the engine calls `Start()`.
-         * Format: `{ key: { path: 'path/to/atlas.json', data: null } }`
-         * After loading, wrap with `new SpriteAtlas(this.atlasAssets.key.data)`.
-         * @type {Object.<string, {path: string, data: *}>|null}
-         */
-        this.atlasAssets = null;
 
         /** @type {Renderer} The active renderer (Canvas2D or WebGL). */
         this.renderer = renderer;

@@ -220,6 +220,42 @@ declare namespace Input {
     function Anything(): boolean;
 }
 
+// ── SpriteAtlas (utils_classes.js) ───────────────────────────────────────────
+
+/**
+ * Wraps a sprite-atlas JSON file and provides named crop-rectangle lookups
+ * for use with `DrawImageSection`. Produced by the Sprite Atlas Editor tool.
+ *
+ * Declare JSON files to preload via `atlasAssets` in the game constructor.
+ * Construct the atlas in `Start()` once the data is available.
+ *
+ * @example
+ * // In constructor:
+ * this.atlasAssets = { ui: { path: 'assets/ui.json', data: null } };
+ *
+ * // In Start():
+ * this.uiAtlas = new SpriteAtlas(this.atlasAssets.ui.data);
+ *
+ * // In Draw():
+ * const r = this.uiAtlas.get('coin'); // { x, y, w, h }
+ * renderer.DrawImageSection(img, x, y, r.x, r.y, r.w, r.h, 1, 1);
+ */
+declare class SpriteAtlas {
+    constructor(atlasData: { sprites?: { [id: string]: { x: number; y: number; w: number; h: number } } } | { [id: string]: { x: number; y: number; w: number; h: number } });
+
+    /**
+     * Returns the crop rectangle for the given sprite id, or `null` if not found.
+     * Pass the result directly to `DrawImageSection` as sx, sy, sw, sh.
+     */
+    get(id: string): { x: number; y: number; w: number; h: number } | null;
+
+    /** All sprite ids defined in this atlas. */
+    readonly ids: string[];
+
+    /** Number of sprites in this atlas. */
+    readonly count: number;
+}
+
 // ── Collider classes ─────────────────────────────────────────────────────────
 
 /**
@@ -351,6 +387,34 @@ declare class Game {
     colliders: Collider[];
     audioActive: boolean;
     config: any;
+
+    /**
+     * Image assets to preload. Format:
+     * ```js
+     * { key: { path: 'img.png', img: null } }
+     * // With an optional co-located sprite atlas JSON:
+     * { key: { path: 'sheet.png', img: null, atlasJsonPath: 'sheet.json' } }
+     * ```
+     * After loading, `entry.img` holds the HTMLImageElement and, when
+     * `atlasJsonPath` was set, `entry.atlas` holds the parsed JSON
+     * ready to pass to `new SpriteAtlas(entry.atlas)`.
+     */
+    graphicAssets: {
+        [key: string]: {
+            path: string;
+            img: HTMLImageElement | null;
+            /** Optional path to a co-located sprite-atlas JSON file. */
+            atlasJsonPath?: string;
+            /** Populated by the engine after load when atlasJsonPath is set. */
+            atlas?: object;
+            /** Optional CSS hex color to treat as transparent (chroma key). */
+            bgColor?: string;
+        }
+    } | null;
+    /** Audio assets to preload. Format: `{ key: { path: 'sfx.wav' } }` */
+    audioAssets: { [key: string]: { path: string } } | null;
+    /** Tiled map JSON assets to preload. Format: `{ key: { path: 'map.json', data: null } }` */
+    tiledAssets: { [key: string]: { path: string; data: any } } | null;
 
     constructor(renderer: Renderer);
     Configure(config: any): void;

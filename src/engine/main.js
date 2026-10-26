@@ -32,36 +32,57 @@ var audioPlayer = null;
 var mobileWithTouchScreen = navigator.maxTouchPoints > 0 && window.matchMedia('(pointer: coarse)').matches;
 
 function LoadImages(assets, onloaded) {
-    if (assets === null || Object.keys(assets).length === 0)
+    if (assets === null || Object.keys(assets).length === 0) {
         onloaded();
-    
-    let imagesToLoad = 0;
-
-    const onload = function(assetEntry) {
-        /** @type {HTMLImageElement|HTMLCanvasElement} */
-        let result = assetEntry.img;
-        if (assetEntry.bgColor) {
-            result = ApplyColorKey(assetEntry.img, assetEntry.bgColor);
-            assetEntry.img = result;
-        }
-        result.halfWidth  = result.width  / 2;
-        result.halfHeight = result.height / 2;
-        --imagesToLoad;
-        if (imagesToLoad === 0) {
-            onloaded();
-        }
+        return;
     }
 
-    // iterate through the object of assets and load every image
-    for (let asset in assets) {
-        if (assets.hasOwnProperty(asset)) {
-            imagesToLoad++; // one more image to load
+    // Count every image AND every co-located atlas JSON that needs fetching.
+    let pendingCount = 0;
 
-            // create the new image and set its path and onload event
-            const entry = assets[asset];
-            const img = entry.img = new Image();
-            img.src = entry.path;
-            img.onload = () => onload(entry);
+    const done = () => {
+        if (--pendingCount === 0)
+            onloaded();
+    };
+
+    for (let assetKey in assets) {
+        if (!assets.hasOwnProperty(assetKey))
+            continue;
+
+        const entry = assets[assetKey];
+
+        // ── Image ──────────────────────────────────────────────
+        pendingCount++;
+        const img = entry.img = new Image();
+        img.src = entry.path;
+        img.onload = () => {
+            let result = entry.img;
+            if (entry.bgColor) {
+                result = ApplyColorKey(entry.img, entry.bgColor);
+                entry.img = result;
+            }
+            result.halfWidth  = result.width  / 2;
+            result.halfHeight = result.height / 2;
+            done();
+        };
+
+        // ── Co-located atlas JSON (optional) ───────────────────
+        if (entry.atlasJsonPath) {
+            pendingCount++;
+            fetch(entry.atlasJsonPath)
+                .then(r => {
+                    if (!r.ok)
+                        throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+                    return r.json();
+                })
+                .then(data => {
+                    entry.atlas = data;
+                    done();
+                })
+                .catch(err => {
+                    console.error(`Failed to load atlas JSON for "${assetKey}" (${entry.atlasJsonPath}):`, err);
+                    done();
+                });
         }
     }
 }
@@ -181,21 +202,18 @@ function Init(GameClass, canvasId = null) {
         LoadJSON(game.tiledAssets, () => {
             console.log(`All Tiled JSON files loaded.`);
 
-            LoadJSON(game.atlasAssets, () => {
-                console.log(`All sprite-atlas JSON files loaded.`);
-
-                if (game.config.audioAnalyzer) {
-                    audioPlayer = new AudioPlayer(true, game.config.analyzerfftSize, game.config.analyzerSmoothing);
-                }
-                else {
-                    audioPlayer = new AudioPlayer();
-                }
-                audioPlayer.LoadAudio(game.audioAssets, () => {
-                    console.log("All audio files loaded.");
-                    console.log("Starting the game...");
-                    Start();
-                    Loop();
-                });
+            if (game.config.audioAnalyzer) {
+                audioPlayer = new AudioPlayer(true, game.config.analyzerfftSize, game.config.analyzerSmoothing);
+            }
+            else {
+                audioPlayer = new AudioPlayer();
+            }
+            
+            audioPlayer.LoadAudio(game.audioAssets, () => {
+                console.log("All audio files loaded.");
+                console.log("Starting the game...");
+                Start();
+                Loop();
             });
         });
     });

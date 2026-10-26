@@ -282,6 +282,24 @@ this.audioAssets   = { shoot: { path: 'assets/shoot.wav' } };
 // game.audioPlayer.PlayAudio('shoot')
 ```
 
+### Loading sprite atlases
+A sprite atlas JSON is co-located with its image via the optional `atlasJsonPath` field on the graphic asset entry. The engine loads both in parallel:
+```javascript
+// In constructor:
+this.graphicAssets = {
+    sprites: { path: 'assets/sprites.png', img: null, atlasJsonPath: 'assets/sprites.json', atlas: null }
+};
+
+// In Start() — both img and atlas are ready:
+this.spritesAtlas = new SpriteAtlas(this.graphicAssets.sprites.atlas);
+
+// In Draw():
+const r = this.spritesAtlas.get('coin'); // → { x, y, w, h }  or null
+renderer.DrawImageSection(this.graphicAssets.sprites.img, x, y, r.x, r.y, r.w, r.h, scaleX, scaleY);
+```
+`SpriteAtlas.get(id)` returns `{x, y, w, h}` or `null` if the id is not found.
+Atlas JSON format: `{ "image": "sprites.png", "sprites": { "id": { x, y, w, h }, … } }`.
+
 ### Non-physics collisions
 Colliders are registered with the game and checked every frame via the callback pattern:
 ```javascript
