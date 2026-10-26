@@ -265,7 +265,7 @@ class SpriteObject extends GameObject {
     constructor(position, rotation, scale, img, alpha=1.0) {
         super(position);
         
-        this.sprite = new Sprite(img, this._position, this._rotation, this._scale, alpha);
+        this.sprite = new Sprite(img, this._position, rotation, this._scale, alpha);
         this._rotation = rotation;
         this.scale = scale;
 
