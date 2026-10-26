@@ -1,7 +1,7 @@
 // =====================================================================
 // Death Rally — Playground Loop circuit definition (Option A / inline)
 //
-// Load order: AFTER death_rally.js (references SURFACE, C_WALL, C_BARREL, WORLD_W/H)
+// Load order: AFTER death_rally_game.js (references SURFACE, C_WALL, C_BARREL, WORLD_W/H)
 // To switch to Option B (Tiled), see the commented tiledAssets block in
 // DeathRallyGame constructor and set DR_TILE_TO_SURFACE tile IDs to match
 // your exported Tiled map.

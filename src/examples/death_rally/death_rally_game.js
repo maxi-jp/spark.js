@@ -3,8 +3,8 @@
 // Globals: DeathRallyGame
 // Screen flow: MAIN_MENU → HUB → RACE → RACE_SUMMARY → COMPETITION_SUMMARY → HUB
 //                       ↘ PLAYGROUND (direct, no campaign)
-// Requires: circuit.js, death_rally_defs.js, game_objects.js, cars.js,
-//           game_state.js, menus/*.js
+// Requires: circuit.js, death_rally_defs.js, death_rally_gameobjects.js,
+//           death_rally_cars.js, death_rally_gamestate.js, menus/*.js
 // Circuit data loaded after this file: circuits/*.js
 // =====================================================================
 
@@ -23,15 +23,36 @@ const GAME_SCREEN = Object.freeze({
 const CIRCUIT_MAP = {};
 
 class DeathRallyGame extends Game {
-    constructor(r) {
-        super(r);
-        this.Configure({ screenWidth: SCREEN_W, screenHeight: SCREEN_H, imageSmoothingEnabled: false });
+    constructor(renderer) {
+        super(renderer);
+
+        this.Configure({
+            screenWidth: SCREEN_W,
+            screenHeight: SCREEN_H,
+            fillWindow: true,
+            imageSmoothingEnabled: false,
+            drawColliders: true
+        });
+
+        this.graphicAssets = {
+            sprites: {
+                path: 'src/examples/death_rally/assets/death_rally.png',
+                img: null,
+                atlasJsonPath: 'src/examples/death_rally/assets/death_rally.json',
+                atlas: null,
+            }, 
+            smoke: { path: "./src/examples/death_rally/assets/smoke.png", img: null },
+        };
+
+        this.spriteAtlas = null;
     }
 
     Start() {
         super.Start();
 
         this._setupInput();
+
+        this.spriteAtlas = new SpriteAtlas(this.graphicAssets.sprites.atlas);
 
         this.raceManager  = new RaceManager();
         this.timer        = 0;
@@ -142,7 +163,8 @@ class DeathRallyGame extends Game {
     OnCreditsBack() {
         if (this.gameState) {
             this._showHub();
-        } else {
+        }
+        else {
             this._showMainMenu();
         }
     }
@@ -162,11 +184,15 @@ class DeathRallyGame extends Game {
     /** Hub → start next campaign race */
     OnStartNextRace() {
         const gs  = this.gameState;
-        if (!gs?.isRaceReady || gs.campaignDone) return;
+        if (!gs?.isRaceReady || gs.campaignDone)
+            return;
 
         const key = gs.nextCircuitKey;
         const def = CIRCUIT_MAP[key];
-        if (!def) { console.error(`Circuit not found: ${key}`); return; }
+        if (!def) {
+            console.error(`Circuit not found: ${key}`);
+            return;
+        }
 
         const circuitData = CircuitLoader.FromInline(def);
         this._hideAllMenus();
@@ -188,7 +214,8 @@ class DeathRallyGame extends Game {
         if (this.gameState?.campaignDone) {
             // Unlock supercar and return to main menu for a new run
             this._showMainMenu();
-        } else {
+        }
+        else {
             this._showHub();
         }
     }
@@ -213,16 +240,36 @@ class DeathRallyGame extends Game {
         this.raceManager.LoadCircuit(circuitData);
 
         // Checkpoints
-        for (const cp of circuitData.checkpoints) this.AddGameObject(new CheckpointZone(cp));
+        for (const cp of circuitData.checkpoints)
+            this.AddGameObject(new CheckpointZone(cp));
+        
         // Obstacles
-        for (const ob of circuitData.obstacles)    this.AddGameObject(new Obstacle(ob.cx, ob.cy, ob.w, ob.h, ob.color ?? C_WALL, ob.isBarrel ?? false));
+        for (const ob of circuitData.obstacles)
+            this.AddGameObject(new Obstacle(ob.cx, ob.cy, ob.w, ob.h, ob.color ?? C_WALL, ob.isBarrel ?? false, ob.rotation ?? 0));
+        
         // Pickups
-        for (const pk of circuitData.pickups)      this.AddGameObject(new Pickup(pk.x, pk.y, pk.type, pk.data));
+        for (const pk of circuitData.pickups) {
+            switch (pk.type) {
+                case 'money':
+                    this.AddGameObject(new PickupMoney(pk.x, pk.y, pk.data, this.graphicAssets.sprites.img));
+                    break;
+                case 'health':
+                    this.AddGameObject(new PickupHealth(pk.x, pk.y, pk.data, this.graphicAssets.sprites.img));
+                    break;
+                case 'weapon':
+                    this.AddGameObject(new PickupWeapon(pk.x, pk.y, this.graphicAssets.sprites.img, pk.data));
+                    break;
+                default:
+                    console.warn(`Unable to load pickup (unknown type ${pk.type}).`);
+                    break;
+            }
+        }
 
         if (gs) {
             // Campaign race — use player's selected car with upgrades
             this._createCampaignCars(circuitData, gs);
-        } else {
+        }
+        else {
             // Playground — default cars
             this._createPlaygroundCars(circuitData);
         }
@@ -381,17 +428,18 @@ class DeathRallyGame extends Game {
         const zones = this.raceManager?.circuit?.surfaceZones ?? [];
         for (let i = zones.length - 1; i >= 0; i--) {
             const z = zones[i];
-            if (x >= z.x && x < z.x + z.w && y >= z.y && y < z.y + z.h) return z.surface;
+            if (x >= z.x && x < z.x + z.w && y >= z.y && y < z.y + z.h)
+                return z.surface;
         }
         return SURFACE.GRASS;
     }
 
-    SpawnExplosion(x, y, large) { this.AddGameObject(new Explosion(x, y, large)); }
+    SpawnExplosion(x, y, large) {
+        this.AddGameObject(new Explosion(x, y, large));
+    }
 
-    ShowPickupMessage(pickup) {
-        if (pickup.type === 'weapon')      this.msgText = `+ ${WEAPON_DEFS[pickup.data].name}`;
-        else if (pickup.type === 'health') this.msgText = `+ ${pickup.data} HP`;
-        else                              this.msgText = `+ $${pickup.data}`;
+    ShowPickupMessage(message) {
+        this.msgText = message;
         this.msgTimer = 2.0;
     }
 
@@ -443,15 +491,25 @@ class DeathRallyGame extends Game {
             fill.style.background = pct > 50 ? '#4caf50' : (pct > 25 ? '#ff9800' : '#f44336');
         }
         const wName = document.getElementById('hud-weapon-name');
-        if (wName) wName.textContent = WEAPON_DEFS[p.currentWeapon].name;
+        if (wName)
+            wName.textContent = WEAPON_DEFS[p.currentWeapon].name;
+
         const ammoEl = document.getElementById('hud-ammo');
-        if (ammoEl) ammoEl.textContent = p.ammo > 0 ? '\u00d7' + p.ammo : '';
+        if (ammoEl)
+            ammoEl.textContent = p.ammo > 0 ? '\u00d7' + p.ammo : '';
+
         const moneyEl = document.getElementById('hud-money');
-        if (moneyEl) moneyEl.textContent = '$' + p.moneyCollected;
+        if (moneyEl)
+            moneyEl.textContent = '$' + p.moneyCollected;
+
         const surfEl = document.getElementById('hud-surface');
-        if (surfEl) surfEl.textContent = p.surfaceType?.name ?? '';
+        if (surfEl)
+            surfEl.textContent = p.surfaceType?.name ?? '';
+
         const spdEl = document.getElementById('hud-speed');
-        if (spdEl) spdEl.textContent = Math.round(p.speed * 0.1) + ' km/h';
+        if (spdEl)
+            spdEl.textContent = Math.round(p.speed * 0.1) + ' km/h';
+
         const timeEl = document.getElementById('hud-time');
         if (timeEl) {
             const m = Math.floor(this.timer / 60);
@@ -468,7 +526,8 @@ class DeathRallyGame extends Game {
         if (posEl && rm.state === RACE_STATE.RACING) {
             const idx = rm.GetPositions().findIndex(e => e.car === p);
             posEl.textContent = idx !== -1 ? `P${idx + 1}` : '';
-        } else if (posEl) {
+        }
+        else if (posEl) {
             posEl.textContent = '';
         }
     }

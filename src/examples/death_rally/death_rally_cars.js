@@ -38,7 +38,9 @@ class Car extends GameObject {
         this.surfaceType       = SURFACE.ASPHALT;
         this.isDead            = false;
         this.hitFlash          = 0;
-        this.collisionCooldown = 0;
+        this.carHitCooldown    = 0;
+        this.wallDamageCooldown = 0;
+        this._pushedThisFrame  = false;
     }
 
     Start() {
@@ -115,7 +117,9 @@ class Car extends GameObject {
     }
 
     Update(dt) {
-        if (this.collisionCooldown > 0) this.collisionCooldown -= dt;
+        if (this.carHitCooldown     > 0) this.carHitCooldown    -= dt;
+        if (this.wallDamageCooldown > 0) this.wallDamageCooldown -= dt;
+        this._pushedThisFrame = false;
         if (this.fireCooldown     > 0) this.fireCooldown     -= dt;
         if (this.hitFlash         > 0) this.hitFlash         -= dt;
         this.surfaceType = game.GetSurfaceAt(this._position.x, this._position.y);
@@ -134,7 +138,17 @@ class Car extends GameObject {
                 this._position.y - fwdY * this.def.height * 0.6,
                 this
             ));
-        } else {
+        }
+        else if (this.currentWeapon === 'MISSILE') {
+            game.AddGameObject(new Missile(
+                this._position.x + fwdX * this.def.height * 0.62,
+                this._position.y + fwdY * this.def.height * 0.62,
+                fwdX * def.speed, fwdY * def.speed,
+                this._rotation, this,
+                this.game.graphicAssets.sprites.img
+            ));
+        }
+        else {
             game.AddGameObject(new Projectile(
                 this._position.x + fwdX * this.def.height * 0.62,
                 this._position.y + fwdY * this.def.height * 0.62,
@@ -142,8 +156,10 @@ class Car extends GameObject {
                 this._rotation, this.currentWeapon, this
             ));
         }
+
         this.ammo--;
-        if (this.ammo <= 0) this.currentWeapon = 'NONE';
+        if (this.ammo <= 0)
+            this.currentWeapon = 'NONE';
     }
 
     EquipWeapon(weaponKey) {
@@ -175,7 +191,10 @@ class Car extends GameObject {
         const go = otherCol.go;
         if (!go || this.isDead) return;
 
-        if (go instanceof Car && this.collisionCooldown <= 0) {
+        // ── Car vs Car ───────────────────────────────────────────────
+        // Cooldown prevents the impulse from being applied twice in the
+        // same frame (both cars call OnCollisionEnter against each other).
+        if (go instanceof Car && this.carHitCooldown <= 0) {
             const dx = go._position.x - this._position.x;
             const dy = go._position.y - this._position.y;
             const dist = Math.sqrt(dx * dx + dy * dy) || 1;
@@ -186,30 +205,28 @@ class Car extends GameObject {
                 this.velocity.x -= nx * impulse * go.def.mass;
                 this.velocity.y -= ny * impulse * go.def.mass;
                 const rawDmg = Math.max(0, impact * 0.07 - 2);
-                if (rawDmg > 0) {
-                    // go's spiked bumper amplifies the damage THIS car receives from the impact
-                    const dmg = rawDmg * go.collisionDamageMultiplier;
-                    this.ApplyDamage(dmg, go);
-                }
+                if (rawDmg > 0) this.ApplyDamage(rawDmg * go.collisionDamageMultiplier, go);
             }
-            this.collisionCooldown = 0.3;
+            this.carHitCooldown = 0.3;
 
-        } else if (go instanceof Obstacle && this.collisionCooldown <= 0) {
+        // ── Car vs Obstacle ─────────────────────────────────────────
+        // Physics response (normal + pushout) runs unconditionally so
+        // that a second wall hit in the same bounce is never skipped.
+        // Only damage is throttled by wallDamageCooldown.
+        } else if (go instanceof Obstacle) {
             let nx, ny;
 
             if (go.isBarrel) {
-                // Circular obstacle: center-to-center is the correct separation axis
                 const dx = this._position.x - go._position.x;
                 const dy = this._position.y - go._position.y;
                 const dist = Math.sqrt(dx * dx + dy * dy) || 1;
                 nx = dx / dist;
                 ny = dy / dist;
             } else {
-                // Rectangular obstacle: use the closest point on the AABB to the car
-                // center. This gives a correct axis-aligned normal on flat faces
-                // regardless of how far the obstacle's center is from the contact point.
+                // Closest point on AABB → correct normal on flat faces regardless
+                // of how far the obstacle centre is from the contact point.
                 const hw = go.w * 0.5, hh = go.h * 0.5;
-                const ox = go._position.x,  oy = go._position.y;
+                const ox = go._position.x, oy = go._position.y;
                 const cpx = Clamp(this._position.x, ox - hw, ox + hw);
                 const cpy = Clamp(this._position.y, oy - hh, oy + hh);
                 const dx  = this._position.x - cpx;
@@ -217,8 +234,7 @@ class Car extends GameObject {
                 const dist = Math.sqrt(dx * dx + dy * dy);
 
                 if (dist < 0.5) {
-                    // Car center is inside the rectangle (deep penetration).
-                    // Escape along the reversed velocity direction.
+                    // Deep penetration — escape along reversed velocity.
                     const spd = this.speed || 1;
                     nx = -this.velocity.x / spd;
                     ny = -this.velocity.y / spd;
@@ -228,21 +244,28 @@ class Car extends GameObject {
                 }
             }
 
-            // Reflect only the incoming component of velocity (dot < 0 = moving into surface)
+            // Reflect the incoming velocity component (dot < 0 = moving into surface).
             const dot = this.velocity.x * nx + this.velocity.y * ny;
             if (dot < 0) {
                 this.velocity.x -= 1.6 * dot * nx;
                 this.velocity.y -= 1.6 * dot * ny;
             }
 
-            // Push car out along the normal so it no longer overlaps
-            this._position.x += nx * 8;
-            this._position.y += ny * 8;
+        // Push car clear of the surface using a small fixed offset — velocity is
+        // already reflected so the car naturally moves away. A per-frame flag
+        // prevents multiple same-frame pushouts (corner hits) from stacking.
+        if (!this._pushedThisFrame) {
+            this._position.x += nx * 6;
+            this._position.y += ny * 6;
+            this._pushedThisFrame = true;
+        }
 
-            // Throttle damage separately from the physics response
-            const spd = this.speed;
-            if (spd > 60) this.ApplyDamage((spd - 60) * 0.04);
-            this.collisionCooldown = 0.12;
+            // Damage — throttled so rapid wall contacts don't stack hits.
+            if (this.wallDamageCooldown <= 0) {
+                const spd = this.speed;
+                if (spd > 60) this.ApplyDamage((spd - 60) * 0.04);
+                this.wallDamageCooldown = 0.25;
+            }
         }
     }
 
@@ -309,15 +332,30 @@ class PlayerCar extends Car {
         super.Update(dt);
     }
 
-    CollectPickup(pickup) {
-        switch (pickup.type) {
-            case 'weapon': this.EquipWeapon(pickup.data);  break;
-            case 'health': this.Heal(pickup.data);          break;
-            case 'money':
-                this.moneyCollected += pickup.data;
-                break;
-        }
-        game.ShowPickupMessage(pickup);
+    // CollectPickup(pickup) {
+    //     switch (pickup.type) {
+    //         case 'weapon': this.EquipWeapon(pickup.data);  break;
+    //         case 'health': this.Heal(pickup.data);          break;
+    //         case 'money':
+    //             this.moneyCollected += pickup.data;
+    //             break;
+    //     }
+    //     game.ShowPickupMessage(pickup);
+    // }
+
+    CollectMoney(quantity) {
+        this.moneyCollected += quantity;
+        this.game.ShowPickupMessage(`+ $${quantity}`);
+    }
+
+    CollectHealth(quantity) {
+        this.Heal(quantity);
+        this.game.ShowPickupMessage(`+ ${quantity} HP`);
+    }
+
+    CollectWeapon(weaponType) {
+        this.EquipWeapon(weaponType);
+        this.game.ShowPickupMessage(`+ ${WEAPON_DEFS[weaponType].name}`);
     }
 
     /** Swap vehicle type at runtime (debug menu). Preserves HP ratio. */
@@ -328,10 +366,10 @@ class PlayerCar extends Car {
         this.maxHealth  = this.def.health;
         this.health     = Math.ceil(this.def.health * ratio);
         this.isDead     = false;
-        game.RemoveCollider(this._collider);
+        this.game.RemoveCollider(this._collider);
         this._collider  = new CircleCollider(
             Vector2.Zero(), Math.max(this.def.width, this.def.height) * 0.45, this);
-        game.AddCollider(this._collider);
+        this.game.AddCollider(this._collider);
     }
 }
 

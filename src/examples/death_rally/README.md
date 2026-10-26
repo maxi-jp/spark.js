@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Death Rally — Vehicular Combat Racing
 
 A full top-down vehicular combat arcade game built with spark.js, inspired by the 1996 classic *Death Rally*. Features a complete campaign mode, car upgrades, a dealership, race summaries, and championship standings across three circuits.
@@ -207,11 +206,6 @@ GameState               (campaign state — not a GameObject)
 - **No session persistence** — campaign progress is lost on page reload (memory-only by design).
 - **Simple AI** — waypoint-following with direct-attack when near the player; no pathfinding or opponent awareness.
 
-=======
-# Death Rally — Vehicular Combat Playground
-
-A top-down vehicular combat arcade game inspired by the 1996 classic *Death Rally*. This is a **playground / prototype** scene built with spark.js to test vehicle physics, surface-based friction, weapons, and game systems before building a full race mode.
->>>>>>> 7fa66df2ba51e042463ff368d262055853784076
 
 ---
 

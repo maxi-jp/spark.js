@@ -3,7 +3,7 @@
 // Race management: checkpoints, lap counting, race state machine,
 // and circuit data loading (inline Option A  +  Tiled Option B).
 //
-// Load order: BEFORE death_rally.js
+// Load order: BEFORE death_rally_game.js
 // Globals: RACE_STATE, RaceProgress, CheckpointZone, RaceManager, CircuitLoader
 // Requires: game.js, gameobjects.js, utils_classes.js, main.js (totalTime, debugMode)
 // =====================================================================

@@ -106,6 +106,41 @@ const AI_OPPONENT_DEFS = [
     { vehicleKey: 'TRUCK'  },
 ];
 
+// ── Particle System configurations ────────────────────────
+const missileSmokeConfig = {
+    maxParticleCount: 200,
+    globalCompositeOperation: "overlay",
+    emitterType: emitterType.point,
+
+    MIN_INITIAL_VELOCITY: 5,
+    MAX_INITIAL_VELOCITY: 20,
+
+    MIN_DIRECTION_X: -1,
+    MAX_DIRECTION_X:  1,
+    MIN_DIRECTION_Y: -1,
+    MAX_DIRECTION_Y:  1,
+
+    MIN_OPACITY_INCREMENT_VELOCITY: 4.0,
+    MAX_OPACITY_INCREMENT_VELOCITY: 6.0,
+    MIN_OPACITY_DECREMENT_VELOCITY: 0.5,
+    MAX_OPACITY_DECREMENT_VELOCITY: 1.0,
+
+    MIN_INITIAL_SCALE: 0.025,
+    MAX_INITIAL_SCALE: 0.05,
+
+    MIN_SCALE_VELOCITY: 0.15,
+    MAX_SCALE_VELOCITY: 0.3,
+
+    MIN_INITIAL_ROTATION: 0,
+    MAX_INITIAL_ROTATION: PI2,
+
+    MIN_ROTATION_VELOCITY: 0.05,
+    MAX_ROTATION_VELOCITY: 0.15,
+
+    MIN_TIME_TO_SPAWN_PARTICLE: 0.0001,
+    MAX_TIME_TO_SPAWN_PARTICLE: 0.005
+};
+
 // ── Color constants (keep Draw() hot-paths allocation-free) ──────────
 const C_WHITE     = new Color(1,  1,  1,  1  );
 const C_BLACK     = new Color(0,  0,  0,  1  );

@@ -27,15 +27,19 @@ const FINAL_CIRCUIT = {
     laps: 3,
 
     // Checkpoints (ordered 1→2→3→0)
-    // CP0 (S/F): at the bottom-left, horizontal gate
-    // CP1: bottom-right hairpin
-    // CP2: top-left area, past long straight
-    // CP3: right side, mid-height (after chicane)
+    // Checkpoint gate orientation rule:
+    //   Car heading E/W → gate is VERTICAL   (w:small, h:large)
+    //   Car heading N/S → gate is HORIZONTAL (w:large, h:small)
+    //
+    // CP0 (S/F): bottom-left, car heading EAST  → vertical gate
+    // CP1: bottom-right hairpin exit, car heading NORTH → horizontal gate
+    // CP2: top straight,              car heading WEST  → vertical gate
+    // CP3: right-centre chicane,      car heading NORTH → horizontal gate
     checkpoints: [
-        { id:0, x: 500, y:1580, w:200, h: 35 },  // S/F — horizontal gate, bottom-left
-        { id:1, x:2050, y:1300, w: 35, h:250 },  // CP1 — bottom-right, vertical gate
-        { id:2, x: 600, y: 330, w:200, h: 35 },  // CP2 — top-left, horizontal gate
-        { id:3, x:1800, y: 760, w: 35, h:200 },  // CP3 — right-side chicane, vertical gate
+        { id:0, x: 500, y:1580, w: 35, h:200 },  // S/F  — car heading E, vertical gate
+        { id:1, x:2100, y:1180, w:250, h: 35 },  // CP1  — car heading N, horizontal gate
+        { id:2, x: 600, y: 330, w: 35, h:200 },  // CP2  — car heading W, vertical gate
+        { id:3, x:1800, y: 740, w:200, h: 35 },  // CP3  — car heading N, horizontal gate
     ],
 
     spawns: [

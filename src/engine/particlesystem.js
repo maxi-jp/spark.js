@@ -215,6 +215,8 @@ class ParticleSystem {
      * @param {Vector2}          position  initial emitter position (point emitters)
      */
     constructor(img, config, position) {
+        this.active = true;
+
         this.img = img;
 
         // Merge defaults with provided config overrides
@@ -248,7 +250,7 @@ class ParticleSystem {
     Update(deltaTime) {
         this.nextTimeToSpawnParticle -= deltaTime;
 
-        if (this.nextTimeToSpawnParticle <= 0.0) {
+        if (this.active && this.nextTimeToSpawnParticle <= 0.0) {
             // Reset timer
             this.nextTimeToSpawnParticle = RandomBetweenFloat(
                 this.config.MIN_TIME_TO_SPAWN_PARTICLE,
