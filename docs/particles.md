@@ -77,6 +77,9 @@ const defaultParticleConfig = {
     MIN_ROTATION_VELOCITY: 0.05,
     MAX_ROTATION_VELOCITY: 0.15,
 
+    // Particles spawned per timer tick
+    emitCountPerSpawn: 1,
+
     // Spawn interval (seconds)
     MIN_TIME_TO_SPAWN_PARTICLE: 0.005,
     MAX_TIME_TO_SPAWN_PARTICLE: 0.05
@@ -104,6 +107,7 @@ The main class you interact with. Owns the particle pool, the emitter, and the u
 | Method | Description |
 |--------|-------------|
 | `SetPosition(x, y)` | Move the emitter to a new world-space position. Ideal for point emitters that follow a game object. |
+| `Burst(count = 1, x, y)` | Immediately spawn `count` particles (optionally at `(x, y)` override coordinates), even if `this.active` is `false`. Ideal for one-shot explosions, impacts, and muzzle flashes. |
 | `Update(deltaTime)` | Spawns new particles and advances all active ones. Call once per frame from `Update`. |
 | `Draw(renderer)` | Renders all active particles. Call once per frame from `Draw`. |
 
@@ -111,6 +115,7 @@ The main class you interact with. Owns the particle pool, the emitter, and the u
 
 | Property | Type | Description |
 |----------|------|-------------|
+| `active` | `boolean` | When `false`, automatic timer-based spawning is paused while existing active particles finish their lifecycle (`Burst()` still works). |
 | `activeCount` *(getter)* | `number` | Number of particles currently alive. Useful for debugging pool exhaustion. |
 
 ---

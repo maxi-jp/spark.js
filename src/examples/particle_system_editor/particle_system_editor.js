@@ -41,8 +41,8 @@ const PRESETS = {
             MAX_INITIAL_ROTATION: Number(PI2.toFixed(4)),
             MIN_ROTATION_VELOCITY: 0.05,
             MAX_ROTATION_VELOCITY: 0.15,
-            MIN_TIME_TO_SPAWN_PARTICLE: 0.0001,
-            MAX_TIME_TO_SPAWN_PARTICLE: 0.005,
+            MIN_TIME_TO_SPAWN_PARTICLE: 0.005,
+            MAX_TIME_TO_SPAWN_PARTICLE: 0.04,
         }
     },
     defaultArea: {
@@ -189,6 +189,7 @@ const PRESETS = {
 // All numeric range parameter keys and their min/max counterparts
 const NUMERIC_PARAMS = [
     'maxParticleCount',
+    'emitCountPerSpawn',
     'AREA_X1', 'AREA_Y1', 'AREA_X2', 'AREA_Y2',
     'MIN_INITIAL_VELOCITY', 'MAX_INITIAL_VELOCITY',
     'MIN_DIRECTION_X', 'MAX_DIRECTION_X',
@@ -225,7 +226,7 @@ const renderer = new Canvas2DRenderer(canvas);
 
 let currentImage     = null;
 let currentImageName = 'smoke.png';
-let currentConfig    = Object.assign({}, PRESETS.missileSmoke.config);
+let currentConfig    = Object.assign({}, defaultParticleConfig, PRESETS.missileSmoke.config);
 let particleSystem   = null;
 
 // Simulation & preview state
@@ -391,6 +392,12 @@ function applyConfigChange(changedKey) {
         }
     }
 
+    if (changedKey === 'emitCountPerSpawn') {
+        const count = Math.max(1, Math.round(currentConfig.emitCountPerSpawn || 1));
+        currentConfig.emitCountPerSpawn = count;
+        particleSystem.config.emitCountPerSpawn = count;
+    }
+
     // Keep area bounds synced
     syncEmitterArea();
 
@@ -459,6 +466,7 @@ function getExportableConfig() {
     out.MAX_INITIAL_ROTATION           = Number(currentConfig.MAX_INITIAL_ROTATION);
     out.MIN_ROTATION_VELOCITY          = Number(currentConfig.MIN_ROTATION_VELOCITY);
     out.MAX_ROTATION_VELOCITY          = Number(currentConfig.MAX_ROTATION_VELOCITY);
+    out.emitCountPerSpawn              = Math.max(1, Math.round(currentConfig.emitCountPerSpawn || 1));
     out.MIN_TIME_TO_SPAWN_PARTICLE     = Number(currentConfig.MIN_TIME_TO_SPAWN_PARTICLE);
     out.MAX_TIME_TO_SPAWN_PARTICLE     = Number(currentConfig.MAX_TIME_TO_SPAWN_PARTICLE);
 
@@ -516,6 +524,7 @@ function formatJSConfigSnippet() {
         `    MIN_ROTATION_VELOCITY: ${c.MIN_ROTATION_VELOCITY},`,
         `    MAX_ROTATION_VELOCITY: ${c.MAX_ROTATION_VELOCITY},`,
         ``,
+        `    emitCountPerSpawn: ${c.emitCountPerSpawn},`,
         `    MIN_TIME_TO_SPAWN_PARTICLE: ${c.MIN_TIME_TO_SPAWN_PARTICLE},`,
         `    MAX_TIME_TO_SPAWN_PARTICLE: ${c.MAX_TIME_TO_SPAWN_PARTICLE}`,
         `};`
@@ -694,7 +703,8 @@ function updateTelemetryBar() {
     const max   = particleSystem.config.maxParticleCount;
 
     const avgSpawn = (currentConfig.MIN_TIME_TO_SPAWN_PARTICLE + currentConfig.MAX_TIME_TO_SPAWN_PARTICLE) * 0.5;
-    const spawnRate = avgSpawn > 0 ? (1 / avgSpawn).toFixed(1) : '∞';
+    const emitCount = Math.max(1, currentConfig.emitCountPerSpawn || 1);
+    const spawnRate = avgSpawn > 0 ? (emitCount / avgSpawn).toFixed(1) : '∞';
 
     const avgInc = (currentConfig.MIN_OPACITY_INCREMENT_VELOCITY + currentConfig.MAX_OPACITY_INCREMENT_VELOCITY) * 0.5;
     const avgDec = (currentConfig.MIN_OPACITY_DECREMENT_VELOCITY + currentConfig.MAX_OPACITY_DECREMENT_VELOCITY) * 0.5;
@@ -1001,6 +1011,12 @@ function wireControls() {
         if (particleSystem) particleSystem.active = emitterActive;
         btnEmit.textContent = emitterActive ? 'Emit: ON' : 'Emit: OFF';
         btnEmit.classList.toggle('off', !emitterActive);
+    });
+
+    document.getElementById('btn-burst').addEventListener('click', () => {
+        if (!particleSystem) return;
+        const count = currentConfig.emitCountPerSpawn > 1 ? currentConfig.emitCountPerSpawn : 25;
+        particleSystem.Burst(count);
     });
 
     const btnPause = document.getElementById('btn-pause');

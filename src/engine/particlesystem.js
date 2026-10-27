@@ -59,7 +59,10 @@ const defaultParticleConfig = {
 
     // Time between particle spawns (seconds)
     MIN_TIME_TO_SPAWN_PARTICLE: 0.005,
-    MAX_TIME_TO_SPAWN_PARTICLE: 0.05
+    MAX_TIME_TO_SPAWN_PARTICLE: 0.05,
+
+    // Number of particles spawned on each spawn tick
+    emitCountPerSpawn: 1
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -137,7 +140,11 @@ class Particle {
         }
 
         // Update transform
-        this.scale    += this.scaleVelocity    * deltaTime;
+        this.scale += this.scaleVelocity * deltaTime;
+        if (this.scale <= 0.0) {
+            this.Deactivate();
+            return;
+        }
         this.rotation += this.rotationVelocity * deltaTime;
         this.position.x += this.direction.x   * deltaTime;
         this.position.y += this.direction.y   * deltaTime;
@@ -149,7 +156,7 @@ class Particle {
             this.position.x, this.position.y,
             this.scale, this.scale,
             this.rotation,
-            this.pivot,
+            Particle.pivot,
             this.opacity
         );
     }
@@ -247,37 +254,73 @@ class ParticleSystem {
         this.emitter.position.y = y;
     }
 
-    Update(deltaTime) {
-        this.nextTimeToSpawnParticle -= deltaTime;
+    /**
+     * Internal helper that activates a single pooled particle.
+     * @param {Vector2} [overridePosition]
+     * @returns {boolean} true if a particle was available and activated
+     */
+    _spawnSingleParticle(overridePosition) {
+        let particle = null;
+        for (let i = 0; i < this.particles.length && particle === null; i++) {
+            if (!this.particles[i].active)
+                particle = this.particles[i];
+        }
 
-        if (this.active && this.nextTimeToSpawnParticle <= 0.0) {
-            // Reset timer
-            this.nextTimeToSpawnParticle = RandomBetweenFloat(
-                this.config.MIN_TIME_TO_SPAWN_PARTICLE,
-                this.config.MAX_TIME_TO_SPAWN_PARTICLE
-            );
+        if (!particle)
+            return false;
 
-            // Find the first inactive particle in the pool
-            let particle = null;
-            for (let i = 0; i < this.particles.length && particle === null; i++) {
-                if (!this.particles[i].active)
-                    particle = this.particles[i];
-            }
+        particle.Activate(
+            overridePosition ? overridePosition : this.emitter.GetSpawnPoint(),
+            RandomBetweenFloat(this.config.MIN_OPACITY_INCREMENT_VELOCITY, this.config.MAX_OPACITY_INCREMENT_VELOCITY),
+            RandomBetweenFloat(this.config.MIN_OPACITY_DECREMENT_VELOCITY, this.config.MAX_OPACITY_DECREMENT_VELOCITY),
+            RandomBetweenFloat(this.config.MIN_INITIAL_SCALE,              this.config.MAX_INITIAL_SCALE),
+            RandomBetweenFloat(this.config.MIN_SCALE_VELOCITY,             this.config.MAX_SCALE_VELOCITY),
+            RandomBetweenFloat(this.config.MIN_INITIAL_ROTATION,           this.config.MAX_INITIAL_ROTATION),
+            RandomBetweenFloat(this.config.MIN_ROTATION_VELOCITY,          this.config.MAX_ROTATION_VELOCITY),
+            this.emitter.GetInitialVelocity()
+        );
 
-            if (particle) {
-                particle.Activate(
-                    this.emitter.GetSpawnPoint(),
-                    RandomBetweenFloat(this.config.MIN_OPACITY_INCREMENT_VELOCITY, this.config.MAX_OPACITY_INCREMENT_VELOCITY),
-                    RandomBetweenFloat(this.config.MIN_OPACITY_DECREMENT_VELOCITY, this.config.MAX_OPACITY_DECREMENT_VELOCITY),
-                    RandomBetweenFloat(this.config.MIN_INITIAL_SCALE,              this.config.MAX_INITIAL_SCALE),
-                    RandomBetweenFloat(this.config.MIN_SCALE_VELOCITY,             this.config.MAX_SCALE_VELOCITY),
-                    RandomBetweenFloat(this.config.MIN_INITIAL_ROTATION,           this.config.MAX_INITIAL_ROTATION),
-                    RandomBetweenFloat(this.config.MIN_ROTATION_VELOCITY,          this.config.MAX_ROTATION_VELOCITY),
-                    this.emitter.GetInitialVelocity()
-                );
+        return true;
+    }
+
+    /**
+     * Immediately spawns `count` particles from the pool (works even when `this.active === false`).
+     * Optional `(x, y)` overrides the emitter spawn position for this burst.
+     * @param {number} [count=1]
+     * @param {number} [x]
+     * @param {number} [y]
+     * @returns {number} Number of particles actually spawned
+     */
+    Burst(count = 1, x, y) {
+        const overridePos = (x !== undefined && y !== undefined) ? new Vector2(x, y) : null;
+        let spawned = 0;
+        for (let i = 0; i < count; i++) {
+            if (this._spawnSingleParticle(overridePos)) {
+                spawned++;
             }
             else {
                 console.warn("ParticleSystem: pool exhausted – increase maxParticleCount.");
+                break;
+            }
+        }
+        return spawned;
+    }
+
+    Update(deltaTime) {
+        if (this.active) {
+            this.nextTimeToSpawnParticle -= deltaTime;
+
+            while (this.nextTimeToSpawnParticle <= 0.0) {
+                this.Burst(this.config.emitCountPerSpawn);
+
+                const interval = Math.max(
+                    0.0001,
+                    RandomBetweenFloat(
+                        this.config.MIN_TIME_TO_SPAWN_PARTICLE,
+                        this.config.MAX_TIME_TO_SPAWN_PARTICLE
+                    )
+                );
+                this.nextTimeToSpawnParticle += interval;
             }
         }
 

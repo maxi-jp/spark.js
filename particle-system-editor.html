@@ -59,6 +59,7 @@
 
         <!-- Playback & Emitter Controls -->
         <button id="btn-toggle-emit" class="tb-btn active-toggle" title="Toggle particle spawning (particleSystem.active)">Emit: ON</button>
+        <button id="btn-burst"       class="tb-btn" title="Trigger a one-shot burst of particles (particleSystem.Burst)">💥 Burst</button>
         <button id="btn-pause"       class="tb-btn" title="Pause / resume simulation">⏸ Pause</button>
         <button id="btn-restart"     class="tb-btn danger" title="Clear all active particles and restart">↻ Reset</button>
     </div>
@@ -211,6 +212,14 @@
                                 <input id="cfg-AREA_Y2" type="number" step="1">
                             </div>
                         </div>
+                    </div>
+
+                    <div class="param-row" style="margin-bottom:8px">
+                        <div class="param-header">
+                            <label for="cfg-emitCountPerSpawn" title="Particles spawned per timer tick">emitCountPerSpawn</label>
+                            <input id="cfg-emitCountPerSpawn" type="number" min="1" max="500" step="1" class="num-input">
+                        </div>
+                        <input id="rng-emitCountPerSpawn" type="range" min="1" max="100" step="1" class="range-input">
                     </div>
 
                     <div class="param-group-label">Time Between Spawns (seconds)</div>
