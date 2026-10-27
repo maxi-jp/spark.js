@@ -254,6 +254,8 @@ nav {
 .feature-icon { font-size: 1.65rem; margin-bottom: 0.7rem; display: block; }
 .feature-title { font-size: 1rem; font-weight: 700; margin-bottom: 0.35rem; }
 .feature-desc { font-size: 0.875rem; color: var(--text-dim); line-height: 1.6; }
+.feature-card a { color: var(--spark); text-decoration: none; font-weight: 600; }
+.feature-card a:hover { text-decoration: underline; }
 .feature-desc code {
     background: var(--surface2); padding: 0.1rem 0.35rem; border-radius: 4px;
     font-family: 'Consolas', monospace; font-size: 0.8rem; color: var(--green);

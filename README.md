@@ -30,6 +30,7 @@ Documentation can be consulted [here](https://maxi-jp.github.io/spark.js/docs/).
 - **Utilities**: A collection of helpers for vector math, collision detection, color manipulation, and more.
 - **Sprite Atlas**: `SpriteAtlas` class in `utils_classes.js` wraps a named-rect JSON file and returns `{x,y,w,h}` crop rectangles by id — use with `DrawImageSection` to render individual frames from a sprite sheet. Declare `atlasAssets` in the game constructor (same pattern as `graphicAssets`) and the engine preloads the JSON before `Start()` is called.
 - **Sprite Atlas Editor**: Standalone browser dev tool (`sprite-atlas-editor.html`) for defining named crop rectangles on sprite-sheet images — drag to draw, grid-snap, zoom/pan, numeric editing, import/export JSON.
+- **Particle System Editor**: Standalone browser dev tool (`particle-system-editor.html`) for designing, previewing, and exporting `ParticleSystem` configurations in real time — upload custom particle textures (or use built-in procedural shapes), tune all emitter/particle parameters with live sliders, test emitter movement modes (drag, follow mouse, orbit), and export JSON or JS snippets.
 - **Debugging Tools**: Optional debug drawing for physics bodies and an FPS/stats overlay.
 - **Mode 7 Renderer**: Simulate SNES-style pseudo-3D backgrounds (as in F-Zero or Mario Kart).
 
@@ -123,6 +124,9 @@ Documentation can be consulted [here](https://maxi-jp.github.io/spark.js/docs/).
   - sprite_atlas_editor/  # Standalone sprite-sheet crop-rect editor (no engine dependency)
     - sprite_atlas_editor.js   # Interactive canvas editor — draw, name, snap, export JSON
     - sprite_atlas_editor.css
+  - particle_system_editor/ # Standalone real-time particle system config editor
+    - particle_system_editor.js # Interactive canvas preview, parameter sliders, presets & JSON export
+    - particle_system_editor.css
 
 ## Getting Started
 
@@ -304,7 +308,7 @@ class MyGame extends Game {
 }
 ```
 
-See `src/examples/particles/particles_example.js` for a full demo with smoke, rain, and snow presets.
+See `src/examples/particles/particles_example.js` for a full demo with smoke, rain, and snow presets, or open `particle-system-editor.html` to visually design and export particle system configurations as JSON.
 
 > The particle system is based on the standalone [HTML5_ParticleSystem](https://github.com/maxi-jp/HTML5_ParticleSystem) project.
 

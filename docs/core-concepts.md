@@ -466,3 +466,12 @@ The `TiledLoader` handles:
 - **Object layers** for sprites and game object placement
 
 > See the [Tiled integration guide](./tiled-integration.md) for full setup instructions and the [Tileset example](../tileset.html) for a complete working demo.
+
+---
+
+## Standalone Visual Developer Tools
+
+The repository includes two browser-based visual editors that require no build step and export JSON configurations directly compatible with the engine:
+
+- **[Sprite Atlas Editor](../sprite-atlas-editor.html ':ignore :target=_blank')** — Load a sprite-sheet image, draw and snap named crop rectangles, and export a JSON file for `SpriteAtlas` (`this.atlasAssets` in `Game`).
+- **[Particle System Editor](../particle-system-editor.html ':ignore :target=_blank')** — Upload a particle texture (or use built-in procedural shapes), tune all `ParticleSystem` emitter parameters (spawn rate, velocity, direction cones, opacity fade-in/out, scale growth, rotation, and blend mode) with real-time canvas preview, test moving emitters (drag, follow mouse, orbit), and export the configuration as JSON or a ready-to-paste JavaScript snippet. See the [Particle System guide](./particles.md) for full details.

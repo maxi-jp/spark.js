@@ -19,6 +19,7 @@ Explore the `src/examples/` directory for practical demonstrations of the engine
 
 ### Other systems
 - [Sprite Atlas Editor](../sprite-atlas-editor.html ':ignore :target=_blank') — standalone dev tool for defining named crop rectangles on sprite sheets and exporting them as JSON. Load a sprite sheet image, drag to draw named rects (with optional grid snapping), zoom and pan, edit coords numerically, then export a `SpriteAtlas`-compatible JSON file. Use `atlasAssets` to preload the JSON and `new SpriteAtlas(data).get('id')` to retrieve a `{x,y,w,h}` rect at runtime — pass it directly to `DrawImageSection`.
+- [Particle System Editor](../particle-system-editor.html ':ignore :target=_blank') — standalone dev tool for designing, previewing, and exporting `ParticleSystem` configurations in real time. Upload a custom particle image (or choose from 5 built-in procedural textures), tune every `defaultParticleConfig` parameter with live sliders and numeric inputs, test emitter movement (drag point/area bounds on canvas, follow mouse, or orbit path), start from 6 built-in presets (including Death Rally missile smoke), and export a ready-to-use JSON config or JS snippet. See [particles.md](particles.md) for full documentation.
 - [Audio system test](../audiotest.html ':ignore :target=_blank')
 - [Colliders test](../colliders.html ':ignore :target=_blank')
 - [Timer System test](../timer-test.html ':ignore :target=_blank') — one-shot and repeating timers, GameObject-owned timers, and automatic cleanup on destruction

@@ -4,6 +4,8 @@ The particle system (`engine/particlesystem.js`) provides a flexible, image-base
 
 > Based on the standalone [HTML5_ParticleSystem](https://github.com/maxi-jp/HTML5_ParticleSystem) project.
 
+> 💡 **Visual Tool:** Use the standalone [Particle System Editor](../particle-system-editor.html ':ignore :target=_blank') to upload a particle image, tweak every config property in real time on a live canvas, and export a ready-to-use JSON configuration.
+
 ## Dependencies
 
 `particlesystem.js` requires `utils_math.js` (`Vector2`, `RandomBetweenFloat`, `PI2`). Include it **after** the rest of the engine scripts:
@@ -216,7 +218,24 @@ Draw() {
 }
 ```
 
-## Live Demo
+## Particle System Editor
+
+Designing particle effects by hand-editing numbers in code can be tedious. The engine includes a standalone, browser-based **[Particle System Editor](../particle-system-editor.html ':ignore :target=_blank')** (`particle-system-editor.html`) that lets you build and preview effects visually:
+
+- **Custom Particle Textures** — Upload any PNG/JPG/WebP/SVG sprite via file picker or drag-and-drop onto the canvas, or test immediately with 5 built-in procedural textures (*Soft Smoke Puff*, *Glowing Spark*, *Hard Circle*, *Star / Flame*, *Crisp Square*).
+- **Real-Time Parameter Tuning** — Paired sliders and numeric inputs for every `defaultParticleConfig` property: pool size (`maxParticleCount`), blend mode (`globalCompositeOperation`), emitter type (`point` vs `area`), spawn interval, initial speed, X/Y direction cones, fade-in/out velocities, initial scale, scale growth, initial rotation, and rotation velocity.
+- **Interactive Emitter Testing** — Test how your particle trail behaves in motion using three emitter modes:
+  - **Static / Drag** — Drag the emitter handle (or the `AREA_X1,Y1` / `AREA_X2,Y2` bounding box corners in area mode) directly on the canvas.
+  - **Follow Mouse** — Emitter tracks the cursor to simulate attached game objects (e.g. a missile smoke trail).
+  - **Orbit Path** — Emitter moves automatically along a circular path at configurable speed.
+- **Built-in Presets** — Jump-start effects from 6 presets (*Missile Smoke (Death Rally)*, *Fire / Torch*, *Explosion Sparks*, *Rain Storm*, *Gentle Snow*, and *Magic Portal*), then customize further.
+- **JSON Import & Export** — Download the config as a `.json` file, copy the raw JSON, or copy a ready-to-paste JavaScript snippet (`const particleConfig = ...; new ParticleSystem(img, particleConfig);`), and re-import existing JSON files at any time.
+
+---
+
+## Live Demo & Tools
+
+- **Interactive Editor:** [Particle System Editor](../particle-system-editor.html ':ignore :target=_blank') (`src/examples/particle_system_editor/`)
 
 See it in action: [Particle System demo](../particles.html ':ignore :target=_blank')
 

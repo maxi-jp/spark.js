@@ -54,7 +54,7 @@ An efficient object pooling system for reusing frequently created and destroyed 
 
 ### Particle System
 
-A configurable, image-based particle emitter that supports both **point** and **area** spawn modes. Every per-particle property — velocity, direction, opacity fade, scale, and rotation — is controlled by min/max random ranges defined in a config object. The system uses an internal object pool so no garbage is created at runtime. Based on the standalone [HTML5_ParticleSystem](https://github.com/maxi-jp/HTML5_ParticleSystem) project.
+A configurable, image-based particle emitter that supports both **point** and **area** spawn modes. Every per-particle property — velocity, direction, opacity fade, scale, and rotation — is controlled by min/max random ranges defined in a config object. The system uses an internal object pool so no garbage is created at runtime. Includes a standalone **[Particle System Editor](../particle-system-editor.html)** to upload a particle sprite, tune parameters live on canvas, and export JSON configs. Based on the standalone [HTML5_ParticleSystem](https://github.com/maxi-jp/HTML5_ParticleSystem) project.
 
 ### Tiled Map Editor Integration
 

@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>spark.js — Particle System Editor</title>
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="stylesheet" href="src/examples/particle_system_editor/particle_system_editor.css">
+
+    <!-- Engine dependencies used directly so preview matches in-engine behaviour 1:1 -->
+    <script src="src/engine/utils_math.js"></script>
+    <script src="src/engine/utils_classes.js"></script>
+    <script src="src/engine/renderer.js"></script>
+    <script src="src/engine/particlesystem.js"></script>
+</head>
+<body>
+
+    <!-- ── Toolbar ── -->
+    <div id="toolbar">
+        <h1>✨ SPARK.JS — PARTICLE SYSTEM EDITOR</h1>
+        <div class="tb-sep"></div>
+
+        <!-- Particle Image -->
+        <button id="btn-load-img" class="tb-btn">Load Image</button>
+        <input type="file" id="file-img" accept="image/*" style="display:none">
+        <select id="select-builtin-img" class="tb-select" title="Built-in sample particle images">
+            <option value="smoke">Built-in: smoke.png</option>
+            <option value="smoke2">Built-in: smoke2.png</option>
+            <option value="snow">Built-in: snow.png</option>
+            <option value="waterdrop">Built-in: waterdrop.png</option>
+            <option value="procedural">Built-in: Soft Circle</option>
+        </select>
+
+        <div class="tb-sep"></div>
+
+        <!-- Presets -->
+        <label for="select-preset" class="tb-label">Preset</label>
+        <select id="select-preset" class="tb-select" title="Load a preset configuration">
+            <option value="missileSmoke">Missile Smoke (Death Rally)</option>
+            <option value="defaultArea">Default (Area Smoke)</option>
+            <option value="pointSmoke">Point Smoke</option>
+            <option value="fire">Fire / Exhaust</option>
+            <option value="rain">Rain</option>
+            <option value="snow">Snow</option>
+        </select>
+
+        <div class="tb-sep"></div>
+
+        <!-- Config JSON -->
+        <input id="config-name" type="text" value="missileSmokeConfig" class="tb-input tb-input-wide"
+               title="Config name for export" spellcheck="false" autocomplete="off">
+        <button id="btn-load-json" class="tb-btn" title="Import a .json particle config">Load JSON</button>
+        <input type="file" id="file-json" accept=".json" style="display:none">
+        <button id="btn-copy-js"   class="tb-btn" title="Copy JS const snippet to clipboard">Copy JS</button>
+        <button id="btn-export"    class="tb-btn primary" title="Download config as a .json file">Export JSON ↓</button>
+
+        <div class="tb-sep"></div>
+
+        <!-- Playback & Emitter Controls -->
+        <button id="btn-toggle-emit" class="tb-btn active-toggle" title="Toggle particle spawning (particleSystem.active)">Emit: ON</button>
+        <button id="btn-pause"       class="tb-btn" title="Pause / resume simulation">⏸ Pause</button>
+        <button id="btn-restart"     class="tb-btn danger" title="Clear all active particles and restart">↻ Reset</button>
+    </div>
+
+    <!-- ── Main ── -->
+    <div id="main">
+
+        <!-- Canvas area -->
+        <div id="canvas-wrap">
+            <canvas id="editor-canvas"></canvas>
+
+            <!-- Floating canvas overlay bar (top-left) -->
+            <div id="canvas-controls">
+                <div class="cc-group">
+                    <label class="tb-label" for="select-motion">Motion</label>
+                    <select id="select-motion" class="tb-select" title="Preview emitter movement (Point emitter)">
+                        <option value="manual">Click / Drag on Canvas</option>
+                        <option value="mouse">Follow Mouse</option>
+                        <option value="circle">Circle Path (Missile Trail)</option>
+                        <option value="figure8">Figure-8 Path</option>
+                        <option value="projectile">Linear Projectile</option>
+                    </select>
+                </div>
+
+                <div class="cc-group" id="motion-speed-group" style="display:none">
+                    <label class="tb-label" for="motion-speed">Speed</label>
+                    <input id="motion-speed" type="range" min="40" max="700" step="10" value="280" style="width:75px">
+                    <span id="motion-speed-val" class="tb-label">280 px/s</span>
+                </div>
+
+                <div class="tb-sep"></div>
+
+                <div class="cc-group">
+                    <label class="tb-label" for="bg-preset">BG</label>
+                    <select id="bg-preset" class="tb-select" title="Canvas background surface">
+                        <option value="#414146">Asphalt (#414146)</option>
+                        <option value="#1a1a2e">Dark Night (#1a1a2e)</option>
+                        <option value="#325023">Grass (#325023)</option>
+                        <option value="#785532">Dirt (#785532)</option>
+                        <option value="#000000">Pure Black (#000000)</option>
+                        <option value="checker">Checkerboard</option>
+                    </select>
+                    <input id="bg-color" type="color" value="#414146" title="Custom background color">
+                </div>
+
+                <div class="tb-sep"></div>
+
+                <div class="cc-group">
+                    <input id="chk-gizmo" type="checkbox" checked>
+                    <label for="chk-gizmo" class="tb-label" style="cursor:pointer">Gizmos</label>
+                </div>
+            </div>
+
+            <!-- Drag & drop overlay -->
+            <div id="drop-overlay">
+                <span class="dh-icon">✨</span>
+                <p>Drop an <strong>image</strong> to use as particle sprite, or a <strong>.json</strong> config file</p>
+            </div>
+
+            <!-- Telemetry / status bar -->
+            <div id="coord-bar"></div>
+        </div>
+
+        <!-- Right panel: Particle System Config Controls -->
+        <div id="side-panel">
+
+            <!-- Current Sprite Preview -->
+            <div class="panel-section sprite-preview-section">
+                <div class="sprite-thumb-wrap" id="thumb-drop-zone" title="Click or drag an image here to change particle texture">
+                    <img id="sprite-thumb" alt="particle">
+                </div>
+                <div class="sprite-meta">
+                    <div class="panel-title" style="margin-bottom:2px">Particle Texture</div>
+                    <div id="tb-image-name" class="sprite-filename">smoke.png</div>
+                    <div id="tb-image-size" class="sprite-dims">64 × 64 px</div>
+                </div>
+            </div>
+
+            <!-- Scrollable Config Parameters -->
+            <div id="config-scroll">
+
+                <!-- 1. General & Blending -->
+                <div class="panel-section">
+                    <div class="panel-title">General &amp; Blending</div>
+
+                    <div class="param-row">
+                        <div class="param-header">
+                            <label for="cfg-maxParticleCount">maxParticleCount</label>
+                            <input id="cfg-maxParticleCount" type="number" min="1" max="5000" step="1" class="num-input">
+                        </div>
+                        <input id="rng-maxParticleCount" type="range" min="1" max="2000" step="1" class="range-input">
+                    </div>
+
+                    <div class="param-row" style="margin-top:8px">
+                        <div class="param-header">
+                            <label for="cfg-globalCompositeOperation">globalCompositeOperation</label>
+                        </div>
+                        <select id="cfg-globalCompositeOperation" class="full-select">
+                            <option value="source-over">source-over (Normal)</option>
+                            <option value="lighter">lighter (Additive / Fire / Glow)</option>
+                            <option value="overlay">overlay (Contrast Smoke)</option>
+                            <option value="screen">screen (Soft Brighten)</option>
+                            <option value="multiply">multiply (Darken / Shadows)</option>
+                            <option value="color-dodge">color-dodge</option>
+                            <option value="color-burn">color-burn</option>
+                            <option value="hard-light">hard-light</option>
+                            <option value="soft-light">soft-light</option>
+                            <option value="difference">difference</option>
+                            <option value="exclusion">exclusion</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 2. Emitter Shape & Spawn Timing -->
+                <div class="panel-section">
+                    <div class="panel-title">Emitter &amp; Spawn Timing</div>
+
+                    <div class="param-row">
+                        <div class="param-header">
+                            <label for="cfg-emitterType">emitterType</label>
+                        </div>
+                        <select id="cfg-emitterType" class="full-select">
+                            <option value="0">0 — emitterType.point (Single Position)</option>
+                            <option value="1">1 — emitterType.area (Rectangle Bounds)</option>
+                        </select>
+                    </div>
+
+                    <!-- Area bounds (only visible when emitterType === area) -->
+                    <div id="area-bounds-panel" class="sub-panel" style="display:none">
+                        <div class="sub-panel-header">
+                            <span>Area Bounds (px)</span>
+                            <button id="btn-fit-area" class="mini-btn" title="Set area to current canvas size">Full Canvas</button>
+                            <button id="btn-center-area" class="mini-btn" title="Set a centered 200x200 box">Center Box</button>
+                        </div>
+                        <div class="coord-grid">
+                            <div class="coord-field">
+                                <label for="cfg-AREA_X1">AREA_X1</label>
+                                <input id="cfg-AREA_X1" type="number" step="1">
+                            </div>
+                            <div class="coord-field">
+                                <label for="cfg-AREA_Y1">AREA_Y1</label>
+                                <input id="cfg-AREA_Y1" type="number" step="1">
+                            </div>
+                            <div class="coord-field">
+                                <label for="cfg-AREA_X2">AREA_X2</label>
+                                <input id="cfg-AREA_X2" type="number" step="1">
+                            </div>
+                            <div class="coord-field">
+                                <label for="cfg-AREA_Y2">AREA_Y2</label>
+                                <input id="cfg-AREA_Y2" type="number" step="1">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="param-group-label">Time Between Spawns (seconds)</div>
+                    <div class="dual-param">
+                        <div class="param-row">
+                            <div class="param-header">
+                                <label for="cfg-MIN_TIME_TO_SPAWN_PARTICLE" title="MIN_TIME_TO_SPAWN_PARTICLE">MIN_TIME</label>
+                                <input id="cfg-MIN_TIME_TO_SPAWN_PARTICLE" type="number" min="0.0001" max="5" step="0.0005" class="num-input">
+                            </div>
+                            <input id="rng-MIN_TIME_TO_SPAWN_PARTICLE" type="range" min="0.0001" max="0.2" step="0.0005" class="range-input">
+                        </div>
+                        <div class="param-row">
+                            <div class="param-header">
+                                <label for="cfg-MAX_TIME_TO_SPAWN_PARTICLE" title="MAX_TIME_TO_SPAWN_PARTICLE">MAX_TIME</label>
+                                <input id="cfg-MAX_TIME_TO_SPAWN_PARTICLE" type="number" min="0.0001" max="5" step="0.0005" class="num-input">
+                            </div>
+                            <input id="rng-MAX_TIME_TO_SPAWN_PARTICLE" type="range" min="0.0001" max="0.2" step="0.0005" class="range-input">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Velocity & Direction -->
+                <div class="panel-section">
+                    <div class="panel-title">Velocity &amp; Direction</div>
+
+                    <div class="param-group-label">Initial Speed (pixels / sec)</div>
+                    <div class="dual-param">
+                        <div class="param-row">
+                            <div class="param-header">
+                                <label for="cfg-MIN_INITIAL_VELOCITY" title="MIN_INITIAL_VELOCITY">MIN_SPEED</label>
+                                <input id="cfg-MIN_INITIAL_VELOCITY" type="number" min="0" max="2000" step="1" class="num-input">
+                            </div>
+                            <input id="rng-MIN_INITIAL_VELOCITY" type="range" min="0" max="1000" step="1" class="range-input">
+                        </div>
+                        <div class="param-row">
+                            <div class="param-header">
+                                <label for="cfg-MAX_INITIAL_VELOCITY" title="MAX_INITIAL_VELOCITY">MAX_SPEED</label>
+                                <input id="cfg-MAX_INITIAL_VELOCITY" type="number" min="0" max="2000" step="1" class="num-input">
+                            </div>
+                            <input id="rng-MAX_INITIAL_VELOCITY" type="range" min="0" max="1000" step="1" class="range-input">
+                        </div>
+                    </div>
+
+                    <div class="param-group-label">
+                        <span>Direction Range [-1, 1]</span>
+                        <span class="quick-btns">
+                            <button class="mini-btn" data-dir="omni" title="All directions">Omni</button>
+                            <button class="mini-btn" data-dir="up" title="Upward cone">↑</button>
+                            <button class="mini-btn" data-dir="down" title="Downward cone">↓</button>
+                            <button class="mini-btn" data-dir="left" title="Leftward cone">←</button>
+                            <button class="mini-btn" data-dir="right" title="Rightward cone">→</button>
+                        </span>
+                    </div>
+                    <div class="dual-param">
+                        <div class="param-row">
+                            <div class="param-header">
+                                <label for="cfg-MIN_DIRECTION_X" title="MIN_DIRECTION_X">MIN_DIR_X</label>
+                                <input id="cfg-MIN_DIRECTION_X" type="number" min="-1" max="1" step="0.05" class="num-input">
+                            </div>
+                            <input id="rng-MIN_DIRECTION_X" type="range" min="-1" max="1" step="0.01" class="range-input">
+                        </div>
+                        <div class="param-row">
+                            <div class="param-header">
+                                <label for="cfg-MAX_DIRECTION_X" title="MAX_DIRECTION_X">MAX_DIR_X</label>
+                                <input id="cfg-MAX_DIRECTION_X" type="number" min="-1" max="1" step="0.05" class="num-input">
+                            </div>
+                            <input id="rng-MAX_DIRECTION_X" type="range" min="-1" max="1" step="0.01" class="range-input">
+                        </div>
+                        <div class="param-row">
+                            <div class="param-header">
+                                <label for="cfg-MIN_DIRECTION_Y" title="MIN_DIRECTION_Y">MIN_DIR_Y</label>
+                                <input id="cfg-MIN_DIRECTION_Y" type="number" min="-1" max="1" step="0.05" class="num-input">
+                            </div>
+                            <input id="rng-MIN_DIRECTION_Y" type="range" min="-1" max="1" step="0.01" class="range-input">
+                        </div>
+                        <div class="param-row">
+                            <div class="param-header">
+                                <label for="cfg-MAX_DIRECTION_Y" title="MAX_DIRECTION_Y">MAX_DIR_Y</label>
+                                <input id="cfg-MAX_DIRECTION_Y" type="number" min="-1" max="1" step="0.05" class="num-input">
+                            </div>
+                            <input id="rng-MAX_DIRECTION_Y" type="range" min="-1" max="1" step="0.01" class="range-input">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Opacity (Fade In / Fade Out) -->
+                <div class="panel-section">
+                    <div class="panel-title">Opacity Lifecycle (Fade In / Out)</div>
+
+                    <div class="param-group-label">Fade-In Speed (opacity / sec)</div>
+                    <div class="dual-param">
+                        <div class="param-row">
+                            <div class="param-header">
+                                <label for="cfg-MIN_OPACITY_INCREMENT_VELOCITY" title="MIN_OPACITY_INCREMENT_VELOCITY">MIN_FADE_IN</label>
+                                <input id="cfg-MIN_OPACITY_INCREMENT_VELOCITY" type="number" min="0.01" max="50" step="0.1" class="num-input">
+                            </div>
+                            <input id="rng-MIN_OPACITY_INCREMENT_VELOCITY" type="range" min="0.05" max="20" step="0.05" class="range-input">
+                        </div>
+                        <div class="param-row">
+                            <div class="param-header">
+                                <label for="cfg-MAX_OPACITY_INCREMENT_VELOCITY" title="MAX_OPACITY_INCREMENT_VELOCITY">MAX_FADE_IN</label>
+                                <input id="cfg-MAX_OPACITY_INCREMENT_VELOCITY" type="number" min="0.01" max="50" step="0.1" class="num-input">
+                            </div>
+                            <input id="rng-MAX_OPACITY_INCREMENT_VELOCITY" type="range" min="0.05" max="20" step="0.05" class="range-input">
+                        </div>
+                    </div>
+
+                    <div class="param-group-label">Fade-Out Speed (opacity / sec)</div>
+                    <div class="dual-param">
+                        <div class="param-row">
+                            <div class="param-header">
+                                <label for="cfg-MIN_OPACITY_DECREMENT_VELOCITY" title="MIN_OPACITY_DECREMENT_VELOCITY">MIN_FADE_OUT</label>
+                                <input id="cfg-MIN_OPACITY_DECREMENT_VELOCITY" type="number" min="0.01" max="50" step="0.05" class="num-input">
+                            </div>
+                            <input id="rng-MIN_OPACITY_DECREMENT_VELOCITY" type="range" min="0.02" max="10" step="0.02" class="range-input">
+                        </div>
+                        <div class="param-row">
+                            <div class="param-header">
+                                <label for="cfg-MAX_OPACITY_DECREMENT_VELOCITY" title="MAX_OPACITY_DECREMENT_VELOCITY">MAX_FADE_OUT</label>
+                                <input id="cfg-MAX_OPACITY_DECREMENT_VELOCITY" type="number" min="0.01" max="50" step="0.05" class="num-input">
+                            </div>
+                            <input id="rng-MAX_OPACITY_DECREMENT_VELOCITY" type="range" min="0.02" max="10" step="0.02" class="range-input">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. Scale -->
+                <div class="panel-section">
+                    <div class="panel-title">Scale &amp; Growth</div>
+
+                    <div class="param-group-label">Initial Scale (multiplier)</div>
+                    <div class="dual-param">
+                        <div class="param-row">
+                            <div class="param-header">
+                                <label for="cfg-MIN_INITIAL_SCALE" title="MIN_INITIAL_SCALE">MIN_SCALE</label>
+                                <input id="cfg-MIN_INITIAL_SCALE" type="number" min="0.001" max="10" step="0.005" class="num-input">
+                            </div>
+                            <input id="rng-MIN_INITIAL_SCALE" type="range" min="0.005" max="2" step="0.005" class="range-input">
+                        </div>
+                        <div class="param-row">
+                            <div class="param-header">
+                                <label for="cfg-MAX_INITIAL_SCALE" title="MAX_INITIAL_SCALE">MAX_SCALE</label>
+                                <input id="cfg-MAX_INITIAL_SCALE" type="number" min="0.001" max="10" step="0.005" class="num-input">
+                            </div>
+                            <input id="rng-MAX_INITIAL_SCALE" type="range" min="0.005" max="2" step="0.005" class="range-input">
+                        </div>
+                    </div>
+
+                    <div class="param-group-label">Scale Velocity (scale / sec)</div>
+                    <div class="dual-param">
+                        <div class="param-row">
+                            <div class="param-header">
+                                <label for="cfg-MIN_SCALE_VELOCITY" title="MIN_SCALE_VELOCITY">MIN_GROWTH</label>
+                                <input id="cfg-MIN_SCALE_VELOCITY" type="number" min="-5" max="10" step="0.01" class="num-input">
+                            </div>
+                            <input id="rng-MIN_SCALE_VELOCITY" type="range" min="-1" max="3" step="0.01" class="range-input">
+                        </div>
+                        <div class="param-row">
+                            <div class="param-header">
+                                <label for="cfg-MAX_SCALE_VELOCITY" title="MAX_SCALE_VELOCITY">MAX_GROWTH</label>
+                                <input id="cfg-MAX_SCALE_VELOCITY" type="number" min="-5" max="10" step="0.01" class="num-input">
+                            </div>
+                            <input id="rng-MAX_SCALE_VELOCITY" type="range" min="-1" max="3" step="0.01" class="range-input">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6. Rotation -->
+                <div class="panel-section">
+                    <div class="panel-title">Rotation</div>
+
+                    <div class="param-group-label">
+                        <span>Initial Rotation (radians)</span>
+                        <span class="quick-btns">
+                            <button class="mini-btn" id="btn-rot-zero" title="Set initial rotation to 0">0</button>
+                            <button class="mini-btn" id="btn-rot-full" title="Set initial rotation to [0, 2π]">0 → 2π</button>
+                        </span>
+                    </div>
+                    <div class="dual-param">
+                        <div class="param-row">
+                            <div class="param-header">
+                                <label for="cfg-MIN_INITIAL_ROTATION" title="MIN_INITIAL_ROTATION">MIN_ANGLE</label>
+                                <input id="cfg-MIN_INITIAL_ROTATION" type="number" min="-6.2832" max="6.2832" step="0.05" class="num-input">
+                            </div>
+                            <input id="rng-MIN_INITIAL_ROTATION" type="range" min="-3.1416" max="6.2832" step="0.01" class="range-input">
+                        </div>
+                        <div class="param-row">
+                            <div class="param-header">
+                                <label for="cfg-MAX_INITIAL_ROTATION" title="MAX_INITIAL_ROTATION">MAX_ANGLE</label>
+                                <input id="cfg-MAX_INITIAL_ROTATION" type="number" min="-6.2832" max="6.2832" step="0.05" class="num-input">
+                            </div>
+                            <input id="rng-MAX_INITIAL_ROTATION" type="range" min="-3.1416" max="6.2832" step="0.01" class="range-input">
+                        </div>
+                    </div>
+
+                    <div class="param-group-label">Rotation Velocity (radians / sec)</div>
+                    <div class="dual-param">
+                        <div class="param-row">
+                            <div class="param-header">
+                                <label for="cfg-MIN_ROTATION_VELOCITY" title="MIN_ROTATION_VELOCITY">MIN_ROT_VEL</label>
+                                <input id="cfg-MIN_ROTATION_VELOCITY" type="number" min="-20" max="20" step="0.01" class="num-input">
+                            </div>
+                            <input id="rng-MIN_ROTATION_VELOCITY" type="range" min="-6.28" max="6.28" step="0.01" class="range-input">
+                        </div>
+                        <div class="param-row">
+                            <div class="param-header">
+                                <label for="cfg-MAX_ROTATION_VELOCITY" title="MAX_ROTATION_VELOCITY">MAX_ROT_VEL</label>
+                                <input id="cfg-MAX_ROTATION_VELOCITY" type="number" min="-20" max="20" step="0.01" class="num-input">
+                            </div>
+                            <input id="rng-MAX_ROTATION_VELOCITY" type="range" min="-6.28" max="6.28" step="0.01" class="range-input">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 7. Live JSON Preview -->
+                <div class="panel-section">
+                    <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center">
+                        <span>Live Config Preview</span>
+                        <button id="btn-copy-json-inline" class="mini-btn">Copy JSON</button>
+                    </div>
+                    <pre id="json-preview"></pre>
+                </div>
+
+            </div><!-- /config-scroll -->
+        </div><!-- /side-panel -->
+    </div><!-- /main -->
+
+    <script src="src/examples/particle_system_editor/particle_system_editor.js"></script>
+</body>
+</html>
+
