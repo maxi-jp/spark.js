@@ -9,7 +9,7 @@ Documentation can be consulted [here](https://maxi-jp.github.io/spark.js/docs/).
 ## Features
 
 - **Modular Core**: A clean, object-oriented core that's easy to extend.
-- **Rendering Engine**: 2D rendering via HTML5 Canvas with an architecture that supports other renderers (like WebGL).
+- **Rendering Engine**: 2D rendering via HTML5 Canvas with an architecture that supports other renderers (like WebGL). The WebGL renderer uses **automatic draw-call batching** — sprites, filled rectangles, and filled circles are each accumulated into a per-type GPU buffer and flushed in a single `gl.drawArrays` call per type per frame, regardless of object count.
 - **Game Loop**: A classic, built-in main loop with fixed update and variable draw phases.
 - **Sprite & Animation**: Full support static sprites, sprite sheets, and both basic and complex sprite sheet animations.
 - **Physics Integration**: Box2D physics support with easy-to-use Box2DGameObject classes for rectangles, sprites, and animated objects.
@@ -98,7 +98,7 @@ Documentation can be consulted [here](https://maxi-jp.github.io/spark.js/docs/).
   - rumble_test.js        # Gamepad haptic/rumble feedback demo
   - lines_intersection.js # Line intersection algorithms
   - object_pooling.js     # Object pooling performance demo
-  - performance_test.js   # Performance benchmarking
+  - performance_test.js   # Performance benchmarking — rectangles, circles, sprites (basic & rotating); append ?webgl to compare renderers
   - puzzlebobble.js       # Puzzle Bobble clone
   - render_test.js        # Renderer feature testing
   - pathfinding/          # Interactive A* pathfinding demo (paint walls, switch heuristics live)
@@ -435,7 +435,7 @@ MIT License
 ## TODO list
 - [x] ~~Example for a Tileset.~~ ✅DONE (see the [tileset example project](https://maxi-jp.github.io/spark.js/tileset.html)).
 - [x] ~~Create an action system for the input (i.e. `Input.Action("move_left")` instead of `Input.IsKeyDown(KEY_LEFT) || Input.IsKeyDown(KEY_A) || Input.IsGamepadButtonDown(0, "DPAD_LEFT") || Input.IsGamepadButtonDown(0, "LS_LEFT")`).~~ ✅DONE
-- [x] Improve the webgl renderer (draw batching).❎half-DONE (only for tilesets for the moment).
+- [x] ~~Improve the webgl renderer (draw batching).~~ ✅DONE — automatic batching for sprites (`DrawImage*`), filled rectangles (`DrawFillRectangle*`), and filled circles (`DrawFillCircle`); draw-call counter in the WebGL stats overlay.
 - [ ] Implement other physic engines.
 - [x] ~~Create a documentation page/wiki.~~ ✅DONE (see [the documentation page](https://maxi-jp.github.io/spark.js/docs/).)
 - [ ] Multiplayer with nodejs.

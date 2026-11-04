@@ -285,6 +285,7 @@ function Draw() {
 
     // draw the game
     game.Draw();
+    renderer.FlushAllBatches();
 
     // draw stats
     if (drawStats)
@@ -293,9 +294,10 @@ function Draw() {
 
 function DrawStats() {
     if (renderer instanceof WebGLRenderer) {
-        this.statsElements.fps.innerText = `FPS: ${fps.toFixed(1)}`;
-        this.statsElements.fpsdt.innerText = `FPS (dt): ${(1 / globalDT).toFixed(2)}`;
-        this.statsElements.dt.innerText = `Delta: ${(globalDT * 1000).toFixed(2)} ms`;
+        this.statsElements.fps.innerText    = `FPS: ${fps.toFixed(1)}`;
+        this.statsElements.fpsdt.innerText  = `FPS (dt): ${(1 / globalDT).toFixed(2)}`;
+        this.statsElements.dt.innerText     = `Delta: ${(globalDT * 1000).toFixed(2)} ms`;
+        this.statsElements.dc.innerText     = `Draw calls: ${renderer.drawCallCount}`;
     }
     else {
         const ctx = renderer.ctx;
@@ -349,6 +351,11 @@ function SetupStatsHTMLElements() {
     dtElem.id = 'engine-stats-dt';
     container.appendChild(dtElem);
 
+    // Draw calls
+    const dcElem = document.createElement('div');
+    dcElem.id = 'engine-stats-dc';
+    container.appendChild(dcElem);
+
     document.body.appendChild(container);
 
     // Save references
@@ -356,6 +363,7 @@ function SetupStatsHTMLElements() {
     this.statsElements.fps = fpsElem;
     this.statsElements.fpsdt = fpsDTElem;
     this.statsElements.dt = dtElem;
+    this.statsElements.dc = dcElem;
 }
 
 function ResumeAudioContext() {

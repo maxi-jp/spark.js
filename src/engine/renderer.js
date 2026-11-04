@@ -126,6 +126,21 @@ class Renderer {
     /** Clears the entire canvas. Called automatically each frame before `Draw()`. */
     Clear() {}
 
+    /** Flushes any pending sprite batch. Overridden in WebGLRenderer. */
+    FlushSpriteBatch() {}
+
+    /** Flushes any pending colored-quad batch. Overridden in WebGLRenderer. */
+    FlushRectBatch() {}
+
+    /** Flushes any pending circle batch. Overridden in WebGLRenderer. */
+    FlushCircleBatch() {}
+
+    /** Flushes all pending batches (sprites, colored quads, circles). Overridden in WebGLRenderer. */
+    FlushAllBatches() {}
+
+    /** Number of `gl.drawArrays` calls issued in the current frame. Always 0 on Canvas2D. */
+    get drawCallCount() { return 0; }
+
     // Draw primitives
     /**
      * Draws a line segment.
@@ -1000,6 +1015,17 @@ class WebGLRenderer extends Renderer {
         this.circleVerts = new Float32Array(this.circleNumSegments * 2);
         this.circleBuffer = gl.createBuffer();
 
+        // Pre-computed unit circle: [cos0, sin0, cos1, sin1, …] — computed once at startup
+        this._unitCircle = new Float32Array(this.circleNumSegments * 2);
+        for (let i = 0; i < this.circleNumSegments; i++) {
+            const a = (i / this.circleNumSegments) * PI2;
+            this._unitCircle[i * 2]     = Math.cos(a);
+            this._unitCircle[i * 2 + 1] = Math.sin(a);
+        }
+
+        // Pre-allocated arc staging buffer — avoids a new Float32Array() per arc draw call
+        this._arcVerts = new Float32Array((this.circleNumSegments + 2) * 2);
+
         // axuliar canvas for measure text
         this.textCanvas = document.createElement('canvas');
         this.textCanvasCtx = this.textCanvas.getContext('2d');
@@ -1021,6 +1047,46 @@ class WebGLRenderer extends Renderer {
         this.spriteShader.Setup(this.gl);
         this.gradientRectShader.Setup(this.gl);
 
+        // Sprite batch shader and state
+        this._spriteBatchShader = new SpriteBatchShader(this.gl);
+        this._spriteBatchShader.Setup(this.gl);
+
+        const _SPRITE_BATCH_MAX_VERTS = 8192 * 6;
+        this._spriteBatchVerts    = new Float32Array(_SPRITE_BATCH_MAX_VERTS * 5);
+        this._spriteBatchMaxVerts = _SPRITE_BATCH_MAX_VERTS;
+        this._spriteBatchCount    = 0;
+        this._spriteBatchTex      = null;
+        this._spriteBatchBuf      = null;
+
+        // Colored-quad batch state
+        this._coloredQuadBatchShader = new ColoredQuadBatchShader(this.gl);
+        this._coloredQuadBatchShader.Setup(this.gl);
+
+        const _RECT_BATCH_MAX_VERTS = 8192 * 6;
+        this._rectBatchVerts    = new Float32Array(_RECT_BATCH_MAX_VERTS * 6); // x,y,r,g,b,a
+        this._rectBatchMaxVerts = _RECT_BATCH_MAX_VERTS;
+        this._rectBatchCount    = 0;
+        this._rectBatchBuf      = null;
+
+        // Circle batch state (SDF quads — one bounding quad per filled circle)
+        this._circleBatchShader = new CircleBatchShader(this.gl);
+        this._circleBatchShader.Setup(this.gl);
+
+        const _CIRCLE_BATCH_MAX_VERTS = 8192 * 6;
+        this._circleBatchVerts    = new Float32Array(_CIRCLE_BATCH_MAX_VERTS * 8); // px,py,lx,ly,r,g,b,a
+        this._circleBatchMaxVerts = _CIRCLE_BATCH_MAX_VERTS;
+        this._circleBatchCount    = 0;
+        this._circleBatchBuf      = null;
+
+        // Draw-call counter — reset each frame in Clear(); gl.drawArrays is intercepted so
+        // every draw (batched flush, primitive, text, etc.) increments it automatically.
+        this._drawCallCount = 0;
+        const _origDrawArrays = gl.drawArrays.bind(gl);
+        gl.drawArrays = (...args) => {
+            this._drawCallCount++;
+            _origDrawArrays(...args);
+        };
+
         this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
         this.gl.clearColor(0, 0, 0, 0); // TODO delete this after testing different pngs
     }
@@ -1030,6 +1096,9 @@ class WebGLRenderer extends Renderer {
     }
     get height() {
         return this._height;
+    }
+    get drawCallCount() {
+        return this._drawCallCount;
     }
 
     set width(value) {
@@ -1143,10 +1212,13 @@ class WebGLRenderer extends Renderer {
     }
 
     Clear() {
+        this.FlushAllBatches();
+        this._drawCallCount = 0;
         this.gl.clear(this.gl.COLOR_BUFFER_BIT);
     }
 
     DrawLine(x1, y1, x2, y2, color=Color.black, lineWidth=1) {
+        this.FlushAllBatches();
         const gl = this.gl;
 
         // update buffer for the two points
@@ -1168,6 +1240,7 @@ class WebGLRenderer extends Renderer {
     }
 
     DrawDashedLine(x1, y1, x2, y2, color=Color.black, lineWidth=1, dash=[5, 5]) {
+        this.FlushAllBatches();
         if (!dash || dash.length === 0) {
             this.DrawLine(x1, y1, x2, y2, color, lineWidth);
             return;
@@ -1215,6 +1288,7 @@ class WebGLRenderer extends Renderer {
     }
 
     DrawPolygon(points, strokeColor=Color.black, lineWidth=1, fill=false, fillColor=Color.black) {
+        this.FlushAllBatches();
         // for (let i = 0; i < points.length; i++) {
         //     const p1 = points[i];
         //     const p2 = points[(i + 1) % points.length];
@@ -1257,6 +1331,7 @@ class WebGLRenderer extends Renderer {
     }
 
     DrawStrokeRectangle(x, y, w, h, color, lineWidth=1, rot=0, pivot=coord) {
+        this.FlushAllBatches();
         const gl = this.gl;
 
         this.basicRectShader.UseForCustomBuffer(gl, this.basicRectShader.outlineBuffer);
@@ -1272,15 +1347,33 @@ class WebGLRenderer extends Renderer {
     }
 
     DrawFillRectangle(x, y, w, h, color, rot=0, pivot=coord) {
-        const gl = this.gl;
+        const hw   = w / 2;
+        const hh   = h / 2;
+        const pivX = pivot.x;
+        const pivY = pivot.y;
 
-        this.basicRectShader.Use(gl);
+        const lx0 = -hw - pivX; const ly0 = -hh - pivY;
+        const lx1 =  hw - pivX; const ly1 = -hh - pivY;
+        const lx2 = -hw - pivX; const ly2 =  hh - pivY;
+        const lx3 =  hw - pivX; const ly3 =  hh - pivY;
 
-        // Set uniforms
-        this.basicRectShader.SetUniforms(gl, this.canvas.width, this.canvas.height, x, y, rot, w, h, pivot.x, pivot.y, color.rgba);
+        let x0, y0, x1, y1, x2, y2, x3, y3;
+        if (rot !== 0) {
+            const cos = Math.cos(rot);
+            const sin = Math.sin(rot);
+            x0 = x + lx0*cos - ly0*sin;  y0 = y + lx0*sin + ly0*cos;
+            x1 = x + lx1*cos - ly1*sin;  y1 = y + lx1*sin + ly1*cos;
+            x2 = x + lx2*cos - ly2*sin;  y2 = y + lx2*sin + ly2*cos;
+            x3 = x + lx3*cos - ly3*sin;  y3 = y + lx3*sin + ly3*cos;
+        } else {
+            x0 = x + lx0; y0 = y + ly0;
+            x1 = x + lx1; y1 = y + ly1;
+            x2 = x + lx2; y2 = y + ly2;
+            x3 = x + lx3; y3 = y + ly3;
+        }
 
-        // Draw
-        gl.drawArrays(gl.TRIANGLES, 0, 6);
+        const c = color.rgba;
+        this._pushColoredQuad(x0, y0, x1, y1, x2, y2, x3, y3, c[0], c[1], c[2], c[3]);
     }
 
     DrawBasicRectangle(x, y, w, h, color=Color.black, stroke=false, lineWidth=1) {
@@ -1293,6 +1386,7 @@ class WebGLRenderer extends Renderer {
     }
 
     DrawStrokeBasicRectangle(x, y, w, h, color=Color.black, lineWidth=1) {
+        this.FlushAllBatches();
         const gl = this.gl;
 
         this.basicRectShader.UseForCustomBuffer(gl, this.basicRectShader.outlineBuffer);
@@ -1308,15 +1402,10 @@ class WebGLRenderer extends Renderer {
     }
 
     DrawFillBasicRectangle(x, y, w, h, color=Color.black) {
-        const gl = this.gl;
-
-        this.basicRectShader.Use(gl);
-
-        // Set uniforms
-        this.basicRectShader.SetUniforms(gl, this.canvas.width, this.canvas.height, x, y, 0, w, h, -w/2, -h/2, color.rgba);
-
-        // Draw
-        gl.drawArrays(gl.TRIANGLES, 0, 6);
+        const x1 = x + w;
+        const y1 = y + h;
+        const c  = color.rgba;
+        this._pushColoredQuad(x, y, x1, y, x, y1, x1, y1, c[0], c[1], c[2], c[3]);
     }
 
     DrawRoundRectangle(x, y, w, h, radius=4, color=Color.black, stroke=false, lineWidth=1, rot=0, pivot=coord) {
@@ -1353,35 +1442,17 @@ class WebGLRenderer extends Renderer {
     }
 
     DrawFillCircle(x, y, radius, color=Color.black) {
-        const gl = this.gl;
-        
-        // TODO let this new vertices calculation and the buffer creation to the shader and just pass the position to update the points
-        // same with the DrawStrokeCircle
-        for (let i = 0; i < this.circleVerts.length; i += 2) {
-            const angle = (i / this.circleNumSegments) * PI2;
-            this.circleVerts[i] = x + Math.cos(angle) * radius;
-            this.circleVerts[i + 1] = y + Math.sin(angle) * radius;
-        }
-
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.circleBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, this.circleVerts, gl.STREAM_DRAW);
-
-        // Use the shader with this custom buffer
-        this.basicRectShader.UseForCustomBuffer(gl, this.circleBuffer);
-
-        // Set uniforms
-        this.basicRectShader.SetUniforms(gl, this.canvas.width, this.canvas.height, 0, 0, 0, 1, 1, 0, 0, color.rgba);
-
-        gl.drawArrays(gl.TRIANGLE_FAN, 0, this.circleNumSegments);
+        const c = color.rgba;
+        this._pushCircleQuad(x, y, radius, c[0], c[1], c[2], c[3]);
     }
 
     DrawStrokeCircle(x, y, radius, color=Color.black, lineWidth=1) {
-        const gl = this.gl;
-        
-        for (let i = 0; i < this.circleVerts.length; i += 2) {
-            const angle = (i / this.circleNumSegments) * PI2;
-            this.circleVerts[i] = x + Math.cos(angle) * radius;
-            this.circleVerts[i + 1] = y + Math.sin(angle) * radius;
+        this.FlushAllBatches();
+        const gl   = this.gl;
+        const unit = this._unitCircle;
+        for (let i = 0; i < this.circleNumSegments; i++) {
+            this.circleVerts[i * 2]     = x + unit[i * 2]     * radius;
+            this.circleVerts[i * 2 + 1] = y + unit[i * 2 + 1] * radius;
         }
 
         gl.bindBuffer(gl.ARRAY_BUFFER, this.circleBuffer);
@@ -1407,14 +1478,14 @@ class WebGLRenderer extends Renderer {
     }
 
     DrawFillEllipse(x, y, radiusX, radiusY, color=Color.black, rot=0) {
-        const gl = this.gl;
+        this.FlushAllBatches();
+        const gl   = this.gl;
         const cosR = Math.cos(rot);
         const sinR = Math.sin(rot);
-
+        const unit = this._unitCircle;
         for (let s = 0; s < this.circleNumSegments; s++) {
-            const angle = (s / this.circleNumSegments) * PI2;
-            const lx = Math.cos(angle) * radiusX;
-            const ly = Math.sin(angle) * radiusY;
+            const lx = unit[s * 2]     * radiusX;
+            const ly = unit[s * 2 + 1] * radiusY;
             this.circleVerts[s * 2]     = x + (lx * cosR - ly * sinR);
             this.circleVerts[s * 2 + 1] = y + (lx * sinR + ly * cosR);
         }
@@ -1429,14 +1500,14 @@ class WebGLRenderer extends Renderer {
     }
 
     DrawStrokeEllipse(x, y, radiusX, radiusY, color=Color.black, lineWidth=1, rot=0) {
-        const gl = this.gl;
+        this.FlushAllBatches();
+        const gl   = this.gl;
         const cosR = Math.cos(rot);
         const sinR = Math.sin(rot);
-
+        const unit = this._unitCircle;
         for (let s = 0; s < this.circleNumSegments; s++) {
-            const angle = (s / this.circleNumSegments) * PI2;
-            const lx = Math.cos(angle) * radiusX;
-            const ly = Math.sin(angle) * radiusY;
+            const lx = unit[s * 2]     * radiusX;
+            const ly = unit[s * 2 + 1] * radiusY;
             this.circleVerts[s * 2]     = x + (lx * cosR - ly * sinR);
             this.circleVerts[s * 2 + 1] = y + (lx * sinR + ly * cosR);
         }
@@ -1461,6 +1532,7 @@ class WebGLRenderer extends Renderer {
     }
 
     DrawFillArc(x, y, radius, startAngle, endAngle, color=Color.black) {
+        this.FlushAllBatches();
         let sweep = endAngle - startAngle;
         if (sweep >= PI2) {
             sweep = PI2;
@@ -1472,8 +1544,8 @@ class WebGLRenderer extends Renderer {
         if (sweep === 0)
             return;
 
-        const steps = Math.max(8, Math.ceil((sweep / PI2) * this.circleNumSegments));
-        const vertices = new Float32Array((steps + 2) * 2);
+        const steps    = Math.max(8, Math.ceil((sweep / PI2) * this.circleNumSegments));
+        const vertices = this._arcVerts;
         vertices[0] = x;
         vertices[1] = y;
         for (let s = 0; s <= steps; s++) {
@@ -1484,7 +1556,7 @@ class WebGLRenderer extends Renderer {
 
         const gl = this.gl;
         gl.bindBuffer(gl.ARRAY_BUFFER, this.polygonBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STREAM_DRAW);
+        gl.bufferData(gl.ARRAY_BUFFER, vertices.subarray(0, (steps + 2) * 2), gl.STREAM_DRAW);
 
         this.basicRectShader.UseForCustomBuffer(gl, this.polygonBuffer);
         this.basicRectShader.SetUniforms(gl, this.canvas.width, this.canvas.height, 0, 0, 0, 1, 1, 0, 0, color.rgba);
@@ -1493,6 +1565,7 @@ class WebGLRenderer extends Renderer {
     }
 
     DrawStrokeArc(x, y, radius, startAngle, endAngle, color=Color.black, lineWidth=1) {
+        this.FlushAllBatches();
         let sweep = endAngle - startAngle;
         if (sweep >= PI2) {
             sweep = PI2;
@@ -1504,8 +1577,8 @@ class WebGLRenderer extends Renderer {
         if (sweep === 0)
             return;
 
-        const steps = Math.max(8, Math.ceil((sweep / PI2) * this.circleNumSegments));
-        const vertices = new Float32Array((steps + 1) * 2);
+        const steps    = Math.max(8, Math.ceil((sweep / PI2) * this.circleNumSegments));
+        const vertices = this._arcVerts;
         for (let s = 0; s <= steps; s++) {
             const angle = startAngle + (s / steps) * sweep;
             vertices[s * 2]     = x + Math.cos(angle) * radius;
@@ -1514,7 +1587,7 @@ class WebGLRenderer extends Renderer {
 
         const gl = this.gl;
         gl.bindBuffer(gl.ARRAY_BUFFER, this.polygonBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STREAM_DRAW);
+        gl.bufferData(gl.ARRAY_BUFFER, vertices.subarray(0, (steps + 1) * 2), gl.STREAM_DRAW);
 
         this.basicRectShader.UseForCustomBuffer(gl, this.polygonBuffer);
         this.basicRectShader.SetUniforms(gl, this.canvas.width, this.canvas.height, 0, 0, 0, 1, 1, 0, 0, color.rgba);
@@ -1524,6 +1597,7 @@ class WebGLRenderer extends Renderer {
     }
 
     DrawText(text, x, y, font, color=Color.black, align="center", baseline="alphabetic", stroke=false, lineWidth=1) {
+        this.FlushAllBatches();
         // TODO rethink this method
         // Prepare the text in the auxiliar Canvas
         const { width, height, x: tx, y: ty } = this.PrepareText(text, x, y, font, color, align, baseline, stroke, lineWidth);
@@ -1561,6 +1635,7 @@ class WebGLRenderer extends Renderer {
     }
 
     DrawTextCached(texture, x, y, width, height) {
+        this.FlushAllBatches();
         const gl = this.gl;
         
         // Draw as a textured quad using the SpriteShader
@@ -1575,66 +1650,88 @@ class WebGLRenderer extends Renderer {
     }
 
     DrawImage(img, x, y, scaleX, scaleY, rot=0, pivot=coord, alpha=1.0) {
-        const gl = this.gl;
-        this.spriteShader.Use(gl);
-        
-        // Set uniforms using the spriteShader's locations
-        this.spriteShader.SetUniforms(gl, this.canvas.width, this.canvas.height, x, y, rot || 0, scaleX * img.width, scaleY * img.height, pivot.x * scaleX, pivot.y * scaleY, alpha);
+        const w    = img.width  * scaleX;
+        const h    = img.height * scaleY;
+        const pivX = pivot.x * scaleX;
+        const pivY = pivot.y * scaleY;
+        const hw = w / 2;
+        const hh = h / 2;
 
-        // Bind texture
-        this.spriteShader.BindTexture(gl, this.GetTexture(img));
+        const lx0 = -hw - pivX; const ly0 = -hh - pivY;
+        const lx1 =  hw - pivX; const ly1 = -hh - pivY;
+        const lx2 = -hw - pivX; const ly2 =  hh - pivY;
+        const lx3 =  hw - pivX; const ly3 =  hh - pivY;
 
-        // Draw
-        gl.drawArrays(gl.TRIANGLES, 0, 6);
+        let x0, y0, x1, y1, x2, y2, x3, y3;
+        if (rot !== 0) {
+            const cos = Math.cos(rot);
+            const sin = Math.sin(rot);
+            x0 = x + lx0*cos - ly0*sin;  y0 = y + lx0*sin + ly0*cos;
+            x1 = x + lx1*cos - ly1*sin;  y1 = y + lx1*sin + ly1*cos;
+            x2 = x + lx2*cos - ly2*sin;  y2 = y + lx2*sin + ly2*cos;
+            x3 = x + lx3*cos - ly3*sin;  y3 = y + lx3*sin + ly3*cos;
+        } else {
+            x0 = x + lx0; y0 = y + ly0;
+            x1 = x + lx1; y1 = y + ly1;
+            x2 = x + lx2; y2 = y + ly2;
+            x3 = x + lx3; y3 = y + ly3;
+        }
+
+        this._pushSpriteQuad(img, x0, y0, x1, y1, x2, y2, x3, y3, 0, 0, 1, 1, alpha);
     }
 
     DrawImageBasic(img, x, y, w=img.width, h=img.height, alpha=1.0) {
-        this.DrawImage(img, x + w / 2, y + h / 2, w / img.width, h / img.height, 0, coord, alpha);
+        const x1 = x + w;
+        const y1 = y + h;
+        this._pushSpriteQuad(img, x, y, x1, y, x, y1, x1, y1, 0, 0, 1, 1, alpha);
     }
 
     DrawImageSection(img, x, y, sx, sy, sw, sh, scaleX, scaleY, rot=0, pivot=coord, alpha=1.0) {
-        const gl = this.gl;
-        const shader = this.spriteShader;
+        const w    = sw * scaleX;
+        const h    = sh * scaleY;
+        const pivX = pivot.x * scaleX;
+        const pivY = pivot.y * scaleY;
+        const hw = w / 2;
+        const hh = h / 2;
 
-        // Calculate normalized texture coordinates for the section
-        const texLeft   = sx / img.width;
-        const texTop    = sy / img.height;
-        const texRight  = (sx + sw) / img.width;
-        const texBottom = (sy + sh) / img.height;
+        const lx0 = -hw - pivX; const ly0 = -hh - pivY;
+        const lx1 =  hw - pivX; const ly1 = -hh - pivY;
+        const lx2 = -hw - pivX; const ly2 =  hh - pivY;
+        const lx3 =  hw - pivX; const ly3 =  hh - pivY;
 
-        // Build texcoord buffer for the section (two triangles)
-        this.auxTexcoords.set([
-            texLeft,  texTop,
-            texRight, texTop,
-            texLeft,  texBottom,
-            texLeft,  texBottom,
-            texRight, texTop,
-            texRight, texBottom,
-        ]);
+        let x0, y0, x1, y1, x2, y2, x3, y3;
+        if (rot !== 0) {
+            const cos = Math.cos(rot);
+            const sin = Math.sin(rot);
+            x0 = x + lx0*cos - ly0*sin;  y0 = y + lx0*sin + ly0*cos;
+            x1 = x + lx1*cos - ly1*sin;  y1 = y + lx1*sin + ly1*cos;
+            x2 = x + lx2*cos - ly2*sin;  y2 = y + lx2*sin + ly2*cos;
+            x3 = x + lx3*cos - ly3*sin;  y3 = y + lx3*sin + ly3*cos;
+        } else {
+            x0 = x + lx0; y0 = y + ly0;
+            x1 = x + lx1; y1 = y + ly1;
+            x2 = x + lx2; y2 = y + ly2;
+            x3 = x + lx3; y3 = y + ly3;
+        }
 
-        // Use the shader and set up position buffer
-        shader.Use(gl);
+        const u0 = sx / img.width;
+        const v0 = sy / img.height;
+        const u1 = (sx + sw) / img.width;
+        const v1 = (sy + sh) / img.height;
 
-        // Update texcoord buffer for this draw
-        gl.bindBuffer(gl.ARRAY_BUFFER, shader.texcoordBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, this.auxTexcoords, gl.STREAM_DRAW);
-
-        // Set uniforms
-        shader.SetUniforms(gl, this.canvas.width, this.canvas.height, x, y, rot || 0, sw * scaleX, sh * scaleY, pivot.x * scaleX, pivot.y * scaleY, alpha);
-
-        // Bind texture
-        shader.BindTexture(gl, this.GetTexture(img));
-
-        // Draw
-        gl.drawArrays(gl.TRIANGLES, 0, 6);
-
-        // Restore the default texcoords for future draws
-        gl.bindBuffer(gl.ARRAY_BUFFER, shader.texcoordBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, shader.texcoords, gl.STATIC_DRAW);
+        this._pushSpriteQuad(img, x0, y0, x1, y1, x2, y2, x3, y3, u0, v0, u1, v1, alpha);
     }
 
     DrawImageSectionBasic(img, x, y, sx, sy, sw, sh, scaleX, scaleY, alpha=1.0) {
-        this.DrawImageSection(img, x, y, sx, sy, sw, sh, scaleX, scaleY, 0, { x: -sw/2, y: -sh/2 }, alpha);
+        const w  = sw * scaleX;
+        const h  = sh * scaleY;
+        const x1 = x + w;
+        const y1 = y + h;
+        const u0 = sx / img.width;
+        const v0 = sy / img.height;
+        const u1 = (sx + sw) / img.width;
+        const v1 = (sy + sh) / img.height;
+        this._pushSpriteQuad(img, x, y, x1, y, x, y1, x1, y1, u0, v0, u1, v1, alpha);
     }
 
     /**
@@ -1645,6 +1742,7 @@ class WebGLRenderer extends Renderer {
      * @param {number} alpha - Global alpha for all sprites
      */
     DrawBatchedSprites(img, vertices, count, alpha = 1.0) {
+        this.FlushAllBatches();
         if (count === 0)
             return;
         
@@ -1691,6 +1789,7 @@ class WebGLRenderer extends Renderer {
     }
     
     DrawGradientRectangle(x, y, w, h, gradient) {
+        this.FlushAllBatches();
         // TODO this would be far more optimal if instead of using a texture, it'll use vertex color
         gradient.UpdateSize(x, y, w, h);
         
@@ -1714,6 +1813,196 @@ class WebGLRenderer extends Renderer {
         gl.drawArrays(gl.TRIANGLES, 0, 6);
     }
 
+    /** Flush any pending sprite batch to the GPU. Call before switching shaders or cameras. */
+    FlushSpriteBatch() {
+        if (this._spriteBatchCount === 0)
+            return;
+
+        const gl         = this.gl;
+        const shader     = this._spriteBatchShader;
+        const floatCount = this._spriteBatchCount * 5;
+
+        if (!this._spriteBatchBuf)
+            this._spriteBatchBuf = gl.createBuffer();
+
+        gl.useProgram(shader.program);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this._spriteBatchBuf);
+        gl.bufferData(gl.ARRAY_BUFFER, this._spriteBatchVerts.subarray(0, floatCount), gl.STREAM_DRAW);
+
+        const stride = 5 * 4;
+        gl.enableVertexAttribArray(shader.alphaLoc);
+        gl.vertexAttribPointer(shader.positionLoc, 2, gl.FLOAT, false, stride, 0);
+        gl.vertexAttribPointer(shader.texcoordLoc, 2, gl.FLOAT, false, stride, 2 * 4);
+        gl.vertexAttribPointer(shader.alphaLoc,    1, gl.FLOAT, false, stride, 4 * 4);
+
+        gl.uniform2f(shader.resolutionLoc, this.canvas.width, this.canvas.height);
+        gl.uniformMatrix3fv(shader.viewMatrixLoc, false, this.viewMatrix);
+        shader.BindTexture(gl, this._spriteBatchTex);
+
+        gl.drawArrays(gl.TRIANGLES, 0, this._spriteBatchCount);
+        gl.disableVertexAttribArray(shader.alphaLoc);
+
+        this._spriteBatchCount = 0;
+        this._spriteBatchTex   = null;
+    }
+
+    /** Flush any pending colored-quad batch to the GPU. */
+    FlushRectBatch() {
+        if (this._rectBatchCount === 0) return;
+
+        const gl     = this.gl;
+        const shader = this._coloredQuadBatchShader;
+        const floatCount = this._rectBatchCount * 6;
+
+        if (!this._rectBatchBuf) {
+            this._rectBatchBuf = gl.createBuffer();
+        }
+
+        gl.useProgram(shader.program);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this._rectBatchBuf);
+        gl.bufferData(gl.ARRAY_BUFFER, this._rectBatchVerts.subarray(0, floatCount), gl.STREAM_DRAW);
+
+        const stride = 6 * 4;
+        gl.vertexAttribPointer(shader.positionLoc, 2, gl.FLOAT, false, stride, 0);
+        gl.vertexAttribPointer(shader.colorLoc,    4, gl.FLOAT, false, stride, 2 * 4);
+
+        gl.uniform2f(shader.resolutionLoc, this.canvas.width, this.canvas.height);
+        gl.uniformMatrix3fv(shader.viewMatrixLoc, false, this.viewMatrix);
+
+        gl.drawArrays(gl.TRIANGLES, 0, this._rectBatchCount);
+
+        this._rectBatchCount = 0;
+    }
+
+    /** Flush both sprite and colored-quad batches. */
+    FlushAllBatches() {
+        this.FlushSpriteBatch();
+        this.FlushRectBatch();
+        this.FlushCircleBatch();
+    }
+
+    /** Flush the pending circle (SDF quad) batch to the GPU. */
+    FlushCircleBatch() {
+        if (this._circleBatchCount === 0) return;
+
+        const gl     = this.gl;
+        const shader = this._circleBatchShader;
+        const floatCount = this._circleBatchCount * 8;
+
+        if (!this._circleBatchBuf)
+            this._circleBatchBuf = gl.createBuffer();
+
+        gl.useProgram(shader.program);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this._circleBatchBuf);
+        gl.bufferData(gl.ARRAY_BUFFER, this._circleBatchVerts.subarray(0, floatCount), gl.STREAM_DRAW);
+
+        const stride = 8 * 4;
+        gl.vertexAttribPointer(shader.positionLoc, 2, gl.FLOAT, false, stride, 0);
+        gl.vertexAttribPointer(shader.localLoc,    2, gl.FLOAT, false, stride, 2 * 4);
+        gl.enableVertexAttribArray(shader.colorLoc);
+        gl.vertexAttribPointer(shader.colorLoc,    4, gl.FLOAT, false, stride, 4 * 4);
+
+        gl.uniform2f(shader.resolutionLoc, this.canvas.width, this.canvas.height);
+        gl.uniformMatrix3fv(shader.viewMatrixLoc, false, this.viewMatrix);
+
+        gl.drawArrays(gl.TRIANGLES, 0, this._circleBatchCount);
+        gl.disableVertexAttribArray(shader.colorLoc);
+
+        this._circleBatchCount = 0;
+    }
+
+    /**
+     * Append a filled circle as a bounding quad to the circle batch.
+     * Uses an SDF test in the fragment shader — zero trig per call.
+     */
+    _pushCircleQuad(x, y, radius, r, g, b, a) {
+        if (this._spriteBatchCount > 0) this.FlushSpriteBatch();
+        if (this._rectBatchCount   > 0) this.FlushRectBatch();
+        if (this._circleBatchCount + 6 > this._circleBatchMaxVerts) this.FlushCircleBatch();
+
+        const buf = this._circleBatchVerts;
+        let i = this._circleBatchCount * 8;
+
+        // Bounding quad corners: TL(-1,-1), TR(+1,-1), BL(-1,+1), BR(+1,+1)
+        // lx,ly are normalized local coords — fragment checks length(lx,ly) <= 1.0
+        const x0 = x - radius, y0 = y - radius;
+        const x1 = x + radius, y1 = y - radius;
+        const x2 = x - radius, y2 = y + radius;
+        const x3 = x + radius, y3 = y + radius;
+
+        // Triangle 1: TL, TR, BL
+        buf[i++]=x0; buf[i++]=y0; buf[i++]=-1; buf[i++]=-1; buf[i++]=r; buf[i++]=g; buf[i++]=b; buf[i++]=a;
+        buf[i++]=x1; buf[i++]=y1; buf[i++]= 1; buf[i++]=-1; buf[i++]=r; buf[i++]=g; buf[i++]=b; buf[i++]=a;
+        buf[i++]=x2; buf[i++]=y2; buf[i++]=-1; buf[i++]= 1; buf[i++]=r; buf[i++]=g; buf[i++]=b; buf[i++]=a;
+        // Triangle 2: BL, TR, BR
+        buf[i++]=x2; buf[i++]=y2; buf[i++]=-1; buf[i++]= 1; buf[i++]=r; buf[i++]=g; buf[i++]=b; buf[i++]=a;
+        buf[i++]=x1; buf[i++]=y1; buf[i++]= 1; buf[i++]=-1; buf[i++]=r; buf[i++]=g; buf[i++]=b; buf[i++]=a;
+        buf[i++]=x3; buf[i++]=y3; buf[i++]= 1; buf[i++]= 1; buf[i++]=r; buf[i++]=g; buf[i++]=b; buf[i++]=a;
+
+        this._circleBatchCount += 6;
+    }
+
+    /**
+     * Append a pre-computed world-space colored quad to the rect batch.
+     * Corners: TL(x0,y0), TR(x1,y1), BL(x2,y2), BR(x3,y3).
+     */
+    _pushColoredQuad(x0, y0, x1, y1, x2, y2, x3, y3, r, g, b, a) {
+        if (this._spriteBatchCount > 0) this.FlushSpriteBatch();
+        if (this._circleBatchCount > 0) this.FlushCircleBatch();
+        if (this._rectBatchCount + 6 > this._rectBatchMaxVerts) {
+            this.FlushRectBatch();
+        }
+
+        const buf = this._rectBatchVerts;
+        let i = this._rectBatchCount * 6;
+
+        // Triangle 1: TL, TR, BL
+        buf[i++]=x0; buf[i++]=y0; buf[i++]=r; buf[i++]=g; buf[i++]=b; buf[i++]=a;
+        buf[i++]=x1; buf[i++]=y1; buf[i++]=r; buf[i++]=g; buf[i++]=b; buf[i++]=a;
+        buf[i++]=x2; buf[i++]=y2; buf[i++]=r; buf[i++]=g; buf[i++]=b; buf[i++]=a;
+        // Triangle 2: BL, TR, BR
+        buf[i++]=x2; buf[i++]=y2; buf[i++]=r; buf[i++]=g; buf[i++]=b; buf[i++]=a;
+        buf[i++]=x1; buf[i++]=y1; buf[i++]=r; buf[i++]=g; buf[i++]=b; buf[i++]=a;
+        buf[i++]=x3; buf[i++]=y3; buf[i++]=r; buf[i++]=g; buf[i++]=b; buf[i++]=a;
+
+        this._rectBatchCount += 6;
+    }
+
+    /**
+     * Append a pre-computed world-space quad to the sprite batch.
+     * Corners: TL(x0,y0), TR(x1,y1), BL(x2,y2), BR(x3,y3).
+     * UV: top-left (u0,v0), bottom-right (u1,v1).
+     */
+    _pushSpriteQuad(img, x0, y0, x1, y1, x2, y2, x3, y3, u0, v0, u1, v1, alpha) {
+        if (this._rectBatchCount   > 0) this.FlushRectBatch();
+        if (this._circleBatchCount > 0) this.FlushCircleBatch();
+
+        const tex = this.GetTexture(img);
+
+        if (tex !== this._spriteBatchTex) {
+            this.FlushSpriteBatch();
+            this._spriteBatchTex = tex;
+        }
+        if (this._spriteBatchCount + 6 > this._spriteBatchMaxVerts) {
+            this.FlushSpriteBatch();
+            this._spriteBatchTex = tex;
+        }
+
+        const buf = this._spriteBatchVerts;
+        let i = this._spriteBatchCount * 5;
+
+        // Triangle 1: TL, TR, BL
+        buf[i++]=x0; buf[i++]=y0; buf[i++]=u0; buf[i++]=v0; buf[i++]=alpha;
+        buf[i++]=x1; buf[i++]=y1; buf[i++]=u1; buf[i++]=v0; buf[i++]=alpha;
+        buf[i++]=x2; buf[i++]=y2; buf[i++]=u0; buf[i++]=v1; buf[i++]=alpha;
+        // Triangle 2: BL, TR, BR
+        buf[i++]=x2; buf[i++]=y2; buf[i++]=u0; buf[i++]=v1; buf[i++]=alpha;
+        buf[i++]=x1; buf[i++]=y1; buf[i++]=u1; buf[i++]=v0; buf[i++]=alpha;
+        buf[i++]=x3; buf[i++]=y3; buf[i++]=u1; buf[i++]=v1; buf[i++]=alpha;
+
+        this._spriteBatchCount += 6;
+    }
+
     _applyViewMatrix() {
         this.gl.useProgram(this.basicRectShader.program);
         this.gl.uniformMatrix3fv(this.basicRectShader.viewMatrixLoc, false, this.viewMatrix);
@@ -1721,9 +2010,16 @@ class WebGLRenderer extends Renderer {
         this.gl.uniformMatrix3fv(this.spriteShader.viewMatrixLoc, false, this.viewMatrix);
         this.gl.useProgram(this.gradientRectShader.program);
         this.gl.uniformMatrix3fv(this.gradientRectShader.viewMatrixLoc, false, this.viewMatrix);
+        this.gl.useProgram(this._spriteBatchShader.program);
+        this.gl.uniformMatrix3fv(this._spriteBatchShader.viewMatrixLoc, false, this.viewMatrix);
+        this.gl.useProgram(this._coloredQuadBatchShader.program);
+        this.gl.uniformMatrix3fv(this._coloredQuadBatchShader.viewMatrixLoc, false, this.viewMatrix);
+        this.gl.useProgram(this._circleBatchShader.program);
+        this.gl.uniformMatrix3fv(this._circleBatchShader.viewMatrixLoc, false, this.viewMatrix);
     }
 
     ApplyCameraTransform(camera) {
+        this.FlushAllBatches();
         const cx   = this._halfWidth;
         const cy   = this._halfHeight;
         const cos  = Math.cos(camera.rotation) * camera.scale;
@@ -1746,6 +2042,7 @@ class WebGLRenderer extends Renderer {
     }
 
     RestoreCameraTransform() {
+        this.FlushAllBatches();
         this.viewMatrix[0] = 1; this.viewMatrix[1] = 0; this.viewMatrix[2] = 0;
         this.viewMatrix[3] = 0; this.viewMatrix[4] = 1; this.viewMatrix[5] = 0;
         this.viewMatrix[6] = 0; this.viewMatrix[7] = 0; this.viewMatrix[8] = 1;
@@ -2027,6 +2324,159 @@ class SpriteShader {
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, texture);
         gl.uniform1i(this.texSamplerLoc, 0);
+    }
+}
+
+class SpriteBatchShader {
+    constructor(gl) {
+        this.vsSource = `
+            attribute vec2 a_position;
+            attribute vec2 a_texcoord;
+            attribute float a_alpha;
+            uniform vec2 u_resolution;
+            uniform mat3 u_viewMatrix;
+            varying vec2 v_texcoord;
+            varying float v_alpha;
+            void main() {
+                vec3 worldPos = u_viewMatrix * vec3(a_position, 1.0);
+                vec2 zeroToOne = worldPos.xy / u_resolution;
+                vec2 clipSpace = zeroToOne * 2.0 - 1.0;
+                gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
+                v_texcoord = a_texcoord;
+                v_alpha = a_alpha;
+            }
+        `;
+
+        this.fsSource = `
+            precision mediump float;
+            varying vec2 v_texcoord;
+            varying float v_alpha;
+            uniform sampler2D u_texture;
+            void main() {
+                vec4 c = texture2D(u_texture, v_texcoord);
+                c.a *= v_alpha;
+                c.rgb *= c.a;
+                gl_FragColor = c;
+            }
+        `;
+
+        this.program = CreateProgram(gl, this.vsSource, this.fsSource);
+
+        this.positionLoc    = gl.getAttribLocation(this.program, "a_position");
+        this.texcoordLoc    = gl.getAttribLocation(this.program, "a_texcoord");
+        this.alphaLoc       = gl.getAttribLocation(this.program, "a_alpha");
+        this.resolutionLoc  = gl.getUniformLocation(this.program, "u_resolution");
+        this.viewMatrixLoc  = gl.getUniformLocation(this.program, "u_viewMatrix");
+        this.samplerLoc     = gl.getUniformLocation(this.program, "u_texture");
+
+        gl.useProgram(this.program);
+        gl.uniformMatrix3fv(this.viewMatrixLoc, false, new Float32Array([1,0,0, 0,1,0, 0,0,1]));
+    }
+
+    Setup(gl) {
+        gl.useProgram(this.program);
+        gl.enableVertexAttribArray(this.positionLoc);
+        gl.enableVertexAttribArray(this.texcoordLoc);
+        // alphaLoc is unique to this shader — enable/disable locally in FlushSpriteBatch
+    }
+
+    BindTexture(gl, texture) {
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.uniform1i(this.samplerLoc, 0);
+    }
+}
+
+class ColoredQuadBatchShader {
+    constructor(gl) {
+        this.vsSource = `
+            attribute vec2 a_position;
+            attribute vec4 a_color;
+            uniform vec2 u_resolution;
+            uniform mat3 u_viewMatrix;
+            varying vec4 v_color;
+            void main() {
+                vec3 worldPos = u_viewMatrix * vec3(a_position, 1.0);
+                vec2 zeroToOne = worldPos.xy / u_resolution;
+                vec2 clipSpace = zeroToOne * 2.0 - 1.0;
+                gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
+                v_color = a_color;
+            }
+        `;
+
+        this.fsSource = `
+            precision mediump float;
+            varying vec4 v_color;
+            void main() {
+                gl_FragColor = vec4(v_color.rgb * v_color.a, v_color.a);
+            }
+        `;
+
+        this.program = CreateProgram(gl, this.vsSource, this.fsSource);
+
+        this.positionLoc   = gl.getAttribLocation(this.program, "a_position");
+        this.colorLoc      = gl.getAttribLocation(this.program, "a_color");
+        this.resolutionLoc = gl.getUniformLocation(this.program, "u_resolution");
+        this.viewMatrixLoc = gl.getUniformLocation(this.program, "u_viewMatrix");
+
+        gl.useProgram(this.program);
+        gl.uniformMatrix3fv(this.viewMatrixLoc, false, new Float32Array([1,0,0, 0,1,0, 0,0,1]));
+    }
+
+    Setup(gl) {
+        gl.useProgram(this.program);
+        gl.enableVertexAttribArray(this.positionLoc);
+        gl.enableVertexAttribArray(this.colorLoc);
+    }
+}
+
+class CircleBatchShader {
+    constructor(gl) {
+        this.vsSource = `
+            attribute vec2 a_position;
+            attribute vec2 a_local;
+            attribute vec4 a_color;
+            uniform vec2 u_resolution;
+            uniform mat3 u_viewMatrix;
+            varying vec2 v_local;
+            varying vec4 v_color;
+            void main() {
+                vec3 worldPos = u_viewMatrix * vec3(a_position, 1.0);
+                vec2 zeroToOne = worldPos.xy / u_resolution;
+                vec2 clipSpace = zeroToOne * 2.0 - 1.0;
+                gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
+                v_local = a_local;
+                v_color = a_color;
+            }
+        `;
+
+        this.fsSource = `
+            precision mediump float;
+            varying vec2 v_local;
+            varying vec4 v_color;
+            void main() {
+                float a = v_color.a * step(length(v_local), 1.0);
+                gl_FragColor = vec4(v_color.rgb * a, a);
+            }
+        `;
+
+        this.program = CreateProgram(gl, this.vsSource, this.fsSource);
+
+        this.positionLoc   = gl.getAttribLocation(this.program, "a_position");
+        this.localLoc      = gl.getAttribLocation(this.program, "a_local");
+        this.colorLoc      = gl.getAttribLocation(this.program, "a_color");
+        this.resolutionLoc = gl.getUniformLocation(this.program, "u_resolution");
+        this.viewMatrixLoc = gl.getUniformLocation(this.program, "u_viewMatrix");
+
+        gl.useProgram(this.program);
+        gl.uniformMatrix3fv(this.viewMatrixLoc, false, new Float32Array([1,0,0, 0,1,0, 0,0,1]));
+    }
+
+    Setup(gl) {
+        gl.useProgram(this.program);
+        gl.enableVertexAttribArray(this.positionLoc);
+        gl.enableVertexAttribArray(this.localLoc);
+        // colorLoc enabled/disabled locally in FlushCircleBatch
     }
 }
 

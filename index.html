@@ -71,7 +71,7 @@
             <div class="feature-card">
                 <span class="feature-icon">🎨</span>
                 <div class="feature-title">2D &amp; WebGL Rendering</div>
-                <div class="feature-desc">Primitives, sprites, sprite sheets, and frame animations through a renderer abstraction that supports both Canvas 2D and WebGL backends.</div>
+                <div class="feature-desc">Primitives, sprites, sprite sheets, and frame animations through a renderer abstraction that supports both Canvas 2D and WebGL backends. The WebGL renderer uses automatic draw-call batching for sprites, filled rectangles, and circles — thousands of objects in a single <code>drawArrays</code> call.</div>
             </div>
             <div class="feature-card">
                 <span class="feature-icon">🔄</span>
@@ -186,6 +186,10 @@
         <div class="examples-grid">
             <a class="ec" href="./render_test.html"><span class="ci">🎨</span>Canvas 2D Renderer</a>
             <a class="ec" href="./render_test.html?webgl"><span class="ci">🎨</span>WebGL Renderer</a>
+            <a class="ec" href="./performance_test_rectangles.html?webgl"><span class="ci">📊</span>Perf: Rectangles</a>
+            <a class="ec" href="./performance_test_circles.html?webgl"><span class="ci">📊</span>Perf: Circles</a>
+            <a class="ec" href="./performance_test_sprites.html?webgl"><span class="ci">📊</span>Perf: Sprites</a>
+            <a class="ec" href="./performance_test_sprites_basic.html?webgl"><span class="ci">📊</span>Perf: Sprites (Basic)</a>
             <a class="ec" href="./particles.html"><span class="ci">✨</span>Particle System</a>
             <a class="ec" href="./audiotest.html"><span class="ci">🔊</span>Audio System</a>
             <a class="ec" href="./colliders.html"><span class="ci">🔵</span>Colliders</a>

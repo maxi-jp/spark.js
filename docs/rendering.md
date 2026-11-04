@@ -404,6 +404,48 @@ this.renderer.fillScreen = false; // calls RestoreCanvasOriginalSize
 
 ---
 
+## WebGL Batching
+
+When running in WebGL mode (`?webgl`), several draw methods accumulate their geometry into shared CPU-side buffers and issue a single `gl.drawArrays` call per batch type at flush time. This dramatically reduces GPU overhead for scenes with many objects.
+
+### Batched methods
+
+| Batch | Methods batched | Flush trigger |
+|---|---|---|
+| **Sprite batch** | `DrawImage`, `DrawImageBasic`, `DrawImageSection`, `DrawImageSectionBasic` | Texture change, buffer full, any non-sprite draw, camera change, end of frame |
+| **Colored-quad batch** | `DrawFillRectangle`, `DrawFillBasicRectangle` (and their `RoundRect` variants) | Any non-rect draw, buffer full, camera change, end of frame |
+| **Circle batch** | `DrawFillCircle` | Any non-circle draw, buffer full, camera change, end of frame |
+
+### Draw-call counter
+
+In WebGL mode the stats overlay (top-left corner) shows a **Draw calls** line updated every frame. With batching active, a scene with thousands of same-type objects typically reports 1–3 draw calls total.
+
+### Draw order guarantee
+
+Batches are flushed automatically whenever a different type of draw call is made. For example:
+
+```javascript
+Draw() {
+    // These three calls produce just 1 draw call — all rects are batched together
+    renderer.DrawFillBasicRectangle(0, 0, 800, 600, Color.black);
+    renderer.DrawFillRectangle(100, 100, 64, 64, Color.red);
+    renderer.DrawFillRectangle(200, 200, 48, 48, Color.blue);
+
+    // Switching to circles flushes the rect batch first, then accumulates circles
+    renderer.DrawFillCircle(400, 300, 32, Color.green);
+    renderer.DrawFillCircle(500, 300, 16, Color.yellow);
+}
+// End of frame: circle batch is flushed → 2 total draw calls
+```
+
+Original draw order is always preserved. The only constraint is that **stroked shapes** (`DrawStrokeCircle`, `DrawStrokeRectangle`, etc.) are not batched — each issues its own draw call immediately.
+
+### Canvas 2D
+
+Batching has no effect on the Canvas 2D renderer. All draw methods behave identically.
+
+---
+
 ## Full API Reference
 
 | Method | Description |

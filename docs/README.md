@@ -16,6 +16,16 @@ A clean, object-oriented architecture ensures that the engine is easy to underst
 
 The architecture supports 2D rendering via the HTML5 Canvas API and WebGL, offering flexibility for more advanced graphics.
 
+The **WebGL renderer** (`WebGLRenderer`) uses automatic draw-call batching to minimise GPU overhead:
+
+- **Sprite batch** — `DrawImage`, `DrawImageBasic`, `DrawImageSection`, and `DrawImageSectionBasic` accumulate all sprites sharing the same texture into a single interleaved vertex buffer and issue one `gl.drawArrays` call per texture group.
+- **Colored-quad batch** — `DrawFillRectangle` and `DrawFillBasicRectangle` (including their rounded-rect variants) accumulate all filled rectangles into one buffer and flush in one draw call regardless of color variety.
+- **Circle batch** — `DrawFillCircle` renders each circle as a GPU-side SDF bounding quad rather than tessellating geometry on the CPU. All circles in a frame are batched into a single draw call.
+
+Batches are flushed automatically when the primitive type changes, the texture changes (sprites), a camera transform is applied, or at end-of-frame. A **draw-call counter** (`renderer.drawCallCount`) is displayed in the WebGL stats overlay (`?webgl` URL suffix) so performance is always visible.
+
+The Canvas 2D renderer is unchanged and does not use batching.
+
 ### Game Loop
 
 A built-in main loop with a fixed update phase for consistent physics and logic, and a variable draw phase to utilize available frame rates.
