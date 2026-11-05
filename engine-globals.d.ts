@@ -149,7 +149,15 @@ declare function DistanceSquaredPointToPoint(p1x: number, p1y: number, p2x: numb
 // ── Input namespace ──────────────────────────────────────────────────────────
 
 declare namespace Input {
-    // Keyboard
+    // Keyboard state object
+    const keyboard: {
+        readonly keyup: { [code: number]: boolean };
+        readonly keypressed: { [code: number]: boolean };
+        readonly keydown: { [code: number]: boolean };
+        readonly anyKeyPressed: boolean;
+    };
+
+    // Keyboard helper functions
     /** True on the single frame the key was first pressed. */
     function IsKeyDown(keycode: number): boolean;
     /** True on the single frame the key was released. */
@@ -181,12 +189,29 @@ declare namespace Input {
     function IsMouseDown(button?: 0 | 1 | 2): boolean;
     /** True on the single frame the mouse button was released. */
     function IsMouseUp(button?: 0 | 1 | 2): boolean;
-    /** Returns the current mouse position in canvas space. */
-    function GetMousePosition(): { x: number; y: number };
+
+    // Touch state object
+    const touch: {
+        readonly any: boolean;
+        readonly count: number;
+        readonly down: boolean;
+        readonly up: boolean;
+        readonly touches: Map<number, { id: number; x: number; y: number }>;
+    };
+
+    // Gamepads state array
+    const gamepads: Array<{
+        gamepad: Gamepad;
+        down: boolean[];
+        up: boolean[];
+        pressed: boolean[];
+        mapping: object;
+    }>;
 
     // Abstract actions
     function RegisterAction(name: string, bindings: object[]): void;
     function UnregisterAction(name: string): void;
+    function ClearMappings(): void;
     /** True every frame the action binding is held. */
     function GetAction(name: string): boolean;
     /** True on the single frame the action binding was first triggered. */
@@ -201,24 +226,81 @@ declare namespace Input {
 
     // Gamepad
     function GetGamepad(index: number): Gamepad | null;
-    function IsGamepadButtonDown(gamepadIndex: number, button: string): boolean;
+    function IsGamepadButtonDown(gamepadIndex: number, buttonId: string): boolean;
+    function IsGamepadButtonUp(gamepadIndex: number, buttonId: string): boolean;
+    function IsGamepadButtonPressed(gamepadIndex: number, buttonId: string): boolean;
     function IsAnyGamepadButtonDown(): boolean;
     function IsAnyGamepadFaceButtonDown(): boolean;
+    function GetGamepadAxisValue(gamepadIndex: number, axisIndex: number): number;
+    function GetGamepadStickAxisValue(gamepadIndex: number, stickId: "LS" | "RS", axis: 0 | 1): number;
+    function GetGamepadLeftStickValue(gamepadIndex: number, axis: 0 | 1): number;
+    function GetGamepadRightStickValue(gamepadIndex: number, axis: 0 | 1): number;
+    function GetGamepadStickValue(gamepadIndex: number, stick: "LS" | "RS"): { x: number; y: number };
+    function GetGamepadStickDirection(gamepadIndex: number, stickId: "LS" | "RS", dir: "UP" | "DOWN" | "LEFT" | "RIGHT"): boolean;
+    function GetGamepadTriggerValue(gamepadIndex: number, trigger: "LT" | "RT"): number;
+    function RumbleGamepad(gamepadIndex: number, strongMagnitude?: number, weakMagnitude?: number, duration?: number, startDelay?: number): Promise<boolean>;
 
-    // Rumble
+    // Rumble presets
     function RegisterRumble(name: string, strong?: number, weak?: number, duration?: number, delay?: number): void;
     function UnregisterRumble(name: string): void;
-    function ExecuteRumble(id: string, gamepadIndex?: number): void;
+    function ExecuteRumble(id: string, gamepadIndex?: number): Promise<boolean>;
 
     // Virtual controls
-    function RegisterVirtualJoystick(id: string, x: number, y: number, radius: number): void;
+    function RegisterVirtualJoystick(id: string, virtualJoystick: VirtualJoystick): VirtualJoystick;
     function RemoveVirtualJoystick(id: string): void;
-    function RegisterVirtualDPad(id: string, x: number, y: number, size: number): void;
+    function RegisterVirtualButton(id: string, virtualButton: VirtualButton): VirtualButton;
+    function GetVirtualJoystick(id: string): VirtualJoystick | undefined;
+    function GetVirtualButton(id: string): VirtualButton | undefined;
 
     // Convenience
     /** True if any keyboard key, mouse button, touch, or gamepad button was triggered this frame. */
     function Anything(): boolean;
 }
+
+// ── Virtual Controls (virtualcontrols.js) ───────────────────────────────────
+
+declare class VirtualJoystick {
+    x: number;
+    y: number;
+    baseRadius: number;
+    knobRadius: number;
+    readonly axisX: number;
+    readonly axisY: number;
+    readonly active: boolean;
+    visible: boolean;
+    baseColor: Color;
+    rimColor: Color;
+    knobColor: Color;
+    rimLineWidth: number;
+    constructor(x: number, y: number, baseRadius: number, knobRadius?: number);
+    Draw(renderer: Renderer): void;
+}
+
+declare class VirtualButton {
+    x: number;
+    y: number;
+    radius: number;
+    label: string;
+    readonly active: boolean;
+    readonly down: boolean;
+    readonly pressed: boolean;
+    readonly up: boolean;
+    visible: boolean;
+    color: Color;
+    pressedColor: Color;
+    rimColor: Color;
+    labelColor: Color;
+    rimLineWidth: number;
+    labelFont: string | null;
+    constructor(x: number, y: number, radius: number, label?: string);
+    Draw(renderer: Renderer): void;
+}
+
+declare const VirtualControlls: {
+    virtualControlls: Array<VirtualJoystick | VirtualButton>;
+    AddVirtualControl(virtualControl: VirtualJoystick | VirtualButton): void;
+    Draw(renderer: Renderer): void;
+};
 
 // ── SpriteAtlas (utils_classes.js) ───────────────────────────────────────────
 

@@ -18,7 +18,7 @@ Each example HTML file must load engine scripts in this order before any game co
 6. `src/engine/audioplayer.js` — AudioPlayer class
 7. `src/engine/particlesystem.js` — ParticleEmitter, ParticleSystem
 8. `src/engine/htmlmenu.js` — HTMLMenu overlay/layer system
-9. `src/engine/virtualcontrols.js` — VirtualJoystick, VirtualDPad
+9. `src/engine/virtualcontrols.js` — VirtualJoystick, VirtualButton
 10. `src/engine/game.js` — Game base class
 11. `src/engine/tiled_loader.js` — TiledLoader *(optional — only if using Tiled maps)*
 12. `src/engine/ai.js` — AStarPathfinder *(optional — only if using pathfinding)*
@@ -175,7 +175,13 @@ window.onload = () => { Init(MyGame); }
 | Mouse left just released | `Input.IsMouseUp()` or `Input.mouse.left.up` |
 | Right / middle button | `Input.mouse.right.down` / `Input.mouse.middle.down` etc. |
 | Mouse wheel | `Input.mouse.wheel` — delta this frame (reset each frame) |
-| Gamepad raw | `Input.GetGamepad(0)` |
+| Gamepad raw | `Input.GetGamepad(0)` or `Input.gamepads[0]?.gamepad` |
+| Gamepad button held | `Input.IsGamepadButtonPressed(0, 'FACE_DOWN')` (also `'LB'`, `'RT'`, `'DPAD_UP'`, …) |
+| Gamepad button down | `Input.IsGamepadButtonDown(0, 'FACE_DOWN')` |
+| Gamepad button up | `Input.IsGamepadButtonUp(0, 'FACE_DOWN')` |
+| Gamepad stick ({x,y}) | `Input.GetGamepadStickValue(0, 'LS')` / `'RS'` — returns `{x, y}` (-1..1) |
+| Gamepad trigger | `Input.GetGamepadTriggerValue(0, 'LT')` / `'RT'` — returns 0..1 |
+| Gamepad rumble | `Input.RumbleGamepad(0, strong, weak, duration)` |
 | Register action | `Input.RegisterAction('Fire', [{type:'key', code:KEY_SPACE}])` |
 | Action held | `Input.GetAction('Fire')` |
 | Action just pressed | `Input.GetActionDown('Fire')` |
@@ -185,7 +191,8 @@ window.onload = () => { Init(MyGame); }
 | Any input | `Input.Anything()` — true if any device triggered anything |
 | Any gamepad face btn | `Input.IsAnyGamepadFaceButtonDown()` |
 | Rumble preset | `Input.RegisterRumble('hit', 0.8, 0.4, 150)` → `Input.ExecuteRumble('hit', 0)` |
-| Virtual joystick | `Input.RegisterVirtualJoystick('move', x, y, radius)` → `Input.GetAxis('move_x')` |
+| Virtual joystick | `Input.RegisterVirtualJoystick('move', new VirtualJoystick(x, y, radius))` → `Input.GetVirtualJoystick('move')?.axisX` / `axisY` |
+| Virtual button | `Input.RegisterVirtualButton('fire', new VirtualButton(x, y, radius, 'FIRE'))` → `Input.GetVirtualButton('fire')?.down` / `pressed` |
 
 ### Key constants (`KEY_*`)
 All key constants are plain global numbers defined in `input.js`.

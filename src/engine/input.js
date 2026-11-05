@@ -1046,6 +1046,15 @@ var Input = {
     },
 
     /**
+     * Returns the raw browser Gamepad object for the given index, or `null` if not connected.
+     * @param {number} gamepadIndex - Index of the gamepad (usually 0).
+     * @returns {Gamepad|null}
+     */
+    GetGamepad: function(gamepadIndex) {
+        return this.gamepads[gamepadIndex]?.gamepad || null;
+    },
+
+    /**
      * Returns the raw value of a gamepad axis by its numeric index (-1 to 1).
      * Prefer `GetGamepadStickValue` for named stick access.
      * @param {number} gamepadIndex - Index of the gamepad.
