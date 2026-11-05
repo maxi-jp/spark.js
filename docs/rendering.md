@@ -177,6 +177,10 @@ Draw(renderer) {
 | `DrawText` | `(text, x, y, font, color, align, baseline, stroke=false, lineWidth=1)` |
 | `MeasureText` | `(text, font)` → returns `number` (width in pixels) |
 
+> **WebGL text caching** — In WebGL mode `DrawText`/`DrawFillText`/`DrawStrokeText` maintain an internal 128-entry LRU texture cache keyed on the string content, font, color, stroke, and line width. Repeated calls with the same arguments skip Canvas2D rasterisation and GPU upload entirely — only the draw position changes. The cache holds up to 128 unique strings before evicting the least-recently-used entry.
+>
+> For moving or animated text labels use `TextLabel` — it allocates one texture per instance and only re-uploads when the text content actually changes, not when the label moves.
+
 ---
 
 ## Images

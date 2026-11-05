@@ -1032,6 +1032,14 @@ class WebGLRenderer extends Renderer {
 
         // auxiliar texture for rendering text from the auxiliar canvas (very ineficient)
         this.textTexture = this.CreateTextTexture();
+        this._textTexW = 0;
+        this._textTexH = 0;
+
+        // Text rasterisation cache — keyed on "text|font|color|stroke|lineWidth".
+        // Maps to { texture, width, height }. LRU eviction: Map insertion order,
+        // oldest entry deleted when size exceeds _textCacheMax.
+        this._textCache    = new Map();
+        this._textCacheMax = 128;
 
         // enable blending for pngs transparency
         this.gl.enable(this.gl.BLEND);
@@ -1597,25 +1605,54 @@ class WebGLRenderer extends Renderer {
     }
 
     DrawText(text, x, y, font, color=Color.black, align="center", baseline="alphabetic", stroke=false, lineWidth=1) {
-        this.FlushAllBatches();
-        // TODO rethink this method
-        // Prepare the text in the auxiliar Canvas
-        const { width, height, x: tx, y: ty } = this.PrepareText(text, x, y, font, color, align, baseline, stroke, lineWidth);
+        if (this._spriteBatchCount > 0)
+            this.FlushSpriteBatch();
+        if (this._rectBatchCount   > 0)
+            this.FlushRectBatch();
+        if (this._circleBatchCount > 0)
+            this.FlushCircleBatch();
+
+        const key = `${text}|${font}|${color}|${stroke}|${lineWidth}`;
+        let entry = this._textCache.get(key);
+
+        if (!entry) {
+            // Cache miss — rasterise to the shared 2D canvas and upload to a new texture.
+            const { width, height } = this.PrepareText(text, x, y, font, color, align, baseline, stroke, lineWidth);
+            const gl  = this.gl;
+            const tex = this.CreateTextTexture();
+            gl.bindTexture(gl.TEXTURE_2D, tex);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.textCanvas);
+
+            entry = { texture: tex, width, height };
+
+            // LRU eviction: remove the oldest entry when at capacity.
+            if (this._textCache.size >= this._textCacheMax) {
+                console.warn(`[WebGLRenderer] Text cache full (${this._textCacheMax} entries). Evicting LRU entry. Consider using the LabelText class for text objects, reducing unique text strings or increasing _textCacheMax.`);
+                const oldestKey = this._textCache.keys().next().value;
+                this.gl.deleteTexture(this._textCache.get(oldestKey).texture);
+                this._textCache.delete(oldestKey);
+            }
+            this._textCache.set(key, entry);
+        }
+        else {
+            // Cache hit — bump to end of Map for LRU ordering.
+            this._textCache.delete(key);
+            this._textCache.set(key, entry);
+        }
+
+        // Compute draw centre from position + cached size + alignment.
+        let tx = x, ty = y;
+        const hw = entry.width  / 2;
+        const hh = entry.height / 2;
+        if      (align    === "left")   tx += hw;
+        else if (align    === "right")  tx -= hw;
+        if      (baseline === "top")    ty += hh;
+        else if (baseline === "bottom") ty -= hh;
 
         const gl = this.gl;
-        
-        // Upload as WebGL texture
-        gl.bindTexture(gl.TEXTURE_2D, this.textTexture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.textCanvas);
-
-        // Draw as a textured quad using the SpriteShader
         this.spriteShader.Use(gl);
-        
-        this.spriteShader.SetUniforms(gl, this.canvas.width, this.canvas.height, tx, ty, 0, width, height, 0, 0, 1.0);
-        
-        // Bind texture
-        this.spriteShader.BindTexture(gl, this.textTexture);
-
+        this.spriteShader.SetUniforms(gl, this.canvas.width, this.canvas.height, tx, ty, 0, entry.width, entry.height, 0, 0, 1.0);
+        this.spriteShader.BindTexture(gl, entry.texture);
         gl.drawArrays(gl.TRIANGLES, 0, 6);
     }
 
@@ -1634,18 +1671,18 @@ class WebGLRenderer extends Renderer {
         return this.textCanvasCtx.measureText(text).width;
     }
 
+    // Each TextLabel owns a unique WebGL texture, so batching across labels is not possible
+    // without a glyph atlas. Uses the static-buffer spriteShader path (no bufferData per call)
+    // and only flushes pending batches when they actually have queued geometry.
     DrawTextCached(texture, x, y, width, height) {
-        this.FlushAllBatches();
-        const gl = this.gl;
-        
-        // Draw as a textured quad using the SpriteShader
-        this.spriteShader.Use(gl);
-        
-        this.spriteShader.SetUniforms(gl, this.canvas.width, this.canvas.height, x, y, 0, width, height, 0, 0, 1.0);
-        
-        // Bind texture
-        this.spriteShader.BindTexture(gl, texture);
+        if (this._spriteBatchCount > 0) this.FlushSpriteBatch();
+        if (this._rectBatchCount   > 0) this.FlushRectBatch();
+        if (this._circleBatchCount > 0) this.FlushCircleBatch();
 
+        const gl = this.gl;
+        this.spriteShader.Use(gl);
+        this.spriteShader.SetUniforms(gl, this.canvas.width, this.canvas.height, x, y, 0, width, height, 0, 0, 1.0);
+        this.spriteShader.BindTexture(gl, texture);
         gl.drawArrays(gl.TRIANGLES, 0, 6);
     }
 
@@ -1999,6 +2036,44 @@ class WebGLRenderer extends Renderer {
         buf[i++]=x2; buf[i++]=y2; buf[i++]=u0; buf[i++]=v1; buf[i++]=alpha;
         buf[i++]=x1; buf[i++]=y1; buf[i++]=u1; buf[i++]=v0; buf[i++]=alpha;
         buf[i++]=x3; buf[i++]=y3; buf[i++]=u1; buf[i++]=v1; buf[i++]=alpha;
+
+        this._spriteBatchCount += 6;
+    }
+
+    /**
+     * Append an axis-aligned textured quad using a raw WebGL texture directly (no HTMLImageElement).
+     * Used by DrawTextCached so text labels go through the sprite batch instead of issuing
+     * an immediate draw call each.  `x, y` is the centre of the quad.
+     */
+    _pushTexturedQuad(tex, x, y, w, h, alpha=1.0) {
+        if (this._rectBatchCount   > 0)
+            this.FlushRectBatch();
+
+        if (this._circleBatchCount > 0)
+            this.FlushCircleBatch();
+
+        if (tex !== this._spriteBatchTex) {
+            this.FlushSpriteBatch();
+            this._spriteBatchTex = tex;
+        }
+
+        if (this._spriteBatchCount + 6 > this._spriteBatchMaxVerts) {
+            this.FlushSpriteBatch();
+            this._spriteBatchTex = tex;
+        }
+
+        const hw = w / 2, hh = h / 2;
+        const buf = this._spriteBatchVerts;
+        let i = this._spriteBatchCount * 5;
+
+        // Triangle 1: TL, TR, BL
+        buf[i++]=x-hw; buf[i++]=y-hh; buf[i++]=0; buf[i++]=0; buf[i++]=alpha;
+        buf[i++]=x+hw; buf[i++]=y-hh; buf[i++]=1; buf[i++]=0; buf[i++]=alpha;
+        buf[i++]=x-hw; buf[i++]=y+hh; buf[i++]=0; buf[i++]=1; buf[i++]=alpha;
+        // Triangle 2: BL, TR, BR
+        buf[i++]=x-hw; buf[i++]=y+hh; buf[i++]=0; buf[i++]=1; buf[i++]=alpha;
+        buf[i++]=x+hw; buf[i++]=y-hh; buf[i++]=1; buf[i++]=0; buf[i++]=alpha;
+        buf[i++]=x+hw; buf[i++]=y+hh; buf[i++]=1; buf[i++]=1; buf[i++]=alpha;
 
         this._spriteBatchCount += 6;
     }

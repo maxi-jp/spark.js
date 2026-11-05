@@ -113,16 +113,16 @@ class BouncingRectangleGO extends RectangleGO {
             this.position.x = this.width / 2;
             this.velocity.x *= -1;
         }
-        if (this.position.x + this.width / 2 > game.screenWidth) {
-            this.position.x = game.screenWidth - this.width / 2;
+        if (this.position.x + this.width / 2 > this.game.screenWidth) {
+            this.position.x = this.game.screenWidth - this.width / 2;
             this.velocity.x *= -1;
         }
         if (this.position.y - this.height / 2 < 0) {
             this.position.y = this.height / 2;
             this.velocity.y *= -1;
         }
-        if (this.position.y + this.height / 2 > game.screenHeight) {
-            this.position.y = game.screenHeight - this.height / 2;
+        if (this.position.y + this.height / 2 > this.game.screenHeight) {
+            this.position.y = this.game.screenHeight - this.height / 2;
             this.velocity.y *= -1;
         }
     }
@@ -164,16 +164,16 @@ class BouncingCircleGO extends CircleGO {
             this.position.x = this.radius;
             this.velocity.x *= -1;
         }
-        if (this.position.x + this.radius > game.screenWidth) {
-            this.position.x = game.screenWidth - this.radius;
+        if (this.position.x + this.radius > this.game.screenWidth) {
+            this.position.x = this.game.screenWidth - this.radius;
             this.velocity.x *= -1;
         }
         if (this.position.y - this.radius < 0) {
             this.position.y = this.radius;
             this.velocity.y *= -1;
         }
-        if (this.position.y + this.radius > game.screenHeight) {
-            this.position.y = game.screenHeight - this.radius;
+        if (this.position.y + this.radius > this.game.screenHeight) {
+            this.position.y = this.game.screenHeight - this.radius;
             this.velocity.y *= -1;
         }
     }
@@ -217,16 +217,16 @@ class BouncingSpriteBasicGO extends SpriteObject {
             this.position.x = this.halfW;
             this.velocity.x *= -1;
         }
-        if (this.position.x + this.halfW > game.screenWidth) {
-            this.position.x = game.screenWidth - this.halfW;
+        if (this.position.x + this.halfW > this.game.screenWidth) {
+            this.position.x = this.game.screenWidth - this.halfW;
             this.velocity.x *= -1;
         }
         if (this.position.y - this.halfH < 0) {
             this.position.y = this.halfH;
             this.velocity.y *= -1;
         }
-        if (this.position.y + this.halfH > game.screenHeight) {
-            this.position.y = game.screenHeight - this.halfH;
+        if (this.position.y + this.halfH > this.game.screenHeight) {
+            this.position.y = this.game.screenHeight - this.halfH;
             this.velocity.y *= -1;
         }
     }
@@ -288,16 +288,16 @@ class BouncingSpriteGO extends SpriteObject {
             this.position.x = this.width / 2;
             this.velocity.x *= -1;
         }
-        if (this.position.x + this.width / 2 > game.screenWidth) {
-            this.position.x = game.screenWidth - this.width / 2;
+        if (this.position.x + this.width / 2 > this.game.screenWidth) {
+            this.position.x = this.game.screenWidth - this.width / 2;
             this.velocity.x *= -1;
         }
         if (this.position.y - this.height / 2 < 0) {
             this.position.y = this.height / 2;
             this.velocity.y *= -1;
         }
-        if (this.position.y + this.height / 2 > game.screenHeight) {
-            this.position.y = game.screenHeight - this.height / 2;
+        if (this.position.y + this.height / 2 > this.game.screenHeight) {
+            this.position.y = this.game.screenHeight - this.height / 2;
             this.velocity.y *= -1;
         }
     }
@@ -320,5 +320,66 @@ class PerformanceTestSprites extends PerformanceTest {
         );
         const velocity = new Vector2(RandomBetweenFloat(-150, 150), RandomBetweenFloat(-150, 150));
         return new BouncingSpriteGO(position, img, velocity);
+    }
+}
+
+// ── Text labels ───────────────────────────────────────────────────────────────
+
+const _LABEL_WORDS = ["spark", "WebGL", "canvas", "Hello!", "fps", "score", "game", "draw", "batch", "test"];
+
+class BouncingTextGO extends GameObject {
+    constructor(position, velocity) {
+        super(position);
+        this.velocity = velocity;
+
+        const word  = _LABEL_WORDS[Math.floor(Math.random() * _LABEL_WORDS.length)];
+        const size  = RandomBetweenInt(12, 24);
+        const color = Color.Random();
+        color.a     = RandomBetweenFloat(0.7, 1.0);
+
+        this._label = new TextLabel(word, this._position, `${size}px monospace`, color, "center", "middle");
+        this._hw    = size * word.length * 0.35; // rough half-width for bouncing
+        this._hh    = size * 0.6;
+    }
+
+    Update(deltaTime) {
+        this.position.x += this.velocity.x * deltaTime;
+        this.position.y += this.velocity.y * deltaTime;
+
+        if (this.position.x - this._hw < 0) {
+            this.position.x = this._hw;
+            this.velocity.x *= -1;
+        }
+        if (this.position.x + this._hw > this.game.screenWidth) {
+            this.position.x = this.game.screenWidth - this._hw;
+            this.velocity.x *= -1;
+        }
+        if (this.position.y - this._hh < 0) {
+            this.position.y = this._hh;
+            this.velocity.y *= -1;
+        }
+        if (this.position.y + this._hh > this.game.screenHeight) {
+            this.position.y = this.game.screenHeight - this._hh;
+            this.velocity.y *= -1;
+        }
+    }
+
+    Draw(renderer) {
+        this._label.Draw(renderer);
+    }
+}
+
+class PerformanceTestTextLabels extends PerformanceTest {
+    constructor(renderer) {
+        super(renderer);
+    }
+
+    _spawnObject() {
+        const position = new Vector2(
+            RandomBetweenFloat(60, this.screenWidth - 60),
+            RandomBetweenFloat(20, this.screenHeight - 20)
+        );
+        const velocity = new Vector2(RandomBetweenFloat(-120, 120), RandomBetweenFloat(-120, 120));
+        return new BouncingTextGO(position, velocity);
     }
 }

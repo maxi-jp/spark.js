@@ -578,7 +578,7 @@ class TextLabel {
         this.stroke = stroke;
         this.lineWidth = lineWidth;
 
-        this._textureNeedsUpdate = true; // Flag to indicate if texture needs re-rendering
+        this._textureNeedsUpdate = true;
         this._webglTexture = null;
 
         if (renderer instanceof WebGLRenderer) {
@@ -587,8 +587,6 @@ class TextLabel {
 
         this._textureWidth = 0;
         this._textureHeight = 0;
-        this._textureX = 0;
-        this._textureY = 0;
     }
 
     get text() {
@@ -630,27 +628,45 @@ class TextLabel {
     }
 
     Draw(renderer) {
-        // Only update texture if text, font, color, etc. changed, or if explicitly flagged
         if (renderer instanceof WebGLRenderer) {
             if (this._textureNeedsUpdate) {
-                const { width, height, x: tx, y: ty } = renderer.PrepareText(this._text, this.position.x, this.position.y, this._font, this._color, this.align, this.baseline, this.stroke, this.lineWidth);
+                // Re-render text to the shared 2D canvas and re-upload GPU texture.
+                // Only happens when text/font/color/stroke actually changed.
+                const { width, height } = renderer.PrepareText(
+                    this._text, this.position.x, this.position.y,
+                    this._font, this._color, this.align, this.baseline,
+                    this.stroke, this.lineWidth
+                );
 
-                if (!this._webglTexture) {
+                if (!this._webglTexture)
                     this._webglTexture = renderer.CreateTextTexture();
+
+                const gl = renderer.gl;
+                gl.bindTexture(gl.TEXTURE_2D, this._webglTexture);
+                if (width === this._textureWidth && height === this._textureHeight) {
+                    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, renderer.textCanvas);
+                }
+                else {
+                    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, renderer.textCanvas);
+                    this._textureWidth  = width;
+                    this._textureHeight = height;
                 }
 
-                renderer.gl.bindTexture(renderer.gl.TEXTURE_2D, this._webglTexture);
-                renderer.gl.texImage2D(renderer.gl.TEXTURE_2D, 0, renderer.gl.RGBA, renderer.gl.RGBA, renderer.gl.UNSIGNED_BYTE, renderer.textCanvas);
-                
-                this._textureWidth = width;
-                this._textureHeight = height;
-                this._textureX = tx;
-                this._textureY = ty;
-
-                this._textureNeedsUpdate = false; // Mark as updated
+                this._textureNeedsUpdate = false;
             }
 
-            renderer.DrawTextCached(this._webglTexture, this._textureX, this._textureY, this._textureWidth, this._textureHeight);
+            // Compute draw centre from current position + cached size + alignment.
+            // This is cheap arithmetic — never triggers a texture re-upload.
+            let tx = this.position.x;
+            let ty = this.position.y;
+            const hw = this._textureWidth  / 2;
+            const hh = this._textureHeight / 2;
+            if      (this.align    === "left")   tx += hw;
+            else if (this.align    === "right")  tx -= hw;
+            if      (this.baseline === "top")    ty += hh;
+            else if (this.baseline === "bottom") ty -= hh;
+
+            renderer.DrawTextCached(this._webglTexture, tx, ty, this._textureWidth, this._textureHeight);
         }
         else {
             renderer.DrawText(this._text, this.position.x, this.position.y, this._font, this._color, this.align, this.baseline, this.stroke, this.lineWidth);
