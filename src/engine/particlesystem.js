@@ -55,6 +55,14 @@ const defaultParticleConfig = {
     MIN_OPACITY_DECREMENT_VELOCITY: 0.5,
     MAX_OPACITY_DECREMENT_VELOCITY: 2.0,
 
+    // Peak opacity range (0, 1] reached at the end of fade-in
+    MIN_MAX_OPACITY: 1.0,
+    MAX_MAX_OPACITY: 1.0,
+
+    // Time in seconds a particle holds at peak opacity before fading out
+    MIN_HOLD_TIME: 0.0,
+    MAX_HOLD_TIME: 0.0,
+
     // Initial scale range
     MIN_INITIAL_SCALE: 0.1,
     MAX_INITIAL_SCALE: 0.5,
@@ -96,6 +104,8 @@ class Particle {
         this.position         = Vector2.Zero();
         this.direction        = Vector2.Zero();
         this.opacity          = 0.0;
+        this.maxOpacity       = 1.0;
+        this.holdTime         = 0.0;
         this.opacityIncrementVelocity = 0.0;
         this.opacityDecrementVelocity = 0.0;
         this.rotation         = 0.0;
@@ -116,16 +126,21 @@ class Particle {
      * @param {number}  scaleVelocity
      * @param {number}  initialRotation
      * @param {number}  rotationVelocity
-     * @param {Vector2} direction        velocity vector (pixels/sec)
-     * @param {number}  [gravityX=0]     horizontal acceleration (pixels/sec²)
-     * @param {number}  [gravityY=0]     vertical acceleration (pixels/sec²)
+     * @param {Vector2} direction           velocity vector (pixels/sec)
+     * @param {number}  [gravityX=0]        horizontal acceleration (pixels/sec²)
+     * @param {number}  [gravityY=0]        vertical acceleration (pixels/sec²)
      * @param {number}  [velocityDamping=0] air drag coefficient (1/sec)
+     * @param {number}  [maxOpacity=1.0]    peak opacity target in (0, 1]
+     * @param {number}  [holdTime=0.0]      duration in seconds held at peak opacity
      */
     Activate(initialPosition, opacityIncrementVelocity, opacityDecrementVelocity,
              initialScale, scaleVelocity, initialRotation, rotationVelocity,
-             direction, gravityX = 0, gravityY = 0, velocityDamping = 0) {
+             direction, gravityX = 0, gravityY = 0, velocityDamping = 0,
+             maxOpacity = 1.0, holdTime = 0.0) {
         this.position         = Vector2.Copy(initialPosition);
         this.opacity          = 0;
+        this.maxOpacity       = maxOpacity;
+        this.holdTime         = holdTime;
         this.opacityIncrementVelocity = opacityIncrementVelocity;
         this.opacityDecrementVelocity = opacityDecrementVelocity;
         this.scale            = initialScale;
@@ -146,12 +161,16 @@ class Particle {
 
     Update(deltaTime) {
         if (this.appearing) {
-            // Fade in
+            // Fade in up to maxOpacity
             this.opacity += this.opacityIncrementVelocity * deltaTime;
-            if (this.opacity >= 1.0) {
-                this.opacity   = 1.0;
+            if (this.opacity >= this.maxOpacity) {
+                this.opacity   = this.maxOpacity;
                 this.appearing = false;
             }
+        }
+        else if (this.holdTime > 0.0) {
+            // Hold at peak opacity before fading out
+            this.holdTime -= deltaTime;
         }
         else {
             // Fade out
@@ -282,8 +301,23 @@ class ParticleSystem {
 
         // Merge defaults with provided config overrides
         this.config = Object.assign({}, defaultParticleConfig, config);
-        if (config && config.directionMode === undefined && (config.MIN_ANGLE !== undefined || config.MAX_ANGLE !== undefined)) {
-            this.config.directionMode = "polar";
+        if (config) {
+            if (config.directionMode === undefined &&
+                (config.MIN_ANGLE !== undefined || config.MAX_ANGLE !== undefined)) {
+                this.config.directionMode = "polar";
+            }
+            if (config.MAX_OPACITY !== undefined) {
+                if (config.MIN_MAX_OPACITY === undefined)
+                    this.config.MIN_MAX_OPACITY = config.MAX_OPACITY;
+                if (config.MAX_MAX_OPACITY === undefined)
+                    this.config.MAX_MAX_OPACITY = config.MAX_OPACITY;
+            }
+            if (config.HOLD_TIME !== undefined) {
+                if (config.MIN_HOLD_TIME === undefined)
+                    this.config.MIN_HOLD_TIME = config.HOLD_TIME;
+                if (config.MAX_HOLD_TIME === undefined)
+                    this.config.MAX_HOLD_TIME = config.HOLD_TIME;
+            }
         }
 
         // Create emitter
@@ -351,7 +385,9 @@ class ParticleSystem {
             this.emitter.GetInitialVelocity(),
             this.config.GRAVITY_X,
             this.config.GRAVITY_Y,
-            this.config.VELOCITY_DAMPING
+            this.config.VELOCITY_DAMPING,
+            RandomBetweenFloat(this.config.MIN_MAX_OPACITY,                this.config.MAX_MAX_OPACITY),
+            RandomBetweenFloat(this.config.MIN_HOLD_TIME,                  this.config.MAX_HOLD_TIME)
         );
 
         return true;

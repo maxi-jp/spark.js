@@ -72,6 +72,10 @@ const PRESETS = {
             MAX_DIRECTION_Y:  1,
             MIN_OPACITY_INCREMENT_VELOCITY: 1.0,
             MAX_OPACITY_INCREMENT_VELOCITY: 4.0,
+            MIN_MAX_OPACITY: 0.35,
+            MAX_MAX_OPACITY: 0.65,
+            MIN_HOLD_TIME: 0.2,
+            MAX_HOLD_TIME: 0.5,
             MIN_OPACITY_DECREMENT_VELOCITY: 0.5,
             MAX_OPACITY_DECREMENT_VELOCITY: 2.0,
             MIN_INITIAL_SCALE: 0.05,
@@ -185,6 +189,10 @@ const PRESETS = {
             VELOCITY_DAMPING: 0.2,
             MIN_OPACITY_INCREMENT_VELOCITY: 8.0,
             MAX_OPACITY_INCREMENT_VELOCITY: 14.0,
+            MIN_MAX_OPACITY: 0.85,
+            MAX_MAX_OPACITY: 1.0,
+            MIN_HOLD_TIME: 0.2,
+            MAX_HOLD_TIME: 0.45,
             MIN_OPACITY_DECREMENT_VELOCITY: 0.6,
             MAX_OPACITY_DECREMENT_VELOCITY: 1.2,
             MIN_INITIAL_SCALE: 0.04,
@@ -224,6 +232,10 @@ const PRESETS = {
             VELOCITY_DAMPING: 3.5,
             MIN_OPACITY_INCREMENT_VELOCITY: 15.0,
             MAX_OPACITY_INCREMENT_VELOCITY: 25.0,
+            MIN_MAX_OPACITY: 0.9,
+            MAX_MAX_OPACITY: 1.0,
+            MIN_HOLD_TIME: 0.15,
+            MAX_HOLD_TIME: 0.35,
             MIN_OPACITY_DECREMENT_VELOCITY: 0.9,
             MAX_OPACITY_DECREMENT_VELOCITY: 2.0,
             MIN_INITIAL_SCALE: 0.05,
@@ -319,6 +331,8 @@ const NUMERIC_PARAMS = [
     'GRAVITY_X', 'GRAVITY_Y',
     'VELOCITY_DAMPING',
     'MIN_OPACITY_INCREMENT_VELOCITY', 'MAX_OPACITY_INCREMENT_VELOCITY',
+    'MIN_MAX_OPACITY', 'MAX_MAX_OPACITY',
+    'MIN_HOLD_TIME', 'MAX_HOLD_TIME',
     'MIN_OPACITY_DECREMENT_VELOCITY', 'MAX_OPACITY_DECREMENT_VELOCITY',
     'MIN_INITIAL_SCALE', 'MAX_INITIAL_SCALE',
     'MIN_SCALE_VELOCITY', 'MAX_SCALE_VELOCITY',
@@ -333,6 +347,8 @@ const MIN_MAX_PAIRS = [
     ['MIN_DIRECTION_Y',                'MAX_DIRECTION_Y'],
     ['MIN_ANGLE',                      'MAX_ANGLE'],
     ['MIN_OPACITY_INCREMENT_VELOCITY', 'MAX_OPACITY_INCREMENT_VELOCITY'],
+    ['MIN_MAX_OPACITY',                'MAX_MAX_OPACITY'],
+    ['MIN_HOLD_TIME',                  'MAX_HOLD_TIME'],
     ['MIN_OPACITY_DECREMENT_VELOCITY', 'MAX_OPACITY_DECREMENT_VELOCITY'],
     ['MIN_INITIAL_SCALE',              'MAX_INITIAL_SCALE'],
     ['MIN_SCALE_VELOCITY',             'MAX_SCALE_VELOCITY'],
@@ -603,6 +619,10 @@ function getExportableConfig() {
     out.VELOCITY_DAMPING               = Number(currentConfig.VELOCITY_DAMPING || 0);
     out.MIN_OPACITY_INCREMENT_VELOCITY = Number(currentConfig.MIN_OPACITY_INCREMENT_VELOCITY);
     out.MAX_OPACITY_INCREMENT_VELOCITY = Number(currentConfig.MAX_OPACITY_INCREMENT_VELOCITY);
+    out.MIN_MAX_OPACITY                = Number(currentConfig.MIN_MAX_OPACITY ?? 1.0);
+    out.MAX_MAX_OPACITY                = Number(currentConfig.MAX_MAX_OPACITY ?? 1.0);
+    out.MIN_HOLD_TIME                  = Number(currentConfig.MIN_HOLD_TIME ?? 0.0);
+    out.MAX_HOLD_TIME                  = Number(currentConfig.MAX_HOLD_TIME ?? 0.0);
     out.MIN_OPACITY_DECREMENT_VELOCITY = Number(currentConfig.MIN_OPACITY_DECREMENT_VELOCITY);
     out.MAX_OPACITY_DECREMENT_VELOCITY = Number(currentConfig.MAX_OPACITY_DECREMENT_VELOCITY);
     out.MIN_INITIAL_SCALE              = Number(currentConfig.MIN_INITIAL_SCALE);
@@ -675,6 +695,10 @@ function formatJSConfigSnippet() {
         ``,
         `    MIN_OPACITY_INCREMENT_VELOCITY: ${c.MIN_OPACITY_INCREMENT_VELOCITY},`,
         `    MAX_OPACITY_INCREMENT_VELOCITY: ${c.MAX_OPACITY_INCREMENT_VELOCITY},`,
+        `    MIN_MAX_OPACITY: ${c.MIN_MAX_OPACITY},`,
+        `    MAX_MAX_OPACITY: ${c.MAX_MAX_OPACITY},`,
+        `    MIN_HOLD_TIME: ${c.MIN_HOLD_TIME},`,
+        `    MAX_HOLD_TIME: ${c.MAX_HOLD_TIME},`,
         `    MIN_OPACITY_DECREMENT_VELOCITY: ${c.MIN_OPACITY_DECREMENT_VELOCITY},`,
         `    MAX_OPACITY_DECREMENT_VELOCITY: ${c.MAX_OPACITY_DECREMENT_VELOCITY},`,
         ``,
@@ -954,9 +978,11 @@ function updateTelemetryBar() {
     const emitCount = Math.max(1, currentConfig.emitCountPerSpawn || 1);
     const spawnRate = avgSpawn > 0 ? (emitCount / avgSpawn).toFixed(1) : '∞';
 
-    const avgInc = (currentConfig.MIN_OPACITY_INCREMENT_VELOCITY + currentConfig.MAX_OPACITY_INCREMENT_VELOCITY) * 0.5;
-    const avgDec = (currentConfig.MIN_OPACITY_DECREMENT_VELOCITY + currentConfig.MAX_OPACITY_DECREMENT_VELOCITY) * 0.5;
-    const avgLife = ((avgInc > 0 ? 1 / avgInc : 0) + (avgDec > 0 ? 1 / avgDec : 0)).toFixed(2);
+    const avgInc   = (currentConfig.MIN_OPACITY_INCREMENT_VELOCITY + currentConfig.MAX_OPACITY_INCREMENT_VELOCITY) * 0.5;
+    const avgDec   = (currentConfig.MIN_OPACITY_DECREMENT_VELOCITY + currentConfig.MAX_OPACITY_DECREMENT_VELOCITY) * 0.5;
+    const avgMaxOp = ((currentConfig.MIN_MAX_OPACITY ?? 1) + (currentConfig.MAX_MAX_OPACITY ?? 1)) * 0.5;
+    const avgHold  = ((currentConfig.MIN_HOLD_TIME ?? 0) + (currentConfig.MAX_HOLD_TIME ?? 0)) * 0.5;
+    const avgLife  = ((avgInc > 0 ? avgMaxOp / avgInc : 0) + avgHold + (avgDec > 0 ? avgMaxOp / avgDec : 0)).toFixed(2);
 
     const poolWarn = alive >= max ? `<span class="warn">⚠ POOL FULL</span>` : '';
 
@@ -1160,6 +1186,14 @@ function loadConfigJSON(file) {
             currentConfig = Object.assign({}, defaultParticleConfig, incoming);
             if (incoming.directionMode === undefined && (incoming.MIN_ANGLE !== undefined || incoming.MAX_ANGLE !== undefined)) {
                 currentConfig.directionMode = 'polar';
+            }
+            if (incoming.MAX_OPACITY !== undefined) {
+                if (incoming.MIN_MAX_OPACITY === undefined) currentConfig.MIN_MAX_OPACITY = incoming.MAX_OPACITY;
+                if (incoming.MAX_MAX_OPACITY === undefined) currentConfig.MAX_MAX_OPACITY = incoming.MAX_OPACITY;
+            }
+            if (incoming.HOLD_TIME !== undefined) {
+                if (incoming.MIN_HOLD_TIME === undefined) currentConfig.MIN_HOLD_TIME = incoming.HOLD_TIME;
+                if (incoming.MAX_HOLD_TIME === undefined) currentConfig.MAX_HOLD_TIME = incoming.HOLD_TIME;
             }
 
             const baseName = file.name.replace(/\.json$/i, '');
@@ -1452,6 +1486,26 @@ function wireControls() {
         currentConfig.GRAVITY_Y = -60;
         syncUIFromConfig();
         applyConfigChange('GRAVITY');
+    });
+
+    // Opacity & Hold quick buttons
+    document.getElementById('btn-opacity-full').addEventListener('click', () => {
+        currentConfig.MIN_MAX_OPACITY = 1.0;
+        currentConfig.MAX_MAX_OPACITY = 1.0;
+        syncUIFromConfig();
+        applyConfigChange('MAX_OPACITY');
+    });
+    document.getElementById('btn-opacity-soft').addEventListener('click', () => {
+        currentConfig.MIN_MAX_OPACITY = 0.3;
+        currentConfig.MAX_MAX_OPACITY = 0.6;
+        syncUIFromConfig();
+        applyConfigChange('MAX_OPACITY');
+    });
+    document.getElementById('btn-hold-zero').addEventListener('click', () => {
+        currentConfig.MIN_HOLD_TIME = 0.0;
+        currentConfig.MAX_HOLD_TIME = 0.0;
+        syncUIFromConfig();
+        applyConfigChange('HOLD_TIME');
     });
 
     // Rotation quick buttons

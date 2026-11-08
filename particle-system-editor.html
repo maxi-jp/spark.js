@@ -389,9 +389,56 @@
                     </div>
                 </div>
 
-                <!-- 4. Opacity (Fade In / Fade Out) -->
+                <!-- 4. Opacity & Hold Time -->
                 <div class="panel-section">
-                    <div class="panel-title">Opacity Lifecycle (Fade In / Out)</div>
+                    <div class="panel-title">Opacity &amp; Hold Lifecycle</div>
+
+                    <div class="param-group-label">
+                        <span>Peak Opacity [0.01, 1.0]</span>
+                        <span class="quick-btns">
+                            <button class="mini-btn" id="btn-opacity-full" title="Set peak opacity to 1.0">1.0</button>
+                            <button class="mini-btn" id="btn-opacity-soft" title="Soft translucent peak [0.3, 0.6]">Soft</button>
+                        </span>
+                    </div>
+                    <div class="dual-param">
+                        <div class="param-row">
+                            <div class="param-header">
+                                <label for="cfg-MIN_MAX_OPACITY" title="MIN_MAX_OPACITY — Minimum peak opacity reached at end of fade-in">MIN_PEAK_OP</label>
+                                <input id="cfg-MIN_MAX_OPACITY" type="number" min="0.01" max="1" step="0.01" class="num-input">
+                            </div>
+                            <input id="rng-MIN_MAX_OPACITY" type="range" min="0.01" max="1" step="0.01" class="range-input">
+                        </div>
+                        <div class="param-row">
+                            <div class="param-header">
+                                <label for="cfg-MAX_MAX_OPACITY" title="MAX_MAX_OPACITY — Maximum peak opacity reached at end of fade-in">MAX_PEAK_OP</label>
+                                <input id="cfg-MAX_MAX_OPACITY" type="number" min="0.01" max="1" step="0.01" class="num-input">
+                            </div>
+                            <input id="rng-MAX_MAX_OPACITY" type="range" min="0.01" max="1" step="0.01" class="range-input">
+                        </div>
+                    </div>
+
+                    <div class="param-group-label">
+                        <span>Hold Time at Peak (seconds)</span>
+                        <span class="quick-btns">
+                            <button class="mini-btn" id="btn-hold-zero" title="No hold time (0s)">0s</button>
+                        </span>
+                    </div>
+                    <div class="dual-param">
+                        <div class="param-row">
+                            <div class="param-header">
+                                <label for="cfg-MIN_HOLD_TIME" title="MIN_HOLD_TIME — Minimum duration held at peak opacity before fading out">MIN_HOLD</label>
+                                <input id="cfg-MIN_HOLD_TIME" type="number" min="0" max="30" step="0.05" class="num-input">
+                            </div>
+                            <input id="rng-MIN_HOLD_TIME" type="range" min="0" max="3" step="0.02" class="range-input">
+                        </div>
+                        <div class="param-row">
+                            <div class="param-header">
+                                <label for="cfg-MAX_HOLD_TIME" title="MAX_HOLD_TIME — Maximum duration held at peak opacity before fading out">MAX_HOLD</label>
+                                <input id="cfg-MAX_HOLD_TIME" type="number" min="0" max="30" step="0.05" class="num-input">
+                            </div>
+                            <input id="rng-MAX_HOLD_TIME" type="range" min="0" max="3" step="0.02" class="range-input">
+                        </div>
+                    </div>
 
                     <div class="param-group-label">Fade-In Speed (opacity / sec)</div>
                     <div class="dual-param">

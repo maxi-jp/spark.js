@@ -34,10 +34,11 @@ The module is organized into three classes inside `src/engine/particlesystem.js`
 
 - **Activation (`Particle.Activate`)**:
   - When spawned, a particle starts at `opacity = 0` with `active = true` and `appearing = true`.
-  - Its initial position, fade-in speed (`opacityIncrementVelocity`), fade-out speed (`opacityDecrementVelocity`), initial scale, scale velocity, initial rotation, rotation velocity, and velocity vector (`direction`) are randomized within the `[MIN_*, MAX_*]` ranges defined in the config.
-- **Opacity State Machine (`appearing` → fade-out)**:
-  - **Phase 1 — Fade In (`this.appearing === true`)**: Opacity increases by `opacityIncrementVelocity * deltaTime`. Once `opacity >= 1.0`, it clamps to `1.0` and transitions to `this.appearing = false`.
-  - **Phase 2 — Fade Out (`this.appearing === false`)**: Opacity decreases by `opacityDecrementVelocity * deltaTime`. Once `opacity <= 0.0`, the particle calls `Deactivate()` (`this.active = false`) and returns to the pool immediately.
+  - Its initial position, fade-in speed (`opacityIncrementVelocity`), peak opacity target (`maxOpacity`), hold duration (`holdTime`), fade-out speed (`opacityDecrementVelocity`), initial scale, scale velocity, initial rotation, rotation velocity, and velocity vector (`direction`) are randomized within the `[MIN_*, MAX_*]` ranges defined in the config.
+- **Opacity State Machine (`appearing` → hold → fade-out)**:
+  - **Phase 1 — Fade In (`this.appearing === true`)**: Opacity increases by `opacityIncrementVelocity * deltaTime`. Once `opacity >= this.maxOpacity`, it clamps to `this.maxOpacity` and transitions to `this.appearing = false`.
+  - **Phase 2 — Hold (`this.appearing === false` and `this.holdTime > 0`)**: The particle remains at `this.maxOpacity` while `this.holdTime` counts down by `deltaTime`.
+  - **Phase 3 — Fade Out (`this.appearing === false` and `this.holdTime <= 0`)**: Opacity decreases by `opacityDecrementVelocity * deltaTime`. Once `opacity <= 0.0`, the particle calls `Deactivate()` (`this.active = false`) and returns to the pool immediately.
 - **Scale & Transform Update**:
   - Each frame, `scale += scaleVelocity * deltaTime`. If `scale <= 0.0` (when using a negative `scaleVelocity` to shrink particles), the particle immediately deactivates to prevent inverted sprite rendering.
   - Rotation advances by `rotationVelocity * deltaTime` (radians/sec) around `Particle.pivot` (`{ x: 0, y: 0 }`, the sprite center).
@@ -105,6 +106,14 @@ const defaultParticleConfig = {
     MAX_OPACITY_INCREMENT_VELOCITY: 4.0,
     MIN_OPACITY_DECREMENT_VELOCITY: 0.5,
     MAX_OPACITY_DECREMENT_VELOCITY: 2.0,
+
+    // Peak opacity target range (0, 1] where fade-in stops (also supports shorthand MAX_OPACITY)
+    MIN_MAX_OPACITY: 1.0,
+    MAX_MAX_OPACITY: 1.0,
+
+    // Hold duration in seconds at peak opacity before fading out (also supports shorthand HOLD_TIME)
+    MIN_HOLD_TIME: 0.0,
+    MAX_HOLD_TIME: 0.0,
 
     // Initial scale multiplier range
     MIN_INITIAL_SCALE: 0.1,
@@ -302,8 +311,8 @@ The standalone **[Particle System Editor](../particle-system-editor.html ':ignor
   - **Area Gizmo**: Dashed bounding rectangle with 4 draggable corner handles (`nw`, `ne`, `sw`, `se`), interior drag-to-move, outside drag-to-draw a new box, plus quick-fit buttons (**Full Canvas**, **Center Box**).
   - **Background Surfaces**: Switch between *Asphalt (`#414146`)*, *Dark Night (`#1a1a2e`)*, *Grass (`#325023`)*, *Dirt (`#785532`)*, *Pure Black (`#000000`)*, *Checkerboard*, or any custom hex color picker.
 - **Real-Time Parameter Sliders & Smart Clamping**:
-  - Synchronized range sliders and numeric inputs for every `defaultParticleConfig` property (including `directionMode` toggle between `cartesian` and `polar`, `MIN_ANGLE`/`MAX_ANGLE`, `SetRotation` preview slider + `Auto-Path` rotation toggle, `emitCountPerSpawn`, `GRAVITY_X`, `GRAVITY_Y`, `VELOCITY_DAMPING`, and all 11 `MIN_*/MAX_*` pairs).
-  - Direction quick-buttons (**Omni**, **↑**, **↓**, **←**, **→** — work for both Cartesian and Polar modes), gravity quick-buttons (**0**, **↓ Grav**, **↑ Buoy**), and rotation quick-buttons (**0**, **0 → 2π**).
+  - Synchronized range sliders and numeric inputs for every `defaultParticleConfig` property (including `directionMode` toggle between `cartesian` and `polar`, `MIN_ANGLE`/`MAX_ANGLE`, `SetRotation` preview slider + `Auto-Path` rotation toggle, `emitCountPerSpawn`, `GRAVITY_X`, `GRAVITY_Y`, `VELOCITY_DAMPING`, `MIN_MAX_OPACITY`/`MAX_MAX_OPACITY`, `MIN_HOLD_TIME`/`MAX_HOLD_TIME`, and all 13 `MIN_*/MAX_*` pairs).
+  - Direction quick-buttons (**Omni**, **↑**, **↓**, **←**, **→** — work for both Cartesian and Polar modes), gravity quick-buttons (**0**, **↓ Grav**, **↑ Buoy**), opacity & hold quick-buttons (**Full 1.0**, **Soft 0.5**, **0s Hold**), and rotation quick-buttons (**0**, **0 → 2π**).
 - **Live Telemetry & Export**:
   - Bottom status bar displays active particle count (`Alive / Max` with a `⚠ POOL FULL` warning), estimated **Spawn Rate (`~N/s`)**, estimated **Avg Lifetime (`~Ns`)**, emitter coordinates, mouse coordinates, and live **FPS**.
   - **Load JSON** (or drag-and-drop a `.json` file), **Copy JS** (formats a clean `const <name> = { ... };` snippet using `emitterType.*` and `PI2`), **Copy JSON**, and **Export JSON ↓**.
@@ -324,6 +333,8 @@ This section tracks all completed and planned improvements for the particle syst
   - *Details*: Added `GRAVITY_X`, `GRAVITY_Y` (pixels/sec²) and `VELOCITY_DAMPING` (1/sec exponential decay via `Math.exp(-damping * dt)`) to `defaultParticleConfig` and `Particle.Update`, added `fountainConfig` (`G`) and `explosionBurstConfig` (`Click / Space`) to `particles_example.js`, and added sliders, quick-preset buttons, a cyan gravity vector gizmo, and *Sparks Fountain* / *Explosion / Debris* presets to `particle-system-editor.html`.
 - [x] **Polar Emission Angles (`MIN_ANGLE`, `MAX_ANGLE`) & `SetRotation(angle)`** ✅ *DONE*
   - *Details*: Added `directionMode: "cartesian" | "polar"`, `MIN_ANGLE`, and `MAX_ANGLE` to `defaultParticleConfig` (auto-selecting `"polar"` when `MIN_ANGLE`/`MAX_ANGLE` are supplied), plus `SetRotation(angle)` and `rotation` getter/setter on `ParticleSystem` (rotating both polar cones and cartesian direction vectors). Added `thrusterConfig` (`H`) to `particles_example.js` and polar cone controls, sector gizmo, `SetRotation` live slider + `Auto-Path` toggle, and *Jet Thruster* preset to `particle-system-editor.html`.
+- [x] **Explicit Particle Lifetime / Hold Time (`MIN_MAX_OPACITY`, `MAX_MAX_OPACITY`, `MIN_HOLD_TIME`, `MAX_HOLD_TIME`)** ✅ *DONE*
+  - *Details*: Decoupled particle peak opacity and lifetime hold duration from fade speeds by adding `MIN_MAX_OPACITY`, `MAX_MAX_OPACITY` (plus `MAX_OPACITY` shorthand) and `MIN_HOLD_TIME`, `MAX_HOLD_TIME` (plus `HOLD_TIME` shorthand) to `defaultParticleConfig` and `Particle`. Updated `particles_example.js` presets, added sliders and quick-preset buttons to `particle-system-editor.html`, and updated the editor's **Avg Lifetime** telemetry formula to account for peak opacity and hold time.
 
 ---
 
@@ -337,19 +348,9 @@ This section tracks all completed and planned improvements for the particle syst
 - **Status**: `[x] Completed`
 - **Config Keys & API**: `directionMode: "cartesian" | "polar"`, `MIN_ANGLE: 0`, `MAX_ANGLE: PI2`, `particleSystem.SetRotation(angle)` / `particleSystem.rotation`.
 
-#### 3. Explicit Particle Lifetime / Hold Time (`HOLD_TIME`, `MAX_OPACITY`)
-- **Status**: `[ ] Pending`
-- **Motivation**: Currently, a particle's total lifetime is strictly determined by `1.0 / opacityIncrementVelocity + 1.0 / opacityDecrementVelocity`, and every particle must reach `opacity = 1.0` before fading out. This creates two limitations:
-  1. You cannot create subtle, translucent effects (e.g. faint mist or ghost trails that never exceed `0.3` peak opacity).
-  2. You cannot create particles that pop in almost immediately, stay fully visible for a set duration (e.g. `0.8s`), and then rapidly fade out at the end of their life.
-- **Proposed Config Keys**:
-  - `MIN_MAX_OPACITY: 1.0`, `MAX_MAX_OPACITY: 1.0` (peak opacity target in `(0, 1]` where the fade-in phase ends)
-  - `MIN_HOLD_TIME: 0.0`, `MAX_HOLD_TIME: 0.0` (seconds the particle remains at peak opacity before transitioning to the fade-out phase)
-- **Implementation Notes**:
-  - In `Particle`: store `this.maxOpacity` and `this.holdTime`.
-  - When `appearing` reaches `this.opacity >= this.maxOpacity`, clamp `this.opacity = this.maxOpacity` and set `this.appearing = false`.
-  - Before decrementing `opacity`, count down `if (this.holdTime > 0) { this.holdTime -= deltaTime; }` and only fade out once `this.holdTime <= 0`.
-  - Update the editor's **Avg Lifetime** telemetry formula to include `(MIN_HOLD_TIME + MAX_HOLD_TIME) * 0.5`.
+#### 3. ~~Explicit Particle Lifetime / Hold Time (`HOLD_TIME`, `MAX_OPACITY`)~~ ✅ *DONE*
+- **Status**: `[x] Completed`
+- **Config Keys**: `MIN_MAX_OPACITY: 1.0`, `MAX_MAX_OPACITY: 1.0` (or shorthand `MAX_OPACITY`), `MIN_HOLD_TIME: 0.0`, `MAX_HOLD_TIME: 0.0` (or shorthand `HOLD_TIME`).
 
 #### 4. Additional Emitter Shapes (`circle`, `ring`, `line`)
 - **Status**: `[ ] Pending`
