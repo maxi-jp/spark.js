@@ -327,34 +327,34 @@ class Renderer {
 
     // Draw sprites
     /**
-     * Draws an image centered on (x, y) with scale, rotation, and alpha.
+     * Draws an image centered on (x, y) with scale, rotation, alpha, and optional RGB tint color.
      * @param {HTMLImageElement} img @param {number} x @param {number} y
      * @param {number} scaleX @param {number} scaleY @param {number} [rot=0]
-     * @param {{x:number,y:number}} [pivot] @param {number} [alpha=1.0]
+     * @param {{x:number,y:number}} [pivot] @param {number} [alpha=1.0] @param {Color} [tint=null]
      */
-    DrawImage(img, x, y, scaleX, scaleY, rot=0, pivot=coord, alpha=1.0) {}
+    DrawImage(img, x, y, scaleX, scaleY, rot=0, pivot=coord, alpha=1.0, tint=null) {}
     /**
      * Draws an image with top-left at (x, y). No rotation — fastest image draw.
      * @param {HTMLImageElement} img @param {number} x @param {number} y
-     * @param {number} [w] @param {number} [h] @param {number} [alpha=1.0]
+     * @param {number} [w] @param {number} [h] @param {number} [alpha=1.0] @param {Color} [tint=null]
      */
-    DrawImageBasic(img, x, y, w=img.width, h=img.height, alpha=1.0) {}
+    DrawImageBasic(img, x, y, w=img.width, h=img.height, alpha=1.0, tint=null) {}
     /**
      * Draws a cropped region of an image (e.g. one frame from a sprite sheet), centered on (x, y).
      * @param {HTMLImageElement} img @param {number} x @param {number} y
      * @param {number} sx - Source x in the sheet. @param {number} sy - Source y.
      * @param {number} sw - Source width. @param {number} sh - Source height.
      * @param {number} scaleX @param {number} scaleY @param {number} [rot=0]
-     * @param {{x:number,y:number}} [pivot] @param {number} [alpha=1.0]
+     * @param {{x:number,y:number}} [pivot] @param {number} [alpha=1.0] @param {Color} [tint=null]
      */
-    DrawImageSection(img, x, y, sx, sy, sw, sh, scaleX, scaleY, rot=0, pivot=coord, alpha=1.0) {}
+    DrawImageSection(img, x, y, sx, sy, sw, sh, scaleX, scaleY, rot=0, pivot=coord, alpha=1.0, tint=null) {}
     /**
      * Draws a cropped region of an image with top-left at (x, y). No rotation.
      * @param {HTMLImageElement} img @param {number} x @param {number} y
      * @param {number} sx @param {number} sy @param {number} sw @param {number} sh
-     * @param {number} scaleX @param {number} scaleY @param {number} [alpha=1.0]
+     * @param {number} scaleX @param {number} scaleY @param {number} [alpha=1.0] @param {Color} [tint=null]
      */
-    DrawImageSectionBasic(img, x, y, sx, sy, sw, sh, scaleX, scaleY, alpha=1.0) {}
+    DrawImageSectionBasic(img, x, y, sx, sy, sw, sh, scaleX, scaleY, alpha=1.0, tint=null) {}
 
     // other Draw methods
     /**
@@ -901,7 +901,51 @@ class Canvas2DRenderer extends Renderer {
         return this.ctx.measureText(text).width;
     }
 
-    DrawImage(img, x, y, scaleX, scaleY, rot=0, pivot=coord, alpha=1.0) {
+    /**
+     * Returns an offscreen canvas with `img` multiplied by `(tint.r, tint.g, tint.b)`,
+     * quantized to 5 bits per channel and cached on `img._tintCache` (LRU max 64).
+     */
+    _getTintedSource(img, tint) {
+        if (!tint) return img;
+        const r5 = Math.max(0, Math.min(31, (tint.r * 31 + 0.5) | 0));
+        const g5 = Math.max(0, Math.min(31, (tint.g * 31 + 0.5) | 0));
+        const b5 = Math.max(0, Math.min(31, (tint.b * 31 + 0.5) | 0));
+        if (r5 === 31 && g5 === 31 && b5 === 31) return img;
+
+        const key = (r5 << 10) | (g5 << 5) | b5;
+        let cache = img._tintCache;
+        if (!cache) {
+            cache = new Map();
+            img._tintCache = cache;
+        }
+        let tinted = cache.get(key);
+        if (tinted) return tinted;
+
+        const w = img.width  || img.naturalWidth  || 64;
+        const h = img.height || img.naturalHeight || 64;
+        const off = document.createElement('canvas');
+        off.width  = w;
+        off.height = h;
+        off.halfWidth  = img.halfWidth  ?? (w / 2);
+        off.halfHeight = img.halfHeight ?? (h / 2);
+
+        const octx = off.getContext('2d');
+        octx.drawImage(img, 0, 0);
+        octx.globalCompositeOperation = 'multiply';
+        octx.fillStyle = `rgb(${Math.round((r5 / 31) * 255)},${Math.round((g5 / 31) * 255)},${Math.round((b5 / 31) * 255)})`;
+        octx.fillRect(0, 0, w, h);
+        octx.globalCompositeOperation = 'destination-in';
+        octx.drawImage(img, 0, 0);
+
+        if (cache.size >= 64) {
+            cache.delete(cache.keys().next().value);
+        }
+        cache.set(key, off);
+        return off;
+    }
+
+    DrawImage(img, x, y, scaleX, scaleY, rot=0, pivot=coord, alpha=1.0, tint=null) {
+        const src = tint ? this._getTintedSource(img, tint) : img;
         this.ctx.globalAlpha = alpha;
         this.ctx.save();
 
@@ -909,19 +953,21 @@ class Canvas2DRenderer extends Renderer {
         this.ctx.rotate(rot);
         this.ctx.scale(scaleX, scaleY);
 
-        this.ctx.drawImage(img, -img.halfWidth - pivot.x, -img.halfHeight - pivot.y);
+        this.ctx.drawImage(src, -src.halfWidth - pivot.x, -src.halfHeight - pivot.y);
 
         this.ctx.restore();
         this.ctx.globalAlpha = 1.0;
     }
 
-    DrawImageBasic(img, x, y, w=img.width, h=img.height, alpha=1.0) {
+    DrawImageBasic(img, x, y, w=img.width, h=img.height, alpha=1.0, tint=null) {
+        const src = tint ? this._getTintedSource(img, tint) : img;
         this.ctx.globalAlpha = alpha;
-        this.ctx.drawImage(img, x, y, w, h);
+        this.ctx.drawImage(src, x, y, w, h);
         this.ctx.globalAlpha = 1.0;
     }
 
-    DrawImageSection(img, x, y, sx, sy, sw, sh, scaleX, scaleY, rot=0, pivot=coord, alpha=1.0) {
+    DrawImageSection(img, x, y, sx, sy, sw, sh, scaleX, scaleY, rot=0, pivot=coord, alpha=1.0, tint=null) {
+        const src = tint ? this._getTintedSource(img, tint) : img;
         this.ctx.save();
         
         this.ctx.translate(x, y);
@@ -936,16 +982,17 @@ class Canvas2DRenderer extends Renderer {
 
         this.ctx.globalAlpha = alpha;
 
-        this.ctx.drawImage(img, sx, sy, sw, sh, -sw/2 - pivot.x, -sh/2 - pivot.y, sw, sh);
+        this.ctx.drawImage(src, sx, sy, sw, sh, -sw/2 - pivot.x, -sh/2 - pivot.y, sw, sh);
 
         this.ctx.globalAlpha = 1.0;
         
         this.ctx.restore();
     }
 
-    DrawImageSectionBasic(img, x, y, sx, sy, sw, sh, scaleX, scaleY, alpha=1.0) {
+    DrawImageSectionBasic(img, x, y, sx, sy, sw, sh, scaleX, scaleY, alpha=1.0, tint=null) {
+        const src = tint ? this._getTintedSource(img, tint) : img;
         this.ctx.globalAlpha = alpha;
-        this.ctx.drawImage(img, sx, sy, sw, sh, x, y, sw * scaleX, sh * scaleY);
+        this.ctx.drawImage(src, sx, sy, sw, sh, x, y, sw * scaleX, sh * scaleY);
         this.ctx.globalAlpha = 1.0;
     }
 
@@ -1060,7 +1107,7 @@ class WebGLRenderer extends Renderer {
         this._spriteBatchShader.Setup(this.gl);
 
         const _SPRITE_BATCH_MAX_VERTS = 8192 * 6;
-        this._spriteBatchVerts    = new Float32Array(_SPRITE_BATCH_MAX_VERTS * 5);
+        this._spriteBatchVerts    = new Float32Array(_SPRITE_BATCH_MAX_VERTS * 8); // x,y,u,v,r,g,b,a
         this._spriteBatchMaxVerts = _SPRITE_BATCH_MAX_VERTS;
         this._spriteBatchCount    = 0;
         this._spriteBatchTex      = null;
@@ -1686,7 +1733,7 @@ class WebGLRenderer extends Renderer {
         gl.drawArrays(gl.TRIANGLES, 0, 6);
     }
 
-    DrawImage(img, x, y, scaleX, scaleY, rot=0, pivot=coord, alpha=1.0) {
+    DrawImage(img, x, y, scaleX, scaleY, rot=0, pivot=coord, alpha=1.0, tint=null) {
         const w    = img.width  * scaleX;
         const h    = img.height * scaleY;
         const pivX = pivot.x * scaleX;
@@ -1714,16 +1761,22 @@ class WebGLRenderer extends Renderer {
             x3 = x + lx3; y3 = y + ly3;
         }
 
-        this._pushSpriteQuad(img, x0, y0, x1, y1, x2, y2, x3, y3, 0, 0, 1, 1, alpha);
+        const r = tint ? tint.r : 1.0;
+        const g = tint ? tint.g : 1.0;
+        const b = tint ? tint.b : 1.0;
+        this._pushSpriteQuad(img, x0, y0, x1, y1, x2, y2, x3, y3, 0, 0, 1, 1, alpha, r, g, b);
     }
 
-    DrawImageBasic(img, x, y, w=img.width, h=img.height, alpha=1.0) {
+    DrawImageBasic(img, x, y, w=img.width, h=img.height, alpha=1.0, tint=null) {
         const x1 = x + w;
         const y1 = y + h;
-        this._pushSpriteQuad(img, x, y, x1, y, x, y1, x1, y1, 0, 0, 1, 1, alpha);
+        const r = tint ? tint.r : 1.0;
+        const g = tint ? tint.g : 1.0;
+        const b = tint ? tint.b : 1.0;
+        this._pushSpriteQuad(img, x, y, x1, y, x, y1, x1, y1, 0, 0, 1, 1, alpha, r, g, b);
     }
 
-    DrawImageSection(img, x, y, sx, sy, sw, sh, scaleX, scaleY, rot=0, pivot=coord, alpha=1.0) {
+    DrawImageSection(img, x, y, sx, sy, sw, sh, scaleX, scaleY, rot=0, pivot=coord, alpha=1.0, tint=null) {
         const w    = sw * scaleX;
         const h    = sh * scaleY;
         const pivX = pivot.x * scaleX;
@@ -1756,10 +1809,13 @@ class WebGLRenderer extends Renderer {
         const u1 = (sx + sw) / img.width;
         const v1 = (sy + sh) / img.height;
 
-        this._pushSpriteQuad(img, x0, y0, x1, y1, x2, y2, x3, y3, u0, v0, u1, v1, alpha);
+        const r = tint ? tint.r : 1.0;
+        const g = tint ? tint.g : 1.0;
+        const b = tint ? tint.b : 1.0;
+        this._pushSpriteQuad(img, x0, y0, x1, y1, x2, y2, x3, y3, u0, v0, u1, v1, alpha, r, g, b);
     }
 
-    DrawImageSectionBasic(img, x, y, sx, sy, sw, sh, scaleX, scaleY, alpha=1.0) {
+    DrawImageSectionBasic(img, x, y, sx, sy, sw, sh, scaleX, scaleY, alpha=1.0, tint=null) {
         const w  = sw * scaleX;
         const h  = sh * scaleY;
         const x1 = x + w;
@@ -1768,7 +1824,10 @@ class WebGLRenderer extends Renderer {
         const v0 = sy / img.height;
         const u1 = (sx + sw) / img.width;
         const v1 = (sy + sh) / img.height;
-        this._pushSpriteQuad(img, x, y, x1, y, x, y1, x1, y1, u0, v0, u1, v1, alpha);
+        const r = tint ? tint.r : 1.0;
+        const g = tint ? tint.g : 1.0;
+        const b = tint ? tint.b : 1.0;
+        this._pushSpriteQuad(img, x, y, x1, y, x, y1, x1, y1, u0, v0, u1, v1, alpha, r, g, b);
     }
 
     /**
@@ -1857,7 +1916,7 @@ class WebGLRenderer extends Renderer {
 
         const gl         = this.gl;
         const shader     = this._spriteBatchShader;
-        const floatCount = this._spriteBatchCount * 5;
+        const floatCount = this._spriteBatchCount * 8;
 
         if (!this._spriteBatchBuf)
             this._spriteBatchBuf = gl.createBuffer();
@@ -1866,18 +1925,18 @@ class WebGLRenderer extends Renderer {
         gl.bindBuffer(gl.ARRAY_BUFFER, this._spriteBatchBuf);
         gl.bufferData(gl.ARRAY_BUFFER, this._spriteBatchVerts.subarray(0, floatCount), gl.STREAM_DRAW);
 
-        const stride = 5 * 4;
-        gl.enableVertexAttribArray(shader.alphaLoc);
+        const stride = 8 * 4;
+        gl.enableVertexAttribArray(shader.colorLoc);
         gl.vertexAttribPointer(shader.positionLoc, 2, gl.FLOAT, false, stride, 0);
         gl.vertexAttribPointer(shader.texcoordLoc, 2, gl.FLOAT, false, stride, 2 * 4);
-        gl.vertexAttribPointer(shader.alphaLoc,    1, gl.FLOAT, false, stride, 4 * 4);
+        gl.vertexAttribPointer(shader.colorLoc,    4, gl.FLOAT, false, stride, 4 * 4);
 
         gl.uniform2f(shader.resolutionLoc, this.canvas.width, this.canvas.height);
         gl.uniformMatrix3fv(shader.viewMatrixLoc, false, this.viewMatrix);
         shader.BindTexture(gl, this._spriteBatchTex);
 
         gl.drawArrays(gl.TRIANGLES, 0, this._spriteBatchCount);
-        gl.disableVertexAttribArray(shader.alphaLoc);
+        gl.disableVertexAttribArray(shader.colorLoc);
 
         this._spriteBatchCount = 0;
         this._spriteBatchTex   = null;
@@ -2010,7 +2069,7 @@ class WebGLRenderer extends Renderer {
      * Corners: TL(x0,y0), TR(x1,y1), BL(x2,y2), BR(x3,y3).
      * UV: top-left (u0,v0), bottom-right (u1,v1).
      */
-    _pushSpriteQuad(img, x0, y0, x1, y1, x2, y2, x3, y3, u0, v0, u1, v1, alpha) {
+    _pushSpriteQuad(img, x0, y0, x1, y1, x2, y2, x3, y3, u0, v0, u1, v1, alpha, r=1.0, g=1.0, b=1.0) {
         if (this._rectBatchCount   > 0) this.FlushRectBatch();
         if (this._circleBatchCount > 0) this.FlushCircleBatch();
 
@@ -2026,16 +2085,16 @@ class WebGLRenderer extends Renderer {
         }
 
         const buf = this._spriteBatchVerts;
-        let i = this._spriteBatchCount * 5;
+        let i = this._spriteBatchCount * 8;
 
         // Triangle 1: TL, TR, BL
-        buf[i++]=x0; buf[i++]=y0; buf[i++]=u0; buf[i++]=v0; buf[i++]=alpha;
-        buf[i++]=x1; buf[i++]=y1; buf[i++]=u1; buf[i++]=v0; buf[i++]=alpha;
-        buf[i++]=x2; buf[i++]=y2; buf[i++]=u0; buf[i++]=v1; buf[i++]=alpha;
+        buf[i++]=x0; buf[i++]=y0; buf[i++]=u0; buf[i++]=v0; buf[i++]=r; buf[i++]=g; buf[i++]=b; buf[i++]=alpha;
+        buf[i++]=x1; buf[i++]=y1; buf[i++]=u1; buf[i++]=v0; buf[i++]=r; buf[i++]=g; buf[i++]=b; buf[i++]=alpha;
+        buf[i++]=x2; buf[i++]=y2; buf[i++]=u0; buf[i++]=v1; buf[i++]=r; buf[i++]=g; buf[i++]=b; buf[i++]=alpha;
         // Triangle 2: BL, TR, BR
-        buf[i++]=x2; buf[i++]=y2; buf[i++]=u0; buf[i++]=v1; buf[i++]=alpha;
-        buf[i++]=x1; buf[i++]=y1; buf[i++]=u1; buf[i++]=v0; buf[i++]=alpha;
-        buf[i++]=x3; buf[i++]=y3; buf[i++]=u1; buf[i++]=v1; buf[i++]=alpha;
+        buf[i++]=x2; buf[i++]=y2; buf[i++]=u0; buf[i++]=v1; buf[i++]=r; buf[i++]=g; buf[i++]=b; buf[i++]=alpha;
+        buf[i++]=x1; buf[i++]=y1; buf[i++]=u1; buf[i++]=v0; buf[i++]=r; buf[i++]=g; buf[i++]=b; buf[i++]=alpha;
+        buf[i++]=x3; buf[i++]=y3; buf[i++]=u1; buf[i++]=v1; buf[i++]=r; buf[i++]=g; buf[i++]=b; buf[i++]=alpha;
 
         this._spriteBatchCount += 6;
     }
@@ -2045,7 +2104,7 @@ class WebGLRenderer extends Renderer {
      * Used by DrawTextCached so text labels go through the sprite batch instead of issuing
      * an immediate draw call each.  `x, y` is the centre of the quad.
      */
-    _pushTexturedQuad(tex, x, y, w, h, alpha=1.0) {
+    _pushTexturedQuad(tex, x, y, w, h, alpha=1.0, r=1.0, g=1.0, b=1.0) {
         if (this._rectBatchCount   > 0)
             this.FlushRectBatch();
 
@@ -2064,16 +2123,16 @@ class WebGLRenderer extends Renderer {
 
         const hw = w / 2, hh = h / 2;
         const buf = this._spriteBatchVerts;
-        let i = this._spriteBatchCount * 5;
+        let i = this._spriteBatchCount * 8;
 
         // Triangle 1: TL, TR, BL
-        buf[i++]=x-hw; buf[i++]=y-hh; buf[i++]=0; buf[i++]=0; buf[i++]=alpha;
-        buf[i++]=x+hw; buf[i++]=y-hh; buf[i++]=1; buf[i++]=0; buf[i++]=alpha;
-        buf[i++]=x-hw; buf[i++]=y+hh; buf[i++]=0; buf[i++]=1; buf[i++]=alpha;
+        buf[i++]=x-hw; buf[i++]=y-hh; buf[i++]=0; buf[i++]=0; buf[i++]=r; buf[i++]=g; buf[i++]=b; buf[i++]=alpha;
+        buf[i++]=x+hw; buf[i++]=y-hh; buf[i++]=1; buf[i++]=0; buf[i++]=r; buf[i++]=g; buf[i++]=b; buf[i++]=alpha;
+        buf[i++]=x-hw; buf[i++]=y+hh; buf[i++]=0; buf[i++]=1; buf[i++]=r; buf[i++]=g; buf[i++]=b; buf[i++]=alpha;
         // Triangle 2: BL, TR, BR
-        buf[i++]=x-hw; buf[i++]=y+hh; buf[i++]=0; buf[i++]=1; buf[i++]=alpha;
-        buf[i++]=x+hw; buf[i++]=y-hh; buf[i++]=1; buf[i++]=0; buf[i++]=alpha;
-        buf[i++]=x+hw; buf[i++]=y+hh; buf[i++]=1; buf[i++]=1; buf[i++]=alpha;
+        buf[i++]=x-hw; buf[i++]=y+hh; buf[i++]=0; buf[i++]=1; buf[i++]=r; buf[i++]=g; buf[i++]=b; buf[i++]=alpha;
+        buf[i++]=x+hw; buf[i++]=y-hh; buf[i++]=1; buf[i++]=0; buf[i++]=r; buf[i++]=g; buf[i++]=b; buf[i++]=alpha;
+        buf[i++]=x+hw; buf[i++]=y+hh; buf[i++]=1; buf[i++]=1; buf[i++]=r; buf[i++]=g; buf[i++]=b; buf[i++]=alpha;
 
         this._spriteBatchCount += 6;
     }
@@ -2407,29 +2466,29 @@ class SpriteBatchShader {
         this.vsSource = `
             attribute vec2 a_position;
             attribute vec2 a_texcoord;
-            attribute float a_alpha;
+            attribute vec4 a_color;
             uniform vec2 u_resolution;
             uniform mat3 u_viewMatrix;
             varying vec2 v_texcoord;
-            varying float v_alpha;
+            varying vec4 v_color;
             void main() {
                 vec3 worldPos = u_viewMatrix * vec3(a_position, 1.0);
                 vec2 zeroToOne = worldPos.xy / u_resolution;
                 vec2 clipSpace = zeroToOne * 2.0 - 1.0;
                 gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
                 v_texcoord = a_texcoord;
-                v_alpha = a_alpha;
+                v_color = a_color;
             }
         `;
 
         this.fsSource = `
             precision mediump float;
             varying vec2 v_texcoord;
-            varying float v_alpha;
+            varying vec4 v_color;
             uniform sampler2D u_texture;
             void main() {
                 vec4 c = texture2D(u_texture, v_texcoord);
-                c.a *= v_alpha;
+                c *= v_color;
                 c.rgb *= c.a;
                 gl_FragColor = c;
             }
@@ -2439,7 +2498,7 @@ class SpriteBatchShader {
 
         this.positionLoc    = gl.getAttribLocation(this.program, "a_position");
         this.texcoordLoc    = gl.getAttribLocation(this.program, "a_texcoord");
-        this.alphaLoc       = gl.getAttribLocation(this.program, "a_alpha");
+        this.colorLoc       = gl.getAttribLocation(this.program, "a_color");
         this.resolutionLoc  = gl.getUniformLocation(this.program, "u_resolution");
         this.viewMatrixLoc  = gl.getUniformLocation(this.program, "u_viewMatrix");
         this.samplerLoc     = gl.getUniformLocation(this.program, "u_texture");
@@ -2452,7 +2511,7 @@ class SpriteBatchShader {
         gl.useProgram(this.program);
         gl.enableVertexAttribArray(this.positionLoc);
         gl.enableVertexAttribArray(this.texcoordLoc);
-        // alphaLoc is unique to this shader — enable/disable locally in FlushSpriteBatch
+        // colorLoc is enabled/disabled locally in FlushSpriteBatch
     }
 
     BindTexture(gl, texture) {

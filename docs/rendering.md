@@ -193,18 +193,18 @@ The fastest way to draw a full image. Position is the **top-left corner**.
 Draw(renderer) {
     renderer.DrawImageBasic(this.graphicAssets.bg.img, 0, 0);
 
-    // Optional: override the draw size (stretches/crops)
-    renderer.DrawImageBasic(img, x, y, w, h, alpha);
+    // Optional: override the draw size (stretches/crops), alpha, and RGB tint
+    renderer.DrawImageBasic(img, x, y, w, h, alpha, tint);
 }
 ```
 
-Signature: `DrawImageBasic(img, x, y, w=img.width, h=img.height, alpha=1.0)`
+Signature: `DrawImageBasic(img, x, y, w=img.width, h=img.height, alpha=1.0, tint=null)`
 
 ---
 
 ### `DrawImage` — scaled, rotated, centered
 
-Draws an image centered on `(x, y)` with full transform support.
+Draws an image centered on `(x, y)` with full transform support and optional RGB color tinting.
 
 ```javascript
 Draw(renderer) {
@@ -215,12 +215,13 @@ Draw(renderer) {
         this.scaleY,       // vertical scale
         this.rotation,     // rotation in radians
         this.pivot,        // Vector2 pivot offset
-        1.0                // alpha (0–1)
+        1.0,               // alpha (0–1)
+        this.tintColor     // optional Color tint (or null for untinted)
     );
 }
 ```
 
-Signature: `DrawImage(img, x, y, scaleX, scaleY, rot=0, pivot=coord, alpha=1.0)`
+Signature: `DrawImage(img, x, y, scaleX, scaleY, rot=0, pivot=coord, alpha=1.0, tint=null)`
 
 > `SpriteObject` uses this internally — most of the time you won't call it directly.
 
@@ -243,12 +244,13 @@ Draw(renderer) {
         1, 1,              // scaleX, scaleY
         this.rotation,
         coord,             // pivot
-        1.0                // alpha
+        1.0,               // alpha
+        this.tintColor     // optional Color tint (or null)
     );
 }
 ```
 
-Signature: `DrawImageSection(img, x, y, sx, sy, sw, sh, scaleX, scaleY, rot=0, pivot=coord, alpha=1.0)`
+Signature: `DrawImageSection(img, x, y, sx, sy, sw, sh, scaleX, scaleY, rot=0, pivot=coord, alpha=1.0, tint=null)`
 
 > `SSAnimationObjectBasic` and `SSAnimationObjectComplex` use this internally.
 
@@ -292,8 +294,25 @@ class PangBall extends SpriteObject {
 Like `DrawImageSection` but with a **top-left anchor** and no rotation.
 
 ```javascript
-renderer.DrawImageSectionBasic(sheet, x, y, sx, sy, sw, sh, scaleX, scaleY, alpha);
+renderer.DrawImageSectionBasic(sheet, x, y, sx, sy, sw, sh, scaleX, scaleY, alpha, tint);
 ```
+
+Signature: `DrawImageSectionBasic(img, x, y, sx, sy, sw, sh, scaleX, scaleY, alpha=1.0, tint=null)`
+
+---
+
+### Sprite Color Tinting (`tint`)
+
+All four image drawing methods accept an optional `tint` (`Color` or `null`, defaulting to `null`) that multiplies the image's RGB channels by `(tint.r, tint.g, tint.b)` while preserving its alpha silhouette. This is useful for hit-flash effects on enemies, team color variations, or tinted particles:
+
+```javascript
+// Tint an enemy sprite red while taking damage, or draw normally when null
+const tint = this.isHurt ? Color.red : null;
+renderer.DrawImage(this.img, this.x, this.y, 1, 1, this.rotation, coord, 1.0, tint);
+```
+
+- **WebGL (`WebGLRenderer`)**: Passes `(tint.r, tint.g, tint.b, alpha)` as a per-vertex `vec4 a_color` attribute in `SpriteBatchShader`. Tinted and untinted sprites sharing the same texture are batched together into a **single GPU draw call** with zero overhead.
+- **Canvas 2D (`Canvas2DRenderer`)**: Uses `_getTintedSource(img, tint)` to multiply the image onto an offscreen canvas (`globalCompositeOperation = 'multiply'` followed by `'destination-in'`), quantized to 5 bits per channel and cached in a 64-entry LRU `Map` (`img._tintCache`) so repeated tints allocate nothing at runtime.
 
 ---
 
@@ -465,10 +484,10 @@ Batching has no effect on the Canvas 2D renderer. All draw methods behave identi
 | `DrawStrokeCircle(x,y,radius,color,lineWidth)` | Stroked circle |
 | `DrawFillText(text,x,y,font,color,align,baseline)` | Filled text |
 | `DrawStrokeText(text,x,y,font,color,align,baseline,lineWidth)` | Stroked text |
-| `DrawImage(img,x,y,scaleX,scaleY,rot,pivot,alpha)` | Centered image with full transform |
-| `DrawImageBasic(img,x,y,w,h,alpha)` | Top-left image, no transform |
-| `DrawImageSection(img,x,y,sx,sy,sw,sh,scaleX,scaleY,rot,pivot,alpha)` | Sprite-sheet crop, centered |
-| `DrawImageSectionBasic(img,x,y,sx,sy,sw,sh,scaleX,scaleY,alpha)` | Sprite-sheet crop, top-left |
+| `DrawImage(img,x,y,scaleX,scaleY,rot,pivot,alpha,tint)` | Centered image with full transform and optional `Color` tint |
+| `DrawImageBasic(img,x,y,w,h,alpha,tint)` | Top-left image, no transform, optional `Color` tint |
+| `DrawImageSection(img,x,y,sx,sy,sw,sh,scaleX,scaleY,rot,pivot,alpha,tint)` | Sprite-sheet crop, centered, optional `Color` tint |
+| `DrawImageSectionBasic(img,x,y,sx,sy,sw,sh,scaleX,scaleY,alpha,tint)` | Sprite-sheet crop, top-left, optional `Color` tint |
 | `DrawGradientRectangle(x,y,w,h,gradient)` | Fill rectangle with `LinearGradient` |
 | `ApplyCameraTransform(camera)` | Push camera offset transform |
 | `RestoreCameraTransform()` | Pop camera offset transform |
