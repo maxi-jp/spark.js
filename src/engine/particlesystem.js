@@ -22,10 +22,30 @@ const emitterType = {
     line:   4
 };
 
+/**
+ * Particle visual shape:
+ * - `"sprite"`: draws the `HTMLImageElement` passed to `ParticleSystem`
+ * - `"circle"`: draws a procedural filled circle of diameter `PARTICLE_SIZE * scale`
+ * - `"rect"`: draws a procedural rotated filled square of side `PARTICLE_SIZE * scale`
+ * - `"line"`: draws a procedural velocity-aligned streak/spark scaled by `PARTICLE_SIZE * scale`
+ */
+const particleShape = {
+    sprite: "sprite",
+    circle: "circle",
+    rect:   "rect",
+    line:   "line"
+};
+
 const defaultParticleConfig = {
     maxParticleCount: 500,
 
     globalCompositeOperation: "source-over",
+
+    // Visual particle shape: "sprite" | "circle" | "rect" | "line"
+    renderShape: "sprite",
+
+    // Base size in pixels for procedural shapes ("circle", "rect", "line") at scale = 1.0
+    PARTICLE_SIZE: 64,
 
     emitterType: emitterType.area,
 
@@ -155,6 +175,8 @@ class Particle {
         this.gravityX         = 0.0;
         this.gravityY         = 0.0;
         this.velocityDamping  = 0.0;
+        this.renderShape      = "sprite";
+        this.particleSize     = 64;
 
         // Color-over-lifetime state
         this.age              = 0.0;
@@ -188,11 +210,14 @@ class Particle {
      * @param {number}  [holdTime=0.0]      duration in seconds held at peak opacity
      * @param {Color|null} [startColor=null] initial RGB tint color
      * @param {Color|null} [endColor=null]   final RGB tint color over lifetime
+     * @param {string}  [renderShape="sprite"] "sprite" | "circle" | "rect" | "line"
+     * @param {number}  [particleSize=64]   base pixel size for procedural shapes at scale = 1.0
      */
     Activate(initialPosition, opacityIncrementVelocity, opacityDecrementVelocity,
              initialScale, scaleVelocity, initialRotation, rotationVelocity,
              direction, gravityX = 0, gravityY = 0, velocityDamping = 0,
-             maxOpacity = 1.0, holdTime = 0.0, startColor = null, endColor = null) {
+             maxOpacity = 1.0, holdTime = 0.0, startColor = null, endColor = null,
+             renderShape = "sprite", particleSize = 64) {
         this.position         = Vector2.Copy(initialPosition);
         this.opacity          = 0;
         this.maxOpacity       = maxOpacity;
@@ -207,6 +232,8 @@ class Particle {
         this.gravityX         = gravityX;
         this.gravityY         = gravityY;
         this.velocityDamping  = velocityDamping;
+        this.renderShape      = renderShape;
+        this.particleSize     = particleSize;
 
         const cStart = startColor || endColor;
         const cEnd   = endColor   || startColor;
@@ -235,6 +262,9 @@ class Particle {
         else {
             this.hasColorTint     = false;
             this.hasColorGradient = false;
+            this.tint._r = this.tint._rgba[0] = 1.0;
+            this.tint._g = this.tint._rgba[1] = 1.0;
+            this.tint._b = this.tint._rgba[2] = 1.0;
         }
 
         this.active           = true;
@@ -303,28 +333,69 @@ class Particle {
     }
 
     Draw(renderer, colorFrames = null) {
-        if (colorFrames && this.hasColorTint) {
-            const idx = this.hasColorGradient
-                ? ((this.lifeProgress * (colorFrames.length - 1) + 0.5) | 0)
-                : 0;
-            renderer.DrawImage(
-                colorFrames[idx],
+        if (this.renderShape === "sprite" && this.img) {
+            if (colorFrames && this.hasColorTint) {
+                const idx = this.hasColorGradient
+                    ? ((this.lifeProgress * (colorFrames.length - 1) + 0.5) | 0)
+                    : 0;
+                renderer.DrawImage(
+                    colorFrames[idx],
+                    this.position.x, this.position.y,
+                    this.scale, this.scale,
+                    this.rotation,
+                    Particle.pivot,
+                    this.opacity
+                );
+            }
+            else {
+                renderer.DrawImage(
+                    this.img,
+                    this.position.x, this.position.y,
+                    this.scale, this.scale,
+                    this.rotation,
+                    Particle.pivot,
+                    this.opacity,
+                    this.hasColorTint ? this.tint : null
+                );
+            }
+            return;
+        }
+
+        const size = this.particleSize * this.scale;
+        if (size <= 0.0)
+            return;
+
+        this.tint._a = this.tint._rgba[3] = this.opacity;
+
+        if (this.renderShape === "rect") {
+            renderer.DrawFillRectangle(
                 this.position.x, this.position.y,
-                this.scale, this.scale,
+                size, size,
+                this.tint,
                 this.rotation,
-                Particle.pivot,
-                this.opacity
+                Particle.pivot
+            );
+        }
+        else if (this.renderShape === "line") {
+            const vx = this.direction.x;
+            const vy = this.direction.y;
+            const angle = (vx !== 0 || vy !== 0) ? Math.atan2(vy, vx) : this.rotation;
+            const length    = Math.max(2.0, size * 1.8);
+            const thickness = Math.max(1.5, size * 0.22);
+            renderer.DrawFillRectangle(
+                this.position.x, this.position.y,
+                length, thickness,
+                this.tint,
+                angle,
+                Particle.pivot
             );
         }
         else {
-            renderer.DrawImage(
-                this.img,
+            // "circle" (or fallback when this.img is null)
+            renderer.DrawFillCircle(
                 this.position.x, this.position.y,
-                this.scale, this.scale,
-                this.rotation,
-                Particle.pivot,
-                this.opacity,
-                this.hasColorTint ? this.tint : null
+                size * 0.5,
+                this.tint
             );
         }
     }
@@ -461,6 +532,9 @@ class ParticleSystem {
 
         // Merge defaults with provided config overrides
         this.config = Object.assign({}, defaultParticleConfig, config);
+        if (!this.img && (!config || config.renderShape === undefined)) {
+            this.config.renderShape = "circle";
+        }
         if (config) {
             if (config.directionMode === undefined &&
                 (config.MIN_ANGLE !== undefined || config.MAX_ANGLE !== undefined)) {
@@ -488,8 +562,8 @@ class ParticleSystem {
 
         this._startColor     = null;
         this._endColor       = null;
+        this._isSprite       = false;
         this._colorFrames    = null;
-        this._colorFramesImg = null;
         this._syncColors();
 
         // Create emitter
@@ -531,20 +605,25 @@ class ParticleSystem {
         this.emitter.rotation = angle;
     }
 
-    /** Re-parses `config.startColor` and `config.endColor` into cached `Color` instances. */
+    /** Re-parses `config.startColor` and `config.endColor` and pre-bakes Canvas2D color frames if needed. */
     _syncColors() {
-        this._startColor     = _parseParticleColor(this.config.startColor);
-        this._endColor       = _parseParticleColor(this.config.endColor);
-        this._colorFrames    = null;
-        this._colorFramesImg = null;
+        this._startColor = _parseParticleColor(this.config.startColor);
+        this._endColor   = _parseParticleColor(this.config.endColor);
+        this._isSprite   = (this.config.renderShape === "sprite" || !this.config.renderShape) && Boolean(this.img);
+
+        // Pre-bake tinted offscreen canvases only when using sprite particles in Canvas2D
+        const useCanvasBake = typeof WebGLRenderer === "undefined" ||
+                              typeof renderer === "undefined" ||
+                              !(renderer instanceof WebGLRenderer);
+        this._colorFrames = (this._isSprite && useCanvasBake) ? this._bakeCanvasColorFrames() : null;
     }
 
     /**
-     * Lazily pre-bakes an array of tinted offscreen canvases (`1` for flat tint, `COLOR_RAMP_STEPS` for a gradient)
-     * when rendering with `Canvas2DRenderer`. Not used when rendering with `WebGLRenderer`.
+     * Pre-bakes an array of tinted offscreen canvases (`1` for flat tint, `COLOR_RAMP_STEPS` for a gradient)
+     * for `Canvas2DRenderer`.
      * @returns {HTMLCanvasElement[]|null}
      */
-    _getCanvasColorFrames() {
+    _bakeCanvasColorFrames() {
         const cStart = this._startColor || this._endColor;
         const cEnd   = this._endColor   || this._startColor;
         if (!cStart || !this.img)
@@ -554,9 +633,6 @@ class ParticleSystem {
         const h = this.img.height || this.img.naturalHeight || 0;
         if (w === 0 || h === 0)
             return null;
-
-        if (this._colorFrames && this._colorFramesImg === this.img)
-            return this._colorFrames;
 
         const isGradient = (cStart.r !== cEnd.r || cStart.g !== cEnd.g || cStart.b !== cEnd.b);
         const steps  = isGradient ? ParticleSystem.COLOR_RAMP_STEPS : 1;
@@ -587,9 +663,16 @@ class ParticleSystem {
             frames[i] = off;
         }
 
-        this._colorFrames    = frames;
-        this._colorFramesImg = this.img;
         return frames;
+    }
+
+    /**
+     * Sets the visual particle shape (`"sprite" | "circle" | "rect" | "line"`) for newly spawned particles.
+     * @param {string} shape
+     */
+    SetRenderShape(shape) {
+        this.config.renderShape = shape;
+        this._syncColors();
     }
 
     /**
@@ -653,7 +736,9 @@ class ParticleSystem {
             RandomBetweenFloat(this.config.MIN_MAX_OPACITY,                this.config.MAX_MAX_OPACITY),
             RandomBetweenFloat(this.config.MIN_HOLD_TIME,                  this.config.MAX_HOLD_TIME),
             this._startColor,
-            this._endColor
+            this._endColor,
+            this.config.renderShape,
+            this.config.PARTICLE_SIZE
         );
 
         return true;
@@ -708,15 +793,12 @@ class ParticleSystem {
     }
 
     Draw(renderer) {
-        const isCanvas2D = Boolean(renderer.ctx);
-
         // globalCompositeOperation is a Canvas 2D concept only
-        if (isCanvas2D) {
+        if (renderer.ctx) {
             renderer.ctx.globalCompositeOperation = this.config.globalCompositeOperation;
         }
 
-        // In Canvas2D, pass pre-baked color step canvases; in WebGL, use hardware vertex tinting
-        const colorFrames = isCanvas2D ? this._getCanvasColorFrames() : null;
+        const colorFrames = renderer.ctx ? this._colorFrames : null;
 
         this.particles.forEach(particle => {
             if (particle.active)
@@ -724,7 +806,7 @@ class ParticleSystem {
         });
 
         // Restore defaults
-        if (isCanvas2D) {
+        if (renderer.ctx) {
             renderer.ctx.globalCompositeOperation = 'source-over';
         }
     }

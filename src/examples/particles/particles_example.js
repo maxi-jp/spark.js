@@ -10,6 +10,7 @@
 //   J – Campfire / Fire Aura (circle emitter following mouse + upward buoyancy)
 //   K – Portal Ring / Shockwave (ring emitter following mouse + radial outward velocity)
 //   L – Energy Beam / Firewall (line emitter between two points + rising flames)
+//   1 / 2 / 3 / 4 – Switch renderShape ("sprite" / "circle" / "rect" / "line")
 //   Click / Space – Explosion burst at cursor (velocity damping + gravity)
 // ============================================================
 
@@ -141,6 +142,8 @@ const snowConfig = {
 const fountainConfig = {
     maxParticleCount: 400,
     globalCompositeOperation: "lighter",
+    renderShape: "line",
+    PARTICLE_SIZE: 80,
     emitterType: emitterType.point,
 
     MIN_INITIAL_VELOCITY: 220,
@@ -540,6 +543,24 @@ class ParticlesExample extends Game {
             this._mode = 'firewall-line';
         }
 
+        // Switch particle renderShape live (1 = sprite, 2 = circle, 3 = rect, 4 = line)
+        if (Input.IsKeyPressed(KEY_1)) {
+            this._particleSystem.SetRenderShape("sprite");
+            this._burstSystem.SetRenderShape("sprite");
+        }
+        if (Input.IsKeyPressed(KEY_2)) {
+            this._particleSystem.SetRenderShape("circle");
+            this._burstSystem.SetRenderShape("circle");
+        }
+        if (Input.IsKeyPressed(KEY_3)) {
+            this._particleSystem.SetRenderShape("rect");
+            this._burstSystem.SetRenderShape("rect");
+        }
+        if (Input.IsKeyPressed(KEY_4)) {
+            this._particleSystem.SetRenderShape("line");
+            this._burstSystem.SetRenderShape("line");
+        }
+
         // Trigger a one-shot damped explosion burst on Left Click or Space
         if (Input.IsMouseDown(0) || Input.IsKeyDown(KEY_SPACE)) {
             this._burstSystem.Burst(55, Input.mouse.x, Input.mouse.y);
@@ -580,12 +601,12 @@ class ParticlesExample extends Game {
     }
 
     _drawHUD(ctx) {
-        this.renderer.DrawFillBasicRectangle(8, 8, 395, 208, this.semiTransparentBlack);
+        this.renderer.DrawFillBasicRectangle(8, 8, 415, 226, this.semiTransparentBlack);
         this.renderer.DrawFillText("A - Area smoke (default)", 16, 28, "13px monospace", Color.white, "left");
         this.renderer.DrawFillText("S - Smoke following mouse (buoyancy)", 16, 46, "13px monospace", Color.white, "left");
         this.renderer.DrawFillText("D - Rain (line emitter along top)", 16, 64, "13px monospace", Color.white, "left");
         this.renderer.DrawFillText("F - Snow (area emitter)", 16, 82, "13px monospace", Color.white, "left");
-        this.renderer.DrawFillText("G - Sparks fountain (polar + gravity)", 16, 100, "13px monospace", Color.white, "left");
+        this.renderer.DrawFillText("G - Sparks fountain (line shape + gravity)", 16, 100, "13px monospace", Color.white, "left");
         this.renderer.DrawFillText("H - Rotating thruster (polar + SetRotation)", 16, 118, "13px monospace", Color.white, "left");
         this.renderer.DrawFillText("J - Campfire / Aura (circle emitter)", 16, 136, "13px monospace", Color.white, "left");
         this.renderer.DrawFillText("K - Portal / Shockwave (ring + radial vel)", 16, 154, "13px monospace", Color.white, "left");
@@ -593,7 +614,9 @@ class ParticlesExample extends Game {
         this.renderer.DrawFillText("Click / Space - Explosion burst (drag)", 16, 190, "13px monospace", Color.white, "left");
         const ps = this._particleSystem;
         const bs = this._burstSystem;
-        this.renderer.DrawFillText(`Particles alive: ${ps.activeCount} / ${ps.config.maxParticleCount} (+${bs.activeCount} burst)`, 16, 208, "13px monospace", Color.white, "left");
+        const shape = ps.config.renderShape || "sprite";
+        this.renderer.DrawFillText(`1-4 Shape: [${shape}] (1:sprite 2:circle 3:rect 4:line)`, 16, 208, "13px monospace", Color.white, "left");
+        this.renderer.DrawFillText(`Particles alive: ${ps.activeCount} / ${ps.config.maxParticleCount} (+${bs.activeCount} burst)`, 16, 226, "13px monospace", Color.white, "left");
     }
 }
 

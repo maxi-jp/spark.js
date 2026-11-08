@@ -51,9 +51,9 @@ The module is organized into three classes inside `src/engine/particlesystem.js`
 
 ## Core Concepts
 
-### `emitterType`
+### `emitterType` & `particleShape`
 
-A global enum defining how particle spawn positions are chosen:
+Global enums defining how particle spawn positions are chosen (`emitterType`) and how each particle is rendered (`particleShape` / `renderShape`):
 
 ```javascript
 const emitterType = {
@@ -62,6 +62,13 @@ const emitterType = {
     circle: 2,  // particles spawn uniformly inside a filled disk of EMISSION_RADIUS centered at emitter.position
     ring:   3,  // particles spawn inside an annulus between EMISSION_INNER_RADIUS and EMISSION_RADIUS centered at emitter.position
     line:   4   // particles spawn randomly along the line segment (AREA_X1, AREA_Y1) -> (AREA_X2, AREA_Y2)
+};
+
+const particleShape = {
+    sprite: "sprite",  // draws the HTMLImageElement passed to ParticleSystem (default)
+    circle: "circle",  // draws a procedural filled circle of diameter PARTICLE_SIZE * scale
+    rect:   "rect",    // draws a procedural rotated square of side PARTICLE_SIZE * scale
+    line:   "line"     // draws a procedural velocity-aligned streak/spark scaled by PARTICLE_SIZE * scale
 };
 ```
 
@@ -74,6 +81,12 @@ const defaultParticleConfig = {
     maxParticleCount: 500,                    // size of the pre-allocated particle pool
 
     globalCompositeOperation: "source-over",  // Canvas 2D blending mode ("source-over", "lighter", "overlay", etc.)
+
+    // Visual particle shape: "sprite" | "circle" | "rect" | "line" (defaults to "circle" if img is null)
+    renderShape: "sprite",
+
+    // Base size in pixels for procedural shapes ("circle", "rect", "line") at scale = 1.0
+    PARTICLE_SIZE: 64,
 
     // Color tinting / Color-over-Lifetime (hex string "#rrggbb", Color instance, or null for untinted)
     // Also supports shorthand tintColor: "#rrggbb" for a flat tint across the entire particle lifetime
@@ -178,6 +191,7 @@ The main class you interact with. Owns the particle pool, the `ParticleEmitter`,
 | `SetPosition(x, y)` | `void` | Moves `this.emitter.position` to `(x, y)` in world space. Ideal for point emitters attached to moving objects or the mouse cursor. |
 | `SetRotation(angle)` | `void` | Rotates the emitter's emission direction by `angle` (in radians). Works with both `"polar"` cones and `"cartesian"` direction ranges. |
 | `SetColor(startColor, endColor = startColor)` | `void` | Updates the emitter's color tint or color-over-lifetime gradient at runtime (`"#rrggbb"`, CSS color string, `Color` instance, or `null` to disable tinting). |
+| `SetRenderShape(shape)` | `void` | Updates `config.renderShape` (`"sprite" \| "circle" \| "rect" \| "line"`) at runtime and refreshes cached sprite color frames. |
 | `Burst(count = 1, x, y)` | `number` | Immediately activates up to `count` particles from the pool and returns the number actually spawned. Works even when `this.active === false`. Optional `(x, y)` overrides the emitter's spawn point for that burst. Logs a `console.warn` if the pool is exhausted. |
 | `Update(deltaTime)` | `void` | If `this.active` is `true`, advances the spawn timer and emits particles; then updates all currently active particles. Call once per frame in `Update(deltaTime)`. |
 | `Draw(renderer)` | `void` | Applies `config.globalCompositeOperation` (on `Canvas2DRenderer`), draws all active particles via `renderer.DrawImage`, and restores `"source-over"`. Call once per frame in `Draw()`. |
@@ -285,11 +299,12 @@ The included demo project ([`particles_example.js`](../src/examples/particles/pa
 - **`S` — Mouse-Following Smoke (`smokePointConfig`)**: Uses `emitterType.point` with `globalCompositeOperation: "overlay"`, thermal upward buoyancy (`GRAVITY_Y: -35`), gentle air drag (`VELOCITY_DAMPING: 0.4`), and soft peak opacity (`0.35–0.65`), updating `SetPosition(Input.mouse.x, Input.mouse.y)` every frame.
 - **`D` — Rain (`rainConfig`)**: Uses `emitterType.line` spawning along a line segment above the top of the screen (`AREA_X1: -200, AREA_Y1: -100, AREA_X2: 700, AREA_Y2: -100`), high downward speed (`400–800 px/s`), slight wind slant (`MIN_DIRECTION_X: 0.15, MAX_DIRECTION_X: 0.25, MIN_DIRECTION_Y: 1, MAX_DIRECTION_Y: 1`), zero scale growth, and fast spawn interval (`0.001–0.002s` with `maxParticleCount: 1000`).
 - **`F` — Snow (`snowConfig`)**: Spawns above the canvas (`AREA_Y1: -100, AREA_Y2: -100`), gentle downward speed (`30–60 px/s`), horizontal flutter (`MIN_DIRECTION_X: -0.25, MAX_DIRECTION_X: 0.25`), slow fade-in/out, and continuous rotation (`0.1–0.5 rad/s`).
-- **`G` — Sparks Fountain (`fountainConfig`)**: Point emitter following the mouse that launches glowing additive particles upward in a polar cone (`directionMode: "polar", MIN_ANGLE: -Math.PI * 0.65, MAX_ANGLE: -Math.PI * 0.35`) and pulls them down in a parabolic arc using `GRAVITY_Y: 550` and `VELOCITY_DAMPING: 0.2`.
+- **`G` — Sparks Fountain (`fountainConfig`)**: Point emitter following the mouse that launches procedural velocity-aligned spark streaks (`renderShape: "line", PARTICLE_SIZE: 80`) upward in a polar cone (`directionMode: "polar", MIN_ANGLE: -Math.PI * 0.65, MAX_ANGLE: -Math.PI * 0.35`) and pulls them down in a parabolic arc using `GRAVITY_Y: 550` and `VELOCITY_DAMPING: 0.2`.
 - **`H` — Rotating Thruster / Flamethrower (`thrusterConfig`)**: Narrow directional polar cone (`MIN_ANGLE: -0.22, MAX_ANGLE: 0.22`) at the screen center that rotates every frame via `SetRotation(angleToMouse)` to aim a stream of fire toward the mouse cursor.
 - **`J` — Campfire / Fire Aura (`circleCampfireConfig`)**: Uses `emitterType.circle` (`EMISSION_RADIUS: 60`) following the mouse cursor with uniform disk sampling (`r = R * Math.max(Math.random(), Math.random())`) and upward thermal buoyancy (`GRAVITY_Y: -90`).
 - **`K` — Portal Ring / Shockwave (`portalRingConfig`)**: Uses `emitterType.ring` (`EMISSION_INNER_RADIUS: 75, EMISSION_RADIUS: 90`) following the mouse cursor with `radialVelocity: true` so particles expand radially outward from the ring perimeter and decelerate under `VELOCITY_DAMPING: 2.2`.
 - **`L` — Flame Barrier (`firewallLineConfig`)**: Uses `emitterType.line` anchored at `(150, 480)` with its second endpoint `(AREA_X2, AREA_Y2)` tracking the mouse cursor in real time, spawning a rising wall of fire along the segment.
+- **`1 / 2 / 3 / 4` — Live Particle Shape Switch (`renderShape`)**: Switches the active emitter and burst emitter live between `"sprite"` (`1`), `"circle"` (`2`), `"rect"` (`3`), and `"line"` (`4`).
 - **`Click / Space` — Explosion Burst (`explosionBurstConfig`)**: Fires a 55-particle one-shot `Burst()` at the cursor using a uniform 360° polar distribution (`MIN_ANGLE: 0, MAX_ANGLE: PI2`) and high initial speed (`180–520 px/s`) that rapidly decelerates mid-air via `VELOCITY_DAMPING: 3.5` while drifting downward under `GRAVITY_Y: 160`.
 
 ---
@@ -361,6 +376,8 @@ This section tracks all completed and planned improvements for the particle syst
   - *Details*: Expanded `emitterType` with `circle` (2, uniform disk sampling via `Math.max(Math.random(), Math.random())`), `ring` (3, annulus sampling between `EMISSION_INNER_RADIUS` and `EMISSION_RADIUS`), and `line` (4, linear interpolation along `(AREA_X1, AREA_Y1) -> (AREA_X2, AREA_Y2)`), plus `radialVelocity` for outward/inward radial velocity on `circle`/`ring` emitters (reusing the cached `_lastSpawnAngle` without `Math.atan2`). Added `J` (`circleCampfireConfig`), `K` (`portalRingConfig`), and `L` (`firewallLineConfig`) interactive demos to `particles_example.js`, and added presets, controls, and interactive circle/ring/line gizmos to `particle-system-editor.html`.
 - [x] **Color Tinting & Color-over-Lifetime (`startColor`, `endColor`, `tintColor`, `SetColor`)** ✅ *DONE*
   - *Details*: Added optional `tint` (`Color`) support to `DrawImage`, `DrawImageBasic`, `DrawImageSection`, and `DrawImageSectionBasic` on both `Canvas2DRenderer` (via `_getTintedSource` offscreen canvas cache) and `WebGLRenderer` (expanding `SpriteBatchShader` vertex attributes to `vec4 a_color` for hardware-accelerated per-sprite RGB tinting), plus a dedicated 16-step pre-baked color ramp (`ParticleSystem._getCanvasColorFrames`) inside `ParticleSystem` when rendering with `Canvas2DRenderer`. Added `startColor`, `endColor` (and `tintColor` shorthand) to `defaultParticleConfig`, `SetColor(startColor, endColor)` to `ParticleSystem`, and allocation-free RGB interpolation in `Particle.Update(deltaTime)`. Updated `particles_example.js` and `particle-system-editor.html` presets and added live color gradient pickers to the editor.
+- [x] **Procedural Particle Shapes (`renderShape: "sprite" | "circle" | "rect" | "line"`, `PARTICLE_SIZE`)** ✅ *DONE*
+  - *Details*: Added `particleShape` enum (`sprite`, `circle`, `rect`, `line`), `renderShape: "sprite"`, and `PARTICLE_SIZE: 64` to `defaultParticleConfig` and `Particle`. Procedural shapes render via `renderer.DrawFillCircle` (`"circle"`) and `renderer.DrawFillRectangle` (`"rect"` and velocity-aligned `"line"` streaks), batching automatically in `WebGLRenderer` and requiring no external image asset (`new ParticleSystem(null, config)` defaults to `"circle"`). Added `1`/`2`/`3`/`4` live shape switching to `particles_example.js` and `renderShape` + `PARTICLE_SIZE` controls to `particle-system-editor.html`.
 
 ---
 
@@ -382,20 +399,9 @@ This section tracks all completed and planned improvements for the particle syst
 - **Status**: `[x] Completed`
 - **Enum & Config Keys**: `emitterType.circle` (`2`), `emitterType.ring` (`3`), `emitterType.line` (`4`), `EMISSION_RADIUS: 50`, `EMISSION_INNER_RADIUS: 0`, `radialVelocity: false`.
 
-#### 5a. ~~Color Tinting / Color-over-Lifetime (`startColor`, `endColor`, `SetColor`)~~ ✅ *DONE*
+#### 5. ~~Color Tinting / Color-over-Lifetime & Procedural Particle Shapes (`startColor`, `endColor`, `renderShape`, `PARTICLE_SIZE`)~~ ✅ *DONE*
 - **Status**: `[x] Completed`
-- **Config Keys & API**: `startColor: null`, `endColor: null`, `tintColor: null`, `particleSystem.SetColor(startColor, endColor)`.
-
-#### 5b. Procedural Particle Shapes (`renderShape`, `PARTICLE_SIZE`)
-- **Status**: `[ ] Pending`
-- **Motivation**: Requiring an external PNG texture for every effect makes simple geometric particles (sparks, rain lines, pixel debris, retro arcade explosions, thruster dots) heavier than necessary.
-- **Proposed Config Keys**:
-  - `renderShape: "sprite"` (`"sprite"` | `"circle"` | `"rect"` | `"line"`):
-    - `"sprite"`: Draws `this.img` (default, current behavior).
-    - `"circle"`: Draws a filled circle via `renderer.DrawFillCircle` with radius `PARTICLE_SIZE * scale` (batches automatically in WebGL!).
-    - `"rect"`: Draws a filled rectangle via `renderer.DrawFillRectangle` with dimensions `PARTICLE_SIZE * scale` (batches automatically in WebGL!).
-    - `"line"`: Draws a velocity-aligned streak/spark line of length `PARTICLE_SIZE * scale` along the particle's movement vector.
-  - `PARTICLE_SIZE: 8` (base pixel size for procedural shapes when `scale === 1.0`).
+- **Enum, Config Keys & API**: `particleShape` (`"sprite"`, `"circle"`, `"rect"`, `"line"`), `renderShape: "sprite"`, `PARTICLE_SIZE: 64`, `startColor: null`, `endColor: null`, `tintColor: null`, `particleSystem.SetColor(startColor, endColor)`.
 
 ---
 

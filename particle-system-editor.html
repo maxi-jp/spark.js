@@ -178,6 +178,26 @@
                         </select>
                     </div>
 
+                    <div class="param-row" style="margin-top:8px">
+                        <div class="param-header">
+                            <label for="cfg-renderShape" title="Particle visual shape: sprite texture or procedural geometry">renderShape</label>
+                        </div>
+                        <select id="cfg-renderShape" class="full-select">
+                            <option value="sprite">"sprite" — Texture Image (HTMLImageElement)</option>
+                            <option value="circle">"circle" — Procedural Filled Circle</option>
+                            <option value="rect">"rect" — Procedural Rotated Square</option>
+                            <option value="line">"line" — Procedural Velocity-Aligned Spark / Streak</option>
+                        </select>
+                    </div>
+
+                    <div id="particle-size-panel" class="param-row" style="display:none;margin-top:8px">
+                        <div class="param-header">
+                            <label for="cfg-PARTICLE_SIZE" title="Base pixel size for procedural shapes when scale = 1.0">PARTICLE_SIZE (px)</label>
+                            <input id="cfg-PARTICLE_SIZE" type="number" min="1" max="512" step="1" class="num-input">
+                        </div>
+                        <input id="rng-PARTICLE_SIZE" type="range" min="2" max="256" step="1" class="range-input">
+                    </div>
+
                     <!-- Color Tinting / Color-over-Lifetime -->
                     <div class="sub-panel" style="margin-top:10px">
                         <div class="sub-panel-header">

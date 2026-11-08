@@ -177,6 +177,8 @@ const PRESETS = {
         config: {
             maxParticleCount: 400,
             globalCompositeOperation: 'lighter',
+            renderShape: 'line',
+            PARTICLE_SIZE: 80,
             startColor: '#fff078',
             endColor: '#ff3c00',
             emitterType: emitterType.point,
@@ -472,6 +474,7 @@ const PRESETS = {
 // All numeric range parameter keys and their min/max counterparts
 const NUMERIC_PARAMS = [
     'maxParticleCount',
+    'PARTICLE_SIZE',
     'emitCountPerSpawn',
     'AREA_X1', 'AREA_Y1', 'AREA_X2', 'AREA_Y2',
     'EMISSION_INNER_RADIUS', 'EMISSION_RADIUS',
@@ -590,6 +593,7 @@ function applyParticleImage(img, name) {
         for (let i = 0; i < particleSystem.particles.length; i++) {
             particleSystem.particles[i].img = img;
         }
+        particleSystem._syncColors();
     }
 }
 
@@ -725,6 +729,12 @@ function syncUIFromConfig() {
     document.getElementById('cfg-globalCompositeOperation').value = currentConfig.globalCompositeOperation;
     document.getElementById('cfg-emitterType').value = String(currentConfig.emitterType);
 
+    const rShape = currentConfig.renderShape || 'sprite';
+    currentConfig.renderShape = rShape;
+    if (currentConfig.PARTICLE_SIZE === undefined) currentConfig.PARTICLE_SIZE = 64;
+    document.getElementById('cfg-renderShape').value = rShape;
+    document.getElementById('particle-size-panel').style.display = rShape !== 'sprite' ? 'block' : 'none';
+
     // Color tinting / Color-over-Lifetime controls
     const hasTint = Boolean(currentConfig.startColor || currentConfig.endColor);
     document.getElementById('chk-enable-tint').checked = hasTint;
@@ -787,6 +797,12 @@ function getExportableConfig() {
         maxParticleCount: Math.round(currentConfig.maxParticleCount),
         globalCompositeOperation: currentConfig.globalCompositeOperation,
     };
+
+    const rShape = currentConfig.renderShape || 'sprite';
+    if (rShape !== 'sprite') {
+        out.renderShape   = rShape;
+        out.PARTICLE_SIZE = Number(currentConfig.PARTICLE_SIZE ?? 64);
+    }
 
     if (currentConfig.startColor || currentConfig.endColor) {
         out.startColor = normalizeHexColor(currentConfig.startColor ?? currentConfig.endColor);
@@ -870,6 +886,13 @@ function formatJSConfigSnippet() {
         `    maxParticleCount: ${c.maxParticleCount},`,
         `    globalCompositeOperation: "${c.globalCompositeOperation}",`,
     ];
+
+    if (c.renderShape && c.renderShape !== 'sprite') {
+        lines.push(
+            `    renderShape: "${c.renderShape}",`,
+            `    PARTICLE_SIZE: ${c.PARTICLE_SIZE},`
+        );
+    }
 
     if (c.startColor || c.endColor) {
         lines.push(
@@ -1720,10 +1743,16 @@ function wireControls() {
         showGizmos = chkGizmo.checked;
     });
 
-    // Composite operation & emitter type selects
+    // Composite operation & renderShape selects
     document.getElementById('cfg-globalCompositeOperation').addEventListener('change', e => {
         currentConfig.globalCompositeOperation = e.target.value;
         applyConfigChange('globalCompositeOperation');
+    });
+
+    document.getElementById('cfg-renderShape').addEventListener('change', e => {
+        currentConfig.renderShape = e.target.value;
+        syncUIFromConfig();
+        applyConfigChange('renderShape');
     });
 
     // Color tinting / Color-over-Lifetime controls
