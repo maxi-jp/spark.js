@@ -2,9 +2,11 @@
 // Particle System – example / demo
 // Controls:
 //   A – Smoke (area, default config)
-//   S – Smoke following the mouse (point emitter)
+//   S – Smoke following the mouse (point emitter, rising buoyancy)
 //   D – Rain
 //   F – Snow
+//   G – Sparks fountain (gravity arc following the mouse)
+//   Click / Space – Explosion burst at cursor (velocity damping + gravity)
 // ============================================================
 
 // ── Pre-set particle configurations ─────────────────────────
@@ -18,13 +20,18 @@ const smokePointConfig = {
     globalCompositeOperation: "overlay",
     emitterType: emitterType.point,
 
-    MIN_INITIAL_VELOCITY: 10,
-    MAX_INITIAL_VELOCITY: 60,
+    MIN_INITIAL_VELOCITY: 15,
+    MAX_INITIAL_VELOCITY: 70,
 
     MIN_DIRECTION_X: -1,
     MAX_DIRECTION_X:  1,
     MIN_DIRECTION_Y: -1,
     MAX_DIRECTION_Y:  1,
+
+    // Thermal buoyancy (rises upward) & gentle air drag
+    GRAVITY_X: 0,
+    GRAVITY_Y: -35,
+    VELOCITY_DAMPING: 0.4,
 
     MIN_OPACITY_INCREMENT_VELOCITY: 1.0,
     MAX_OPACITY_INCREMENT_VELOCITY: 4.0,
@@ -121,6 +128,82 @@ const snowConfig = {
     MAX_TIME_TO_SPAWN_PARTICLE: 0.002
 };
 
+const fountainConfig = {
+    maxParticleCount: 400,
+    globalCompositeOperation: "lighter",
+    emitterType: emitterType.point,
+
+    MIN_INITIAL_VELOCITY: 220,
+    MAX_INITIAL_VELOCITY: 380,
+
+    // Launch upward in a cone; gravity pulls particles down in a parabolic arc
+    MIN_DIRECTION_X: -0.45,
+    MAX_DIRECTION_X:  0.45,
+    MIN_DIRECTION_Y: -1.0,
+    MAX_DIRECTION_Y: -0.7,
+
+    GRAVITY_X: 0,
+    GRAVITY_Y: 550,
+    VELOCITY_DAMPING: 0.2,
+
+    MIN_OPACITY_INCREMENT_VELOCITY: 8.0,
+    MAX_OPACITY_INCREMENT_VELOCITY: 14.0,
+    MIN_OPACITY_DECREMENT_VELOCITY: 0.6,
+    MAX_OPACITY_DECREMENT_VELOCITY: 1.2,
+
+    MIN_INITIAL_SCALE: 0.04,
+    MAX_INITIAL_SCALE: 0.10,
+
+    MIN_SCALE_VELOCITY: 0.02,
+    MAX_SCALE_VELOCITY: 0.08,
+
+    MIN_INITIAL_ROTATION: 0,
+    MAX_INITIAL_ROTATION: PI2,
+
+    MIN_ROTATION_VELOCITY: -2.0,
+    MAX_ROTATION_VELOCITY:  2.0,
+
+    emitCountPerSpawn: 2,
+    MIN_TIME_TO_SPAWN_PARTICLE: 0.008,
+    MAX_TIME_TO_SPAWN_PARTICLE: 0.02
+};
+
+const explosionBurstConfig = {
+    maxParticleCount: 400,
+    globalCompositeOperation: "lighter",
+    emitterType: emitterType.point,
+
+    // High initial blast speed that rapidly brakes due to VELOCITY_DAMPING
+    MIN_INITIAL_VELOCITY: 180,
+    MAX_INITIAL_VELOCITY: 520,
+
+    MIN_DIRECTION_X: -1,
+    MAX_DIRECTION_X:  1,
+    MIN_DIRECTION_Y: -1,
+    MAX_DIRECTION_Y:  1,
+
+    GRAVITY_X: 0,
+    GRAVITY_Y: 160,
+    VELOCITY_DAMPING: 3.5,
+
+    MIN_OPACITY_INCREMENT_VELOCITY: 15.0,
+    MAX_OPACITY_INCREMENT_VELOCITY: 25.0,
+    MIN_OPACITY_DECREMENT_VELOCITY: 0.9,
+    MAX_OPACITY_DECREMENT_VELOCITY: 2.0,
+
+    MIN_INITIAL_SCALE: 0.05,
+    MAX_INITIAL_SCALE: 0.14,
+
+    MIN_SCALE_VELOCITY: 0.08,
+    MAX_SCALE_VELOCITY: 0.22,
+
+    MIN_INITIAL_ROTATION: 0,
+    MAX_INITIAL_ROTATION: PI2,
+
+    MIN_ROTATION_VELOCITY: -1.5,
+    MAX_ROTATION_VELOCITY:  1.5
+};
+
 // ── Game setup ───────────────────────────────────────────────
 
 class ParticlesExample extends Game {
@@ -141,6 +224,7 @@ class ParticlesExample extends Game {
         };
 
         this._particleSystem = null;
+        this._burstSystem    = null;
         this._mode = 'area-smoke';
 
         this.bgColor = Color.FromHex("#1a1a2e");
@@ -153,6 +237,11 @@ class ParticlesExample extends Game {
             this.graphicAssets.smoke.img,
             smokeAreaConfig
         );
+        this._burstSystem = new ParticleSystem(
+            this.graphicAssets.smoke.img,
+            explosionBurstConfig
+        );
+        this._burstSystem.active = false; // only spawns on Burst()
         this._mode = 'area-smoke';
     }
 
@@ -187,13 +276,27 @@ class ParticlesExample extends Game {
             );
             this._mode = 'snow';
         }
+        if (Input.IsKeyPressed(KEY_G)) {
+            this._particleSystem = new ParticleSystem(
+                this.graphicAssets.smoke.img,
+                fountainConfig,
+                new Vector2(Input.mouse.x, Input.mouse.y)
+            );
+            this._mode = 'fountain';
+        }
 
-        // Point emitter follows the mouse
-        if (this._mode === 'point-smoke') {
+        // Trigger a one-shot damped explosion burst on Left Click or Space
+        if (Input.IsMouseDown(0) || Input.IsKeyDown(KEY_SPACE)) {
+            this._burstSystem.Burst(55, Input.mouse.x, Input.mouse.y);
+        }
+
+        // Point emitters follow the mouse
+        if (this._mode === 'point-smoke' || this._mode === 'fountain') {
             this._particleSystem.SetPosition(Input.mouse.x, Input.mouse.y);
         }
 
         this._particleSystem.Update(deltaTime);
+        this._burstSystem.Update(deltaTime);
     }
 
     Draw() {
@@ -205,17 +308,21 @@ class ParticlesExample extends Game {
         );
 
         this._particleSystem.Draw(this.renderer);
+        this._burstSystem.Draw(this.renderer);
         this._drawHUD(this.renderer.ctx);
     }
 
     _drawHUD(ctx) {
-        this.renderer.DrawFillBasicRectangle(8, 8, 320, 100, this.semiTransparentBlack);
+        this.renderer.DrawFillBasicRectangle(8, 8, 355, 136, this.semiTransparentBlack);
         this.renderer.DrawFillText("A - Area smoke (default)", 16, 28, "13px monospace", Color.white, "left");
-        this.renderer.DrawFillText("S - Smoke following mouse", 16, 46, "13px monospace", Color.white, "left");
+        this.renderer.DrawFillText("S - Smoke following mouse (buoyancy)", 16, 46, "13px monospace", Color.white, "left");
         this.renderer.DrawFillText("D - Rain", 16, 64, "13px monospace", Color.white, "left");
         this.renderer.DrawFillText("F - Snow", 16, 82, "13px monospace", Color.white, "left");
+        this.renderer.DrawFillText("G - Sparks fountain (gravity arc)", 16, 100, "13px monospace", Color.white, "left");
+        this.renderer.DrawFillText("Click / Space - Explosion burst (drag)", 16, 118, "13px monospace", Color.white, "left");
         const ps = this._particleSystem;
-        this.renderer.DrawFillText(`Particles alive: ${ps.activeCount} / ${ps.config.maxParticleCount}`, 16, 100, "13px monospace", Color.white, "left");
+        const bs = this._burstSystem;
+        this.renderer.DrawFillText(`Particles alive: ${ps.activeCount} / ${ps.config.maxParticleCount} (+${bs.activeCount} burst)`, 16, 136, "13px monospace", Color.white, "left");
     }
 }
 

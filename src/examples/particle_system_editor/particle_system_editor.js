@@ -102,6 +102,9 @@ const PRESETS = {
             MAX_DIRECTION_X:  0.35,
             MIN_DIRECTION_Y: -1,
             MAX_DIRECTION_Y: -0.4,
+            GRAVITY_X: 0,
+            GRAVITY_Y: -60,
+            VELOCITY_DAMPING: 0.5,
             MIN_OPACITY_INCREMENT_VELOCITY: 6.0,
             MAX_OPACITY_INCREMENT_VELOCITY: 10.0,
             MIN_OPACITY_DECREMENT_VELOCITY: 1.2,
@@ -116,6 +119,78 @@ const PRESETS = {
             MAX_ROTATION_VELOCITY:  0.5,
             MIN_TIME_TO_SPAWN_PARTICLE: 0.002,
             MAX_TIME_TO_SPAWN_PARTICLE: 0.008
+        }
+    },
+    sparksFountain: {
+        name: 'sparksFountainConfig',
+        builtinImg: 'smoke2',
+        bgPreset: '#1a1a2e',
+        motion: 'manual',
+        config: {
+            maxParticleCount: 400,
+            globalCompositeOperation: 'lighter',
+            emitterType: emitterType.point,
+            AREA_X1: 0, AREA_Y1: 0, AREA_X2: 800, AREA_Y2: 640,
+            MIN_INITIAL_VELOCITY: 220,
+            MAX_INITIAL_VELOCITY: 380,
+            MIN_DIRECTION_X: -0.45,
+            MAX_DIRECTION_X:  0.45,
+            MIN_DIRECTION_Y: -1.0,
+            MAX_DIRECTION_Y: -0.7,
+            GRAVITY_X: 0,
+            GRAVITY_Y: 550,
+            VELOCITY_DAMPING: 0.2,
+            MIN_OPACITY_INCREMENT_VELOCITY: 8.0,
+            MAX_OPACITY_INCREMENT_VELOCITY: 14.0,
+            MIN_OPACITY_DECREMENT_VELOCITY: 0.6,
+            MAX_OPACITY_DECREMENT_VELOCITY: 1.2,
+            MIN_INITIAL_SCALE: 0.04,
+            MAX_INITIAL_SCALE: 0.10,
+            MIN_SCALE_VELOCITY: 0.02,
+            MAX_SCALE_VELOCITY: 0.08,
+            MIN_INITIAL_ROTATION: 0,
+            MAX_INITIAL_ROTATION: Number(PI2.toFixed(4)),
+            MIN_ROTATION_VELOCITY: -2.0,
+            MAX_ROTATION_VELOCITY:  2.0,
+            emitCountPerSpawn: 2,
+            MIN_TIME_TO_SPAWN_PARTICLE: 0.008,
+            MAX_TIME_TO_SPAWN_PARTICLE: 0.02
+        }
+    },
+    explosionBurst: {
+        name: 'explosionBurstConfig',
+        builtinImg: 'smoke2',
+        bgPreset: '#1a1a2e',
+        motion: 'manual',
+        config: {
+            maxParticleCount: 400,
+            globalCompositeOperation: 'lighter',
+            emitterType: emitterType.point,
+            AREA_X1: 0, AREA_Y1: 0, AREA_X2: 800, AREA_Y2: 640,
+            MIN_INITIAL_VELOCITY: 200,
+            MAX_INITIAL_VELOCITY: 520,
+            MIN_DIRECTION_X: -1,
+            MAX_DIRECTION_X:  1,
+            MIN_DIRECTION_Y: -1,
+            MAX_DIRECTION_Y:  1,
+            GRAVITY_X: 0,
+            GRAVITY_Y: 160,
+            VELOCITY_DAMPING: 3.5,
+            MIN_OPACITY_INCREMENT_VELOCITY: 15.0,
+            MAX_OPACITY_INCREMENT_VELOCITY: 25.0,
+            MIN_OPACITY_DECREMENT_VELOCITY: 0.9,
+            MAX_OPACITY_DECREMENT_VELOCITY: 2.0,
+            MIN_INITIAL_SCALE: 0.05,
+            MAX_INITIAL_SCALE: 0.14,
+            MIN_SCALE_VELOCITY: 0.08,
+            MAX_SCALE_VELOCITY: 0.22,
+            MIN_INITIAL_ROTATION: 0,
+            MAX_INITIAL_ROTATION: Number(PI2.toFixed(4)),
+            MIN_ROTATION_VELOCITY: -1.5,
+            MAX_ROTATION_VELOCITY:  1.5,
+            emitCountPerSpawn: 35,
+            MIN_TIME_TO_SPAWN_PARTICLE: 0.4,
+            MAX_TIME_TO_SPAWN_PARTICLE: 0.65
         }
     },
     rain: {
@@ -194,6 +269,8 @@ const NUMERIC_PARAMS = [
     'MIN_INITIAL_VELOCITY', 'MAX_INITIAL_VELOCITY',
     'MIN_DIRECTION_X', 'MAX_DIRECTION_X',
     'MIN_DIRECTION_Y', 'MAX_DIRECTION_Y',
+    'GRAVITY_X', 'GRAVITY_Y',
+    'VELOCITY_DAMPING',
     'MIN_OPACITY_INCREMENT_VELOCITY', 'MAX_OPACITY_INCREMENT_VELOCITY',
     'MIN_OPACITY_DECREMENT_VELOCITY', 'MAX_OPACITY_DECREMENT_VELOCITY',
     'MIN_INITIAL_SCALE', 'MAX_INITIAL_SCALE',
@@ -454,6 +531,9 @@ function getExportableConfig() {
     out.MAX_DIRECTION_X                = Number(currentConfig.MAX_DIRECTION_X);
     out.MIN_DIRECTION_Y                = Number(currentConfig.MIN_DIRECTION_Y);
     out.MAX_DIRECTION_Y                = Number(currentConfig.MAX_DIRECTION_Y);
+    out.GRAVITY_X                      = Number(currentConfig.GRAVITY_X || 0);
+    out.GRAVITY_Y                      = Number(currentConfig.GRAVITY_Y || 0);
+    out.VELOCITY_DAMPING               = Number(currentConfig.VELOCITY_DAMPING || 0);
     out.MIN_OPACITY_INCREMENT_VELOCITY = Number(currentConfig.MIN_OPACITY_INCREMENT_VELOCITY);
     out.MAX_OPACITY_INCREMENT_VELOCITY = Number(currentConfig.MAX_OPACITY_INCREMENT_VELOCITY);
     out.MIN_OPACITY_DECREMENT_VELOCITY = Number(currentConfig.MIN_OPACITY_DECREMENT_VELOCITY);
@@ -506,6 +586,10 @@ function formatJSConfigSnippet() {
         `    MAX_DIRECTION_X: ${c.MAX_DIRECTION_X},`,
         `    MIN_DIRECTION_Y: ${c.MIN_DIRECTION_Y},`,
         `    MAX_DIRECTION_Y: ${c.MAX_DIRECTION_Y},`,
+        ``,
+        `    GRAVITY_X: ${c.GRAVITY_X},`,
+        `    GRAVITY_Y: ${c.GRAVITY_Y},`,
+        `    VELOCITY_DAMPING: ${c.VELOCITY_DAMPING},`,
         ``,
         `    MIN_OPACITY_INCREMENT_VELOCITY: ${c.MIN_OPACITY_INCREMENT_VELOCITY},`,
         `    MAX_OPACITY_INCREMENT_VELOCITY: ${c.MAX_OPACITY_INCREMENT_VELOCITY},`,
@@ -630,6 +714,39 @@ function drawGizmos(ctx) {
             ctx.moveTo(x, y);
             ctx.lineTo(x + nx * 36, y + ny * 36);
             ctx.stroke();
+        }
+
+        // Gravity vector indicator (cyan dashed arrow)
+        const gx = currentConfig.GRAVITY_X || 0;
+        const gy = currentConfig.GRAVITY_Y || 0;
+        const gLen = Math.hypot(gx, gy);
+        if (gLen > 1) {
+            const gnx = gx / gLen;
+            const gny = gy / gLen;
+            const arrowLen = Math.min(54, Math.max(20, gLen * 0.08));
+            const ex = x + gnx * arrowLen;
+            const ey = y + gny * arrowLen;
+
+            ctx.save();
+            ctx.strokeStyle = 'rgba(0, 229, 255, 0.8)';
+            ctx.fillStyle   = 'rgba(0, 229, 255, 0.8)';
+            ctx.lineWidth   = 1.5;
+            ctx.setLineDash([3, 3]);
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(ex, ey);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Arrowhead
+            const gAngle = Math.atan2(gny, gnx);
+            ctx.beginPath();
+            ctx.moveTo(ex, ey);
+            ctx.lineTo(ex - Math.cos(gAngle - 0.5) * 6, ey - Math.sin(gAngle - 0.5) * 6);
+            ctx.lineTo(ex - Math.cos(gAngle + 0.5) * 6, ey - Math.sin(gAngle + 0.5) * 6);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
         }
 
         // If moving along a path, draw a small missile body ahead of the smoke point
@@ -1123,6 +1240,26 @@ function wireControls() {
             syncUIFromConfig();
             applyConfigChange('DIRECTION');
         });
+    });
+
+    // Gravity quick buttons
+    document.getElementById('btn-gravity-zero').addEventListener('click', () => {
+        currentConfig.GRAVITY_X = 0;
+        currentConfig.GRAVITY_Y = 0;
+        syncUIFromConfig();
+        applyConfigChange('GRAVITY');
+    });
+    document.getElementById('btn-gravity-down').addEventListener('click', () => {
+        currentConfig.GRAVITY_X = 0;
+        currentConfig.GRAVITY_Y = 450;
+        syncUIFromConfig();
+        applyConfigChange('GRAVITY');
+    });
+    document.getElementById('btn-gravity-up').addEventListener('click', () => {
+        currentConfig.GRAVITY_X = 0;
+        currentConfig.GRAVITY_Y = -60;
+        syncUIFromConfig();
+        applyConfigChange('GRAVITY');
     });
 
     // Rotation quick buttons

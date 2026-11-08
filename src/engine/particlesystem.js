@@ -35,6 +35,13 @@ const defaultParticleConfig = {
     MIN_DIRECTION_Y: -1,
     MAX_DIRECTION_Y:  1,
 
+    // Constant acceleration / gravity (pixels/sec²)
+    GRAVITY_X: 0,
+    GRAVITY_Y: 0,
+
+    // Velocity damping / air drag coefficient (1/sec; 0 = no drag)
+    VELOCITY_DAMPING: 0,
+
     // Opacity fade speed (units/sec)
     MIN_OPACITY_INCREMENT_VELOCITY: 1.0,
     MAX_OPACITY_INCREMENT_VELOCITY: 4.0,
@@ -88,6 +95,9 @@ class Particle {
         this.rotationVelocity = 0.0;
         this.scale            = 1.0;
         this.scaleVelocity    = 0.0;
+        this.gravityX         = 0.0;
+        this.gravityY         = 0.0;
+        this.velocityDamping  = 0.0;
     }
 
     /**
@@ -100,10 +110,13 @@ class Particle {
      * @param {number}  initialRotation
      * @param {number}  rotationVelocity
      * @param {Vector2} direction        velocity vector (pixels/sec)
+     * @param {number}  [gravityX=0]     horizontal acceleration (pixels/sec²)
+     * @param {number}  [gravityY=0]     vertical acceleration (pixels/sec²)
+     * @param {number}  [velocityDamping=0] air drag coefficient (1/sec)
      */
     Activate(initialPosition, opacityIncrementVelocity, opacityDecrementVelocity,
              initialScale, scaleVelocity, initialRotation, rotationVelocity,
-             direction) {
+             direction, gravityX = 0, gravityY = 0, velocityDamping = 0) {
         this.position         = Vector2.Copy(initialPosition);
         this.opacity          = 0;
         this.opacityIncrementVelocity = opacityIncrementVelocity;
@@ -113,6 +126,9 @@ class Particle {
         this.rotation         = initialRotation;
         this.rotationVelocity = rotationVelocity;
         this.direction        = direction;
+        this.gravityX         = gravityX;
+        this.gravityY         = gravityY;
+        this.velocityDamping  = velocityDamping;
         this.active           = true;
         this.appearing        = true;
     }
@@ -146,8 +162,19 @@ class Particle {
             return;
         }
         this.rotation += this.rotationVelocity * deltaTime;
-        this.position.x += this.direction.x   * deltaTime;
-        this.position.y += this.direction.y   * deltaTime;
+
+        // Apply constant acceleration (gravity / wind) and velocity damping
+        this.direction.x += this.gravityX * deltaTime;
+        this.direction.y += this.gravityY * deltaTime;
+
+        if (this.velocityDamping > 0) {
+            const dragFactor = Math.exp(-this.velocityDamping * deltaTime);
+            this.direction.x *= dragFactor;
+            this.direction.y *= dragFactor;
+        }
+
+        this.position.x += this.direction.x * deltaTime;
+        this.position.y += this.direction.y * deltaTime;
     }
 
     Draw(renderer) {
@@ -277,7 +304,10 @@ class ParticleSystem {
             RandomBetweenFloat(this.config.MIN_SCALE_VELOCITY,             this.config.MAX_SCALE_VELOCITY),
             RandomBetweenFloat(this.config.MIN_INITIAL_ROTATION,           this.config.MAX_INITIAL_ROTATION),
             RandomBetweenFloat(this.config.MIN_ROTATION_VELOCITY,          this.config.MAX_ROTATION_VELOCITY),
-            this.emitter.GetInitialVelocity()
+            this.emitter.GetInitialVelocity(),
+            this.config.GRAVITY_X,
+            this.config.GRAVITY_Y,
+            this.config.VELOCITY_DAMPING
         );
 
         return true;

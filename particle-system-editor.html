@@ -41,6 +41,8 @@
             <option value="defaultArea">Default (Area Smoke)</option>
             <option value="pointSmoke">Point Smoke</option>
             <option value="fire">Fire / Exhaust</option>
+            <option value="sparksFountain">Sparks Fountain (Gravity)</option>
+            <option value="explosionBurst">Explosion / Debris (Drag + Gravity)</option>
             <option value="rain">Rain</option>
             <option value="snow">Snow</option>
         </select>
@@ -302,6 +304,39 @@
                             </div>
                             <input id="rng-MAX_DIRECTION_Y" type="range" min="-1" max="1" step="0.01" class="range-input">
                         </div>
+                    </div>
+
+                    <div class="param-group-label" style="margin-top:8px">
+                        <span>Gravity / Acceleration (px / sec²)</span>
+                        <span class="quick-btns">
+                            <button class="mini-btn" id="btn-gravity-zero" title="Reset gravity to 0">0</button>
+                            <button class="mini-btn" id="btn-gravity-down" title="Standard downward gravity (+450)">↓ Grav</button>
+                            <button class="mini-btn" id="btn-gravity-up" title="Upward thermal buoyancy (-60)">↑ Buoy</button>
+                        </span>
+                    </div>
+                    <div class="dual-param">
+                        <div class="param-row">
+                            <div class="param-header">
+                                <label for="cfg-GRAVITY_X" title="Horizontal constant acceleration (pixels/sec²)">GRAVITY_X</label>
+                                <input id="cfg-GRAVITY_X" type="number" min="-2000" max="2000" step="5" class="num-input">
+                            </div>
+                            <input id="rng-GRAVITY_X" type="range" min="-800" max="800" step="5" class="range-input">
+                        </div>
+                        <div class="param-row">
+                            <div class="param-header">
+                                <label for="cfg-GRAVITY_Y" title="Vertical constant acceleration (pixels/sec²)">GRAVITY_Y</label>
+                                <input id="cfg-GRAVITY_Y" type="number" min="-2000" max="2000" step="5" class="num-input">
+                            </div>
+                            <input id="rng-GRAVITY_Y" type="range" min="-800" max="800" step="5" class="range-input">
+                        </div>
+                    </div>
+
+                    <div class="param-row" style="margin-top:8px">
+                        <div class="param-header">
+                            <label for="cfg-VELOCITY_DAMPING" title="Air drag / velocity damping coefficient (1/sec; 0 = no drag)">VELOCITY_DAMPING</label>
+                            <input id="cfg-VELOCITY_DAMPING" type="number" min="0" max="30" step="0.05" class="num-input">
+                        </div>
+                        <input id="rng-VELOCITY_DAMPING" type="range" min="0" max="10" step="0.05" class="range-input">
                     </div>
                 </div>
 

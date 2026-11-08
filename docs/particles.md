@@ -85,6 +85,13 @@ const defaultParticleConfig = {
     MIN_DIRECTION_X: -1, MAX_DIRECTION_X: 1,
     MIN_DIRECTION_Y: -1, MAX_DIRECTION_Y: 1,
 
+    // Constant acceleration / gravity (pixels / sec²)
+    GRAVITY_X: 0,
+    GRAVITY_Y: 0,
+
+    // Air drag / velocity damping coefficient (1 / sec; 0 = no drag)
+    VELOCITY_DAMPING: 0,
+
     // Opacity fade-in & fade-out speeds (opacity units / sec)
     MIN_OPACITY_INCREMENT_VELOCITY: 1.0,
     MAX_OPACITY_INCREMENT_VELOCITY: 4.0,
@@ -240,9 +247,11 @@ this.hitSparks.Burst(35, hitX, hitY);
 The included demo project ([`particles_example.js`](../src/examples/particles/particles_example.js ':ignore')) demonstrates switching between four preset configurations at runtime using keyboard keys:
 
 - **`A` — Area Smoke (`smokeAreaConfig`)**: Uses `defaultParticleConfig` (`emitterType.area` across `0..800 × 0..640`) to fill the screen with drifting smoke clouds.
-- **`S` — Mouse-Following Smoke (`smokePointConfig`)**: Uses `emitterType.point` with `globalCompositeOperation: "overlay"`, updating `SetPosition(Input.mouse.x, Input.mouse.y)` every frame.
+- **`S` — Mouse-Following Smoke (`smokePointConfig`)**: Uses `emitterType.point` with `globalCompositeOperation: "overlay"`, thermal upward buoyancy (`GRAVITY_Y: -35`), and gentle air drag (`VELOCITY_DAMPING: 0.4`), updating `SetPosition(Input.mouse.x, Input.mouse.y)` every frame.
 - **`D` — Rain (`rainConfig`)**: Uses `emitterType.area` spawning along a line above the top of the screen (`AREA_X1: -200, AREA_Y1: -100, AREA_X2: 700, AREA_Y2: -100`), high downward speed (`400–800 px/s`), slight wind slant (`MIN_DIRECTION_X: 0.15, MAX_DIRECTION_X: 0.25, MIN_DIRECTION_Y: 1, MAX_DIRECTION_Y: 1`), zero scale growth, and fast spawn interval (`0.001–0.002s` with `maxParticleCount: 1000`).
 - **`F` — Snow (`snowConfig`)**: Spawns above the canvas (`AREA_Y1: -100, AREA_Y2: -100`), gentle downward speed (`30–60 px/s`), horizontal flutter (`MIN_DIRECTION_X: -0.25, MAX_DIRECTION_X: 0.25`), slow fade-in/out, and continuous rotation (`0.1–0.5 rad/s`).
+- **`G` — Sparks Fountain (`fountainConfig`)**: Point emitter following the mouse that launches glowing additive particles upward in a cone (`MIN_DIRECTION_Y: -1.0, MAX_DIRECTION_Y: -0.7`) and pulls them down in a parabolic arc using `GRAVITY_Y: 550` and `VELOCITY_DAMPING: 0.2`.
+- **`Click / Space` — Explosion Burst (`explosionBurstConfig`)**: Fires a 55-particle one-shot `Burst()` at the cursor using a high initial speed (`180–520 px/s`) that rapidly decelerates mid-air via `VELOCITY_DAMPING: 3.5` while drifting downward under `GRAVITY_Y: 160`.
 
 ---
 
@@ -255,11 +264,13 @@ The standalone **[Particle System Editor](../particle-system-editor.html ':ignor
 - **Particle Textures (Built-in & Custom)**:
   - Switch between 4 built-in sample assets (`smoke.png`, `smoke2.png`, `snow.png`, `waterdrop.png`) and a procedural radial-gradient fallback (`Built-in: Soft Circle`).
   - Load any custom image via the **Load Image** button, by clicking the sprite thumbnail preview, or by dragging and dropping an image file anywhere onto the window.
-- **6 Built-in Presets**:
+- **8 Built-in Presets**:
   - *Missile Smoke (Death Rally)* (`missileSmokeConfig`)
   - *Default (Area Smoke)* (`smokeAreaConfig`)
   - *Point Smoke* (`smokePointConfig`)
-  - *Fire / Exhaust* (`fireExhaustConfig` — additive `"lighter"` blending)
+  - *Fire / Exhaust* (`fireExhaustConfig` — additive `"lighter"` blending with upward thermal buoyancy `GRAVITY_Y: -60`)
+  - *Sparks Fountain (Gravity)* (`sparksFountainConfig` — parabolic gravity arc with `GRAVITY_Y: 550`)
+  - *Explosion / Debris (Drag + Gravity)* (`explosionBurstConfig` — high-velocity bursts braked by `VELOCITY_DAMPING: 3.5`)
   - *Rain* (`rainConfig`)
   - *Snow* (`snowConfig`)
 - **Playback & Burst Toolbar**:
@@ -275,12 +286,12 @@ The standalone **[Particle System Editor](../particle-system-editor.html ':ignor
   - **Linear Projectile (`projectile`)** — Flies across the canvas at a slight angle and wraps around.
   - Includes a **Speed** slider (`40–700 px/s`) for the animated path modes.
 - **Interactive Canvas Gizmos & Backgrounds**:
-  - **Point Gizmo**: Crosshair + orange average direction vector indicator + optional projectile nose cone.
+  - **Point Gizmo**: Crosshair + orange average direction vector indicator + cyan dashed gravity vector arrow + optional projectile nose cone.
   - **Area Gizmo**: Dashed bounding rectangle with 4 draggable corner handles (`nw`, `ne`, `sw`, `se`), interior drag-to-move, outside drag-to-draw a new box, plus quick-fit buttons (**Full Canvas**, **Center Box**).
   - **Background Surfaces**: Switch between *Asphalt (`#414146`)*, *Dark Night (`#1a1a2e`)*, *Grass (`#325023`)*, *Dirt (`#785532`)*, *Pure Black (`#000000`)*, *Checkerboard*, or any custom hex color picker.
 - **Real-Time Parameter Sliders & Smart Clamping**:
-  - Synchronized range sliders and numeric inputs for every `defaultParticleConfig` property (including `emitCountPerSpawn` and all 10 `MIN_*/MAX_*` pairs, which automatically clamp if `MIN > MAX`).
-  - Direction quick-buttons (**Omni**, **↑**, **↓**, **←**, **→**) and rotation quick-buttons (**0**, **0 → 2π**).
+  - Synchronized range sliders and numeric inputs for every `defaultParticleConfig` property (including `emitCountPerSpawn`, `GRAVITY_X`, `GRAVITY_Y`, `VELOCITY_DAMPING`, and all 10 `MIN_*/MAX_*` pairs, which automatically clamp if `MIN > MAX`).
+  - Direction quick-buttons (**Omni**, **↑**, **↓**, **←**, **→**), gravity quick-buttons (**0**, **↓ Grav**, **↑ Buoy**), and rotation quick-buttons (**0**, **0 → 2π**).
 - **Live Telemetry & Export**:
   - Bottom status bar displays active particle count (`Alive / Max` with a `⚠ POOL FULL` warning), estimated **Spawn Rate (`~N/s`)**, estimated **Avg Lifetime (`~Ns`)**, emitter coordinates, mouse coordinates, and live **FPS**.
   - **Load JSON** (or drag-and-drop a `.json` file), **Copy JS** (formats a clean `const <name> = { ... };` snippet using `emitterType.*` and `PI2`), **Copy JSON**, and **Export JSON ↓**.
@@ -297,23 +308,16 @@ This section tracks all completed and planned improvements for the particle syst
   - *Details*: `Particle.Update` now checks `if (this.scale <= 0.0) { this.Deactivate(); return; }` so shrinking particles (`MIN_SCALE_VELOCITY < 0`) deactivate cleanly instead of flipping upside-down with negative scale. `Particle.Draw` passes the static `Particle.pivot` (`{ x: 0, y: 0 }`) to `renderer.DrawImage`.
 - [x] **One-shot bursts (`Burst(count, x, y)`), multi-particle spawn ticks (`emitCountPerSpawn`), and sub-frame catch-up loop** ✅ *DONE*
   - *Details*: Added `ParticleSystem.Burst(count = 1, x, y)` for immediate emission even when `this.active === false`, added `emitCountPerSpawn` to `defaultParticleConfig`, and replaced the single `if (this.nextTimeToSpawnParticle <= 0.0)` check in `Update(deltaTime)` with a `while` catch-up loop so sub-frame spawn intervals (`< 16.6ms`) emit the exact expected number of particles per frame.
+- [x] **Gravity / Constant Acceleration (`GRAVITY_X`, `GRAVITY_Y`) & Velocity Damping (`VELOCITY_DAMPING`)** ✅ *DONE*
+  - *Details*: Added `GRAVITY_X`, `GRAVITY_Y` (pixels/sec²) and `VELOCITY_DAMPING` (1/sec exponential decay via `Math.exp(-damping * dt)`) to `defaultParticleConfig` and `Particle.Update`, added `fountainConfig` (`G`) and `explosionBurstConfig` (`Click / Space`) to `particles_example.js`, and added sliders, quick-preset buttons, a cyan gravity vector gizmo, and *Sparks Fountain* / *Explosion / Debris* presets to `particle-system-editor.html`.
 
 ---
 
 ### Phase 1 — Core Physics, Direction & Lifecycle (Repository TODOs)
 
-#### 1. Gravity / Constant Acceleration & Velocity Damping (Air Drag)
-- **Status**: `[ ] Pending`
-- **Motivation**: Currently, particles move in a straight line at constant velocity (`this.direction`) for their entire life. You cannot create ballistic arcs (sparks, fountains, shell casings, debris affected by gravity or wind) or punchy explosions where particles burst outward at high speed and rapidly decelerate due to air resistance.
-- **Proposed Config Keys**:
-  - `GRAVITY_X: 0` (pixels/sec² horizontal acceleration, e.g. wind)
-  - `GRAVITY_Y: 0` (pixels/sec² vertical acceleration, e.g. `+400` for downward gravity or `-80` for rising hot air/embers)
-  - `VELOCITY_DAMPING: 0` (air drag coefficient `>= 0`, where `0` = no drag, and positive values exponentially damp velocity each frame via `const damp = Math.max(0, 1 - this.damping * deltaTime)` or `Math.exp(-this.damping * deltaTime)`)
-- **Implementation Notes**:
-  - In `Particle.Update(deltaTime)`:
-    1. Apply acceleration: `this.direction.x += gravityX * deltaTime; this.direction.y += gravityY * deltaTime;`
-    2. Apply damping if `damping > 0`: multiply `this.direction.x` and `this.direction.y` by `Math.exp(-damping * deltaTime)` (frame-rate independent).
-  - Expose `GRAVITY_X`, `GRAVITY_Y`, and `VELOCITY_DAMPING` in `particle-system-editor.html` under the **Velocity & Direction** panel.
+#### 1. ~~Gravity / Constant Acceleration & Velocity Damping (Air Drag)~~ ✅ *DONE*
+- **Status**: `[x] Completed`
+- **Config Keys**: `GRAVITY_X: 0`, `GRAVITY_Y: 0`, `VELOCITY_DAMPING: 0`.
 
 #### 2. Polar Emission Angles (`MIN_ANGLE`, `MAX_ANGLE`) & `SetRotation(angle)`
 - **Status**: `[ ] Pending`
