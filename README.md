@@ -458,7 +458,7 @@ MIT License
   - [x] ~~Fix negative scale sprite inversion bug (`scale <= 0` deactivation) and `Particle.pivot` reference in `Particle.Draw`.~~ ✅DONE
   - [x] ~~One-shot bursts (`Burst(count, x, y)`) and multi-particle spawn ticks (`emitCountPerSpawn`), plus sub-frame catch-up loop when `MIN_TIME_TO_SPAWN_PARTICLE` is smaller than `deltaTime`.~~ ✅DONE
   - [x] ~~Gravity / constant acceleration (`GRAVITY_X`, `GRAVITY_Y`) and velocity damping / air drag (`VELOCITY_DAMPING`) for ballistic arcs and decelerating explosions.~~ ✅DONE
-  - [ ] Polar emission angles (`MIN_ANGLE`, `MAX_ANGLE` / cone spread) and `SetRotation(angle)` for directional emitters attached to rotating objects (cars, turrets, missiles).
+  - [x] ~~Polar emission angles (`MIN_ANGLE`, `MAX_ANGLE` / cone spread) and `SetRotation(angle)` for directional emitters attached to rotating objects (cars, turrets, missiles).~~ ✅DONE
   - [ ] Color tinting / color-over-lifetime (`startColor` → `endColor`) and optional procedural particle shapes (circles, sparks, lines) without requiring external textures.
   - [ ] Explicit particle lifetime / hold time (`HOLD_TIME`, `MAX_OPACITY`) decoupled from fade-in/fade-out speeds.
   - [ ] Additional emitter shapes (`emitterType.circle`, `emitterType.ring`, `emitterType.line`).

@@ -5,7 +5,8 @@
 //   S – Smoke following the mouse (point emitter, rising buoyancy)
 //   D – Rain
 //   F – Snow
-//   G – Sparks fountain (gravity arc following the mouse)
+//   G – Sparks fountain (polar cone + gravity arc)
+//   H – Rotating thruster / flamethrower (polar cone + SetRotation aiming at mouse)
 //   Click / Space – Explosion burst at cursor (velocity damping + gravity)
 // ============================================================
 
@@ -136,11 +137,10 @@ const fountainConfig = {
     MIN_INITIAL_VELOCITY: 220,
     MAX_INITIAL_VELOCITY: 380,
 
-    // Launch upward in a cone; gravity pulls particles down in a parabolic arc
-    MIN_DIRECTION_X: -0.45,
-    MAX_DIRECTION_X:  0.45,
-    MIN_DIRECTION_Y: -1.0,
-    MAX_DIRECTION_Y: -0.7,
+    // Launch upward in a polar cone; gravity pulls particles down in a parabolic arc
+    directionMode: "polar",
+    MIN_ANGLE: -Math.PI * 0.65,
+    MAX_ANGLE: -Math.PI * 0.35,
 
     GRAVITY_X: 0,
     GRAVITY_Y: 550,
@@ -168,6 +168,45 @@ const fountainConfig = {
     MAX_TIME_TO_SPAWN_PARTICLE: 0.02
 };
 
+const thrusterConfig = {
+    maxParticleCount: 400,
+    globalCompositeOperation: "lighter",
+    emitterType: emitterType.point,
+
+    MIN_INITIAL_VELOCITY: 240,
+    MAX_INITIAL_VELOCITY: 420,
+
+    // Narrow directional polar cone [-12.5°, +12.5°], rotated at runtime via SetRotation(angle)
+    directionMode: "polar",
+    MIN_ANGLE: -0.22,
+    MAX_ANGLE:  0.22,
+
+    GRAVITY_X: 0,
+    GRAVITY_Y: -40,
+    VELOCITY_DAMPING: 1.8,
+
+    MIN_OPACITY_INCREMENT_VELOCITY: 12.0,
+    MAX_OPACITY_INCREMENT_VELOCITY: 20.0,
+    MIN_OPACITY_DECREMENT_VELOCITY: 1.2,
+    MAX_OPACITY_DECREMENT_VELOCITY: 2.4,
+
+    MIN_INITIAL_SCALE: 0.04,
+    MAX_INITIAL_SCALE: 0.10,
+
+    MIN_SCALE_VELOCITY: 0.18,
+    MAX_SCALE_VELOCITY: 0.35,
+
+    MIN_INITIAL_ROTATION: 0,
+    MAX_INITIAL_ROTATION: PI2,
+
+    MIN_ROTATION_VELOCITY: -1.5,
+    MAX_ROTATION_VELOCITY:  1.5,
+
+    emitCountPerSpawn: 2,
+    MIN_TIME_TO_SPAWN_PARTICLE: 0.005,
+    MAX_TIME_TO_SPAWN_PARTICLE: 0.012
+};
+
 const explosionBurstConfig = {
     maxParticleCount: 400,
     globalCompositeOperation: "lighter",
@@ -177,10 +216,10 @@ const explosionBurstConfig = {
     MIN_INITIAL_VELOCITY: 180,
     MAX_INITIAL_VELOCITY: 520,
 
-    MIN_DIRECTION_X: -1,
-    MAX_DIRECTION_X:  1,
-    MIN_DIRECTION_Y: -1,
-    MAX_DIRECTION_Y:  1,
+    // Uniform 360° polar radial distribution (no 45° diagonal box bias)
+    directionMode: "polar",
+    MIN_ANGLE: 0,
+    MAX_ANGLE: PI2,
 
     GRAVITY_X: 0,
     GRAVITY_Y: 160,
@@ -284,15 +323,29 @@ class ParticlesExample extends Game {
             );
             this._mode = 'fountain';
         }
+        if (Input.IsKeyPressed(KEY_H)) {
+            this._particleSystem = new ParticleSystem(
+                this.graphicAssets.smoke.img,
+                thrusterConfig,
+                new Vector2(this.screenWidth * 0.5, this.screenHeight * 0.5)
+            );
+            this._mode = 'thruster';
+        }
 
         // Trigger a one-shot damped explosion burst on Left Click or Space
         if (Input.IsMouseDown(0) || Input.IsKeyDown(KEY_SPACE)) {
             this._burstSystem.Burst(55, Input.mouse.x, Input.mouse.y);
         }
 
-        // Point emitters follow the mouse
+        // Point emitters follow the mouse (or rotate toward the mouse in thruster mode)
         if (this._mode === 'point-smoke' || this._mode === 'fountain') {
             this._particleSystem.SetPosition(Input.mouse.x, Input.mouse.y);
+        }
+        else if (this._mode === 'thruster') {
+            const cx = this.screenWidth * 0.5;
+            const cy = this.screenHeight * 0.5;
+            const angle = Math.atan2(Input.mouse.y - cy, Input.mouse.x - cx);
+            this._particleSystem.SetRotation(angle);
         }
 
         this._particleSystem.Update(deltaTime);
@@ -313,16 +366,17 @@ class ParticlesExample extends Game {
     }
 
     _drawHUD(ctx) {
-        this.renderer.DrawFillBasicRectangle(8, 8, 355, 136, this.semiTransparentBlack);
+        this.renderer.DrawFillBasicRectangle(8, 8, 365, 154, this.semiTransparentBlack);
         this.renderer.DrawFillText("A - Area smoke (default)", 16, 28, "13px monospace", Color.white, "left");
         this.renderer.DrawFillText("S - Smoke following mouse (buoyancy)", 16, 46, "13px monospace", Color.white, "left");
         this.renderer.DrawFillText("D - Rain", 16, 64, "13px monospace", Color.white, "left");
         this.renderer.DrawFillText("F - Snow", 16, 82, "13px monospace", Color.white, "left");
-        this.renderer.DrawFillText("G - Sparks fountain (gravity arc)", 16, 100, "13px monospace", Color.white, "left");
-        this.renderer.DrawFillText("Click / Space - Explosion burst (drag)", 16, 118, "13px monospace", Color.white, "left");
+        this.renderer.DrawFillText("G - Sparks fountain (polar + gravity)", 16, 100, "13px monospace", Color.white, "left");
+        this.renderer.DrawFillText("H - Rotating thruster (polar + SetRotation)", 16, 118, "13px monospace", Color.white, "left");
+        this.renderer.DrawFillText("Click / Space - Explosion burst (drag)", 16, 136, "13px monospace", Color.white, "left");
         const ps = this._particleSystem;
         const bs = this._burstSystem;
-        this.renderer.DrawFillText(`Particles alive: ${ps.activeCount} / ${ps.config.maxParticleCount} (+${bs.activeCount} burst)`, 16, 136, "13px monospace", Color.white, "left");
+        this.renderer.DrawFillText(`Particles alive: ${ps.activeCount} / ${ps.config.maxParticleCount} (+${bs.activeCount} burst)`, 16, 154, "13px monospace", Color.white, "left");
     }
 }
 

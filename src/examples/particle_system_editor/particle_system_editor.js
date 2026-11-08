@@ -121,6 +121,46 @@ const PRESETS = {
             MAX_TIME_TO_SPAWN_PARTICLE: 0.008
         }
     },
+    jetThruster: {
+        name: 'jetThrusterConfig',
+        builtinImg: 'smoke2',
+        bgPreset: '#1a1a2e',
+        motion: 'circle',
+        autoRotate: true,
+        config: {
+            maxParticleCount: 400,
+            globalCompositeOperation: 'lighter',
+            emitterType: emitterType.point,
+            AREA_X1: 0, AREA_Y1: 0, AREA_X2: 800, AREA_Y2: 640,
+            MIN_INITIAL_VELOCITY: 180,
+            MAX_INITIAL_VELOCITY: 340,
+            directionMode: 'polar',
+            MIN_ANGLE: -0.22,
+            MAX_ANGLE:  0.22,
+            MIN_DIRECTION_X: -1,
+            MAX_DIRECTION_X:  1,
+            MIN_DIRECTION_Y: -1,
+            MAX_DIRECTION_Y:  1,
+            GRAVITY_X: 0,
+            GRAVITY_Y: 0,
+            VELOCITY_DAMPING: 2.2,
+            MIN_OPACITY_INCREMENT_VELOCITY: 14.0,
+            MAX_OPACITY_INCREMENT_VELOCITY: 22.0,
+            MIN_OPACITY_DECREMENT_VELOCITY: 1.5,
+            MAX_OPACITY_DECREMENT_VELOCITY: 3.0,
+            MIN_INITIAL_SCALE: 0.04,
+            MAX_INITIAL_SCALE: 0.09,
+            MIN_SCALE_VELOCITY: 0.15,
+            MAX_SCALE_VELOCITY: 0.30,
+            MIN_INITIAL_ROTATION: 0,
+            MAX_INITIAL_ROTATION: Number(PI2.toFixed(4)),
+            MIN_ROTATION_VELOCITY: -1.5,
+            MAX_ROTATION_VELOCITY:  1.5,
+            emitCountPerSpawn: 2,
+            MIN_TIME_TO_SPAWN_PARTICLE: 0.004,
+            MAX_TIME_TO_SPAWN_PARTICLE: 0.012
+        }
+    },
     sparksFountain: {
         name: 'sparksFountainConfig',
         builtinImg: 'smoke2',
@@ -133,6 +173,9 @@ const PRESETS = {
             AREA_X1: 0, AREA_Y1: 0, AREA_X2: 800, AREA_Y2: 640,
             MIN_INITIAL_VELOCITY: 220,
             MAX_INITIAL_VELOCITY: 380,
+            directionMode: 'polar',
+            MIN_ANGLE: -2.04,
+            MAX_ANGLE: -1.10,
             MIN_DIRECTION_X: -0.45,
             MAX_DIRECTION_X:  0.45,
             MIN_DIRECTION_Y: -1.0,
@@ -169,6 +212,9 @@ const PRESETS = {
             AREA_X1: 0, AREA_Y1: 0, AREA_X2: 800, AREA_Y2: 640,
             MIN_INITIAL_VELOCITY: 200,
             MAX_INITIAL_VELOCITY: 520,
+            directionMode: 'polar',
+            MIN_ANGLE: 0,
+            MAX_ANGLE: Number(PI2.toFixed(4)),
             MIN_DIRECTION_X: -1,
             MAX_DIRECTION_X:  1,
             MIN_DIRECTION_Y: -1,
@@ -269,6 +315,7 @@ const NUMERIC_PARAMS = [
     'MIN_INITIAL_VELOCITY', 'MAX_INITIAL_VELOCITY',
     'MIN_DIRECTION_X', 'MAX_DIRECTION_X',
     'MIN_DIRECTION_Y', 'MAX_DIRECTION_Y',
+    'MIN_ANGLE', 'MAX_ANGLE',
     'GRAVITY_X', 'GRAVITY_Y',
     'VELOCITY_DAMPING',
     'MIN_OPACITY_INCREMENT_VELOCITY', 'MAX_OPACITY_INCREMENT_VELOCITY',
@@ -284,6 +331,7 @@ const MIN_MAX_PAIRS = [
     ['MIN_INITIAL_VELOCITY',           'MAX_INITIAL_VELOCITY'],
     ['MIN_DIRECTION_X',                'MAX_DIRECTION_X'],
     ['MIN_DIRECTION_Y',                'MAX_DIRECTION_Y'],
+    ['MIN_ANGLE',                      'MAX_ANGLE'],
     ['MIN_OPACITY_INCREMENT_VELOCITY', 'MAX_OPACITY_INCREMENT_VELOCITY'],
     ['MIN_OPACITY_DECREMENT_VELOCITY', 'MAX_OPACITY_DECREMENT_VELOCITY'],
     ['MIN_INITIAL_SCALE',              'MAX_INITIAL_SCALE'],
@@ -316,6 +364,8 @@ let motionSpeed    = 280;       // px/sec for animated emitter modes
 let motionTime     = 0;
 let emitterPos     = new Vector2(400, 300);
 let emitterHeading = 0;         // radians, for drawing directional gizmo on moving emitter
+let emitterRotation = 0;        // radians, passed to particleSystem.SetRotation()
+let autoRotateWithMotion = false;
 
 // Mouse interaction state
 let mousePos       = { x: 400, y: 300 };
@@ -432,6 +482,7 @@ function rebuildParticleSystem() {
         new Vector2(emitterPos.x, emitterPos.y)
     );
     particleSystem.active = emitterActive;
+    particleSystem.SetRotation(emitterRotation);
     syncEmitterArea();
 }
 
@@ -495,6 +546,14 @@ function syncUIFromConfig() {
     document.getElementById('cfg-globalCompositeOperation').value = currentConfig.globalCompositeOperation;
     document.getElementById('cfg-emitterType').value = String(currentConfig.emitterType);
 
+    const dirMode = currentConfig.directionMode === 'polar' ? 'polar' : 'cartesian';
+    currentConfig.directionMode = dirMode;
+    document.getElementById('cfg-directionMode').value = dirMode;
+    document.getElementById('cartesian-dir-panel').style.display = dirMode === 'cartesian' ? 'grid' : 'none';
+    document.getElementById('polar-dir-panel').style.display     = dirMode === 'polar'     ? 'grid' : 'none';
+    document.getElementById('lbl-dir-mode').textContent =
+        dirMode === 'polar' ? 'Polar Cone [MIN_ANGLE, MAX_ANGLE] (rad)' : 'Direction Range [-1, 1]';
+
     // Show/hide area bounds sub-panel
     const isArea = currentConfig.emitterType === emitterType.area;
     document.getElementById('area-bounds-panel').style.display = isArea ? 'block' : 'none';
@@ -525,12 +584,20 @@ function getExportableConfig() {
         out.AREA_Y2 = Math.round(currentConfig.AREA_Y2);
     }
 
-    out.MIN_INITIAL_VELOCITY           = Number(currentConfig.MIN_INITIAL_VELOCITY);
-    out.MAX_INITIAL_VELOCITY           = Number(currentConfig.MAX_INITIAL_VELOCITY);
-    out.MIN_DIRECTION_X                = Number(currentConfig.MIN_DIRECTION_X);
-    out.MAX_DIRECTION_X                = Number(currentConfig.MAX_DIRECTION_X);
-    out.MIN_DIRECTION_Y                = Number(currentConfig.MIN_DIRECTION_Y);
-    out.MAX_DIRECTION_Y                = Number(currentConfig.MAX_DIRECTION_Y);
+    out.MIN_INITIAL_VELOCITY = Number(currentConfig.MIN_INITIAL_VELOCITY);
+    out.MAX_INITIAL_VELOCITY = Number(currentConfig.MAX_INITIAL_VELOCITY);
+
+    out.directionMode = currentConfig.directionMode === 'polar' ? 'polar' : 'cartesian';
+    if (out.directionMode === 'polar') {
+        out.MIN_ANGLE = Number(currentConfig.MIN_ANGLE);
+        out.MAX_ANGLE = Number(currentConfig.MAX_ANGLE);
+    } else {
+        out.MIN_DIRECTION_X = Number(currentConfig.MIN_DIRECTION_X);
+        out.MAX_DIRECTION_X = Number(currentConfig.MAX_DIRECTION_X);
+        out.MIN_DIRECTION_Y = Number(currentConfig.MIN_DIRECTION_Y);
+        out.MAX_DIRECTION_Y = Number(currentConfig.MAX_DIRECTION_Y);
+    }
+
     out.GRAVITY_X                      = Number(currentConfig.GRAVITY_X || 0);
     out.GRAVITY_Y                      = Number(currentConfig.GRAVITY_Y || 0);
     out.VELOCITY_DAMPING               = Number(currentConfig.VELOCITY_DAMPING || 0);
@@ -581,11 +648,26 @@ function formatJSConfigSnippet() {
         ``,
         `    MIN_INITIAL_VELOCITY: ${c.MIN_INITIAL_VELOCITY},`,
         `    MAX_INITIAL_VELOCITY: ${c.MAX_INITIAL_VELOCITY},`,
-        ``,
-        `    MIN_DIRECTION_X: ${c.MIN_DIRECTION_X},`,
-        `    MAX_DIRECTION_X: ${c.MAX_DIRECTION_X},`,
-        `    MIN_DIRECTION_Y: ${c.MIN_DIRECTION_Y},`,
-        `    MAX_DIRECTION_Y: ${c.MAX_DIRECTION_Y},`,
+        ``
+    );
+
+    if (c.directionMode === 'polar') {
+        const maxAngleStr = Math.abs(c.MAX_ANGLE - PI2) < 0.005 ? 'PI2' : c.MAX_ANGLE;
+        lines.push(
+            `    directionMode: "polar",`,
+            `    MIN_ANGLE: ${c.MIN_ANGLE},`,
+            `    MAX_ANGLE: ${maxAngleStr},`
+        );
+    } else {
+        lines.push(
+            `    MIN_DIRECTION_X: ${c.MIN_DIRECTION_X},`,
+            `    MAX_DIRECTION_X: ${c.MAX_DIRECTION_X},`,
+            `    MIN_DIRECTION_Y: ${c.MIN_DIRECTION_Y},`,
+            `    MAX_DIRECTION_Y: ${c.MAX_DIRECTION_Y},`
+        );
+    }
+
+    lines.push(
         ``,
         `    GRAVITY_X: ${c.GRAVITY_X},`,
         `    GRAVITY_Y: ${c.GRAVITY_Y},`,
@@ -689,6 +771,18 @@ function updateEmitterMotion(dt) {
 
     if (particleSystem) {
         particleSystem.SetPosition(emitterPos.x, emitterPos.y);
+        if (autoRotateWithMotion && motionMode !== 'manual') {
+            // Point exhaust cone opposite the travel heading
+            let exhaustAngle = emitterHeading + Math.PI;
+            while (exhaustAngle >  Math.PI) exhaustAngle -= PI2;
+            while (exhaustAngle < -Math.PI) exhaustAngle += PI2;
+            emitterRotation = Number(exhaustAngle.toFixed(2));
+            particleSystem.SetRotation(emitterRotation);
+            const rotNum = document.getElementById('emitter-rot-num');
+            const rotRng = document.getElementById('emitter-rot-rng');
+            if (rotNum && document.activeElement !== rotNum) rotNum.value = emitterRotation;
+            if (rotRng && document.activeElement !== rotRng) rotRng.value = emitterRotation;
+        }
     }
 }
 
@@ -700,20 +794,57 @@ function drawGizmos(ctx) {
         const x = emitterPos.x;
         const y = emitterPos.y;
 
-        // Direction range indicator vector
-        const avgDirX = (currentConfig.MIN_DIRECTION_X + currentConfig.MAX_DIRECTION_X) * 0.5;
-        const avgDirY = (currentConfig.MIN_DIRECTION_Y + currentConfig.MAX_DIRECTION_Y) * 0.5;
-        const dirLen  = Math.hypot(avgDirX, avgDirY);
+        if (currentConfig.directionMode === 'polar') {
+            // Polar emission cone gizmo (sector + bisector vector)
+            const a1 = (currentConfig.MIN_ANGLE || 0) + emitterRotation;
+            const a2 = (currentConfig.MAX_ANGLE || 0) + emitterRotation;
+            const span = Math.abs(a2 - a1);
+            const r = 38;
 
-        if (dirLen > 0.05) {
-            const nx = avgDirX / dirLen;
-            const ny = avgDirY / dirLen;
-            ctx.strokeStyle = 'rgba(255, 152, 0, 0.75)';
-            ctx.lineWidth = 1.5;
+            ctx.fillStyle   = 'rgba(255, 152, 0, 0.14)';
+            ctx.strokeStyle = 'rgba(255, 152, 0, 0.8)';
+            ctx.lineWidth   = 1.5;
+
             ctx.beginPath();
-            ctx.moveTo(x, y);
-            ctx.lineTo(x + nx * 36, y + ny * 36);
+            if (span >= PI2 - 0.01) {
+                ctx.arc(x, y, r, 0, PI2);
+            } else {
+                ctx.moveTo(x, y);
+                ctx.arc(x, y, r, Math.min(a1, a2), Math.max(a1, a2));
+                ctx.closePath();
+            }
+            ctx.fill();
             ctx.stroke();
+
+            // Bisector arrow when cone is narrower than full circle
+            if (span < PI2 - 0.05) {
+                const mid = (a1 + a2) * 0.5;
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + Math.cos(mid) * (r + 8), y + Math.sin(mid) * (r + 8));
+                ctx.stroke();
+            }
+        }
+        else {
+            // Cartesian direction range indicator vector (rotated by emitterRotation)
+            const avgDirX = (currentConfig.MIN_DIRECTION_X + currentConfig.MAX_DIRECTION_X) * 0.5;
+            const avgDirY = (currentConfig.MIN_DIRECTION_Y + currentConfig.MAX_DIRECTION_Y) * 0.5;
+            const dirLen  = Math.hypot(avgDirX, avgDirY);
+
+            if (dirLen > 0.05) {
+                const ux = avgDirX / dirLen;
+                const uy = avgDirY / dirLen;
+                const cos = Math.cos(emitterRotation);
+                const sin = Math.sin(emitterRotation);
+                const nx = ux * cos - uy * sin;
+                const ny = ux * sin + uy * cos;
+                ctx.strokeStyle = 'rgba(255, 152, 0, 0.75)';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + nx * 36, y + ny * 36);
+                ctx.stroke();
+            }
         }
 
         // Gravity vector indicator (cyan dashed arrow)
@@ -1027,6 +1158,9 @@ function loadConfigJSON(file) {
 
             // Merge with defaultParticleConfig so any omitted fields have valid defaults
             currentConfig = Object.assign({}, defaultParticleConfig, incoming);
+            if (incoming.directionMode === undefined && (incoming.MIN_ANGLE !== undefined || incoming.MAX_ANGLE !== undefined)) {
+                currentConfig.directionMode = 'polar';
+            }
 
             const baseName = file.name.replace(/\.json$/i, '');
             document.getElementById('config-name').value = baseName;
@@ -1094,6 +1228,14 @@ function wireControls() {
             document.getElementById('select-motion').value = preset.motion;
             document.getElementById('motion-speed-group').style.display =
                 (motionMode === 'circle' || motionMode === 'figure8' || motionMode === 'projectile') ? 'flex' : 'none';
+        }
+
+        autoRotateWithMotion = Boolean(preset.autoRotate);
+        document.getElementById('chk-auto-rotate').checked = autoRotateWithMotion;
+        if (!autoRotateWithMotion) {
+            emitterRotation = 0;
+            document.getElementById('emitter-rot-num').value = 0;
+            document.getElementById('emitter-rot-rng').value = 0;
         }
 
         syncUIFromConfig();
@@ -1196,6 +1338,12 @@ function wireControls() {
         applyConfigChange('emitterType');
     });
 
+    document.getElementById('cfg-directionMode').addEventListener('change', e => {
+        currentConfig.directionMode = e.target.value;
+        syncUIFromConfig();
+        applyConfigChange('directionMode');
+    });
+
     // Area helper buttons
     document.getElementById('btn-fit-area').addEventListener('click', () => {
         currentConfig.AREA_X1 = 0;
@@ -1217,29 +1365,73 @@ function wireControls() {
         applyConfigChange('AREA');
     });
 
-    // Direction quick preset buttons
+    // Direction quick preset buttons (works for both Cartesian and Polar modes)
     document.querySelectorAll('[data-dir]').forEach(btn => {
         btn.addEventListener('click', () => {
             const dir = btn.dataset.dir;
-            if (dir === 'omni') {
-                currentConfig.MIN_DIRECTION_X = -1; currentConfig.MAX_DIRECTION_X = 1;
-                currentConfig.MIN_DIRECTION_Y = -1; currentConfig.MAX_DIRECTION_Y = 1;
-            } else if (dir === 'up') {
-                currentConfig.MIN_DIRECTION_X = -0.35; currentConfig.MAX_DIRECTION_X = 0.35;
-                currentConfig.MIN_DIRECTION_Y = -1;    currentConfig.MAX_DIRECTION_Y = -0.5;
-            } else if (dir === 'down') {
-                currentConfig.MIN_DIRECTION_X = -0.35; currentConfig.MAX_DIRECTION_X = 0.35;
-                currentConfig.MIN_DIRECTION_Y = 0.5;   currentConfig.MAX_DIRECTION_Y = 1;
-            } else if (dir === 'left') {
-                currentConfig.MIN_DIRECTION_X = -1;    currentConfig.MAX_DIRECTION_X = -0.5;
-                currentConfig.MIN_DIRECTION_Y = -0.35; currentConfig.MAX_DIRECTION_Y = 0.35;
-            } else if (dir === 'right') {
-                currentConfig.MIN_DIRECTION_X = 0.5;   currentConfig.MAX_DIRECTION_X = 1;
-                currentConfig.MIN_DIRECTION_Y = -0.35; currentConfig.MAX_DIRECTION_Y = 0.35;
+            if (currentConfig.directionMode === 'polar') {
+                if (dir === 'omni') {
+                    currentConfig.MIN_ANGLE = 0;     currentConfig.MAX_ANGLE = Number(PI2.toFixed(4));
+                } else if (dir === 'up') {
+                    currentConfig.MIN_ANGLE = -1.92; currentConfig.MAX_ANGLE = -1.22;
+                } else if (dir === 'down') {
+                    currentConfig.MIN_ANGLE =  1.22; currentConfig.MAX_ANGLE =  1.92;
+                } else if (dir === 'left') {
+                    currentConfig.MIN_ANGLE =  2.79; currentConfig.MAX_ANGLE =  3.49;
+                } else if (dir === 'right') {
+                    currentConfig.MIN_ANGLE = -0.35; currentConfig.MAX_ANGLE =  0.35;
+                }
+            } else {
+                if (dir === 'omni') {
+                    currentConfig.MIN_DIRECTION_X = -1;    currentConfig.MAX_DIRECTION_X = 1;
+                    currentConfig.MIN_DIRECTION_Y = -1;    currentConfig.MAX_DIRECTION_Y = 1;
+                } else if (dir === 'up') {
+                    currentConfig.MIN_DIRECTION_X = -0.35; currentConfig.MAX_DIRECTION_X = 0.35;
+                    currentConfig.MIN_DIRECTION_Y = -1;    currentConfig.MAX_DIRECTION_Y = -0.5;
+                } else if (dir === 'down') {
+                    currentConfig.MIN_DIRECTION_X = -0.35; currentConfig.MAX_DIRECTION_X = 0.35;
+                    currentConfig.MIN_DIRECTION_Y = 0.5;   currentConfig.MAX_DIRECTION_Y = 1;
+                } else if (dir === 'left') {
+                    currentConfig.MIN_DIRECTION_X = -1;    currentConfig.MAX_DIRECTION_X = -0.5;
+                    currentConfig.MIN_DIRECTION_Y = -0.35; currentConfig.MAX_DIRECTION_Y = 0.35;
+                } else if (dir === 'right') {
+                    currentConfig.MIN_DIRECTION_X = 0.5;   currentConfig.MAX_DIRECTION_X = 1;
+                    currentConfig.MIN_DIRECTION_Y = -0.35; currentConfig.MAX_DIRECTION_Y = 0.35;
+                }
             }
             syncUIFromConfig();
             applyConfigChange('DIRECTION');
         });
+    });
+
+    // Runtime Emitter Rotation (SetRotation) preview controls
+    const emRotNum = document.getElementById('emitter-rot-num');
+    const emRotRng = document.getElementById('emitter-rot-rng');
+    const chkAutoRot = document.getElementById('chk-auto-rotate');
+
+    const updateEmitterRotation = (val) => {
+        const parsed = parseFloat(val);
+        if (isNaN(parsed)) return;
+        emitterRotation = parsed;
+        if (emRotNum && document.activeElement !== emRotNum) emRotNum.value = emitterRotation;
+        if (emRotRng && document.activeElement !== emRotRng) emRotRng.value = emitterRotation;
+        if (particleSystem) particleSystem.SetRotation(emitterRotation);
+    };
+
+    emRotNum.addEventListener('input', e => updateEmitterRotation(e.target.value));
+    emRotRng.addEventListener('input', e => {
+        emRotNum.value = e.target.value;
+        updateEmitterRotation(e.target.value);
+    });
+    chkAutoRot.addEventListener('change', () => {
+        autoRotateWithMotion = chkAutoRot.checked;
+    });
+    document.getElementById('btn-emitter-rot-zero').addEventListener('click', () => {
+        autoRotateWithMotion = false;
+        chkAutoRot.checked = false;
+        emRotNum.value = 0;
+        emRotRng.value = 0;
+        updateEmitterRotation(0);
     });
 
     // Gravity quick buttons

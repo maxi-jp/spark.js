@@ -41,6 +41,7 @@
             <option value="defaultArea">Default (Area Smoke)</option>
             <option value="pointSmoke">Point Smoke</option>
             <option value="fire">Fire / Exhaust</option>
+            <option value="jetThruster">Jet Thruster (Polar Cone + Rotation)</option>
             <option value="sparksFountain">Sparks Fountain (Gravity)</option>
             <option value="explosionBurst">Explosion / Debris (Drag + Gravity)</option>
             <option value="rain">Rain</option>
@@ -265,17 +266,29 @@
                         </div>
                     </div>
 
+                    <div class="param-row" style="margin-top:6px;margin-bottom:6px">
+                        <div class="param-header">
+                            <label for="cfg-directionMode">directionMode</label>
+                        </div>
+                        <select id="cfg-directionMode" class="full-select">
+                            <option value="cartesian">cartesian — Box Range (MIN/MAX_DIRECTION_X/Y)</option>
+                            <option value="polar">polar — Angular Cone (MIN_ANGLE / MAX_ANGLE)</option>
+                        </select>
+                    </div>
+
                     <div class="param-group-label">
-                        <span>Direction Range [-1, 1]</span>
+                        <span id="lbl-dir-mode">Direction Range [-1, 1]</span>
                         <span class="quick-btns">
-                            <button class="mini-btn" data-dir="omni" title="All directions">Omni</button>
+                            <button class="mini-btn" data-dir="omni" title="All directions (360°)">Omni</button>
                             <button class="mini-btn" data-dir="up" title="Upward cone">↑</button>
                             <button class="mini-btn" data-dir="down" title="Downward cone">↓</button>
                             <button class="mini-btn" data-dir="left" title="Leftward cone">←</button>
                             <button class="mini-btn" data-dir="right" title="Rightward cone">→</button>
                         </span>
                     </div>
-                    <div class="dual-param">
+
+                    <!-- Cartesian Direction Controls -->
+                    <div id="cartesian-dir-panel" class="dual-param">
                         <div class="param-row">
                             <div class="param-header">
                                 <label for="cfg-MIN_DIRECTION_X" title="MIN_DIRECTION_X">MIN_DIR_X</label>
@@ -304,6 +317,42 @@
                             </div>
                             <input id="rng-MAX_DIRECTION_Y" type="range" min="-1" max="1" step="0.01" class="range-input">
                         </div>
+                    </div>
+
+                    <!-- Polar Angle Cone Controls -->
+                    <div id="polar-dir-panel" class="dual-param" style="display:none">
+                        <div class="param-row">
+                            <div class="param-header">
+                                <label for="cfg-MIN_ANGLE" title="Minimum emission angle in radians (0 = right, -π/2 = up)">MIN_ANGLE</label>
+                                <input id="cfg-MIN_ANGLE" type="number" min="-6.2832" max="6.2832" step="0.05" class="num-input">
+                            </div>
+                            <input id="rng-MIN_ANGLE" type="range" min="-3.1416" max="6.2832" step="0.01" class="range-input">
+                        </div>
+                        <div class="param-row">
+                            <div class="param-header">
+                                <label for="cfg-MAX_ANGLE" title="Maximum emission angle in radians (0 = right, -π/2 = up)">MAX_ANGLE</label>
+                                <input id="cfg-MAX_ANGLE" type="number" min="-6.2832" max="6.2832" step="0.05" class="num-input">
+                            </div>
+                            <input id="rng-MAX_ANGLE" type="range" min="-3.1416" max="6.2832" step="0.01" class="range-input">
+                        </div>
+                    </div>
+
+                    <!-- Runtime Emitter Rotation Preview (SetRotation) -->
+                    <div class="param-group-label" style="margin-top:8px">
+                        <span>Emitter Rotation (<code>SetRotation</code>)</span>
+                        <span class="quick-btns" style="display:flex;align-items:center;gap:6px">
+                            <label style="font-size:10px;color:#9aa4b8;cursor:pointer;display:flex;align-items:center;gap:3px" title="Automatically rotate emitter exhaust opposite the moving path heading">
+                                <input id="chk-auto-rotate" type="checkbox"> Auto-Path
+                            </label>
+                            <button class="mini-btn" id="btn-emitter-rot-zero" title="Reset emitter rotation to 0">0 rad</button>
+                        </span>
+                    </div>
+                    <div class="param-row">
+                        <div class="param-header">
+                            <label for="emitter-rot-num" title="Preview runtime particleSystem.SetRotation(angle) in radians">emitter.rotation</label>
+                            <input id="emitter-rot-num" type="number" min="-6.2832" max="6.2832" step="0.05" value="0" class="num-input">
+                        </div>
+                        <input id="emitter-rot-rng" type="range" min="-3.1416" max="3.1416" step="0.01" value="0" class="range-input">
                     </div>
 
                     <div class="param-group-label" style="margin-top:8px">

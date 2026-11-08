@@ -81,9 +81,17 @@ const defaultParticleConfig = {
     MIN_INITIAL_VELOCITY: 10,
     MAX_INITIAL_VELOCITY: 60,
 
-    // Un-normalised direction components [-1, 1] (normalised before multiplying by speed)
+    // Direction mode: "cartesian" (uses MIN/MAX_DIRECTION_X/Y) or "polar" (uses MIN_ANGLE / MAX_ANGLE)
+    // Auto-selects "polar" if MIN_ANGLE or MAX_ANGLE is provided in config without directionMode
+    directionMode: "cartesian",
+
+    // Un-normalised direction components [-1, 1] (used when directionMode === "cartesian")
     MIN_DIRECTION_X: -1, MAX_DIRECTION_X: 1,
     MIN_DIRECTION_Y: -1, MAX_DIRECTION_Y: 1,
+
+    // Polar emission cone angles in radians (used when directionMode === "polar"; 0 = right, -PI/2 = up)
+    MIN_ANGLE: 0,
+    MAX_ANGLE: PI2,
 
     // Constant acceleration / gravity (pixels / sec²)
     GRAVITY_X: 0,
@@ -144,6 +152,7 @@ The main class you interact with. Owns the particle pool, the `ParticleEmitter`,
 | Method | Returns | Description |
 |--------|---------|-------------|
 | `SetPosition(x, y)` | `void` | Moves `this.emitter.position` to `(x, y)` in world space. Ideal for point emitters attached to moving objects or the mouse cursor. |
+| `SetRotation(angle)` | `void` | Rotates the emitter's emission direction by `angle` (in radians). Works with both `"polar"` cones and `"cartesian"` direction ranges. |
 | `Burst(count = 1, x, y)` | `number` | Immediately activates up to `count` particles from the pool and returns the number actually spawned. Works even when `this.active === false`. Optional `(x, y)` overrides the emitter's spawn point for that burst. Logs a `console.warn` if the pool is exhausted. |
 | `Update(deltaTime)` | `void` | If `this.active` is `true`, advances the spawn timer and emits particles; then updates all currently active particles. Call once per frame in `Update(deltaTime)`. |
 | `Draw(renderer)` | `void` | Applies `config.globalCompositeOperation` (on `Canvas2DRenderer`), draws all active particles via `renderer.DrawImage`, and restores `"source-over"`. Call once per frame in `Draw()`. |
@@ -153,6 +162,7 @@ The main class you interact with. Owns the particle pool, the `ParticleEmitter`,
 | Property | Type | Description |
 |----------|------|-------------|
 | `active` | `boolean` | Controls continuous timer-based emission (`true` by default). Setting `active = false` stops automatic spawning while allowing already-alive particles to finish fading out (`Burst()` still works). |
+| `rotation` *(getter/setter)* | `number` | Current emitter rotation angle in radians (`this.emitter.rotation`). |
 | `activeCount` *(getter)* | `number` | Returns the number of particles currently alive (`active === true`). Useful for HUD telemetry and pool sizing. |
 | `config` | `Object` | Merged configuration object for this instance. |
 | `emitter` | `ParticleEmitter` | The internal emitter responsible for spawn points and initial velocity vectors. |
@@ -250,8 +260,9 @@ The included demo project ([`particles_example.js`](../src/examples/particles/pa
 - **`S` — Mouse-Following Smoke (`smokePointConfig`)**: Uses `emitterType.point` with `globalCompositeOperation: "overlay"`, thermal upward buoyancy (`GRAVITY_Y: -35`), and gentle air drag (`VELOCITY_DAMPING: 0.4`), updating `SetPosition(Input.mouse.x, Input.mouse.y)` every frame.
 - **`D` — Rain (`rainConfig`)**: Uses `emitterType.area` spawning along a line above the top of the screen (`AREA_X1: -200, AREA_Y1: -100, AREA_X2: 700, AREA_Y2: -100`), high downward speed (`400–800 px/s`), slight wind slant (`MIN_DIRECTION_X: 0.15, MAX_DIRECTION_X: 0.25, MIN_DIRECTION_Y: 1, MAX_DIRECTION_Y: 1`), zero scale growth, and fast spawn interval (`0.001–0.002s` with `maxParticleCount: 1000`).
 - **`F` — Snow (`snowConfig`)**: Spawns above the canvas (`AREA_Y1: -100, AREA_Y2: -100`), gentle downward speed (`30–60 px/s`), horizontal flutter (`MIN_DIRECTION_X: -0.25, MAX_DIRECTION_X: 0.25`), slow fade-in/out, and continuous rotation (`0.1–0.5 rad/s`).
-- **`G` — Sparks Fountain (`fountainConfig`)**: Point emitter following the mouse that launches glowing additive particles upward in a cone (`MIN_DIRECTION_Y: -1.0, MAX_DIRECTION_Y: -0.7`) and pulls them down in a parabolic arc using `GRAVITY_Y: 550` and `VELOCITY_DAMPING: 0.2`.
-- **`Click / Space` — Explosion Burst (`explosionBurstConfig`)**: Fires a 55-particle one-shot `Burst()` at the cursor using a high initial speed (`180–520 px/s`) that rapidly decelerates mid-air via `VELOCITY_DAMPING: 3.5` while drifting downward under `GRAVITY_Y: 160`.
+- **`G` — Sparks Fountain (`fountainConfig`)**: Point emitter following the mouse that launches glowing additive particles upward in a polar cone (`directionMode: "polar", MIN_ANGLE: -Math.PI * 0.65, MAX_ANGLE: -Math.PI * 0.35`) and pulls them down in a parabolic arc using `GRAVITY_Y: 550` and `VELOCITY_DAMPING: 0.2`.
+- **`H` — Rotating Thruster / Flamethrower (`thrusterConfig`)**: Narrow directional polar cone (`MIN_ANGLE: -0.22, MAX_ANGLE: 0.22`) at the screen center that rotates every frame via `SetRotation(angleToMouse)` to aim a stream of fire toward the mouse cursor.
+- **`Click / Space` — Explosion Burst (`explosionBurstConfig`)**: Fires a 55-particle one-shot `Burst()` at the cursor using a uniform 360° polar distribution (`MIN_ANGLE: 0, MAX_ANGLE: PI2`) and high initial speed (`180–520 px/s`) that rapidly decelerates mid-air via `VELOCITY_DAMPING: 3.5` while drifting downward under `GRAVITY_Y: 160`.
 
 ---
 
@@ -264,13 +275,14 @@ The standalone **[Particle System Editor](../particle-system-editor.html ':ignor
 - **Particle Textures (Built-in & Custom)**:
   - Switch between 4 built-in sample assets (`smoke.png`, `smoke2.png`, `snow.png`, `waterdrop.png`) and a procedural radial-gradient fallback (`Built-in: Soft Circle`).
   - Load any custom image via the **Load Image** button, by clicking the sprite thumbnail preview, or by dragging and dropping an image file anywhere onto the window.
-- **8 Built-in Presets**:
+- **9 Built-in Presets**:
   - *Missile Smoke (Death Rally)* (`missileSmokeConfig`)
   - *Default (Area Smoke)* (`smokeAreaConfig`)
   - *Point Smoke* (`smokePointConfig`)
   - *Fire / Exhaust* (`fireExhaustConfig` — additive `"lighter"` blending with upward thermal buoyancy `GRAVITY_Y: -60`)
-  - *Sparks Fountain (Gravity)* (`sparksFountainConfig` — parabolic gravity arc with `GRAVITY_Y: 550`)
-  - *Explosion / Debris (Drag + Gravity)* (`explosionBurstConfig` — high-velocity bursts braked by `VELOCITY_DAMPING: 3.5`)
+  - *Jet Thruster (Polar Cone + Rotation)* (`jetThrusterConfig` — narrow polar cone on an orbiting emitter with `Auto-Path` exhaust rotation)
+  - *Sparks Fountain (Gravity)* (`sparksFountainConfig` — polar upward cone + parabolic gravity arc with `GRAVITY_Y: 550`)
+  - *Explosion / Debris (Drag + Gravity)* (`explosionBurstConfig` — 360° polar bursts braked by `VELOCITY_DAMPING: 3.5`)
   - *Rain* (`rainConfig`)
   - *Snow* (`snowConfig`)
 - **Playback & Burst Toolbar**:
@@ -286,12 +298,12 @@ The standalone **[Particle System Editor](../particle-system-editor.html ':ignor
   - **Linear Projectile (`projectile`)** — Flies across the canvas at a slight angle and wraps around.
   - Includes a **Speed** slider (`40–700 px/s`) for the animated path modes.
 - **Interactive Canvas Gizmos & Backgrounds**:
-  - **Point Gizmo**: Crosshair + orange average direction vector indicator + cyan dashed gravity vector arrow + optional projectile nose cone.
+  - **Point Gizmo**: Crosshair + orange direction indicator (a vector in `cartesian` mode, or a shaded angular sector wedge in `polar` mode, rotated by `emitter.rotation`) + cyan dashed gravity vector arrow + optional projectile nose cone.
   - **Area Gizmo**: Dashed bounding rectangle with 4 draggable corner handles (`nw`, `ne`, `sw`, `se`), interior drag-to-move, outside drag-to-draw a new box, plus quick-fit buttons (**Full Canvas**, **Center Box**).
   - **Background Surfaces**: Switch between *Asphalt (`#414146`)*, *Dark Night (`#1a1a2e`)*, *Grass (`#325023`)*, *Dirt (`#785532`)*, *Pure Black (`#000000`)*, *Checkerboard*, or any custom hex color picker.
 - **Real-Time Parameter Sliders & Smart Clamping**:
-  - Synchronized range sliders and numeric inputs for every `defaultParticleConfig` property (including `emitCountPerSpawn`, `GRAVITY_X`, `GRAVITY_Y`, `VELOCITY_DAMPING`, and all 10 `MIN_*/MAX_*` pairs, which automatically clamp if `MIN > MAX`).
-  - Direction quick-buttons (**Omni**, **↑**, **↓**, **←**, **→**), gravity quick-buttons (**0**, **↓ Grav**, **↑ Buoy**), and rotation quick-buttons (**0**, **0 → 2π**).
+  - Synchronized range sliders and numeric inputs for every `defaultParticleConfig` property (including `directionMode` toggle between `cartesian` and `polar`, `MIN_ANGLE`/`MAX_ANGLE`, `SetRotation` preview slider + `Auto-Path` rotation toggle, `emitCountPerSpawn`, `GRAVITY_X`, `GRAVITY_Y`, `VELOCITY_DAMPING`, and all 11 `MIN_*/MAX_*` pairs).
+  - Direction quick-buttons (**Omni**, **↑**, **↓**, **←**, **→** — work for both Cartesian and Polar modes), gravity quick-buttons (**0**, **↓ Grav**, **↑ Buoy**), and rotation quick-buttons (**0**, **0 → 2π**).
 - **Live Telemetry & Export**:
   - Bottom status bar displays active particle count (`Alive / Max` with a `⚠ POOL FULL` warning), estimated **Spawn Rate (`~N/s`)**, estimated **Avg Lifetime (`~Ns`)**, emitter coordinates, mouse coordinates, and live **FPS**.
   - **Load JSON** (or drag-and-drop a `.json` file), **Copy JS** (formats a clean `const <name> = { ... };` snippet using `emitterType.*` and `PI2`), **Copy JSON**, and **Export JSON ↓**.
@@ -310,6 +322,8 @@ This section tracks all completed and planned improvements for the particle syst
   - *Details*: Added `ParticleSystem.Burst(count = 1, x, y)` for immediate emission even when `this.active === false`, added `emitCountPerSpawn` to `defaultParticleConfig`, and replaced the single `if (this.nextTimeToSpawnParticle <= 0.0)` check in `Update(deltaTime)` with a `while` catch-up loop so sub-frame spawn intervals (`< 16.6ms`) emit the exact expected number of particles per frame.
 - [x] **Gravity / Constant Acceleration (`GRAVITY_X`, `GRAVITY_Y`) & Velocity Damping (`VELOCITY_DAMPING`)** ✅ *DONE*
   - *Details*: Added `GRAVITY_X`, `GRAVITY_Y` (pixels/sec²) and `VELOCITY_DAMPING` (1/sec exponential decay via `Math.exp(-damping * dt)`) to `defaultParticleConfig` and `Particle.Update`, added `fountainConfig` (`G`) and `explosionBurstConfig` (`Click / Space`) to `particles_example.js`, and added sliders, quick-preset buttons, a cyan gravity vector gizmo, and *Sparks Fountain* / *Explosion / Debris* presets to `particle-system-editor.html`.
+- [x] **Polar Emission Angles (`MIN_ANGLE`, `MAX_ANGLE`) & `SetRotation(angle)`** ✅ *DONE*
+  - *Details*: Added `directionMode: "cartesian" | "polar"`, `MIN_ANGLE`, and `MAX_ANGLE` to `defaultParticleConfig` (auto-selecting `"polar"` when `MIN_ANGLE`/`MAX_ANGLE` are supplied), plus `SetRotation(angle)` and `rotation` getter/setter on `ParticleSystem` (rotating both polar cones and cartesian direction vectors). Added `thrusterConfig` (`H`) to `particles_example.js` and polar cone controls, sector gizmo, `SetRotation` live slider + `Auto-Path` toggle, and *Jet Thruster* preset to `particle-system-editor.html`.
 
 ---
 
@@ -319,16 +333,9 @@ This section tracks all completed and planned improvements for the particle syst
 - **Status**: `[x] Completed`
 - **Config Keys**: `GRAVITY_X: 0`, `GRAVITY_Y: 0`, `VELOCITY_DAMPING: 0`.
 
-#### 2. Polar Emission Angles (`MIN_ANGLE`, `MAX_ANGLE`) & `SetRotation(angle)`
-- **Status**: `[ ] Pending`
-- **Motivation**:
-  1. Currently, `GetInitialVelocity()` picks random `X` in `[MIN_DIRECTION_X, MAX_DIRECTION_X]` and `Y` in `[MIN_DIRECTION_Y, MAX_DIRECTION_Y]` and normalizes the vector. Sampling a rectangle and normalizing biases directions toward the 45° corners.
-  2. When an emitter is attached to a rotating game object (a car drifting in *Death Rally*, a rotating turret, or a homing missile), rotating the emission cone requires manually recomputing `MIN/MAX_DIRECTION_X/Y` with trigonometry every frame.
-- **Proposed Config Keys & API**:
-  - `usePolarDirection: false` (or automatic when `MIN_ANGLE` / `MAX_ANGLE` or `spreadAngle` are used, maintaining 100% backward compatibility with `MIN/MAX_DIRECTION_X/Y`)
-  - `emitterAngle: 0` (base emission direction in radians; `0` = right, `-Math.PI / 2` = up)
-  - `spreadAngle: PI2` (cone width in radians centered on `emitterAngle`; `0` = laser-straight stream, `PI2` = omnidirectional 360°)
-  - `ParticleSystem.SetRotation(angle)` / `emitter.rotation`: Rotates the emission direction at runtime (for both polar mode and cartesian `DIRECTION_X/Y` vectors) so attaching an exhaust emitter to a vehicle is a single `particles.SetRotation(car.rotation + Math.PI)` call.
+#### 2. ~~Polar Emission Angles (`MIN_ANGLE`, `MAX_ANGLE`) & `SetRotation(angle)`~~ ✅ *DONE*
+- **Status**: `[x] Completed`
+- **Config Keys & API**: `directionMode: "cartesian" | "polar"`, `MIN_ANGLE: 0`, `MAX_ANGLE: PI2`, `particleSystem.SetRotation(angle)` / `particleSystem.rotation`.
 
 #### 3. Explicit Particle Lifetime / Hold Time (`HOLD_TIME`, `MAX_OPACITY`)
 - **Status**: `[ ] Pending`

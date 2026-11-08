@@ -29,11 +29,18 @@ const defaultParticleConfig = {
     MIN_INITIAL_VELOCITY: 10,
     MAX_INITIAL_VELOCITY: 60,
 
-    // Normalised direction range [-1, 1]
+    // Direction mode: "cartesian" (uses MIN/MAX_DIRECTION_X/Y) or "polar" (uses MIN_ANGLE / MAX_ANGLE)
+    directionMode: "cartesian",
+
+    // Normalised direction range [-1, 1] (used when directionMode === "cartesian")
     MIN_DIRECTION_X: -1,
     MAX_DIRECTION_X:  1,
     MIN_DIRECTION_Y: -1,
     MAX_DIRECTION_Y:  1,
+
+    // Polar emission angle range in radians (used when directionMode === "polar"; 0 = right, -PI/2 = up)
+    MIN_ANGLE: 0,
+    MAX_ANGLE: PI2,
 
     // Constant acceleration / gravity (pixels/sec²)
     GRAVITY_X: 0,
@@ -196,9 +203,11 @@ class ParticleEmitter {
     /**
      * @param {Vector2} initialPosition  world-space position for point emitters
      * @param {Object}  config           particle system config (uses defaultParticleConfig shape)
+     * @param {number}  [initialRotation=0] initial emitter rotation angle in radians
      */
-    constructor(initialPosition, config) {
+    constructor(initialPosition, config, initialRotation = 0) {
         this.position = initialPosition ? Vector2.Copy(initialPosition) : Vector2.Zero();
+        this.rotation = initialRotation;
         this.config   = config;
 
         if (this.config.emitterType === emitterType.area) {
@@ -227,14 +236,32 @@ class ParticleEmitter {
 
     /** Returns a velocity Vector2 for the next particle. */
     GetInitialVelocity() {
+        const speed = RandomBetweenFloat(this.config.MIN_INITIAL_VELOCITY, this.config.MAX_INITIAL_VELOCITY);
+
+        if (this.config.directionMode === "polar") {
+            const angle = RandomBetweenFloat(this.config.MIN_ANGLE, this.config.MAX_ANGLE) + this.rotation;
+            return new Vector2(
+                Math.cos(angle) * speed,
+                Math.sin(angle) * speed
+            );
+        }
+
         const direction = new Vector2(
             RandomBetweenFloat(this.config.MIN_DIRECTION_X, this.config.MAX_DIRECTION_X),
             RandomBetweenFloat(this.config.MIN_DIRECTION_Y, this.config.MAX_DIRECTION_Y)
         );
         direction.Normalize();
-        direction.MultiplyScalar(
-            RandomBetweenFloat(this.config.MIN_INITIAL_VELOCITY, this.config.MAX_INITIAL_VELOCITY)
-        );
+
+        if (this.rotation !== 0) {
+            const cos = Math.cos(this.rotation);
+            const sin = Math.sin(this.rotation);
+            const rx = direction.x * cos - direction.y * sin;
+            const ry = direction.x * sin + direction.y * cos;
+            direction.x = rx;
+            direction.y = ry;
+        }
+
+        direction.MultiplyScalar(speed);
         return direction;
     }
 }
@@ -255,6 +282,9 @@ class ParticleSystem {
 
         // Merge defaults with provided config overrides
         this.config = Object.assign({}, defaultParticleConfig, config);
+        if (config && config.directionMode === undefined && (config.MIN_ANGLE !== undefined || config.MAX_ANGLE !== undefined)) {
+            this.config.directionMode = "polar";
+        }
 
         // Create emitter
         this.emitter = new ParticleEmitter(
@@ -279,6 +309,20 @@ class ParticleSystem {
     SetPosition(x, y) {
         this.emitter.position.x = x;
         this.emitter.position.y = y;
+    }
+
+    /** Rotate the emitter's emission direction by `angle` (in radians). */
+    SetRotation(angle) {
+        this.emitter.rotation = angle;
+    }
+
+    /** Current emitter rotation angle in radians. */
+    get rotation() {
+        return this.emitter.rotation;
+    }
+
+    set rotation(angle) {
+        this.emitter.rotation = angle;
     }
 
     /**
