@@ -1,20 +1,50 @@
 # Particle System
 
-The particle system (`engine/particlesystem.js`) provides a flexible, image-based particle emitter for visual effects such as smoke, fire, rain, snow, sparks, and more. It is built on an internal object pool so that no garbage is created at runtime once the system is initialised.
+The particle system (`src/engine/particlesystem.js`) provides a flexible, pooled, image-based 2D particle emitter for visual effects such as smoke, fire, rain, snow, sparks, muzzle flashes, and explosions. It uses a pre-allocated internal object pool so that `Particle` instances are reused rather than created and destroyed at runtime.
 
 > Based on the standalone [HTML5_ParticleSystem](https://github.com/maxi-jp/HTML5_ParticleSystem) project.
 
-> 💡 **Visual Tool:** Use the standalone [Particle System Editor](../particle-system-editor.html ':ignore :target=_blank') to upload a particle image, tweak every config property in real time on a live canvas, and export a ready-to-use JSON configuration.
+> 💡 **Visual Tool:** Use the standalone [Particle System Editor](../particle-system-editor.html ':ignore :target=_blank') to load or drop a particle sprite, tweak every configuration parameter in real time on an interactive canvas, test moving emitter paths, and export ready-to-use JSON or JavaScript snippets.
+
+---
 
 ## Dependencies
 
-`particlesystem.js` requires `utils_math.js` (`Vector2`, `RandomBetweenFloat`, `PI2`). Include it **after** the rest of the engine scripts:
+`particlesystem.js` requires `utils_math.js` (`Vector2`, `RandomBetweenFloat`, `PI2`). Include it **after** `utils_math.js` and `renderer.js`:
 
 ```html
 <script src="engine/utils_math.js"></script>
+<script src="engine/utils_classes.js"></script>
+<script src="engine/renderer.js"></script>
 <!-- ... other engine scripts ... -->
 <script src="engine/particlesystem.js"></script>
 ```
+
+---
+
+## Architecture & Lifecycle
+
+The module is organized into three classes inside `src/engine/particlesystem.js`:
+
+1. **`Particle`** — A single pooled particle instance storing transform (`position`, `scale`, `rotation`), velocity (`direction`), and lifecycle state (`active`, `appearing`, `opacity`, fade speeds, `scaleVelocity`, `rotationVelocity`). Managed internally by `ParticleSystem`.
+2. **`ParticleEmitter`** — Calculates spawn positions (`GetSpawnPoint()`) for `point` or `area` emitters and generates randomized initial velocity vectors (`GetInitialVelocity()`).
+3. **`ParticleSystem`** — Public controller that merges user configuration with `defaultParticleConfig`, pre-allocates the `Particle` pool, runs the spawn timer and sub-frame catch-up loop in `Update(deltaTime)`, supports immediate one-shot `Burst()` calls, and renders active particles in `Draw(renderer)`.
+
+### Particle Lifecycle Details
+
+- **Activation (`Particle.Activate`)**:
+  - When spawned, a particle starts at `opacity = 0` with `active = true` and `appearing = true`.
+  - Its initial position, fade-in speed (`opacityIncrementVelocity`), fade-out speed (`opacityDecrementVelocity`), initial scale, scale velocity, initial rotation, rotation velocity, and velocity vector (`direction`) are randomized within the `[MIN_*, MAX_*]` ranges defined in the config.
+- **Opacity State Machine (`appearing` → fade-out)**:
+  - **Phase 1 — Fade In (`this.appearing === true`)**: Opacity increases by `opacityIncrementVelocity * deltaTime`. Once `opacity >= 1.0`, it clamps to `1.0` and transitions to `this.appearing = false`.
+  - **Phase 2 — Fade Out (`this.appearing === false`)**: Opacity decreases by `opacityDecrementVelocity * deltaTime`. Once `opacity <= 0.0`, the particle calls `Deactivate()` (`this.active = false`) and returns to the pool immediately.
+- **Scale & Transform Update**:
+  - Each frame, `scale += scaleVelocity * deltaTime`. If `scale <= 0.0` (when using a negative `scaleVelocity` to shrink particles), the particle immediately deactivates to prevent inverted sprite rendering.
+  - Rotation advances by `rotationVelocity * deltaTime` (radians/sec) around `Particle.pivot` (`{ x: 0, y: 0 }`, the sprite center).
+  - Position advances by `direction.x * deltaTime` and `direction.y * deltaTime` (pixels/sec).
+- **Sub-Frame Spawn Catch-Up**:
+  - In `ParticleSystem.Update(deltaTime)`, `nextTimeToSpawnParticle` counts down by `deltaTime`.
+  - A `while (this.nextTimeToSpawnParticle <= 0.0)` loop calls `this.Burst(this.config.emitCountPerSpawn)` and adds the next randomized interval (clamped to a minimum of `0.0001s`). This guarantees accurate high-frequency emission rates even when `MIN_TIME_TO_SPAWN_PARTICLE` (e.g. `0.001s` for dense rain) is smaller than a single frame's `deltaTime` (`~0.0167s` at 60 FPS).
 
 ---
 
@@ -22,50 +52,50 @@ The particle system (`engine/particlesystem.js`) provides a flexible, image-base
 
 ### `emitterType`
 
-A global constant defining how spawn positions are chosen:
+A global enum defining how particle spawn positions are chosen:
 
 ```javascript
 const emitterType = {
-    point: 0,  // all particles spawn at a single world position
-    area:  1   // particles spawn at random positions inside a rectangle
+    point: 0,  // all particles spawn at a single world position (emitter.position)
+    area:  1   // particles spawn at random positions inside a rectangle (AREA_X1..AREA_X2, AREA_Y1..AREA_Y2)
 };
 ```
 
 ### `defaultParticleConfig`
 
-Every `ParticleSystem` is configured by a plain object merged with `defaultParticleConfig`. Supply only the properties you want to override.
+Every `ParticleSystem` merges your config object with `defaultParticleConfig` via `Object.assign({}, defaultParticleConfig, config)`. You only need to pass the properties you wish to override:
 
 ```javascript
 const defaultParticleConfig = {
-    maxParticleCount: 500,          // size of the internal particle pool
+    maxParticleCount: 500,                    // size of the pre-allocated particle pool
 
-    globalCompositeOperation: "source-over",  // Canvas blending mode
+    globalCompositeOperation: "source-over",  // Canvas 2D blending mode ("source-over", "lighter", "overlay", etc.)
 
-    emitterType: emitterType.area,
+    emitterType: emitterType.area,            // emitterType.point (0) or emitterType.area (1)
 
-    // Area emitter bounds (pixels)
+    // Area emitter bounds in pixels (used when emitterType === emitterType.area)
     AREA_X1: 0,   AREA_Y1: 0,
     AREA_X2: 800, AREA_Y2: 640,
 
-    // Particle speed (pixels / sec)
+    // Initial particle speed range (pixels / sec)
     MIN_INITIAL_VELOCITY: 10,
     MAX_INITIAL_VELOCITY: 60,
 
-    // Normalised direction range [-1, 1]
+    // Un-normalised direction components [-1, 1] (normalised before multiplying by speed)
     MIN_DIRECTION_X: -1, MAX_DIRECTION_X: 1,
     MIN_DIRECTION_Y: -1, MAX_DIRECTION_Y: 1,
 
-    // Opacity fade speed (units / sec)
+    // Opacity fade-in & fade-out speeds (opacity units / sec)
     MIN_OPACITY_INCREMENT_VELOCITY: 1.0,
     MAX_OPACITY_INCREMENT_VELOCITY: 4.0,
     MIN_OPACITY_DECREMENT_VELOCITY: 0.5,
     MAX_OPACITY_DECREMENT_VELOCITY: 2.0,
 
-    // Initial scale range
+    // Initial scale multiplier range
     MIN_INITIAL_SCALE: 0.1,
     MAX_INITIAL_SCALE: 0.5,
 
-    // Scale growth speed (units / sec)
+    // Scale growth / shrink speed (scale units / sec; negative values shrink particles)
     MIN_SCALE_VELOCITY: 0.5,
     MAX_SCALE_VELOCITY: 0.75,
 
@@ -73,16 +103,16 @@ const defaultParticleConfig = {
     MIN_INITIAL_ROTATION: 0,
     MAX_INITIAL_ROTATION: PI2,
 
-    // Rotation speed (radians / sec)
+    // Angular velocity range (radians / sec)
     MIN_ROTATION_VELOCITY: 0.05,
     MAX_ROTATION_VELOCITY: 0.15,
 
-    // Particles spawned per timer tick
-    emitCountPerSpawn: 1,
-
-    // Spawn interval (seconds)
+    // Time between spawn ticks (seconds)
     MIN_TIME_TO_SPAWN_PARTICLE: 0.005,
-    MAX_TIME_TO_SPAWN_PARTICLE: 0.05
+    MAX_TIME_TO_SPAWN_PARTICLE: 0.05,
+
+    // Number of particles spawned on each timer tick
+    emitCountPerSpawn: 1
 };
 ```
 
@@ -92,35 +122,40 @@ const defaultParticleConfig = {
 
 ### `ParticleSystem`
 
-The main class you interact with. Owns the particle pool, the emitter, and the update/draw cycle.
+The main class you interact with. Owns the particle pool, the `ParticleEmitter`, and the update/draw loop.
 
 #### `constructor(img, config, position)`
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `img` | `HTMLImageElement` | Sprite used for every particle |
-| `config` | `Object` | Overrides for `defaultParticleConfig`. Missing keys fall back to defaults. |
-| `position` | `Vector2` *(optional)* | Initial emitter position for point emitters |
+| `img` | `HTMLImageElement` | Sprite texture drawn for each particle. |
+| `config` | `Object` *(optional)* | Overrides for `defaultParticleConfig`. Missing keys fall back to defaults. |
+| `position` | `Vector2` *(optional)* | Initial world-space position for `emitterType.point` emitters (defaults to `Vector2.Zero()`). |
 
 #### Methods
 
-| Method | Description |
-|--------|-------------|
-| `SetPosition(x, y)` | Move the emitter to a new world-space position. Ideal for point emitters that follow a game object. |
-| `Burst(count = 1, x, y)` | Immediately spawn `count` particles (optionally at `(x, y)` override coordinates), even if `this.active` is `false`. Ideal for one-shot explosions, impacts, and muzzle flashes. |
-| `Update(deltaTime)` | Spawns new particles and advances all active ones. Call once per frame from `Update`. |
-| `Draw(renderer)` | Renders all active particles. Call once per frame from `Draw`. |
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `SetPosition(x, y)` | `void` | Moves `this.emitter.position` to `(x, y)` in world space. Ideal for point emitters attached to moving objects or the mouse cursor. |
+| `Burst(count = 1, x, y)` | `number` | Immediately activates up to `count` particles from the pool and returns the number actually spawned. Works even when `this.active === false`. Optional `(x, y)` overrides the emitter's spawn point for that burst. Logs a `console.warn` if the pool is exhausted. |
+| `Update(deltaTime)` | `void` | If `this.active` is `true`, advances the spawn timer and emits particles; then updates all currently active particles. Call once per frame in `Update(deltaTime)`. |
+| `Draw(renderer)` | `void` | Applies `config.globalCompositeOperation` (on `Canvas2DRenderer`), draws all active particles via `renderer.DrawImage`, and restores `"source-over"`. Call once per frame in `Draw()`. |
 
 #### Properties
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `active` | `boolean` | When `false`, automatic timer-based spawning is paused while existing active particles finish their lifecycle (`Burst()` still works). |
-| `activeCount` *(getter)* | `number` | Number of particles currently alive. Useful for debugging pool exhaustion. |
+| `active` | `boolean` | Controls continuous timer-based emission (`true` by default). Setting `active = false` stops automatic spawning while allowing already-alive particles to finish fading out (`Burst()` still works). |
+| `activeCount` *(getter)* | `number` | Returns the number of particles currently alive (`active === true`). Useful for HUD telemetry and pool sizing. |
+| `config` | `Object` | Merged configuration object for this instance. |
+| `emitter` | `ParticleEmitter` | The internal emitter responsible for spawn points and initial velocity vectors. |
+| `particles` | `Particle[]` | Pre-allocated array of pooled `Particle` instances (`length === config.maxParticleCount`). |
 
 ---
 
-## Basic Usage
+## Usage Examples
+
+### 1. Continuous Point Emitter Following the Mouse
 
 ```javascript
 class MyGame extends Game {
@@ -139,23 +174,28 @@ class MyGame extends Game {
     Start() {
         super.Start();
 
-        this.smoke = new ParticleSystem(this.graphicAssets.smoke.img, {
-            emitterType: emitterType.point,
-            maxParticleCount: 200,
-            globalCompositeOperation: "overlay",
-            MIN_INITIAL_VELOCITY: 20,
-            MAX_INITIAL_VELOCITY: 80,
-            MIN_DIRECTION_Y: -1,
-            MAX_DIRECTION_Y: -0.2,   // drift mostly upward
-        });
-
-        this.smoke.SetPosition(400, 500);
+        this.smoke = new ParticleSystem(
+            this.graphicAssets.smoke.img,
+            {
+                emitterType: emitterType.point,
+                maxParticleCount: 200,
+                globalCompositeOperation: "overlay",
+                MIN_INITIAL_VELOCITY: 10,
+                MAX_INITIAL_VELOCITY: 60,
+                MIN_INITIAL_SCALE: 0.05,
+                MAX_INITIAL_SCALE: 0.5,
+                MIN_SCALE_VELOCITY: 0.25,
+                MAX_SCALE_VELOCITY: 0.5,
+                MIN_TIME_TO_SPAWN_PARTICLE: 0.01,
+                MAX_TIME_TO_SPAWN_PARTICLE: 0.1
+            },
+            new Vector2(400, 320)
+        );
     }
 
     Update(deltaTime) {
         super.Update(deltaTime);
 
-        // Follow the mouse cursor
         this.smoke.SetPosition(Input.mouse.x, Input.mouse.y);
         this.smoke.Update(deltaTime);
     }
@@ -168,80 +208,265 @@ class MyGame extends Game {
 }
 ```
 
-## Rain Preset Example
+### 2. One-Shot Explosion / Impact Burst
+
+Set `active = false` on a `ParticleSystem` to disable continuous spawning, and trigger `Burst(count, x, y)` on demand (e.g. when a projectile hits a target):
 
 ```javascript
-const rainConfig = {
-    maxParticleCount: 500,
-    emitterType: emitterType.area,
+// In Start(): create a shared burst pool with continuous spawning disabled
+this.hitSparks = new ParticleSystem(this.graphicAssets.smoke2.img, {
+    emitterType: emitterType.point,
+    maxParticleCount: 300,
+    globalCompositeOperation: "lighter",
+    MIN_INITIAL_VELOCITY: 80,
+    MAX_INITIAL_VELOCITY: 240,
+    MIN_OPACITY_INCREMENT_VELOCITY: 10.0,
+    MAX_OPACITY_INCREMENT_VELOCITY: 20.0,
+    MIN_OPACITY_DECREMENT_VELOCITY: 2.0,
+    MAX_OPACITY_DECREMENT_VELOCITY: 4.0,
+    MIN_INITIAL_SCALE: 0.05,
+    MAX_INITIAL_SCALE: 0.15,
+    MIN_SCALE_VELOCITY: -0.05,
+    MAX_SCALE_VELOCITY: 0.05
+});
+this.hitSparks.active = false; // only emit when Burst() is called
 
-    AREA_X1: 0,   AREA_Y1: -50,
-    AREA_X2: 800, AREA_Y2: 0,       // spawn just above the canvas top
-
-    MIN_INITIAL_VELOCITY: 300,
-    MAX_INITIAL_VELOCITY: 500,
-
-    MIN_DIRECTION_X: -0.1, MAX_DIRECTION_X: 0.1,
-    MIN_DIRECTION_Y:  0.9, MAX_DIRECTION_Y: 1.0,  // fall straight down
-
-    MIN_OPACITY_INCREMENT_VELOCITY: 4.0,
-    MAX_OPACITY_INCREMENT_VELOCITY: 8.0,
-    MIN_OPACITY_DECREMENT_VELOCITY: 0.3,
-    MAX_OPACITY_DECREMENT_VELOCITY: 0.5,
-
-    MIN_INITIAL_SCALE: 0.05, MAX_INITIAL_SCALE: 0.15,
-    MIN_SCALE_VELOCITY: 0.0, MAX_SCALE_VELOCITY: 0.0,
-
-    MIN_INITIAL_ROTATION: 0, MAX_INITIAL_ROTATION: 0,
-    MIN_ROTATION_VELOCITY: 0.0, MAX_ROTATION_VELOCITY: 0.0,
-
-    MIN_TIME_TO_SPAWN_PARTICLE: 0.001,
-    MAX_TIME_TO_SPAWN_PARTICLE: 0.01
-};
-
-this.rain = new ParticleSystem(rainImg, rainConfig);
+// When an explosion or collision occurs at (hitX, hitY):
+this.hitSparks.Burst(35, hitX, hitY);
 ```
 
-## Multiple Systems
+### 3. Interactive Demo (`src/examples/particles/particles_example.js`)
 
-Each `ParticleSystem` carries its own pool and configuration. Call `Update` and `Draw` for each one every frame.
+The included demo project ([`particles_example.js`](../src/examples/particles/particles_example.js ':ignore')) demonstrates switching between four preset configurations at runtime using keyboard keys:
 
-```javascript
-Update(deltaTime) {
-    super.Update(deltaTime);
-    this.smoke.Update(deltaTime);
-    this.rain.Update(deltaTime);
-    this.snow.Update(deltaTime);
-}
+- **`A` — Area Smoke (`smokeAreaConfig`)**: Uses `defaultParticleConfig` (`emitterType.area` across `0..800 × 0..640`) to fill the screen with drifting smoke clouds.
+- **`S` — Mouse-Following Smoke (`smokePointConfig`)**: Uses `emitterType.point` with `globalCompositeOperation: "overlay"`, updating `SetPosition(Input.mouse.x, Input.mouse.y)` every frame.
+- **`D` — Rain (`rainConfig`)**: Uses `emitterType.area` spawning along a line above the top of the screen (`AREA_X1: -200, AREA_Y1: -100, AREA_X2: 700, AREA_Y2: -100`), high downward speed (`400–800 px/s`), slight wind slant (`MIN_DIRECTION_X: 0.15, MAX_DIRECTION_X: 0.25, MIN_DIRECTION_Y: 1, MAX_DIRECTION_Y: 1`), zero scale growth, and fast spawn interval (`0.001–0.002s` with `maxParticleCount: 1000`).
+- **`F` — Snow (`snowConfig`)**: Spawns above the canvas (`AREA_Y1: -100, AREA_Y2: -100`), gentle downward speed (`30–60 px/s`), horizontal flutter (`MIN_DIRECTION_X: -0.25, MAX_DIRECTION_X: 0.25`), slow fade-in/out, and continuous rotation (`0.1–0.5 rad/s`).
 
-Draw() {
-    this.renderer.DrawFillBasicRectangle(0, 0, this.screenWidth, this.screenHeight, Color.black);
-    super.Draw();
-    this.rain.Draw(this.renderer);
-    this.snow.Draw(this.renderer);
-    this.smoke.Draw(this.renderer); // draw smoke on top
-}
-```
+---
 
 ## Particle System Editor
 
-Designing particle effects by hand-editing numbers in code can be tedious. The engine includes a standalone, browser-based **[Particle System Editor](../particle-system-editor.html ':ignore :target=_blank')** (`particle-system-editor.html`) that lets you build and preview effects visually:
+The standalone **[Particle System Editor](../particle-system-editor.html ':ignore :target=_blank')** (`particle-system-editor.html`, implemented in `src/examples/particle_system_editor/particle_system_editor.js`) runs the actual engine `Canvas2DRenderer` and `ParticleSystem` so visual previews match in-game rendering 1:1.
 
-- **Custom Particle Textures** — Upload any PNG/JPG/WebP/SVG sprite via file picker or drag-and-drop onto the canvas, or test immediately with 5 built-in procedural textures (*Soft Smoke Puff*, *Glowing Spark*, *Hard Circle*, *Star / Flame*, *Crisp Square*).
-- **Real-Time Parameter Tuning** — Paired sliders and numeric inputs for every `defaultParticleConfig` property: pool size (`maxParticleCount`), blend mode (`globalCompositeOperation`), emitter type (`point` vs `area`), spawn interval, initial speed, X/Y direction cones, fade-in/out velocities, initial scale, scale growth, initial rotation, and rotation velocity.
-- **Interactive Emitter Testing** — Test how your particle trail behaves in motion using three emitter modes:
-  - **Static / Drag** — Drag the emitter handle (or the `AREA_X1,Y1` / `AREA_X2,Y2` bounding box corners in area mode) directly on the canvas.
-  - **Follow Mouse** — Emitter tracks the cursor to simulate attached game objects (e.g. a missile smoke trail).
-  - **Orbit Path** — Emitter moves automatically along a circular path at configurable speed.
-- **Built-in Presets** — Jump-start effects from 6 presets (*Missile Smoke (Death Rally)*, *Fire / Torch*, *Explosion Sparks*, *Rain Storm*, *Gentle Snow*, and *Magic Portal*), then customize further.
-- **JSON Import & Export** — Download the config as a `.json` file, copy the raw JSON, or copy a ready-to-paste JavaScript snippet (`const particleConfig = ...; new ParticleSystem(img, particleConfig);`), and re-import existing JSON files at any time.
+### Editor Capabilities
+
+- **Particle Textures (Built-in & Custom)**:
+  - Switch between 4 built-in sample assets (`smoke.png`, `smoke2.png`, `snow.png`, `waterdrop.png`) and a procedural radial-gradient fallback (`Built-in: Soft Circle`).
+  - Load any custom image via the **Load Image** button, by clicking the sprite thumbnail preview, or by dragging and dropping an image file anywhere onto the window.
+- **6 Built-in Presets**:
+  - *Missile Smoke (Death Rally)* (`missileSmokeConfig`)
+  - *Default (Area Smoke)* (`smokeAreaConfig`)
+  - *Point Smoke* (`smokePointConfig`)
+  - *Fire / Exhaust* (`fireExhaustConfig` — additive `"lighter"` blending)
+  - *Rain* (`rainConfig`)
+  - *Snow* (`snowConfig`)
+- **Playback & Burst Toolbar**:
+  - **Emit: ON / OFF** — Toggles `particleSystem.active` to test how trails dissipate when emission stops.
+  - **💥 Burst** — Fires `particleSystem.Burst(count)` on demand (`max(10, emitCountPerSpawn)`).
+  - **⏸ Pause / ▶ Resume** — Freezes the simulation loop to inspect individual particles.
+  - **↻ Reset** — Rebuilds the particle pool and clears all active particles.
+- **Emitter Motion Preview Modes (Point Emitters)**:
+  - **Click / Drag on Canvas (`manual`)** — Click or drag anywhere on the canvas to position the emitter.
+  - **Follow Mouse (`mouse`)** — Emitter tracks the cursor inside the canvas.
+  - **Circle Path (`circle`)** — Moves the emitter along an orbit with a simulated missile body gizmo ahead of the exhaust point.
+  - **Figure-8 Path (`figure8`)** — Moves the emitter along a Lissajous figure-8 curve to test turn banking.
+  - **Linear Projectile (`projectile`)** — Flies across the canvas at a slight angle and wraps around.
+  - Includes a **Speed** slider (`40–700 px/s`) for the animated path modes.
+- **Interactive Canvas Gizmos & Backgrounds**:
+  - **Point Gizmo**: Crosshair + orange average direction vector indicator + optional projectile nose cone.
+  - **Area Gizmo**: Dashed bounding rectangle with 4 draggable corner handles (`nw`, `ne`, `sw`, `se`), interior drag-to-move, outside drag-to-draw a new box, plus quick-fit buttons (**Full Canvas**, **Center Box**).
+  - **Background Surfaces**: Switch between *Asphalt (`#414146`)*, *Dark Night (`#1a1a2e`)*, *Grass (`#325023`)*, *Dirt (`#785532`)*, *Pure Black (`#000000`)*, *Checkerboard*, or any custom hex color picker.
+- **Real-Time Parameter Sliders & Smart Clamping**:
+  - Synchronized range sliders and numeric inputs for every `defaultParticleConfig` property (including `emitCountPerSpawn` and all 10 `MIN_*/MAX_*` pairs, which automatically clamp if `MIN > MAX`).
+  - Direction quick-buttons (**Omni**, **↑**, **↓**, **←**, **→**) and rotation quick-buttons (**0**, **0 → 2π**).
+- **Live Telemetry & Export**:
+  - Bottom status bar displays active particle count (`Alive / Max` with a `⚠ POOL FULL` warning), estimated **Spawn Rate (`~N/s`)**, estimated **Avg Lifetime (`~Ns`)**, emitter coordinates, mouse coordinates, and live **FPS**.
+  - **Load JSON** (or drag-and-drop a `.json` file), **Copy JS** (formats a clean `const <name> = { ... };` snippet using `emitterType.*` and `PI2`), **Copy JSON**, and **Export JSON ↓**.
+
+---
+
+## Planned Improvements & Roadmap (TODOs)
+
+This section tracks all completed and planned improvements for the particle system across the engine (`src/engine/particlesystem.js`), renderer (`src/engine/renderer.js`), editor (`particle-system-editor.html`), and examples (`src/examples/particles/particles_example.js`).
+
+### Completed Milestones
+
+- [x] **Fix negative scale sprite inversion bug & `Particle.pivot` reference** ✅ *DONE*
+  - *Details*: `Particle.Update` now checks `if (this.scale <= 0.0) { this.Deactivate(); return; }` so shrinking particles (`MIN_SCALE_VELOCITY < 0`) deactivate cleanly instead of flipping upside-down with negative scale. `Particle.Draw` passes the static `Particle.pivot` (`{ x: 0, y: 0 }`) to `renderer.DrawImage`.
+- [x] **One-shot bursts (`Burst(count, x, y)`), multi-particle spawn ticks (`emitCountPerSpawn`), and sub-frame catch-up loop** ✅ *DONE*
+  - *Details*: Added `ParticleSystem.Burst(count = 1, x, y)` for immediate emission even when `this.active === false`, added `emitCountPerSpawn` to `defaultParticleConfig`, and replaced the single `if (this.nextTimeToSpawnParticle <= 0.0)` check in `Update(deltaTime)` with a `while` catch-up loop so sub-frame spawn intervals (`< 16.6ms`) emit the exact expected number of particles per frame.
+
+---
+
+### Phase 1 — Core Physics, Direction & Lifecycle (Repository TODOs)
+
+#### 1. Gravity / Constant Acceleration & Velocity Damping (Air Drag)
+- **Status**: `[ ] Pending`
+- **Motivation**: Currently, particles move in a straight line at constant velocity (`this.direction`) for their entire life. You cannot create ballistic arcs (sparks, fountains, shell casings, debris affected by gravity or wind) or punchy explosions where particles burst outward at high speed and rapidly decelerate due to air resistance.
+- **Proposed Config Keys**:
+  - `GRAVITY_X: 0` (pixels/sec² horizontal acceleration, e.g. wind)
+  - `GRAVITY_Y: 0` (pixels/sec² vertical acceleration, e.g. `+400` for downward gravity or `-80` for rising hot air/embers)
+  - `VELOCITY_DAMPING: 0` (air drag coefficient `>= 0`, where `0` = no drag, and positive values exponentially damp velocity each frame via `const damp = Math.max(0, 1 - this.damping * deltaTime)` or `Math.exp(-this.damping * deltaTime)`)
+- **Implementation Notes**:
+  - In `Particle.Update(deltaTime)`:
+    1. Apply acceleration: `this.direction.x += gravityX * deltaTime; this.direction.y += gravityY * deltaTime;`
+    2. Apply damping if `damping > 0`: multiply `this.direction.x` and `this.direction.y` by `Math.exp(-damping * deltaTime)` (frame-rate independent).
+  - Expose `GRAVITY_X`, `GRAVITY_Y`, and `VELOCITY_DAMPING` in `particle-system-editor.html` under the **Velocity & Direction** panel.
+
+#### 2. Polar Emission Angles (`MIN_ANGLE`, `MAX_ANGLE`) & `SetRotation(angle)`
+- **Status**: `[ ] Pending`
+- **Motivation**:
+  1. Currently, `GetInitialVelocity()` picks random `X` in `[MIN_DIRECTION_X, MAX_DIRECTION_X]` and `Y` in `[MIN_DIRECTION_Y, MAX_DIRECTION_Y]` and normalizes the vector. Sampling a rectangle and normalizing biases directions toward the 45° corners.
+  2. When an emitter is attached to a rotating game object (a car drifting in *Death Rally*, a rotating turret, or a homing missile), rotating the emission cone requires manually recomputing `MIN/MAX_DIRECTION_X/Y` with trigonometry every frame.
+- **Proposed Config Keys & API**:
+  - `usePolarDirection: false` (or automatic when `MIN_ANGLE` / `MAX_ANGLE` or `spreadAngle` are used, maintaining 100% backward compatibility with `MIN/MAX_DIRECTION_X/Y`)
+  - `emitterAngle: 0` (base emission direction in radians; `0` = right, `-Math.PI / 2` = up)
+  - `spreadAngle: PI2` (cone width in radians centered on `emitterAngle`; `0` = laser-straight stream, `PI2` = omnidirectional 360°)
+  - `ParticleSystem.SetRotation(angle)` / `emitter.rotation`: Rotates the emission direction at runtime (for both polar mode and cartesian `DIRECTION_X/Y` vectors) so attaching an exhaust emitter to a vehicle is a single `particles.SetRotation(car.rotation + Math.PI)` call.
+
+#### 3. Explicit Particle Lifetime / Hold Time (`HOLD_TIME`, `MAX_OPACITY`)
+- **Status**: `[ ] Pending`
+- **Motivation**: Currently, a particle's total lifetime is strictly determined by `1.0 / opacityIncrementVelocity + 1.0 / opacityDecrementVelocity`, and every particle must reach `opacity = 1.0` before fading out. This creates two limitations:
+  1. You cannot create subtle, translucent effects (e.g. faint mist or ghost trails that never exceed `0.3` peak opacity).
+  2. You cannot create particles that pop in almost immediately, stay fully visible for a set duration (e.g. `0.8s`), and then rapidly fade out at the end of their life.
+- **Proposed Config Keys**:
+  - `MIN_MAX_OPACITY: 1.0`, `MAX_MAX_OPACITY: 1.0` (peak opacity target in `(0, 1]` where the fade-in phase ends)
+  - `MIN_HOLD_TIME: 0.0`, `MAX_HOLD_TIME: 0.0` (seconds the particle remains at peak opacity before transitioning to the fade-out phase)
+- **Implementation Notes**:
+  - In `Particle`: store `this.maxOpacity` and `this.holdTime`.
+  - When `appearing` reaches `this.opacity >= this.maxOpacity`, clamp `this.opacity = this.maxOpacity` and set `this.appearing = false`.
+  - Before decrementing `opacity`, count down `if (this.holdTime > 0) { this.holdTime -= deltaTime; }` and only fade out once `this.holdTime <= 0`.
+  - Update the editor's **Avg Lifetime** telemetry formula to include `(MIN_HOLD_TIME + MAX_HOLD_TIME) * 0.5`.
+
+#### 4. Additional Emitter Shapes (`circle`, `ring`, `line`)
+- **Status**: `[ ] Pending`
+- **Motivation**: `point` and axis-aligned `area` rectangles cover basic use cases, but many game effects need circular or linear emission zones (e.g. shockwave rings, magic portals, campfires, laser beams, ground dust lines, or radial explosions).
+- **Proposed Enum & Config Keys**:
+  - Expand `emitterType`:
+    ```javascript
+    const emitterType = {
+        point:  0,
+        area:   1,
+        circle: 2, // uniform random distribution inside a circle of EMISSION_RADIUS
+        ring:   3, // spawn on the circumference (or between INNER_RADIUS and EMISSION_RADIUS)
+        line:   4  // spawn along the segment (AREA_X1, AREA_Y1) -> (AREA_X2, AREA_Y2)
+    };
+    ```
+  - `EMISSION_RADIUS: 50` (outer radius for `circle` and `ring`)
+  - `EMISSION_INNER_RADIUS: 0` (inner radius for `ring`; when equal to `EMISSION_RADIUS`, spawns on the exact perimeter)
+  - `radialVelocity: false` (when `true` on `circle`/`ring` emitters, initial velocity points outward—or inward if speed is negative—along the vector from the emitter center to the spawn point).
+- **Implementation Notes**:
+  - For uniform disk sampling in `emitterType.circle`, use `const r = radius * Math.sqrt(Math.random())` so particles don't bunch up at the center.
+  - Note: `circle` and `ring` should be centered on `this.emitter.position` so they move naturally when `SetPosition(x, y)` is called!
+
+#### 5. Color Tinting / Color-over-Lifetime & Procedural Shapes
+- **Status**: `[ ] Pending`
+- **Motivation**: Requiring an external PNG texture for every effect makes simple geometric particles (sparks, rain lines, pixel debris, retro arcade explosions, thruster dots) heavier than necessary, and image-only particles cannot smoothly shift color over their lifetime (e.g. white-hot → yellow → orange → dark red → grey smoke).
+- **Proposed Config Keys**:
+  - `renderShape: "sprite"` (`"sprite"` | `"circle"` | `"rect"` | `"line"`):
+    - `"sprite"`: Draws `this.img` (default, current behavior).
+    - `"circle"`: Draws a filled circle via `renderer.DrawFillCircle` with radius `PARTICLE_SIZE * scale` (batches automatically in WebGL!).
+    - `"rect"`: Draws a filled rectangle via `renderer.DrawFillRectangle` with dimensions `PARTICLE_SIZE * scale` (batches automatically in WebGL!).
+    - `"line"`: Draws a velocity-aligned streak/spark line of length `PARTICLE_SIZE * scale` along the particle's movement vector.
+  - `PARTICLE_SIZE: 8` (base pixel size for procedural shapes when `scale === 1.0`)
+  - `tintColor: null` / `startColor: null`, `endColor: null` (optional hex strings or `Color` objects; interpolates particle `[r, g, b]` over its normalized lifetime progress `0 -> 1`).
+
+---
+
+### Phase 2 — Engine & Gameplay Integration Enhancements
+
+#### 6. `GameObject` & `Pool` Integration (`ParticleSystemGO` / One-Shot Auto-Cleanup)
+- **Status**: `[ ] Pending`
+- **Motivation**: `ParticleSystem` is currently a standalone class rather than a `GameObject` subclass (`src/engine/gameobjects.js`). Users must manually store references, call `Update(deltaTime)` and `Draw(renderer)` in their `Game` class, and cannot drop particle emitters into `this.gameObjects` or manage temporary explosion emitters via the engine's `Pool` class.
+- **Proposed Solution**:
+  - Either make `ParticleSystem extends GameObject` (keeping the existing constructor signature `new ParticleSystem(img, config, position)` working seamlessly) or provide a `ParticleSystemGO extends GameObject` class.
+  - Add lifecycle helpers for one-shot effects:
+    - `autoDeactivateWhenEmpty: false` — When a one-shot burst finishes and `activeCount === 0`, automatically sets the GameObject inactive (returning it to a `Pool` or removing it if `destroyWhenEmpty: true`).
+    - Sync `this.position` and `this.rotation` with the emitter automatically.
+
+#### 7. Sub-Frame Trail Interpolation for Fast-Moving Emitters
+- **Status**: `[ ] Pending`
+- **Motivation**: When a fast-moving emitter (e.g. a missile moving at `600 px/s` or a mouse cursor flicked quickly across the screen) calls `SetPosition(x, y)` once per frame and spawns multiple particles during `Update(deltaTime)`, all particles spawned during that frame originate at the exact new `(x, y)` position. This causes visible "beading" or clumping at 60Hz intervals instead of a continuous ribbon.
+- **Proposed Solution**:
+  - Track `_prevPosition` inside `ParticleEmitter` / `ParticleSystem`.
+  - When `SetPosition(x, y)` is called and multiple particles are spawned across sub-frame steps in `Update(deltaTime)`, linearly interpolate (`Vector2.Lerp`) the spawn origin between `_prevPosition` and `position` based on each sub-step's fractional timestamp within `deltaTime`, then update `_prevPosition` at the end of `Update()`.
+
+#### 8. Velocity-Aligned Particle Rotation (`alignToVelocity`)
+- **Status**: `[ ] Pending`
+- **Motivation**: Directional particles like rain streaks, sparks, arrows, or shrapnel should point in the direction they are currently moving—especially once gravity (`GRAVITY_Y`) curves their trajectory along a parabolic arc.
+- **Proposed Config Key**:
+  - `alignToVelocity: false` (when `true`, sets `particle.rotation = Math.atan2(particle.direction.y, particle.direction.x) + config.rotationOffset` each frame instead of integrating `rotationVelocity`).
+
+#### 9. Sprite Sheet / `SpriteAtlas` Frame Support
+- **Status**: `[ ] Pending`
+- **Motivation**: Using a single static image per `ParticleSystem` means every debris chunk or leaf looks identical, and flipbook animations (like animated fire/explosion sheets) aren't supported.
+- **Proposed Config Keys**:
+  - Support passing an array of crop rects (`frames: [{ x, y, w, h }, ...]`) or a `SpriteAtlas` to `ParticleSystem`.
+  - Two frame modes:
+    - `"random"`: Each particle picks a random sprite frame from the sheet upon `Activate()` (great for varied rock debris, foliage, shell casings, orgore/sparks).
+    - `"animate"`: Each particle steps through the frames over its lifetime from `0` to `frames.length - 1`.
+
+#### 10. Local vs. World Simulation Space (`simulationSpace`)
+- **Status**: `[ ] Pending`
+- **Motivation**: Currently all particles are simulated in `"world"` space—once spawned, they stay behind in the world when the emitter moves (ideal for smoke trails). However, effects like a character aura, shield glow, or torch flame attached to a moving platform often need `"local"` space, where particles move together with the emitter's position/rotation.
+- **Proposed Config Key**:
+  - `simulationSpace: "world"` (`"world"` | `"local"`).
+
+#### 11. Prewarm Simulation (`Prewarm(seconds, step)` / `prewarm: true`)
+- **Status**: `[ ] Pending`
+- **Motivation**: For ambient environmental effects like `rainConfig`, `snowConfig`, or `smokeAreaConfig`, starting the scene (or switching modes in `particles_example.js`) begins with a blank screen while the first wave of particles slowly falls from the top.
+- **Proposed API & Config Key**:
+  - `prewarm: false` (or `prewarmTime: 0` in config) and method `particleSystem.Prewarm(duration = 2.0, fixedStep = 0.05)`: runs `Update(fixedStep)` in a fast loop during initialization so ambient weather/smoke is already in steady state on frame 1.
+
+---
+
+### Phase 3 — Performance & Zero-Allocation Optimizations
+
+#### 12. Eliminate Per-Spawn `Vector2` Heap Allocations
+- **Status**: `[ ] Pending`
+- **Motivation**: Although `Particle` instances are pooled, spawning a single particle currently allocates **2 to 3 new `Vector2` objects** on the heap:
+  1. `ParticleEmitter.GetSpawnPoint()` allocates `Vector2.Copy(this.position)` or `new Vector2(x, y)`.
+  2. `ParticleEmitter.GetInitialVelocity()` allocates `new Vector2(...)`.
+  3. `Particle.Activate()` calls `this.position = Vector2.Copy(initialPosition)`.
+  - At high spawn rates (e.g. `1,000` particles/sec in `rainConfig`), this creates `~3,000` short-lived objects per second, triggering avoidable garbage collection pauses.
+- **Proposed Solution**:
+  - Change `ParticleEmitter` helpers to write directly into the target particle's existing `Vector2` fields (`this.emitter.WriteSpawnPoint(particle.position)` and `this.emitter.WriteInitialVelocity(particle.direction)`), and update `Particle.Activate` to mutate `this.position.Set(x, y)` and `this.direction.Set(vx, vy)` in-place. Zero objects allocated per spawn!
+
+#### 13. $O(1)$ Incremental `activeCount` Tracking
+- **Status**: `[ ] Pending`
+- **Motivation**: `get activeCount()` currently executes `this.particles.filter(p => p.active).length`. Because `Array.prototype.filter` allocates a new array and scans all `maxParticleCount` elements every time it is read (such as every frame in the HUD of `particles_example.js` and `particle-system-editor.html`), it adds unnecessary per-frame work and GC churn.
+- **Proposed Solution**:
+  - Maintain an integer `this._activeCount = 0` on `ParticleSystem`, incremented when a particle is activated and decremented when a particle deactivates. `get activeCount()` becomes an $O(1)$ property read with zero allocations.
+
+#### 14. $O(1)$ Ring-Cursor / Free-List Pool Lookup
+- **Status**: `[ ] Pending`
+- **Motivation**: `_spawnSingleParticle` currently scans `this.particles` from index `0` on every spawn (`for (let i = 0; i < this.particles.length; i++)`). When 900 out of 1,000 particles are active, spawning a burst of 50 particles performs up to `45,000` iterations.
+- **Proposed Solution**:
+  - Maintain a `this._searchCursor = 0` index that wraps around `this.particles.length` (or an explicit free-list stack of inactive indices), reducing average particle lookup time from $O(N)$ to $O(1)$.
+
+---
+
+### Phase 4 — Renderer, Documentation & Editor Polish
+
+#### 15. WebGL Blend Mode Support (`SetBlendMode` / Additive Particles in WebGL)
+- **Status**: `[ ] Pending`
+- **Motivation**: `ParticleSystem.Draw` currently applies `renderer.ctx.globalCompositeOperation = this.config.globalCompositeOperation`, which only affects `Canvas2DRenderer`. When running with `?webgl` (`WebGLRenderer`), additive particle effects (`"lighter"`, `"screen"`) render with standard alpha blending.
+- **Proposed Solution**:
+  - Add a `SetBlendMode(mode)` method on `Renderer` (`Canvas2DRenderer` sets `ctx.globalCompositeOperation`; `WebGLRenderer` flushes the current batch and switches `gl.blendFunc` between `gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA` for `"source-over"` and `gl.SRC_ALPHA, gl.ONE` for `"lighter"` / `"screen"`).
+
+#### 16. Camera Transform & Culling Awareness
+- **Status**: `[ ] Pending`
+- **Motivation**: Verify and document how `ParticleSystem` interacts with `renderer.ApplyCameraTransform(camera)` in scrolling worlds (such as *Run & Gun* or *Death Rally*), and optionally allow an area emitter's bounds to be relative to `emitter.position` (`relativeArea: true`) so an area emitter can follow the camera viewport automatically for infinite world rain/snow.
+
+#### 17. Sync `README.md` Quick-Start Snippet
+- **Status**: `[ ] Pending`
+- **Motivation**: The particle system snippet in `README.md` currently references legacy methods (`SetPointPosition`, `Start()`, `Draw(this.renderer.ctx)`) instead of `SetPosition(x, y)` and `Draw(this.renderer)`.
 
 ---
 
 ## Live Demo & Tools
 
 - **Interactive Editor:** [Particle System Editor](../particle-system-editor.html ':ignore :target=_blank') (`src/examples/particle_system_editor/`)
-
-See it in action: [Particle System demo](../particles.html ':ignore :target=_blank')
-
-Source: `src/examples/particles/particles_example.js` — showcases smoke (area and point emitters), rain, and snow presets.
+- **Live Example:** [Particle System Demo](../particles.html ':ignore :target=_blank') (`src/examples/particles/particles_example.js`) — showcases smoke (area and point emitters), rain, and snow presets.
