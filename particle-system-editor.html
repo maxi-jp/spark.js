@@ -177,6 +177,39 @@
                             <option value="exclusion">exclusion</option>
                         </select>
                     </div>
+
+                    <!-- Color Tinting / Color-over-Lifetime -->
+                    <div class="sub-panel" style="margin-top:10px">
+                        <div class="sub-panel-header">
+                            <span style="display:flex;align-items:center;gap:6px">
+                                <input id="chk-enable-tint" type="checkbox" style="cursor:pointer">
+                                <label for="chk-enable-tint" style="cursor:pointer" title="Enable RGB color tinting or startColor → endColor gradient over particle lifetime">Color Tint / Gradient</label>
+                            </span>
+                            <button id="btn-tint-none"  class="mini-btn" title="Disable color tinting (use raw texture)">None</button>
+                            <button id="btn-tint-fire"  class="mini-btn" title="Fire gradient (#ffdd55 → #ff2a00)">Fire</button>
+                            <button id="btn-tint-magic" class="mini-btn" title="Arcane cyan-to-violet gradient (#00f0ff → #9b1dff)">Arcane</button>
+                            <button id="btn-tint-ice"   class="mini-btn" title="Ice blue gradient (#e0faff → #1e88ff)">Ice</button>
+                        </div>
+                        <div id="color-tint-panel" class="coord-grid" style="display:none;margin-top:6px">
+                            <div class="coord-field">
+                                <label for="cfg-startColor">startColor</label>
+                                <div style="display:flex;align-items:center;gap:6px">
+                                    <input id="cfg-startColor" type="color" value="#ffffff" style="width:32px;height:24px;padding:0;border:none;background:none;cursor:pointer">
+                                    <input id="txt-startColor" type="text" value="#ffffff" spellcheck="false" style="width:74px;font-family:monospace;font-size:11px">
+                                </div>
+                            </div>
+                            <div class="coord-field">
+                                <div style="display:flex;align-items:center;justify-content:space-between">
+                                    <label for="cfg-endColor">endColor</label>
+                                    <button id="btn-sync-end-color" class="mini-btn" style="padding:1px 5px;font-size:10px" title="Set endColor equal to startColor (flat tint)">= Start</button>
+                                </div>
+                                <div style="display:flex;align-items:center;gap:6px">
+                                    <input id="cfg-endColor" type="color" value="#ffffff" style="width:32px;height:24px;padding:0;border:none;background:none;cursor:pointer">
+                                    <input id="txt-endColor" type="text" value="#ffffff" spellcheck="false" style="width:74px;font-family:monospace;font-size:11px">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- 2. Emitter Shape & Spawn Timing -->

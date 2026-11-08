@@ -180,7 +180,11 @@ const fountainConfig = {
 
     emitCountPerSpawn: 2,
     MIN_TIME_TO_SPAWN_PARTICLE: 0.008,
-    MAX_TIME_TO_SPAWN_PARTICLE: 0.02
+    MAX_TIME_TO_SPAWN_PARTICLE: 0.02,
+
+    // Color-over-lifetime: white-hot gold -> deep fiery orange
+    startColor: "#fff078",
+    endColor:   "#ff3c00"
 };
 
 const thrusterConfig = {
@@ -219,7 +223,11 @@ const thrusterConfig = {
 
     emitCountPerSpawn: 2,
     MIN_TIME_TO_SPAWN_PARTICLE: 0.005,
-    MAX_TIME_TO_SPAWN_PARTICLE: 0.012
+    MAX_TIME_TO_SPAWN_PARTICLE: 0.012,
+
+    // Color-over-lifetime: bright yellow-orange -> dark ember red
+    startColor: "#ffe066",
+    endColor:   "#d92600"
 };
 
 const circleCampfireConfig = {
@@ -267,7 +275,11 @@ const circleCampfireConfig = {
 
     emitCountPerSpawn: 2,
     MIN_TIME_TO_SPAWN_PARTICLE: 0.006,
-    MAX_TIME_TO_SPAWN_PARTICLE: 0.015
+    MAX_TIME_TO_SPAWN_PARTICLE: 0.015,
+
+    // Color-over-lifetime: bright amber flame -> dark crimson smoke
+    startColor: "#ffb833",
+    endColor:   "#801500"
 };
 
 const portalRingConfig = {
@@ -312,7 +324,11 @@ const portalRingConfig = {
 
     emitCountPerSpawn: 3,
     MIN_TIME_TO_SPAWN_PARTICLE: 0.006,
-    MAX_TIME_TO_SPAWN_PARTICLE: 0.014
+    MAX_TIME_TO_SPAWN_PARTICLE: 0.014,
+
+    // Color-over-lifetime: electric cyan -> deep arcane violet
+    startColor: "#00f0ff",
+    endColor:   "#9b1dff"
 };
 
 const firewallLineConfig = {
@@ -359,7 +375,11 @@ const firewallLineConfig = {
 
     emitCountPerSpawn: 3,
     MIN_TIME_TO_SPAWN_PARTICLE: 0.005,
-    MAX_TIME_TO_SPAWN_PARTICLE: 0.012
+    MAX_TIME_TO_SPAWN_PARTICLE: 0.012,
+
+    // Color-over-lifetime: bright neon green -> teal-blue
+    startColor: "#50ff64",
+    endColor:   "#0066ff"
 };
 
 const explosionBurstConfig = {
@@ -401,7 +421,11 @@ const explosionBurstConfig = {
     MAX_INITIAL_ROTATION: PI2,
 
     MIN_ROTATION_VELOCITY: -1.5,
-    MAX_ROTATION_VELOCITY:  1.5
+    MAX_ROTATION_VELOCITY:  1.5,
+
+    // Color-over-lifetime: white-yellow blast flash -> fiery orange-red
+    startColor: "#fff599",
+    endColor:   "#ff2a00"
 };
 
 // ── Game setup ───────────────────────────────────────────────

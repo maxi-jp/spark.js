@@ -459,7 +459,8 @@ MIT License
   - [x] ~~One-shot bursts (`Burst(count, x, y)`) and multi-particle spawn ticks (`emitCountPerSpawn`), plus sub-frame catch-up loop when `MIN_TIME_TO_SPAWN_PARTICLE` is smaller than `deltaTime`.~~ ✅DONE
   - [x] ~~Gravity / constant acceleration (`GRAVITY_X`, `GRAVITY_Y`) and velocity damping / air drag (`VELOCITY_DAMPING`) for ballistic arcs and decelerating explosions.~~ ✅DONE
   - [x] ~~Polar emission angles (`MIN_ANGLE`, `MAX_ANGLE` / cone spread) and `SetRotation(angle)` for directional emitters attached to rotating objects (cars, turrets, missiles).~~ ✅DONE
-  - [ ] Color tinting / color-over-lifetime (`startColor` → `endColor`) and optional procedural particle shapes (circles, sparks, lines) without requiring external textures.
+  - [x] ~~Color tinting / color-over-lifetime (`startColor` → `endColor`, `tintColor`, `SetColor`) across `Canvas2DRenderer` and `WebGLRenderer`.~~ ✅DONE
+  - [ ] Procedural particle shapes (`renderShape: "circle" | "rect" | "line"`, `PARTICLE_SIZE`) without requiring external textures.
   - [x] ~~Explicit particle lifetime / hold time (`HOLD_TIME`, `MAX_OPACITY`) decoupled from fade-in/fade-out speeds.~~ ✅DONE
   - [x] ~~Additional emitter shapes (`emitterType.circle`, `emitterType.ring`, `emitterType.line`).~~ ✅DONE
 

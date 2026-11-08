@@ -98,6 +98,8 @@ const PRESETS = {
         config: {
             maxParticleCount: 300,
             globalCompositeOperation: 'lighter',
+            startColor: '#ffdd55',
+            endColor: '#ff2200',
             emitterType: emitterType.point,
             AREA_X1: 0, AREA_Y1: 0, AREA_X2: 800, AREA_Y2: 640,
             MIN_INITIAL_VELOCITY: 40,
@@ -134,6 +136,8 @@ const PRESETS = {
         config: {
             maxParticleCount: 400,
             globalCompositeOperation: 'lighter',
+            startColor: '#ffe066',
+            endColor: '#d92600',
             emitterType: emitterType.point,
             AREA_X1: 0, AREA_Y1: 0, AREA_X2: 800, AREA_Y2: 640,
             MIN_INITIAL_VELOCITY: 180,
@@ -173,6 +177,8 @@ const PRESETS = {
         config: {
             maxParticleCount: 400,
             globalCompositeOperation: 'lighter',
+            startColor: '#fff078',
+            endColor: '#ff3c00',
             emitterType: emitterType.point,
             AREA_X1: 0, AREA_Y1: 0, AREA_X2: 800, AREA_Y2: 640,
             MIN_INITIAL_VELOCITY: 220,
@@ -216,6 +222,8 @@ const PRESETS = {
         config: {
             maxParticleCount: 400,
             globalCompositeOperation: 'lighter',
+            startColor: '#fff599',
+            endColor: '#ff2a00',
             emitterType: emitterType.point,
             AREA_X1: 0, AREA_Y1: 0, AREA_X2: 800, AREA_Y2: 640,
             MIN_INITIAL_VELOCITY: 200,
@@ -259,6 +267,8 @@ const PRESETS = {
         config: {
             maxParticleCount: 400,
             globalCompositeOperation: 'lighter',
+            startColor: '#ffb833',
+            endColor: '#801500',
             emitterType: emitterType.circle,
             EMISSION_RADIUS: 60,
             EMISSION_INNER_RADIUS: 0,
@@ -305,6 +315,8 @@ const PRESETS = {
         config: {
             maxParticleCount: 450,
             globalCompositeOperation: 'lighter',
+            startColor: '#00f0ff',
+            endColor: '#9b1dff',
             emitterType: emitterType.ring,
             EMISSION_INNER_RADIUS: 75,
             EMISSION_RADIUS: 90,
@@ -351,6 +363,8 @@ const PRESETS = {
         config: {
             maxParticleCount: 500,
             globalCompositeOperation: 'lighter',
+            startColor: '#50ff64',
+            endColor: '#0066ff',
             emitterType: emitterType.line,
             AREA_X1: 180, AREA_Y1: 420,
             AREA_X2: 620, AREA_Y2: 240,
@@ -650,6 +664,16 @@ function syncEmitterArea() {
     };
 }
 
+/** Normalizes a color config value (hex string, Color, or null) into a "#rrggbb" hex string. */
+function normalizeHexColor(val, fallback = '#ffffff') {
+    const parsed = _parseParticleColor(val);
+    if (!parsed) return fallback;
+    const r = Math.max(0, Math.min(255, Math.round(parsed.r * 255))).toString(16).padStart(2, '0');
+    const g = Math.max(0, Math.min(255, Math.round(parsed.g * 255))).toString(16).padStart(2, '0');
+    const b = Math.max(0, Math.min(255, Math.round(parsed.b * 255))).toString(16).padStart(2, '0');
+    return `#${r}${g}${b}`;
+}
+
 /** Updates the live ParticleSystem in-place when any parameter changes. */
 function applyConfigChange(changedKey) {
     if (!particleSystem) {
@@ -659,6 +683,7 @@ function applyConfigChange(changedKey) {
 
     // Copy all config values into the live particleSystem.config
     Object.assign(particleSystem.config, currentConfig);
+    particleSystem._syncColors();
 
     // Handle pool resizing if maxParticleCount changed
     if (changedKey === 'maxParticleCount') {
@@ -699,6 +724,21 @@ function syncUIFromConfig() {
     // Select inputs
     document.getElementById('cfg-globalCompositeOperation').value = currentConfig.globalCompositeOperation;
     document.getElementById('cfg-emitterType').value = String(currentConfig.emitterType);
+
+    // Color tinting / Color-over-Lifetime controls
+    const hasTint = Boolean(currentConfig.startColor || currentConfig.endColor);
+    document.getElementById('chk-enable-tint').checked = hasTint;
+    document.getElementById('color-tint-panel').style.display = hasTint ? 'grid' : 'none';
+    if (hasTint) {
+        const startHex = normalizeHexColor(currentConfig.startColor ?? currentConfig.endColor, '#ffffff');
+        const endHex   = normalizeHexColor(currentConfig.endColor   ?? currentConfig.startColor, startHex);
+        currentConfig.startColor = startHex;
+        currentConfig.endColor   = endHex;
+        document.getElementById('cfg-startColor').value = startHex;
+        document.getElementById('txt-startColor').value = startHex;
+        document.getElementById('cfg-endColor').value   = endHex;
+        document.getElementById('txt-endColor').value   = endHex;
+    }
 
     const dirMode = currentConfig.directionMode === 'polar' ? 'polar' : 'cartesian';
     currentConfig.directionMode = dirMode;
@@ -746,8 +786,14 @@ function getExportableConfig() {
     const out = {
         maxParticleCount: Math.round(currentConfig.maxParticleCount),
         globalCompositeOperation: currentConfig.globalCompositeOperation,
-        emitterType: Number(currentConfig.emitterType),
     };
+
+    if (currentConfig.startColor || currentConfig.endColor) {
+        out.startColor = normalizeHexColor(currentConfig.startColor ?? currentConfig.endColor);
+        out.endColor   = normalizeHexColor(currentConfig.endColor   ?? currentConfig.startColor, out.startColor);
+    }
+
+    out.emitterType = Number(currentConfig.emitterType);
 
     if (out.emitterType === emitterType.area || out.emitterType === emitterType.line) {
         out.AREA_X1 = Math.round(currentConfig.AREA_X1);
@@ -823,8 +869,16 @@ function formatJSConfigSnippet() {
         `const ${safeName} = {`,
         `    maxParticleCount: ${c.maxParticleCount},`,
         `    globalCompositeOperation: "${c.globalCompositeOperation}",`,
-        `    emitterType: ${emTypeStr},`,
     ];
+
+    if (c.startColor || c.endColor) {
+        lines.push(
+            `    startColor: "${c.startColor}",`,
+            `    endColor: "${c.endColor}",`
+        );
+    }
+
+    lines.push(`    emitterType: ${emTypeStr},`);
 
     if (c.emitterType === emitterType.area || c.emitterType === emitterType.line) {
         lines.push(
@@ -1498,6 +1552,10 @@ function loadConfigJSON(file) {
                 if (incoming.MIN_HOLD_TIME === undefined) currentConfig.MIN_HOLD_TIME = incoming.HOLD_TIME;
                 if (incoming.MAX_HOLD_TIME === undefined) currentConfig.MAX_HOLD_TIME = incoming.HOLD_TIME;
             }
+            if (incoming.tintColor !== undefined) {
+                if (incoming.startColor === undefined) currentConfig.startColor = incoming.tintColor;
+                if (incoming.endColor === undefined)   currentConfig.endColor   = incoming.tintColor;
+            }
 
             const baseName = file.name.replace(/\.json$/i, '');
             document.getElementById('config-name').value = baseName;
@@ -1667,6 +1725,65 @@ function wireControls() {
         currentConfig.globalCompositeOperation = e.target.value;
         applyConfigChange('globalCompositeOperation');
     });
+
+    // Color tinting / Color-over-Lifetime controls
+    const chkEnableTint = document.getElementById('chk-enable-tint');
+    const cfgStartColor = document.getElementById('cfg-startColor');
+    const txtStartColor = document.getElementById('txt-startColor');
+    const cfgEndColor   = document.getElementById('cfg-endColor');
+    const txtEndColor   = document.getElementById('txt-endColor');
+
+    const applyColorPreset = (startHex, endHex) => {
+        currentConfig.startColor = startHex;
+        currentConfig.endColor   = endHex;
+        syncUIFromConfig();
+        applyConfigChange('COLOR');
+    };
+
+    chkEnableTint.addEventListener('change', () => {
+        if (chkEnableTint.checked) {
+            applyColorPreset(cfgStartColor.value || '#ffdd55', cfgEndColor.value || '#ff2a00');
+        } else {
+            applyColorPreset(null, null);
+        }
+    });
+
+    cfgStartColor.addEventListener('input', e => {
+        currentConfig.startColor = e.target.value;
+        txtStartColor.value = e.target.value;
+        if (!currentConfig.endColor) currentConfig.endColor = e.target.value;
+        applyConfigChange('startColor');
+    });
+    txtStartColor.addEventListener('change', e => {
+        const hex = normalizeHexColor(e.target.value, cfgStartColor.value);
+        currentConfig.startColor = hex;
+        syncUIFromConfig();
+        applyConfigChange('startColor');
+    });
+
+    cfgEndColor.addEventListener('input', e => {
+        currentConfig.endColor = e.target.value;
+        txtEndColor.value = e.target.value;
+        if (!currentConfig.startColor) currentConfig.startColor = e.target.value;
+        applyConfigChange('endColor');
+    });
+    txtEndColor.addEventListener('change', e => {
+        const hex = normalizeHexColor(e.target.value, cfgEndColor.value);
+        currentConfig.endColor = hex;
+        syncUIFromConfig();
+        applyConfigChange('endColor');
+    });
+
+    document.getElementById('btn-sync-end-color').addEventListener('click', () => {
+        currentConfig.endColor = currentConfig.startColor || cfgStartColor.value;
+        syncUIFromConfig();
+        applyConfigChange('endColor');
+    });
+
+    document.getElementById('btn-tint-none').addEventListener('click',  () => applyColorPreset(null, null));
+    document.getElementById('btn-tint-fire').addEventListener('click',  () => applyColorPreset('#ffdd55', '#ff2a00'));
+    document.getElementById('btn-tint-magic').addEventListener('click', () => applyColorPreset('#00f0ff', '#9b1dff'));
+    document.getElementById('btn-tint-ice').addEventListener('click',   () => applyColorPreset('#e0faff', '#1e88ff'));
 
     document.getElementById('cfg-emitterType').addEventListener('change', e => {
         currentConfig.emitterType = Number(e.target.value);

@@ -101,8 +101,31 @@ const defaultParticleConfig = {
     MAX_TIME_TO_SPAWN_PARTICLE: 0.05,
 
     // Number of particles spawned on each spawn tick
-    emitCountPerSpawn: 1
+    emitCountPerSpawn: 1,
+
+    // Optional color tinting / color-over-lifetime (hex string "#rrggbb" or Color instance; null = untinted)
+    startColor: null,
+    endColor: null
 };
+
+/**
+ * Parses a hex string, CSS color string, or `Color` object into a `Color` instance (or `null`).
+ * @param {string|Color|null|undefined} val
+ * @returns {Color|null}
+ */
+function _parseParticleColor(val) {
+    if (!val) return null;
+    if (val instanceof Color) return Color.Copy(val);
+    if (typeof val === "string") {
+        const s = val.trim();
+        if (!s || s === "none" || s === "null") return null;
+        return Color.FromString(s);
+    }
+    if (typeof val === "object" && val.r !== undefined && val.g !== undefined && val.b !== undefined) {
+        return new Color(val.r, val.g, val.b, val.a ?? 1);
+    }
+    return null;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Particle
@@ -132,6 +155,20 @@ class Particle {
         this.gravityX         = 0.0;
         this.gravityY         = 0.0;
         this.velocityDamping  = 0.0;
+
+        // Color-over-lifetime state
+        this.age              = 0.0;
+        this.invLifetime      = 0.0;
+        this.lifeProgress     = 0.0;
+        this.hasColorTint     = false;
+        this.hasColorGradient = false;
+        this.startR           = 1.0;
+        this.startG           = 1.0;
+        this.startB           = 1.0;
+        this.endR             = 1.0;
+        this.endG             = 1.0;
+        this.endB             = 1.0;
+        this.tint             = new Color(1, 1, 1, 1);
     }
 
     /**
@@ -149,11 +186,13 @@ class Particle {
      * @param {number}  [velocityDamping=0] air drag coefficient (1/sec)
      * @param {number}  [maxOpacity=1.0]    peak opacity target in (0, 1]
      * @param {number}  [holdTime=0.0]      duration in seconds held at peak opacity
+     * @param {Color|null} [startColor=null] initial RGB tint color
+     * @param {Color|null} [endColor=null]   final RGB tint color over lifetime
      */
     Activate(initialPosition, opacityIncrementVelocity, opacityDecrementVelocity,
              initialScale, scaleVelocity, initialRotation, rotationVelocity,
              direction, gravityX = 0, gravityY = 0, velocityDamping = 0,
-             maxOpacity = 1.0, holdTime = 0.0) {
+             maxOpacity = 1.0, holdTime = 0.0, startColor = null, endColor = null) {
         this.position         = Vector2.Copy(initialPosition);
         this.opacity          = 0;
         this.maxOpacity       = maxOpacity;
@@ -168,6 +207,36 @@ class Particle {
         this.gravityX         = gravityX;
         this.gravityY         = gravityY;
         this.velocityDamping  = velocityDamping;
+
+        const cStart = startColor || endColor;
+        const cEnd   = endColor   || startColor;
+        if (cStart) {
+            this.hasColorTint = true;
+            this.lifeProgress = 0.0;
+            this.startR = cStart.r;
+            this.startG = cStart.g;
+            this.startB = cStart.b;
+            this.endR   = cEnd.r;
+            this.endG   = cEnd.g;
+            this.endB   = cEnd.b;
+            this.tint._r = this.tint._rgba[0] = this.startR;
+            this.tint._g = this.tint._rgba[1] = this.startG;
+            this.tint._b = this.tint._rgba[2] = this.startB;
+            this.hasColorGradient = (this.startR !== this.endR || this.startG !== this.endG || this.startB !== this.endB);
+            if (this.hasColorGradient) {
+                this.age = 0.0;
+                const totalLife =
+                    (opacityIncrementVelocity > 0 ? maxOpacity / opacityIncrementVelocity : 0) +
+                    holdTime +
+                    (opacityDecrementVelocity > 0 ? maxOpacity / opacityDecrementVelocity : 0);
+                this.invLifetime = totalLife > 0.0001 ? 1.0 / totalLife : 0.0;
+            }
+        }
+        else {
+            this.hasColorTint     = false;
+            this.hasColorGradient = false;
+        }
+
         this.active           = true;
         this.appearing        = true;
     }
@@ -198,6 +267,19 @@ class Particle {
             }
         }
 
+        // Interpolate RGB tint color over particle lifetime
+        if (this.hasColorGradient) {
+            this.age += deltaTime;
+            let t = this.age * this.invLifetime;
+            if (t > 1.0)
+                t = 1.0;
+            this.lifeProgress = t;
+            
+            this.tint._r = this.tint._rgba[0] = this.startR + (this.endR - this.startR) * t;
+            this.tint._g = this.tint._rgba[1] = this.startG + (this.endG - this.startG) * t;
+            this.tint._b = this.tint._rgba[2] = this.startB + (this.endB - this.startB) * t;
+        }
+
         // Update transform
         this.scale += this.scaleVelocity * deltaTime;
         if (this.scale <= 0.0) {
@@ -220,15 +302,31 @@ class Particle {
         this.position.y += this.direction.y * deltaTime;
     }
 
-    Draw(renderer) {
-        renderer.DrawImage(
-            this.img,
-            this.position.x, this.position.y,
-            this.scale, this.scale,
-            this.rotation,
-            Particle.pivot,
-            this.opacity
-        );
+    Draw(renderer, colorFrames = null) {
+        if (colorFrames && this.hasColorTint) {
+            const idx = this.hasColorGradient
+                ? ((this.lifeProgress * (colorFrames.length - 1) + 0.5) | 0)
+                : 0;
+            renderer.DrawImage(
+                colorFrames[idx],
+                this.position.x, this.position.y,
+                this.scale, this.scale,
+                this.rotation,
+                Particle.pivot,
+                this.opacity
+            );
+        }
+        else {
+            renderer.DrawImage(
+                this.img,
+                this.position.x, this.position.y,
+                this.scale, this.scale,
+                this.rotation,
+                Particle.pivot,
+                this.opacity,
+                this.hasColorTint ? this.tint : null
+            );
+        }
     }
 }
 
@@ -348,6 +446,9 @@ class ParticleEmitter {
 // ParticleSystem
 // ─────────────────────────────────────────────────────────────────────────────
 class ParticleSystem {
+    /** Number of pre-baked offscreen canvas steps generated for `Canvas2DRenderer` color gradients. */
+    static COLOR_RAMP_STEPS = 16;
+
     /**
      * @param {HTMLImageElement} img       sprite used for every particle
      * @param {Object}           config    overrides for defaultParticleConfig
@@ -377,7 +478,19 @@ class ParticleSystem {
                 if (config.MAX_HOLD_TIME === undefined)
                     this.config.MAX_HOLD_TIME = config.HOLD_TIME;
             }
+            if (config.tintColor !== undefined) {
+                if (config.startColor === undefined)
+                    this.config.startColor = config.tintColor;
+                if (config.endColor === undefined)
+                    this.config.endColor = config.tintColor;
+            }
         }
+
+        this._startColor     = null;
+        this._endColor       = null;
+        this._colorFrames    = null;
+        this._colorFramesImg = null;
+        this._syncColors();
 
         // Create emitter
         this.emitter = new ParticleEmitter(
@@ -416,6 +529,79 @@ class ParticleSystem {
 
     set rotation(angle) {
         this.emitter.rotation = angle;
+    }
+
+    /** Re-parses `config.startColor` and `config.endColor` into cached `Color` instances. */
+    _syncColors() {
+        this._startColor     = _parseParticleColor(this.config.startColor);
+        this._endColor       = _parseParticleColor(this.config.endColor);
+        this._colorFrames    = null;
+        this._colorFramesImg = null;
+    }
+
+    /**
+     * Lazily pre-bakes an array of tinted offscreen canvases (`1` for flat tint, `COLOR_RAMP_STEPS` for a gradient)
+     * when rendering with `Canvas2DRenderer`. Not used when rendering with `WebGLRenderer`.
+     * @returns {HTMLCanvasElement[]|null}
+     */
+    _getCanvasColorFrames() {
+        const cStart = this._startColor || this._endColor;
+        const cEnd   = this._endColor   || this._startColor;
+        if (!cStart || !this.img)
+            return null;
+
+        const w = this.img.width  || this.img.naturalWidth  || 0;
+        const h = this.img.height || this.img.naturalHeight || 0;
+        if (w === 0 || h === 0)
+            return null;
+
+        if (this._colorFrames && this._colorFramesImg === this.img)
+            return this._colorFrames;
+
+        const isGradient = (cStart.r !== cEnd.r || cStart.g !== cEnd.g || cStart.b !== cEnd.b);
+        const steps  = isGradient ? ParticleSystem.COLOR_RAMP_STEPS : 1;
+        const frames = new Array(steps);
+        const halfW  = this.img.halfWidth  ?? (w / 2);
+        const halfH  = this.img.halfHeight ?? (h / 2);
+
+        for (let i = 0; i < steps; i++) {
+            const t = steps > 1 ? i / (steps - 1) : 0;
+            const r = Math.round((cStart.r + (cEnd.r - cStart.r) * t) * 255);
+            const g = Math.round((cStart.g + (cEnd.g - cStart.g) * t) * 255);
+            const b = Math.round((cStart.b + (cEnd.b - cStart.b) * t) * 255);
+
+            const off = document.createElement('canvas');
+            off.width      = w;
+            off.height     = h;
+            off.halfWidth  = halfW;
+            off.halfHeight = halfH;
+
+            const octx = off.getContext('2d');
+            octx.drawImage(this.img, 0, 0);
+            octx.globalCompositeOperation = 'multiply';
+            octx.fillStyle = `rgb(${r},${g},${b})`;
+            octx.fillRect(0, 0, w, h);
+            octx.globalCompositeOperation = 'destination-in';
+            octx.drawImage(this.img, 0, 0);
+
+            frames[i] = off;
+        }
+
+        this._colorFrames    = frames;
+        this._colorFramesImg = this.img;
+        return frames;
+    }
+
+    /**
+     * Sets the start and end tint colors for newly spawned particles.
+     * Pass `null` to disable tinting, or omit `endColor` for a constant single tint.
+     * @param {string|Color|null} startColor
+     * @param {string|Color|null} [endColor=startColor]
+     */
+    SetColor(startColor, endColor = startColor) {
+        this.config.startColor = startColor;
+        this.config.endColor   = endColor;
+        this._syncColors();
     }
 
     /**
@@ -465,7 +651,9 @@ class ParticleSystem {
             this.config.GRAVITY_Y,
             this.config.VELOCITY_DAMPING,
             RandomBetweenFloat(this.config.MIN_MAX_OPACITY,                this.config.MAX_MAX_OPACITY),
-            RandomBetweenFloat(this.config.MIN_HOLD_TIME,                  this.config.MAX_HOLD_TIME)
+            RandomBetweenFloat(this.config.MIN_HOLD_TIME,                  this.config.MAX_HOLD_TIME),
+            this._startColor,
+            this._endColor
         );
 
         return true;
@@ -520,18 +708,23 @@ class ParticleSystem {
     }
 
     Draw(renderer) {
+        const isCanvas2D = Boolean(renderer.ctx);
+
         // globalCompositeOperation is a Canvas 2D concept only
-        if (renderer.ctx) {
+        if (isCanvas2D) {
             renderer.ctx.globalCompositeOperation = this.config.globalCompositeOperation;
         }
 
+        // In Canvas2D, pass pre-baked color step canvases; in WebGL, use hardware vertex tinting
+        const colorFrames = isCanvas2D ? this._getCanvasColorFrames() : null;
+
         this.particles.forEach(particle => {
             if (particle.active)
-                particle.Draw(renderer);
+                particle.Draw(renderer, colorFrames);
         });
 
         // Restore defaults
-        if (renderer.ctx) {
+        if (isCanvas2D) {
             renderer.ctx.globalCompositeOperation = 'source-over';
         }
     }

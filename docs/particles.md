@@ -75,6 +75,11 @@ const defaultParticleConfig = {
 
     globalCompositeOperation: "source-over",  // Canvas 2D blending mode ("source-over", "lighter", "overlay", etc.)
 
+    // Color tinting / Color-over-Lifetime (hex string "#rrggbb", Color instance, or null for untinted)
+    // Also supports shorthand tintColor: "#rrggbb" for a flat tint across the entire particle lifetime
+    startColor: null,
+    endColor: null,
+
     emitterType: emitterType.area,            // point (0), area (1), circle (2), ring (3), or line (4)
 
     // Area / Line emitter bounds in pixels (used when emitterType === area or emitterType === line)
@@ -172,6 +177,7 @@ The main class you interact with. Owns the particle pool, the `ParticleEmitter`,
 |--------|---------|-------------|
 | `SetPosition(x, y)` | `void` | Moves `this.emitter.position` to `(x, y)` in world space. Ideal for point emitters attached to moving objects or the mouse cursor. |
 | `SetRotation(angle)` | `void` | Rotates the emitter's emission direction by `angle` (in radians). Works with both `"polar"` cones and `"cartesian"` direction ranges. |
+| `SetColor(startColor, endColor = startColor)` | `void` | Updates the emitter's color tint or color-over-lifetime gradient at runtime (`"#rrggbb"`, CSS color string, `Color` instance, or `null` to disable tinting). |
 | `Burst(count = 1, x, y)` | `number` | Immediately activates up to `count` particles from the pool and returns the number actually spawned. Works even when `this.active === false`. Optional `(x, y)` overrides the emitter's spawn point for that burst. Logs a `console.warn` if the pool is exhausted. |
 | `Update(deltaTime)` | `void` | If `this.active` is `true`, advances the spawn timer and emits particles; then updates all currently active particles. Call once per frame in `Update(deltaTime)`. |
 | `Draw(renderer)` | `void` | Applies `config.globalCompositeOperation` (on `Canvas2DRenderer`), draws all active particles via `renderer.DrawImage`, and restores `"source-over"`. Call once per frame in `Draw()`. |
@@ -327,7 +333,7 @@ The standalone **[Particle System Editor](../particle-system-editor.html ':ignor
   - **Area & Line Gizmos**: Dashed bounding rectangle (with 4 draggable corner handles) or dashed line segment (with 2 draggable endpoint handles), interior/segment drag-to-move, outside drag-to-draw, plus quick-fit buttons (**Full Canvas**, **Center Box**, **Horiz Line**).
   - **Background Surfaces**: Switch between *Asphalt (`#414146`)*, *Dark Night (`#1a1a2e`)*, *Grass (`#325023`)*, *Dirt (`#785532`)*, *Pure Black (`#000000`)*, *Checkerboard*, or any custom hex color picker.
 - **Real-Time Parameter Sliders & Smart Clamping**:
-  - Synchronized range sliders and numeric inputs for every `defaultParticleConfig` property (including `directionMode` toggle between `cartesian` and `polar`, `MIN_ANGLE`/`MAX_ANGLE`, `SetRotation` preview slider + `Auto-Path` rotation toggle, `emitCountPerSpawn`, `GRAVITY_X`, `GRAVITY_Y`, `VELOCITY_DAMPING`, `MIN_MAX_OPACITY`/`MAX_MAX_OPACITY`, `MIN_HOLD_TIME`/`MAX_HOLD_TIME`, and all 13 `MIN_*/MAX_*` pairs).
+  - Synchronized range sliders and numeric inputs for every `defaultParticleConfig` property (including `startColor`/`endColor` color pickers + quick gradient presets **None**, **Fire**, **Arcane**, **Ice**, `directionMode` toggle between `cartesian` and `polar`, `MIN_ANGLE`/`MAX_ANGLE`, `SetRotation` preview slider + `Auto-Path` rotation toggle, `emitCountPerSpawn`, `GRAVITY_X`, `GRAVITY_Y`, `VELOCITY_DAMPING`, `MIN_MAX_OPACITY`/`MAX_MAX_OPACITY`, `MIN_HOLD_TIME`/`MAX_HOLD_TIME`, and all 14 `MIN_*/MAX_*` pairs).
   - Direction quick-buttons (**Omni**, **↑**, **↓**, **←**, **→** — work for both Cartesian and Polar modes), gravity quick-buttons (**0**, **↓ Grav**, **↑ Buoy**), opacity & hold quick-buttons (**Full 1.0**, **Soft 0.5**, **0s Hold**), and rotation quick-buttons (**0**, **0 → 2π**).
 - **Live Telemetry & Export**:
   - Bottom status bar displays active particle count (`Alive / Max` with a `⚠ POOL FULL` warning), estimated **Spawn Rate (`~N/s`)**, estimated **Avg Lifetime (`~Ns`)**, emitter coordinates, mouse coordinates, and live **FPS**.
@@ -353,6 +359,8 @@ This section tracks all completed and planned improvements for the particle syst
   - *Details*: Decoupled particle peak opacity and lifetime hold duration from fade speeds by adding `MIN_MAX_OPACITY`, `MAX_MAX_OPACITY` (plus `MAX_OPACITY` shorthand) and `MIN_HOLD_TIME`, `MAX_HOLD_TIME` (plus `HOLD_TIME` shorthand) to `defaultParticleConfig` and `Particle`. Updated `particles_example.js` presets, added sliders and quick-preset buttons to `particle-system-editor.html`, and updated the editor's **Avg Lifetime** telemetry formula to account for peak opacity and hold time.
 - [x] **Additional Emitter Shapes (`emitterType.circle`, `emitterType.ring`, `emitterType.line`) & `radialVelocity`** ✅ *DONE*
   - *Details*: Expanded `emitterType` with `circle` (2, uniform disk sampling via `Math.max(Math.random(), Math.random())`), `ring` (3, annulus sampling between `EMISSION_INNER_RADIUS` and `EMISSION_RADIUS`), and `line` (4, linear interpolation along `(AREA_X1, AREA_Y1) -> (AREA_X2, AREA_Y2)`), plus `radialVelocity` for outward/inward radial velocity on `circle`/`ring` emitters (reusing the cached `_lastSpawnAngle` without `Math.atan2`). Added `J` (`circleCampfireConfig`), `K` (`portalRingConfig`), and `L` (`firewallLineConfig`) interactive demos to `particles_example.js`, and added presets, controls, and interactive circle/ring/line gizmos to `particle-system-editor.html`.
+- [x] **Color Tinting & Color-over-Lifetime (`startColor`, `endColor`, `tintColor`, `SetColor`)** ✅ *DONE*
+  - *Details*: Added optional `tint` (`Color`) support to `DrawImage`, `DrawImageBasic`, `DrawImageSection`, and `DrawImageSectionBasic` on both `Canvas2DRenderer` (via `_getTintedSource` offscreen canvas cache) and `WebGLRenderer` (expanding `SpriteBatchShader` vertex attributes to `vec4 a_color` for hardware-accelerated per-sprite RGB tinting), plus a dedicated 16-step pre-baked color ramp (`ParticleSystem._getCanvasColorFrames`) inside `ParticleSystem` when rendering with `Canvas2DRenderer`. Added `startColor`, `endColor` (and `tintColor` shorthand) to `defaultParticleConfig`, `SetColor(startColor, endColor)` to `ParticleSystem`, and allocation-free RGB interpolation in `Particle.Update(deltaTime)`. Updated `particles_example.js` and `particle-system-editor.html` presets and added live color gradient pickers to the editor.
 
 ---
 
@@ -374,17 +382,20 @@ This section tracks all completed and planned improvements for the particle syst
 - **Status**: `[x] Completed`
 - **Enum & Config Keys**: `emitterType.circle` (`2`), `emitterType.ring` (`3`), `emitterType.line` (`4`), `EMISSION_RADIUS: 50`, `EMISSION_INNER_RADIUS: 0`, `radialVelocity: false`.
 
-#### 5. Color Tinting / Color-over-Lifetime & Procedural Shapes
+#### 5a. ~~Color Tinting / Color-over-Lifetime (`startColor`, `endColor`, `SetColor`)~~ ✅ *DONE*
+- **Status**: `[x] Completed`
+- **Config Keys & API**: `startColor: null`, `endColor: null`, `tintColor: null`, `particleSystem.SetColor(startColor, endColor)`.
+
+#### 5b. Procedural Particle Shapes (`renderShape`, `PARTICLE_SIZE`)
 - **Status**: `[ ] Pending`
-- **Motivation**: Requiring an external PNG texture for every effect makes simple geometric particles (sparks, rain lines, pixel debris, retro arcade explosions, thruster dots) heavier than necessary, and image-only particles cannot smoothly shift color over their lifetime (e.g. white-hot → yellow → orange → dark red → grey smoke).
+- **Motivation**: Requiring an external PNG texture for every effect makes simple geometric particles (sparks, rain lines, pixel debris, retro arcade explosions, thruster dots) heavier than necessary.
 - **Proposed Config Keys**:
   - `renderShape: "sprite"` (`"sprite"` | `"circle"` | `"rect"` | `"line"`):
     - `"sprite"`: Draws `this.img` (default, current behavior).
     - `"circle"`: Draws a filled circle via `renderer.DrawFillCircle` with radius `PARTICLE_SIZE * scale` (batches automatically in WebGL!).
     - `"rect"`: Draws a filled rectangle via `renderer.DrawFillRectangle` with dimensions `PARTICLE_SIZE * scale` (batches automatically in WebGL!).
     - `"line"`: Draws a velocity-aligned streak/spark line of length `PARTICLE_SIZE * scale` along the particle's movement vector.
-  - `PARTICLE_SIZE: 8` (base pixel size for procedural shapes when `scale === 1.0`)
-  - `tintColor: null` / `startColor: null`, `endColor: null` (optional hex strings or `Color` objects; interpolates particle `[r, g, b]` over its normalized lifetime progress `0 -> 1`).
+  - `PARTICLE_SIZE: 8` (base pixel size for procedural shapes when `scale === 1.0`).
 
 ---
 
