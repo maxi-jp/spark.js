@@ -65,6 +65,16 @@ Documentation can be consulted [here](https://maxi-jp.github.io/spark.js/docs/).
     - circuits/playground.js    # Inline cross-shaped open circuit (Option A)
     - circuits/oval_track.js    # Inline barrier-enclosed oval circuit (Option A)
     - README.md                 # Design decisions, physics model, and system documentation
+  - run_and_gun/          # Side-scrolling run-and-gun arcade (Contra / Metal Slug inspired)
+    - audio.js                  # Procedural 16-bit Web Audio API sound synthesizer & chiptune music
+    - sprites.js                # Procedural pixel-art sprite generator (player, enemies, boss, tiles)
+    - weapons.js                # Weapon definitions and pooled projectiles, mortars, sparks & power-ups
+    - player.js                 # 8-way aiming commando with Actions/Axes input, crouching & platform drop-through
+    - enemies.js                # GruntSoldier, SniperTurret, FlyingDrone, ItemCarrierBlimp, ExplosiveBarrel
+    - boss.js                   # Multi-phase Mecha-Colossus boss with destructible weapon pods
+    - stage.js                  # Multi-layer parallax stage, platform collisions, and off-screen wave spawners
+    - run_and_gun_game.js       # RunAndGunGame (main class, FollowCamera, Pool management, arcade HUD)
+    - README.md                 # Gameplay, controls, weapon arsenal, and architecture overview
   - audio_test/           # Audio system testing and examples
   - box2d/                # Box2D physics examples
     - angry_birds.js      # Angry Birds clone with Box2D

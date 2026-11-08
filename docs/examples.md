@@ -56,6 +56,16 @@ Explore the `src/examples/` directory for practical demonstrations of the engine
   - **Split codebase** — `circuit.js`, `death_rally_defs.js`, `game_objects.js`, `cars.js`, `death_rally_game.js`, `circuits/playground.js`, `circuits/oval_track.js`
   - See the project's [README](../src/examples/death_rally/README.md ':ignore :target=_blank') for implementation notes and design decisions
 
+  - [Cyber Commando: Project Spark (Run & Gun)](../run-and-gun.html ':ignore :target=_blank') — side-scrolling run-and-gun arcade game inspired by *Contra*, *Metal Slug*, and *Gunstar Heroes*, build almost entirerly with Gemini 3.8 Flash, with zero external asset files:
+  - **8-way aiming & platforming** — run, jump, crouch, drop through one-way catwalk girders, and aim in all 8 directions across keyboard, gamepad, and mobile touch controls via `Input.RegisterAxis` and `Input.RegisterAction`
+  - **5 weapons + barrier shield** — Assault Rifle (`[R]`), 5-way Spread Gun (`[S]`), Heavy Machine Gun (`[M]`), Piercing Laser (`[L]`), and explosive Rocket/Grenade Launcher (`[G]`), dropped by flying item pods alongside a timed `[B]` Barrier Shield
+  - **Enemy variety & chain reactions** — patrolling Grunt Soldiers, 360°-tracking Sniper Turrets, bomb-dropping Flying Drones, and Explosive Barrels that trigger area-of-effect chain reactions
+  - **Multi-phase boss encounter** — the *Mecha-Colossus MK-IV* features independently destructible Rocket Launcher and Plasma Cannon subsystems in Phase 1 before exposing its reactor core for Phase 2 Overdrive
+  - **Engine `Pool` & `FollowCamera` integration** — 5 pre-allocated `Pool` instances (player bullets, enemy bullets, boss mortars, spark particles, and power-ups) plus a `FollowCamera` with anti-backtracking clamp, boss arena lock, and explosion screen shake
+  - **Procedural pixel art & Web Audio synth** — crisp 16-bit sprites generated onto offscreen canvases at startup (`sprites.js`) and real-time synthesized SFX and chiptune soundtrack via the Web Audio API (`audio.js`)
+  - **Split codebase** — `audio.js`, `sprites.js`, `weapons.js`, `player.js`, `enemies.js`, `boss.js`, `stage.js`, `run_and_gun_game.js`
+  - See the project's [README](../src/examples/run_and_gun/README.md ':ignore :target=_blank') for gameplay details, controls, and system documentation
+
 - [BrokeOut](../brokeout.html ':ignore :target=_blank') — basic Breakout clone
 - [Floppy Derp](../floppyderp.html ':ignore :target=_blank') — Flappy Bird-like game
 - [Twin Stick Shooter](../twin-stick-shooter.html ':ignore :target=_blank')

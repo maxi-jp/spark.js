@@ -515,6 +515,61 @@ declare class Game {
     CancelAllInvokes(owner?: any): void;
 }
 
+// ── Camera & FollowCamera classes (gameobjects.js) ───────────────────────────
+
+declare class Camera {
+    position: Vector2;
+    scale: Vector2;
+    targetScale: Vector2;
+    zoomSmoothingSpeed: number;
+    zoomTarget: Vector2;
+    zoomTargetRatio: Vector2;
+    constructor(position: Vector2);
+    PreDraw(renderer: Renderer): void;
+    PostDraw(renderer: Renderer): void;
+    Zoom(targetZoom: Vector2, speed?: number, target?: Vector2): void;
+    Update(deltaTime: number): void;
+}
+
+declare class FollowCamera extends Camera {
+    target: GameObject;
+    targetPosition: Vector2;
+    minX: number;
+    maxX: number;
+    minY: number;
+    maxY: number;
+    smoothingSpeed: number;
+    offset: Vector2;
+    shakingValue: Vector2;
+    shakingTime: number;
+    shakingSpeed: number;
+    shakingSize: number;
+    constructor(position: Vector2, target: GameObject, minX: number, maxX: number, minY: number, maxY: number, smoothingSpeed?: number, offset?: Vector2);
+    Start(): void;
+    Update(deltaTime: number): void;
+    Shake(time: number, speed: number, size: number): void;
+}
+
+// ── Object Pooling (gameobjects.js) ──────────────────────────────────────────
+
+/**
+ * Object pool for pre-allocating, reusing, and recycling objects (e.g. bullets, particles).
+ */
+declare class Pool<T = any> {
+    static semiTransparentRed: Color;
+    owner: any;
+    maxSize: number;
+    objectConstructor: new (...args: any[]) => T;
+    constructorParams: any[];
+    objects: T[];
+    drawDebug: boolean;
+    constructor(owner: any, maxSize: number, objectConstructor: new (...args: any[]) => T, constructorParams?: any[]);
+    Update(deltaTime: number): void;
+    Draw(renderer: Renderer): void;
+    Activate(): T;
+    DisableAll(): void;
+}
+
 // ── Renderer class ───────────────────────────────────────────────────────────
 
 /**

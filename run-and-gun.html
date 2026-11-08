@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>spark.js — Cyber Commando (Run 'N' Gun Arcade)</title>
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            background-color: #0b0f19;
+            color: #e2e8f0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        header {
+            margin-bottom: 8px;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #ffd166;
+            margin: 0;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            color: #00f5d4;
+            margin-top: 2px;
+        }
+
+        #gameWrapper {
+            position: relative;
+            box-shadow: 0 0 25px rgba(0, 245, 212, 0.25), 0 10px 30px rgba(0, 0, 0, 0.8);
+            border: 2px solid #1e293b;
+            border-radius: 6px;
+            overflow: hidden;
+            background: #000;
+            max-width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        canvas {
+            display: block;
+            margin: 0;
+            border: none;
+            width: 100%;
+            max-width: 1280px;
+            max-height: 75vh;
+            aspect-ratio: 16 / 9;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: -webkit-crisp-edges;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        .instructions {
+            margin-top: 12px;
+            max-width: 1280px;
+            width: 100%;
+            background: #111827;
+            padding: 10px 18px;
+            border-radius: 6px;
+            border: 1px solid #1f293d;
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #94a3b8;
+            gap: 20px;
+            box-sizing: border-box;
+        }
+
+        .instructions strong {
+            color: #f1f5f9;
+        }
+
+        .key-badge {
+            display: inline-block;
+            background: #1e293b;
+            color: #38bdf8;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-weight: bold;
+            font-size: 12px;
+            border: 1px solid #334155;
+        }
+
+        .badge-list {
+            display: flex;
+            gap: 12px;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+
+        .badge-pill {
+            background: #0f172a;
+            border: 1px solid #334155;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        a.back-link {
+            color: #38bdf8;
+            text-decoration: none;
+            margin-top: 8px;
+            font-size: 13px;
+            transition: color 0.2s;
+        }
+
+        a.back-link:hover {
+            color: #7dd3fc;
+            text-decoration: underline;
+        }
+    </style>
+
+    <!-- ── Spark.js Engine Core (Strict Dependency Order) ─────── -->
+    <script src="src/engine/utils_math.js"></script>
+    <script src="src/engine/utils_classes.js"></script>
+    <script src="src/engine/renderer.js"></script>
+    <script src="src/engine/gameobjects.js"></script>
+    <script src="src/engine/input.js"></script>
+    <script src="src/engine/audioplayer.js"></script>
+    <script src="src/engine/particlesystem.js"></script>
+    <script src="src/engine/htmlmenu.js"></script>
+    <script src="src/engine/virtualcontrols.js"></script>
+    <script src="src/engine/game.js"></script>
+    <script src="src/engine/main.js"></script>
+
+    <!-- ── Cyber Commando Game Scripts ──────────────────────── -->
+    <script src="src/examples/run_and_gun/audio.js"></script>
+    <script src="src/examples/run_and_gun/sprites.js"></script>
+    <script src="src/examples/run_and_gun/weapons.js"></script>
+    <script src="src/examples/run_and_gun/player.js"></script>
+    <script src="src/examples/run_and_gun/enemies.js"></script>
+    <script src="src/examples/run_and_gun/boss.js"></script>
+    <script src="src/examples/run_and_gun/stage.js"></script>
+    <script src="src/examples/run_and_gun/run_and_gun_game.js"></script>
+</head>
+<body>
+    <header>
+        <h1>⚡ CYBER COMMANDO: PROJECT SPARK</h1>
+        <div class="subtitle">Side-Scrolling Run 'N' Gun Arcade Action on spark.js</div>
+    </header>
+
+    <div id="gameWrapper">
+        <canvas id="canvas" width="1280" height="720"></canvas>
+    </div>
+
+    <div class="instructions">
+        <div>
+            <strong>Move:</strong> <span class="key-badge">A</span> <span class="key-badge">D</span> / Arrows &nbsp;|&nbsp;
+            <strong>Aim (8-way):</strong> <span class="key-badge">W</span> <span class="key-badge">S</span> / Arrows &nbsp;|&nbsp;
+            <strong>Jump:</strong> <span class="key-badge">K</span> / <span class="key-badge">X</span> / Space &nbsp;|&nbsp;
+            <strong>Drop Down:</strong> <span class="key-badge">S</span> + Jump
+        </div>
+        <div>
+            <strong>Fire:</strong> <span class="key-badge">J</span> / <span class="key-badge">Z</span> / Left Click &nbsp;|&nbsp;
+            <strong>Mute Audio:</strong> <span class="key-badge">M</span> &nbsp;|&nbsp;
+            <strong>Gamepad:</strong> D-Pad, <span class="key-badge">A</span> Jump, <span class="key-badge">X/RT</span> Fire
+        </div>
+    </div>
+
+    <div class="badge-list">
+        <span class="badge-pill" style="color: #ff0055;">[S] Spread Gun</span>
+        <span class="badge-pill" style="color: #ffaa00;">[M] Machine Gun</span>
+        <span class="badge-pill" style="color: #00f5d4;">[L] Piercing Laser</span>
+        <span class="badge-pill" style="color: #9d4edd;">[G] Grenade Launcher</span>
+        <span class="badge-pill" style="color: #3a86ff;">[B] Barrier Shield</span>
+    </div>
+
+    <a class="back-link" href="index.html">← Back to spark.js Showcase</a>
+
+    <script>
+        window.onload = () => {
+            Init(RunAndGunGame, "canvas");
+        };
+    </script>
+</body>
+</html>
+

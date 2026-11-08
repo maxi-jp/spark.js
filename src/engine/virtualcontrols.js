@@ -1,8 +1,8 @@
 // ============================================================
 // Virtual Controls
-// On-screen touch controls: VirtualJoystick and VirtualDPad.
-// Registered via Input.RegisterVirtualJoystick() / Input.RegisterVirtualDPad().
-// Globals provided: VirtualControlls, VirtualJoystick, VirtualDPad
+// On-screen touch controls: VirtualJoystick and VirtualButton.
+// Registered via Input.RegisterVirtualJoystick() / Input.RegisterVirtualButton().
+// Globals provided: VirtualControlls, VirtualJoystick, VirtualButton
 // Requires: utils_classes.js (Vector2), renderer.js
 // ============================================================
 
