@@ -461,7 +461,7 @@ MIT License
   - [x] ~~Polar emission angles (`MIN_ANGLE`, `MAX_ANGLE` / cone spread) and `SetRotation(angle)` for directional emitters attached to rotating objects (cars, turrets, missiles).~~ ✅DONE
   - [ ] Color tinting / color-over-lifetime (`startColor` → `endColor`) and optional procedural particle shapes (circles, sparks, lines) without requiring external textures.
   - [x] ~~Explicit particle lifetime / hold time (`HOLD_TIME`, `MAX_OPACITY`) decoupled from fade-in/fade-out speeds.~~ ✅DONE
-  - [ ] Additional emitter shapes (`emitterType.circle`, `emitterType.ring`, `emitterType.line`).
+  - [x] ~~Additional emitter shapes (`emitterType.circle`, `emitterType.ring`, `emitterType.line`).~~ ✅DONE
 
 ## Contributing
 

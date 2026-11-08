@@ -3,10 +3,13 @@
 // Controls:
 //   A – Smoke (area, default config)
 //   S – Smoke following the mouse (point emitter, rising buoyancy)
-//   D – Rain
-//   F – Snow
+//   D – Rain (line emitter along top edge)
+//   F – Snow (area emitter)
 //   G – Sparks fountain (polar cone + gravity arc)
 //   H – Rotating thruster / flamethrower (polar cone + SetRotation aiming at mouse)
+//   J – Campfire / Fire Aura (circle emitter following mouse + upward buoyancy)
+//   K – Portal Ring / Shockwave (ring emitter following mouse + radial outward velocity)
+//   L – Energy Beam / Firewall (line emitter between two points + rising flames)
 //   Click / Space – Explosion burst at cursor (velocity damping + gravity)
 // ============================================================
 
@@ -64,7 +67,7 @@ const smokePointConfig = {
 const rainConfig = {
     maxParticleCount: 1000,
     globalCompositeOperation: "source-over",
-    emitterType: emitterType.area,
+    emitterType: emitterType.line,
 
     AREA_X1: -200, AREA_Y1: -100,
     AREA_X2:  700, AREA_Y2: -100,
@@ -219,6 +222,146 @@ const thrusterConfig = {
     MAX_TIME_TO_SPAWN_PARTICLE: 0.012
 };
 
+const circleCampfireConfig = {
+    maxParticleCount: 400,
+    globalCompositeOperation: "lighter",
+    emitterType: emitterType.circle,
+
+    // Uniform random disk of radius 60px centered on emitter.position
+    EMISSION_RADIUS: 60,
+    radialVelocity: false,
+
+    MIN_INITIAL_VELOCITY: 15,
+    MAX_INITIAL_VELOCITY: 55,
+
+    // Gently drift inward/upward while rising under thermal buoyancy
+    directionMode: "polar",
+    MIN_ANGLE: -Math.PI * 0.7,
+    MAX_ANGLE: -Math.PI * 0.3,
+
+    GRAVITY_X: 0,
+    GRAVITY_Y: -90,
+    VELOCITY_DAMPING: 0.6,
+
+    MIN_OPACITY_INCREMENT_VELOCITY: 6.0,
+    MAX_OPACITY_INCREMENT_VELOCITY: 12.0,
+    MIN_OPACITY_DECREMENT_VELOCITY: 1.0,
+    MAX_OPACITY_DECREMENT_VELOCITY: 2.2,
+
+    MIN_MAX_OPACITY: 0.6,
+    MAX_MAX_OPACITY: 1.0,
+    MIN_HOLD_TIME: 0.1,
+    MAX_HOLD_TIME: 0.25,
+
+    MIN_INITIAL_SCALE: 0.06,
+    MAX_INITIAL_SCALE: 0.16,
+
+    MIN_SCALE_VELOCITY: 0.05,
+    MAX_SCALE_VELOCITY: 0.18,
+
+    MIN_INITIAL_ROTATION: 0,
+    MAX_INITIAL_ROTATION: PI2,
+
+    MIN_ROTATION_VELOCITY: -1.0,
+    MAX_ROTATION_VELOCITY:  1.0,
+
+    emitCountPerSpawn: 2,
+    MIN_TIME_TO_SPAWN_PARTICLE: 0.006,
+    MAX_TIME_TO_SPAWN_PARTICLE: 0.015
+};
+
+const portalRingConfig = {
+    maxParticleCount: 450,
+    globalCompositeOperation: "lighter",
+    emitterType: emitterType.ring,
+
+    // Annulus ring between 75px and 90px around emitter.position
+    EMISSION_INNER_RADIUS: 75,
+    EMISSION_RADIUS: 90,
+    radialVelocity: true,
+
+    // Expand radially outward from the ring circumference, braked by air drag
+    MIN_INITIAL_VELOCITY: 60,
+    MAX_INITIAL_VELOCITY: 150,
+
+    GRAVITY_X: 0,
+    GRAVITY_Y: 0,
+    VELOCITY_DAMPING: 2.2,
+
+    MIN_OPACITY_INCREMENT_VELOCITY: 12.0,
+    MAX_OPACITY_INCREMENT_VELOCITY: 20.0,
+    MIN_OPACITY_DECREMENT_VELOCITY: 1.2,
+    MAX_OPACITY_DECREMENT_VELOCITY: 2.4,
+
+    MIN_MAX_OPACITY: 0.75,
+    MAX_MAX_OPACITY: 1.0,
+    MIN_HOLD_TIME: 0.15,
+    MAX_HOLD_TIME: 0.35,
+
+    MIN_INITIAL_SCALE: 0.05,
+    MAX_INITIAL_SCALE: 0.12,
+
+    MIN_SCALE_VELOCITY: 0.04,
+    MAX_SCALE_VELOCITY: 0.12,
+
+    MIN_INITIAL_ROTATION: 0,
+    MAX_INITIAL_ROTATION: PI2,
+
+    MIN_ROTATION_VELOCITY: -2.0,
+    MAX_ROTATION_VELOCITY:  2.0,
+
+    emitCountPerSpawn: 3,
+    MIN_TIME_TO_SPAWN_PARTICLE: 0.006,
+    MAX_TIME_TO_SPAWN_PARTICLE: 0.014
+};
+
+const firewallLineConfig = {
+    maxParticleCount: 500,
+    globalCompositeOperation: "lighter",
+    emitterType: emitterType.line,
+
+    // Diagonal energy / flame barrier segment across the screen
+    AREA_X1: 150, AREA_Y1: 480,
+    AREA_X2: 650, AREA_Y2: 240,
+
+    MIN_INITIAL_VELOCITY: 30,
+    MAX_INITIAL_VELOCITY: 95,
+
+    directionMode: "polar",
+    MIN_ANGLE: -Math.PI * 0.65,
+    MAX_ANGLE: -Math.PI * 0.35,
+
+    GRAVITY_X: 0,
+    GRAVITY_Y: -80,
+    VELOCITY_DAMPING: 0.8,
+
+    MIN_OPACITY_INCREMENT_VELOCITY: 8.0,
+    MAX_OPACITY_INCREMENT_VELOCITY: 16.0,
+    MIN_OPACITY_DECREMENT_VELOCITY: 1.2,
+    MAX_OPACITY_DECREMENT_VELOCITY: 2.5,
+
+    MIN_MAX_OPACITY: 0.7,
+    MAX_MAX_OPACITY: 1.0,
+    MIN_HOLD_TIME: 0.1,
+    MAX_HOLD_TIME: 0.3,
+
+    MIN_INITIAL_SCALE: 0.05,
+    MAX_INITIAL_SCALE: 0.13,
+
+    MIN_SCALE_VELOCITY: 0.06,
+    MAX_SCALE_VELOCITY: 0.16,
+
+    MIN_INITIAL_ROTATION: 0,
+    MAX_INITIAL_ROTATION: PI2,
+
+    MIN_ROTATION_VELOCITY: -1.5,
+    MAX_ROTATION_VELOCITY:  1.5,
+
+    emitCountPerSpawn: 3,
+    MIN_TIME_TO_SPAWN_PARTICLE: 0.005,
+    MAX_TIME_TO_SPAWN_PARTICLE: 0.012
+};
+
 const explosionBurstConfig = {
     maxParticleCount: 400,
     globalCompositeOperation: "lighter",
@@ -349,14 +492,38 @@ class ParticlesExample extends Game {
             );
             this._mode = 'thruster';
         }
+        if (Input.IsKeyPressed(KEY_J)) {
+            this._particleSystem = new ParticleSystem(
+                this.graphicAssets.smoke.img,
+                circleCampfireConfig,
+                new Vector2(Input.mouse.x, Input.mouse.y)
+            );
+            this._mode = 'circle-campfire';
+        }
+        if (Input.IsKeyPressed(KEY_K)) {
+            this._particleSystem = new ParticleSystem(
+                this.graphicAssets.smoke.img,
+                portalRingConfig,
+                new Vector2(Input.mouse.x, Input.mouse.y)
+            );
+            this._mode = 'portal-ring';
+        }
+        if (Input.IsKeyPressed(KEY_L)) {
+            this._particleSystem = new ParticleSystem(
+                this.graphicAssets.smoke.img,
+                firewallLineConfig
+            );
+            this._mode = 'firewall-line';
+        }
 
         // Trigger a one-shot damped explosion burst on Left Click or Space
         if (Input.IsMouseDown(0) || Input.IsKeyDown(KEY_SPACE)) {
             this._burstSystem.Burst(55, Input.mouse.x, Input.mouse.y);
         }
 
-        // Point emitters follow the mouse (or rotate toward the mouse in thruster mode)
-        if (this._mode === 'point-smoke' || this._mode === 'fountain') {
+        // Emitters that track the mouse cursor
+        if (this._mode === 'point-smoke' || this._mode === 'fountain' ||
+            this._mode === 'circle-campfire' || this._mode === 'portal-ring') {
             this._particleSystem.SetPosition(Input.mouse.x, Input.mouse.y);
         }
         else if (this._mode === 'thruster') {
@@ -364,6 +531,11 @@ class ParticlesExample extends Game {
             const cy = this.screenHeight * 0.5;
             const angle = Math.atan2(Input.mouse.y - cy, Input.mouse.x - cx);
             this._particleSystem.SetRotation(angle);
+        }
+        else if (this._mode === 'firewall-line') {
+            // Anchor start of the line at (180, 460) and track the mouse with the second endpoint
+            this._particleSystem.emitter.area.x2 = Input.mouse.x;
+            this._particleSystem.emitter.area.y2 = Input.mouse.y;
         }
 
         this._particleSystem.Update(deltaTime);
@@ -384,17 +556,20 @@ class ParticlesExample extends Game {
     }
 
     _drawHUD(ctx) {
-        this.renderer.DrawFillBasicRectangle(8, 8, 365, 154, this.semiTransparentBlack);
+        this.renderer.DrawFillBasicRectangle(8, 8, 395, 208, this.semiTransparentBlack);
         this.renderer.DrawFillText("A - Area smoke (default)", 16, 28, "13px monospace", Color.white, "left");
         this.renderer.DrawFillText("S - Smoke following mouse (buoyancy)", 16, 46, "13px monospace", Color.white, "left");
-        this.renderer.DrawFillText("D - Rain", 16, 64, "13px monospace", Color.white, "left");
-        this.renderer.DrawFillText("F - Snow", 16, 82, "13px monospace", Color.white, "left");
+        this.renderer.DrawFillText("D - Rain (line emitter along top)", 16, 64, "13px monospace", Color.white, "left");
+        this.renderer.DrawFillText("F - Snow (area emitter)", 16, 82, "13px monospace", Color.white, "left");
         this.renderer.DrawFillText("G - Sparks fountain (polar + gravity)", 16, 100, "13px monospace", Color.white, "left");
         this.renderer.DrawFillText("H - Rotating thruster (polar + SetRotation)", 16, 118, "13px monospace", Color.white, "left");
-        this.renderer.DrawFillText("Click / Space - Explosion burst (drag)", 16, 136, "13px monospace", Color.white, "left");
+        this.renderer.DrawFillText("J - Campfire / Aura (circle emitter)", 16, 136, "13px monospace", Color.white, "left");
+        this.renderer.DrawFillText("K - Portal / Shockwave (ring + radial vel)", 16, 154, "13px monospace", Color.white, "left");
+        this.renderer.DrawFillText("L - Flame Barrier (line emitter to mouse)", 16, 172, "13px monospace", Color.white, "left");
+        this.renderer.DrawFillText("Click / Space - Explosion burst (drag)", 16, 190, "13px monospace", Color.white, "left");
         const ps = this._particleSystem;
         const bs = this._burstSystem;
-        this.renderer.DrawFillText(`Particles alive: ${ps.activeCount} / ${ps.config.maxParticleCount} (+${bs.activeCount} burst)`, 16, 154, "13px monospace", Color.white, "left");
+        this.renderer.DrawFillText(`Particles alive: ${ps.activeCount} / ${ps.config.maxParticleCount} (+${bs.activeCount} burst)`, 16, 208, "13px monospace", Color.white, "left");
     }
 }
 

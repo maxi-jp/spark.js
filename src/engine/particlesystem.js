@@ -6,10 +6,20 @@
 // Based on: https://github.com/maxi-jp/HTML5_ParticleSystem
 // ============================================================
 
-/** Emitter shape: `point` spawns all particles at one position; `area` spawns randomly within a rectangle. */
+/**
+ * Emitter shape:
+ * - `point` (0): spawns all particles at `emitter.position`
+ * - `area` (1): spawns randomly within the rectangle `(AREA_X1, AREA_Y1)` to `(AREA_X2, AREA_Y2)`
+ * - `circle` (2): spawns uniformly inside a disk of `EMISSION_RADIUS` centered at `emitter.position`
+ * - `ring` (3): spawns within an annulus between `EMISSION_INNER_RADIUS` and `EMISSION_RADIUS` centered at `emitter.position`
+ * - `line` (4): spawns randomly along the segment `(AREA_X1, AREA_Y1)` -> `(AREA_X2, AREA_Y2)`
+ */
 const emitterType = {
-    point: 0,
-    area: 1
+    point:  0,
+    area:   1,
+    circle: 2,
+    ring:   3,
+    line:   4
 };
 
 const defaultParticleConfig = {
@@ -19,11 +29,18 @@ const defaultParticleConfig = {
 
     emitterType: emitterType.area,
 
-    // Area emitter bounds (used when emitterType === area)
+    // Area / Line emitter bounds (used when emitterType === area or emitterType === line)
     AREA_X1: 0,
     AREA_Y1: 0,
     AREA_X2: 800,
     AREA_Y2: 640,
+
+    // Circle / Ring emitter radii in pixels (used when emitterType === circle or emitterType === ring)
+    EMISSION_RADIUS: 50,
+    EMISSION_INNER_RADIUS: 0,
+
+    // When true on circle or ring emitters, initial velocity points radially from emitter.position through the spawn point
+    radialVelocity: false,
 
     // Particle velocity (pixels/sec)
     MIN_INITIAL_VELOCITY: 10,
@@ -228,15 +245,14 @@ class ParticleEmitter {
         this.position = initialPosition ? Vector2.Copy(initialPosition) : Vector2.Zero();
         this.rotation = initialRotation;
         this.config   = config;
+        this._lastSpawnAngle = 0;
 
-        if (this.config.emitterType === emitterType.area) {
-            this.area = {
-                x1: this.config.AREA_X1,
-                y1: this.config.AREA_Y1,
-                x2: this.config.AREA_X2,
-                y2: this.config.AREA_Y2
-            };
-        }
+        this.area = {
+            x1: this.config.AREA_X1,
+            y1: this.config.AREA_Y1,
+            x2: this.config.AREA_X2,
+            y2: this.config.AREA_Y2
+        };
     }
 
     /** Returns a Vector2 with the spawn position for the next particle. */
@@ -250,12 +266,55 @@ class ParticleEmitter {
                     RandomBetweenFloat(this.area.x1, this.area.x2),
                     RandomBetweenFloat(this.area.y1, this.area.y2)
                 );
+
+            case emitterType.circle: {
+                const radius = Math.max(0, this.config.EMISSION_RADIUS);
+                const angle  = RandomBetweenFloat(0, PI2);
+                const r      = radius * Math.max(Math.random(), Math.random());
+                this._lastSpawnAngle = angle;
+                return new Vector2(
+                    this.position.x + Math.cos(angle) * r,
+                    this.position.y + Math.sin(angle) * r
+                );
+            }
+
+            case emitterType.ring: {
+                const outerR = Math.max(0, this.config.EMISSION_RADIUS);
+                const innerR = Math.max(0, Math.min(outerR, this.config.EMISSION_INNER_RADIUS));
+                const angle  = RandomBetweenFloat(0, PI2);
+                const r      = RandomBetweenFloat(innerR, outerR);
+                this._lastSpawnAngle = angle;
+                return new Vector2(
+                    this.position.x + Math.cos(angle) * r,
+                    this.position.y + Math.sin(angle) * r
+                );
+            }
+
+            case emitterType.line: {
+                const t = Math.random();
+                return new Vector2(
+                    this.area.x1 + (this.area.x2 - this.area.x1) * t,
+                    this.area.y1 + (this.area.y2 - this.area.y1) * t
+                );
+            }
+
+            default:
+                return Vector2.Copy(this.position);
         }
     }
 
     /** Returns a velocity Vector2 for the next particle. */
     GetInitialVelocity() {
         const speed = RandomBetweenFloat(this.config.MIN_INITIAL_VELOCITY, this.config.MAX_INITIAL_VELOCITY);
+
+        if (this.config.radialVelocity &&
+            (this.config.emitterType === emitterType.circle || this.config.emitterType === emitterType.ring)) {
+            const angle = this._lastSpawnAngle + this.rotation;
+            return new Vector2(
+                Math.cos(angle) * speed,
+                Math.sin(angle) * speed
+            );
+        }
 
         if (this.config.directionMode === "polar") {
             const angle = RandomBetweenFloat(this.config.MIN_ANGLE, this.config.MAX_ANGLE) + this.rotation;
@@ -374,8 +433,27 @@ class ParticleSystem {
         if (!particle)
             return false;
 
+        let spawnPoint;
+        if (overridePosition) {
+            if (this.config.emitterType === emitterType.circle || this.config.emitterType === emitterType.ring) {
+                const savedX = this.emitter.position.x;
+                const savedY = this.emitter.position.y;
+                this.emitter.position.x = overridePosition.x;
+                this.emitter.position.y = overridePosition.y;
+                spawnPoint = this.emitter.GetSpawnPoint();
+                this.emitter.position.x = savedX;
+                this.emitter.position.y = savedY;
+            }
+            else {
+                spawnPoint = overridePosition;
+            }
+        }
+        else {
+            spawnPoint = this.emitter.GetSpawnPoint();
+        }
+
         particle.Activate(
-            overridePosition ? overridePosition : this.emitter.GetSpawnPoint(),
+            spawnPoint,
             RandomBetweenFloat(this.config.MIN_OPACITY_INCREMENT_VELOCITY, this.config.MAX_OPACITY_INCREMENT_VELOCITY),
             RandomBetweenFloat(this.config.MIN_OPACITY_DECREMENT_VELOCITY, this.config.MAX_OPACITY_DECREMENT_VELOCITY),
             RandomBetweenFloat(this.config.MIN_INITIAL_SCALE,              this.config.MAX_INITIAL_SCALE),

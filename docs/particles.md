@@ -57,8 +57,11 @@ A global enum defining how particle spawn positions are chosen:
 
 ```javascript
 const emitterType = {
-    point: 0,  // all particles spawn at a single world position (emitter.position)
-    area:  1   // particles spawn at random positions inside a rectangle (AREA_X1..AREA_X2, AREA_Y1..AREA_Y2)
+    point:  0,  // all particles spawn at a single world position (emitter.position)
+    area:   1,  // particles spawn at random positions inside a rectangle (AREA_X1..AREA_X2, AREA_Y1..AREA_Y2)
+    circle: 2,  // particles spawn uniformly inside a filled disk of EMISSION_RADIUS centered at emitter.position
+    ring:   3,  // particles spawn inside an annulus between EMISSION_INNER_RADIUS and EMISSION_RADIUS centered at emitter.position
+    line:   4   // particles spawn randomly along the line segment (AREA_X1, AREA_Y1) -> (AREA_X2, AREA_Y2)
 };
 ```
 
@@ -72,11 +75,18 @@ const defaultParticleConfig = {
 
     globalCompositeOperation: "source-over",  // Canvas 2D blending mode ("source-over", "lighter", "overlay", etc.)
 
-    emitterType: emitterType.area,            // emitterType.point (0) or emitterType.area (1)
+    emitterType: emitterType.area,            // point (0), area (1), circle (2), ring (3), or line (4)
 
-    // Area emitter bounds in pixels (used when emitterType === emitterType.area)
+    // Area / Line emitter bounds in pixels (used when emitterType === area or emitterType === line)
     AREA_X1: 0,   AREA_Y1: 0,
     AREA_X2: 800, AREA_Y2: 640,
+
+    // Circle / Ring emitter radii in pixels (used when emitterType === circle or emitterType === ring)
+    EMISSION_RADIUS: 50,
+    EMISSION_INNER_RADIUS: 0,
+
+    // When true on circle or ring emitters, initial velocity points radially outward from emitter.position
+    radialVelocity: false,
 
     // Initial particle speed range (pixels / sec)
     MIN_INITIAL_VELOCITY: 10,
@@ -263,14 +273,17 @@ this.hitSparks.Burst(35, hitX, hitY);
 
 ### 3. Interactive Demo (`src/examples/particles/particles_example.js`)
 
-The included demo project ([`particles_example.js`](../src/examples/particles/particles_example.js ':ignore')) demonstrates switching between four preset configurations at runtime using keyboard keys:
+The included demo project ([`particles_example.js`](../src/examples/particles/particles_example.js ':ignore')) demonstrates switching between preset configurations at runtime using keyboard keys:
 
 - **`A` — Area Smoke (`smokeAreaConfig`)**: Uses `defaultParticleConfig` (`emitterType.area` across `0..800 × 0..640`) to fill the screen with drifting smoke clouds.
-- **`S` — Mouse-Following Smoke (`smokePointConfig`)**: Uses `emitterType.point` with `globalCompositeOperation: "overlay"`, thermal upward buoyancy (`GRAVITY_Y: -35`), and gentle air drag (`VELOCITY_DAMPING: 0.4`), updating `SetPosition(Input.mouse.x, Input.mouse.y)` every frame.
-- **`D` — Rain (`rainConfig`)**: Uses `emitterType.area` spawning along a line above the top of the screen (`AREA_X1: -200, AREA_Y1: -100, AREA_X2: 700, AREA_Y2: -100`), high downward speed (`400–800 px/s`), slight wind slant (`MIN_DIRECTION_X: 0.15, MAX_DIRECTION_X: 0.25, MIN_DIRECTION_Y: 1, MAX_DIRECTION_Y: 1`), zero scale growth, and fast spawn interval (`0.001–0.002s` with `maxParticleCount: 1000`).
+- **`S` — Mouse-Following Smoke (`smokePointConfig`)**: Uses `emitterType.point` with `globalCompositeOperation: "overlay"`, thermal upward buoyancy (`GRAVITY_Y: -35`), gentle air drag (`VELOCITY_DAMPING: 0.4`), and soft peak opacity (`0.35–0.65`), updating `SetPosition(Input.mouse.x, Input.mouse.y)` every frame.
+- **`D` — Rain (`rainConfig`)**: Uses `emitterType.line` spawning along a line segment above the top of the screen (`AREA_X1: -200, AREA_Y1: -100, AREA_X2: 700, AREA_Y2: -100`), high downward speed (`400–800 px/s`), slight wind slant (`MIN_DIRECTION_X: 0.15, MAX_DIRECTION_X: 0.25, MIN_DIRECTION_Y: 1, MAX_DIRECTION_Y: 1`), zero scale growth, and fast spawn interval (`0.001–0.002s` with `maxParticleCount: 1000`).
 - **`F` — Snow (`snowConfig`)**: Spawns above the canvas (`AREA_Y1: -100, AREA_Y2: -100`), gentle downward speed (`30–60 px/s`), horizontal flutter (`MIN_DIRECTION_X: -0.25, MAX_DIRECTION_X: 0.25`), slow fade-in/out, and continuous rotation (`0.1–0.5 rad/s`).
 - **`G` — Sparks Fountain (`fountainConfig`)**: Point emitter following the mouse that launches glowing additive particles upward in a polar cone (`directionMode: "polar", MIN_ANGLE: -Math.PI * 0.65, MAX_ANGLE: -Math.PI * 0.35`) and pulls them down in a parabolic arc using `GRAVITY_Y: 550` and `VELOCITY_DAMPING: 0.2`.
 - **`H` — Rotating Thruster / Flamethrower (`thrusterConfig`)**: Narrow directional polar cone (`MIN_ANGLE: -0.22, MAX_ANGLE: 0.22`) at the screen center that rotates every frame via `SetRotation(angleToMouse)` to aim a stream of fire toward the mouse cursor.
+- **`J` — Campfire / Fire Aura (`circleCampfireConfig`)**: Uses `emitterType.circle` (`EMISSION_RADIUS: 60`) following the mouse cursor with uniform disk sampling (`r = R * Math.max(Math.random(), Math.random())`) and upward thermal buoyancy (`GRAVITY_Y: -90`).
+- **`K` — Portal Ring / Shockwave (`portalRingConfig`)**: Uses `emitterType.ring` (`EMISSION_INNER_RADIUS: 75, EMISSION_RADIUS: 90`) following the mouse cursor with `radialVelocity: true` so particles expand radially outward from the ring perimeter and decelerate under `VELOCITY_DAMPING: 2.2`.
+- **`L` — Flame Barrier (`firewallLineConfig`)**: Uses `emitterType.line` anchored at `(150, 480)` with its second endpoint `(AREA_X2, AREA_Y2)` tracking the mouse cursor in real time, spawning a rising wall of fire along the segment.
 - **`Click / Space` — Explosion Burst (`explosionBurstConfig`)**: Fires a 55-particle one-shot `Burst()` at the cursor using a uniform 360° polar distribution (`MIN_ANGLE: 0, MAX_ANGLE: PI2`) and high initial speed (`180–520 px/s`) that rapidly decelerates mid-air via `VELOCITY_DAMPING: 3.5` while drifting downward under `GRAVITY_Y: 160`.
 
 ---
@@ -284,7 +297,7 @@ The standalone **[Particle System Editor](../particle-system-editor.html ':ignor
 - **Particle Textures (Built-in & Custom)**:
   - Switch between 4 built-in sample assets (`smoke.png`, `smoke2.png`, `snow.png`, `waterdrop.png`) and a procedural radial-gradient fallback (`Built-in: Soft Circle`).
   - Load any custom image via the **Load Image** button, by clicking the sprite thumbnail preview, or by dragging and dropping an image file anywhere onto the window.
-- **9 Built-in Presets**:
+- **12 Built-in Presets**:
   - *Missile Smoke (Death Rally)* (`missileSmokeConfig`)
   - *Default (Area Smoke)* (`smokeAreaConfig`)
   - *Point Smoke* (`smokePointConfig`)
@@ -292,6 +305,9 @@ The standalone **[Particle System Editor](../particle-system-editor.html ':ignor
   - *Jet Thruster (Polar Cone + Rotation)* (`jetThrusterConfig` — narrow polar cone on an orbiting emitter with `Auto-Path` exhaust rotation)
   - *Sparks Fountain (Gravity)* (`sparksFountainConfig` — polar upward cone + parabolic gravity arc with `GRAVITY_Y: 550`)
   - *Explosion / Debris (Drag + Gravity)* (`explosionBurstConfig` — 360° polar bursts braked by `VELOCITY_DAMPING: 3.5`)
+  - *Campfire / Aura (Circle Emitter)* (`circleCampfireConfig` — `emitterType.circle` disk with rising buoyancy)
+  - *Portal / Shockwave (Ring + Radial)* (`portalRingConfig` — `emitterType.ring` annulus with `radialVelocity: true`)
+  - *Flame Barrier (Line Emitter)* (`firewallLineConfig` — `emitterType.line` segment with draggable endpoints)
   - *Rain* (`rainConfig`)
   - *Snow* (`snowConfig`)
 - **Playback & Burst Toolbar**:
@@ -299,7 +315,7 @@ The standalone **[Particle System Editor](../particle-system-editor.html ':ignor
   - **💥 Burst** — Fires `particleSystem.Burst(count)` on demand (`max(10, emitCountPerSpawn)`).
   - **⏸ Pause / ▶ Resume** — Freezes the simulation loop to inspect individual particles.
   - **↻ Reset** — Rebuilds the particle pool and clears all active particles.
-- **Emitter Motion Preview Modes (Point Emitters)**:
+- **Emitter Motion Preview Modes (Point, Circle & Ring Emitters)**:
   - **Click / Drag on Canvas (`manual`)** — Click or drag anywhere on the canvas to position the emitter.
   - **Follow Mouse (`mouse`)** — Emitter tracks the cursor inside the canvas.
   - **Circle Path (`circle`)** — Moves the emitter along an orbit with a simulated missile body gizmo ahead of the exhaust point.
@@ -307,8 +323,8 @@ The standalone **[Particle System Editor](../particle-system-editor.html ':ignor
   - **Linear Projectile (`projectile`)** — Flies across the canvas at a slight angle and wraps around.
   - Includes a **Speed** slider (`40–700 px/s`) for the animated path modes.
 - **Interactive Canvas Gizmos & Backgrounds**:
-  - **Point Gizmo**: Crosshair + orange direction indicator (a vector in `cartesian` mode, or a shaded angular sector wedge in `polar` mode, rotated by `emitter.rotation`) + cyan dashed gravity vector arrow + optional projectile nose cone.
-  - **Area Gizmo**: Dashed bounding rectangle with 4 draggable corner handles (`nw`, `ne`, `sw`, `se`), interior drag-to-move, outside drag-to-draw a new box, plus quick-fit buttons (**Full Canvas**, **Center Box**).
+  - **Point / Circle / Ring Gizmos**: Crosshair + dashed circle/annulus boundaries (`EMISSION_INNER_RADIUS`..`EMISSION_RADIUS`) + orange direction indicator (vector in `cartesian` mode, shaded angular sector wedge in `polar` mode, or 8 outward radial spokes when `radialVelocity` is enabled) + cyan dashed gravity vector arrow + optional projectile nose cone.
+  - **Area & Line Gizmos**: Dashed bounding rectangle (with 4 draggable corner handles) or dashed line segment (with 2 draggable endpoint handles), interior/segment drag-to-move, outside drag-to-draw, plus quick-fit buttons (**Full Canvas**, **Center Box**, **Horiz Line**).
   - **Background Surfaces**: Switch between *Asphalt (`#414146`)*, *Dark Night (`#1a1a2e`)*, *Grass (`#325023`)*, *Dirt (`#785532`)*, *Pure Black (`#000000`)*, *Checkerboard*, or any custom hex color picker.
 - **Real-Time Parameter Sliders & Smart Clamping**:
   - Synchronized range sliders and numeric inputs for every `defaultParticleConfig` property (including `directionMode` toggle between `cartesian` and `polar`, `MIN_ANGLE`/`MAX_ANGLE`, `SetRotation` preview slider + `Auto-Path` rotation toggle, `emitCountPerSpawn`, `GRAVITY_X`, `GRAVITY_Y`, `VELOCITY_DAMPING`, `MIN_MAX_OPACITY`/`MAX_MAX_OPACITY`, `MIN_HOLD_TIME`/`MAX_HOLD_TIME`, and all 13 `MIN_*/MAX_*` pairs).
@@ -335,6 +351,8 @@ This section tracks all completed and planned improvements for the particle syst
   - *Details*: Added `directionMode: "cartesian" | "polar"`, `MIN_ANGLE`, and `MAX_ANGLE` to `defaultParticleConfig` (auto-selecting `"polar"` when `MIN_ANGLE`/`MAX_ANGLE` are supplied), plus `SetRotation(angle)` and `rotation` getter/setter on `ParticleSystem` (rotating both polar cones and cartesian direction vectors). Added `thrusterConfig` (`H`) to `particles_example.js` and polar cone controls, sector gizmo, `SetRotation` live slider + `Auto-Path` toggle, and *Jet Thruster* preset to `particle-system-editor.html`.
 - [x] **Explicit Particle Lifetime / Hold Time (`MIN_MAX_OPACITY`, `MAX_MAX_OPACITY`, `MIN_HOLD_TIME`, `MAX_HOLD_TIME`)** ✅ *DONE*
   - *Details*: Decoupled particle peak opacity and lifetime hold duration from fade speeds by adding `MIN_MAX_OPACITY`, `MAX_MAX_OPACITY` (plus `MAX_OPACITY` shorthand) and `MIN_HOLD_TIME`, `MAX_HOLD_TIME` (plus `HOLD_TIME` shorthand) to `defaultParticleConfig` and `Particle`. Updated `particles_example.js` presets, added sliders and quick-preset buttons to `particle-system-editor.html`, and updated the editor's **Avg Lifetime** telemetry formula to account for peak opacity and hold time.
+- [x] **Additional Emitter Shapes (`emitterType.circle`, `emitterType.ring`, `emitterType.line`) & `radialVelocity`** ✅ *DONE*
+  - *Details*: Expanded `emitterType` with `circle` (2, uniform disk sampling via `Math.max(Math.random(), Math.random())`), `ring` (3, annulus sampling between `EMISSION_INNER_RADIUS` and `EMISSION_RADIUS`), and `line` (4, linear interpolation along `(AREA_X1, AREA_Y1) -> (AREA_X2, AREA_Y2)`), plus `radialVelocity` for outward/inward radial velocity on `circle`/`ring` emitters (reusing the cached `_lastSpawnAngle` without `Math.atan2`). Added `J` (`circleCampfireConfig`), `K` (`portalRingConfig`), and `L` (`firewallLineConfig`) interactive demos to `particles_example.js`, and added presets, controls, and interactive circle/ring/line gizmos to `particle-system-editor.html`.
 
 ---
 
@@ -352,26 +370,9 @@ This section tracks all completed and planned improvements for the particle syst
 - **Status**: `[x] Completed`
 - **Config Keys**: `MIN_MAX_OPACITY: 1.0`, `MAX_MAX_OPACITY: 1.0` (or shorthand `MAX_OPACITY`), `MIN_HOLD_TIME: 0.0`, `MAX_HOLD_TIME: 0.0` (or shorthand `HOLD_TIME`).
 
-#### 4. Additional Emitter Shapes (`circle`, `ring`, `line`)
-- **Status**: `[ ] Pending`
-- **Motivation**: `point` and axis-aligned `area` rectangles cover basic use cases, but many game effects need circular or linear emission zones (e.g. shockwave rings, magic portals, campfires, laser beams, ground dust lines, or radial explosions).
-- **Proposed Enum & Config Keys**:
-  - Expand `emitterType`:
-    ```javascript
-    const emitterType = {
-        point:  0,
-        area:   1,
-        circle: 2, // uniform random distribution inside a circle of EMISSION_RADIUS
-        ring:   3, // spawn on the circumference (or between INNER_RADIUS and EMISSION_RADIUS)
-        line:   4  // spawn along the segment (AREA_X1, AREA_Y1) -> (AREA_X2, AREA_Y2)
-    };
-    ```
-  - `EMISSION_RADIUS: 50` (outer radius for `circle` and `ring`)
-  - `EMISSION_INNER_RADIUS: 0` (inner radius for `ring`; when equal to `EMISSION_RADIUS`, spawns on the exact perimeter)
-  - `radialVelocity: false` (when `true` on `circle`/`ring` emitters, initial velocity points outward—or inward if speed is negative—along the vector from the emitter center to the spawn point).
-- **Implementation Notes**:
-  - For uniform disk sampling in `emitterType.circle`, use `const r = radius * Math.sqrt(Math.random())` so particles don't bunch up at the center.
-  - Note: `circle` and `ring` should be centered on `this.emitter.position` so they move naturally when `SetPosition(x, y)` is called!
+#### 4. ~~Additional Emitter Shapes (`circle`, `ring`, `line`)~~ ✅ *DONE*
+- **Status**: `[x] Completed`
+- **Enum & Config Keys**: `emitterType.circle` (`2`), `emitterType.ring` (`3`), `emitterType.line` (`4`), `EMISSION_RADIUS: 50`, `EMISSION_INNER_RADIUS: 0`, `radialVelocity: false`.
 
 #### 5. Color Tinting / Color-over-Lifetime & Procedural Shapes
 - **Status**: `[ ] Pending`

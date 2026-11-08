@@ -44,6 +44,9 @@
             <option value="jetThruster">Jet Thruster (Polar Cone + Rotation)</option>
             <option value="sparksFountain">Sparks Fountain (Gravity)</option>
             <option value="explosionBurst">Explosion / Debris (Drag + Gravity)</option>
+            <option value="circleCampfire">Campfire / Aura (Circle Emitter)</option>
+            <option value="portalRing">Portal / Shockwave (Ring + Radial)</option>
+            <option value="firewallLine">Flame Barrier (Line Emitter)</option>
             <option value="rain">Rain</option>
             <option value="snow">Snow</option>
         </select>
@@ -187,15 +190,19 @@
                         <select id="cfg-emitterType" class="full-select">
                             <option value="0">0 — emitterType.point (Single Position)</option>
                             <option value="1">1 — emitterType.area (Rectangle Bounds)</option>
+                            <option value="2">2 — emitterType.circle (Filled Disk)</option>
+                            <option value="3">3 — emitterType.ring (Annulus / Perimeter)</option>
+                            <option value="4">4 — emitterType.line (Line Segment)</option>
                         </select>
                     </div>
 
-                    <!-- Area bounds (only visible when emitterType === area) -->
+                    <!-- Area / Line bounds (only visible when emitterType === area or line) -->
                     <div id="area-bounds-panel" class="sub-panel" style="display:none">
                         <div class="sub-panel-header">
-                            <span>Area Bounds (px)</span>
+                            <span id="lbl-area-bounds">Area Bounds (px)</span>
                             <button id="btn-fit-area" class="mini-btn" title="Set area to current canvas size">Full Canvas</button>
-                            <button id="btn-center-area" class="mini-btn" title="Set a centered 200x200 box">Center Box</button>
+                            <button id="btn-center-area" class="mini-btn" title="Set a centered 240x240 box">Center Box</button>
+                            <button id="btn-horiz-line" class="mini-btn" title="Set a centered horizontal line segment" style="display:none">Horiz Line</button>
                         </div>
                         <div class="coord-grid">
                             <div class="coord-field">
@@ -214,6 +221,30 @@
                                 <label for="cfg-AREA_Y2">AREA_Y2</label>
                                 <input id="cfg-AREA_Y2" type="number" step="1">
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Circle / Ring bounds (only visible when emitterType === circle or ring) -->
+                    <div id="circle-bounds-panel" class="sub-panel" style="display:none">
+                        <div class="sub-panel-header">
+                            <span id="lbl-circle-bounds">Circle / Ring Radius (px)</span>
+                            <label style="font-size:10px;color:#9aa4b8;cursor:pointer;display:flex;align-items:center;gap:4px" title="When enabled, initial particle velocity points radially outward from the emitter center through each particle's spawn point">
+                                <input id="cfg-radialVelocity" type="checkbox"> radialVelocity
+                            </label>
+                        </div>
+                        <div class="param-row" id="inner-radius-row" style="display:none;margin-bottom:6px">
+                            <div class="param-header">
+                                <label for="cfg-EMISSION_INNER_RADIUS" title="Inner radius for ring emitter (set equal to EMISSION_RADIUS for exact circumference)">EMISSION_INNER_RADIUS</label>
+                                <input id="cfg-EMISSION_INNER_RADIUS" type="number" min="0" max="1000" step="1" class="num-input">
+                            </div>
+                            <input id="rng-EMISSION_INNER_RADIUS" type="range" min="0" max="400" step="1" class="range-input">
+                        </div>
+                        <div class="param-row">
+                            <div class="param-header">
+                                <label for="cfg-EMISSION_RADIUS" title="Outer radius in pixels around emitter.position">EMISSION_RADIUS</label>
+                                <input id="cfg-EMISSION_RADIUS" type="number" min="1" max="1000" step="1" class="num-input">
+                            </div>
+                            <input id="rng-EMISSION_RADIUS" type="range" min="1" max="400" step="1" class="range-input">
                         </div>
                     </div>
 

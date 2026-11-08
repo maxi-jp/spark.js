@@ -92,7 +92,7 @@ const PRESETS = {
     },
     fire: {
         name: 'fireExhaustConfig',
-        builtinImg: 'smoke2',
+        builtinImg: 'smoke',
         bgPreset: '#1a1a2e',
         motion: 'manual',
         config: {
@@ -127,7 +127,7 @@ const PRESETS = {
     },
     jetThruster: {
         name: 'jetThrusterConfig',
-        builtinImg: 'smoke2',
+        builtinImg: 'smoke',
         bgPreset: '#1a1a2e',
         motion: 'circle',
         autoRotate: true,
@@ -167,7 +167,7 @@ const PRESETS = {
     },
     sparksFountain: {
         name: 'sparksFountainConfig',
-        builtinImg: 'smoke2',
+        builtinImg: 'smoke',
         bgPreset: '#1a1a2e',
         motion: 'manual',
         config: {
@@ -210,7 +210,7 @@ const PRESETS = {
     },
     explosionBurst: {
         name: 'explosionBurstConfig',
-        builtinImg: 'smoke2',
+        builtinImg: 'smoke',
         bgPreset: '#1a1a2e',
         motion: 'manual',
         config: {
@@ -249,6 +249,142 @@ const PRESETS = {
             emitCountPerSpawn: 35,
             MIN_TIME_TO_SPAWN_PARTICLE: 0.4,
             MAX_TIME_TO_SPAWN_PARTICLE: 0.65
+        }
+    },
+    circleCampfire: {
+        name: 'circleCampfireConfig',
+        builtinImg: 'smoke',
+        bgPreset: '#1a1a2e',
+        motion: 'manual',
+        config: {
+            maxParticleCount: 400,
+            globalCompositeOperation: 'lighter',
+            emitterType: emitterType.circle,
+            EMISSION_RADIUS: 60,
+            EMISSION_INNER_RADIUS: 0,
+            radialVelocity: false,
+            AREA_X1: 0, AREA_Y1: 0, AREA_X2: 800, AREA_Y2: 640,
+            MIN_INITIAL_VELOCITY: 15,
+            MAX_INITIAL_VELOCITY: 55,
+            directionMode: 'polar',
+            MIN_ANGLE: -2.20,
+            MAX_ANGLE: -0.94,
+            MIN_DIRECTION_X: -0.5,
+            MAX_DIRECTION_X:  0.5,
+            MIN_DIRECTION_Y: -1.0,
+            MAX_DIRECTION_Y: -0.5,
+            GRAVITY_X: 0,
+            GRAVITY_Y: -90,
+            VELOCITY_DAMPING: 0.6,
+            MIN_OPACITY_INCREMENT_VELOCITY: 6.0,
+            MAX_OPACITY_INCREMENT_VELOCITY: 12.0,
+            MIN_MAX_OPACITY: 0.6,
+            MAX_MAX_OPACITY: 1.0,
+            MIN_HOLD_TIME: 0.1,
+            MAX_HOLD_TIME: 0.25,
+            MIN_OPACITY_DECREMENT_VELOCITY: 1.0,
+            MAX_OPACITY_DECREMENT_VELOCITY: 2.2,
+            MIN_INITIAL_SCALE: 0.06,
+            MAX_INITIAL_SCALE: 0.16,
+            MIN_SCALE_VELOCITY: 0.05,
+            MAX_SCALE_VELOCITY: 0.18,
+            MIN_INITIAL_ROTATION: 0,
+            MAX_INITIAL_ROTATION: Number(PI2.toFixed(4)),
+            MIN_ROTATION_VELOCITY: -1.0,
+            MAX_ROTATION_VELOCITY:  1.0,
+            emitCountPerSpawn: 2,
+            MIN_TIME_TO_SPAWN_PARTICLE: 0.006,
+            MAX_TIME_TO_SPAWN_PARTICLE: 0.015
+        }
+    },
+    portalRing: {
+        name: 'portalRingConfig',
+        builtinImg: 'smoke',
+        bgPreset: '#1a1a2e',
+        motion: 'manual',
+        config: {
+            maxParticleCount: 450,
+            globalCompositeOperation: 'lighter',
+            emitterType: emitterType.ring,
+            EMISSION_INNER_RADIUS: 75,
+            EMISSION_RADIUS: 90,
+            radialVelocity: true,
+            AREA_X1: 0, AREA_Y1: 0, AREA_X2: 800, AREA_Y2: 640,
+            MIN_INITIAL_VELOCITY: 60,
+            MAX_INITIAL_VELOCITY: 150,
+            directionMode: 'polar',
+            MIN_ANGLE: 0,
+            MAX_ANGLE: Number(PI2.toFixed(4)),
+            MIN_DIRECTION_X: -1,
+            MAX_DIRECTION_X:  1,
+            MIN_DIRECTION_Y: -1,
+            MAX_DIRECTION_Y:  1,
+            GRAVITY_X: 0,
+            GRAVITY_Y: 0,
+            VELOCITY_DAMPING: 2.2,
+            MIN_OPACITY_INCREMENT_VELOCITY: 12.0,
+            MAX_OPACITY_INCREMENT_VELOCITY: 20.0,
+            MIN_MAX_OPACITY: 0.75,
+            MAX_MAX_OPACITY: 1.0,
+            MIN_HOLD_TIME: 0.15,
+            MAX_HOLD_TIME: 0.35,
+            MIN_OPACITY_DECREMENT_VELOCITY: 1.2,
+            MAX_OPACITY_DECREMENT_VELOCITY: 2.4,
+            MIN_INITIAL_SCALE: 0.05,
+            MAX_INITIAL_SCALE: 0.12,
+            MIN_SCALE_VELOCITY: 0.04,
+            MAX_SCALE_VELOCITY: 0.12,
+            MIN_INITIAL_ROTATION: 0,
+            MAX_INITIAL_ROTATION: Number(PI2.toFixed(4)),
+            MIN_ROTATION_VELOCITY: -2.0,
+            MAX_ROTATION_VELOCITY:  2.0,
+            emitCountPerSpawn: 3,
+            MIN_TIME_TO_SPAWN_PARTICLE: 0.006,
+            MAX_TIME_TO_SPAWN_PARTICLE: 0.014
+        }
+    },
+    firewallLine: {
+        name: 'firewallLineConfig',
+        builtinImg: 'smoke',
+        bgPreset: '#1a1a2e',
+        motion: 'manual',
+        config: {
+            maxParticleCount: 500,
+            globalCompositeOperation: 'lighter',
+            emitterType: emitterType.line,
+            AREA_X1: 180, AREA_Y1: 420,
+            AREA_X2: 620, AREA_Y2: 240,
+            MIN_INITIAL_VELOCITY: 30,
+            MAX_INITIAL_VELOCITY: 95,
+            directionMode: 'polar',
+            MIN_ANGLE: -2.04,
+            MAX_ANGLE: -1.10,
+            MIN_DIRECTION_X: -0.35,
+            MAX_DIRECTION_X:  0.35,
+            MIN_DIRECTION_Y: -1.0,
+            MAX_DIRECTION_Y: -0.5,
+            GRAVITY_X: 0,
+            GRAVITY_Y: -80,
+            VELOCITY_DAMPING: 0.8,
+            MIN_OPACITY_INCREMENT_VELOCITY: 8.0,
+            MAX_OPACITY_INCREMENT_VELOCITY: 16.0,
+            MIN_MAX_OPACITY: 0.7,
+            MAX_MAX_OPACITY: 1.0,
+            MIN_HOLD_TIME: 0.1,
+            MAX_HOLD_TIME: 0.3,
+            MIN_OPACITY_DECREMENT_VELOCITY: 1.2,
+            MAX_OPACITY_DECREMENT_VELOCITY: 2.5,
+            MIN_INITIAL_SCALE: 0.05,
+            MAX_INITIAL_SCALE: 0.13,
+            MIN_SCALE_VELOCITY: 0.06,
+            MAX_SCALE_VELOCITY: 0.16,
+            MIN_INITIAL_ROTATION: 0,
+            MAX_INITIAL_ROTATION: Number(PI2.toFixed(4)),
+            MIN_ROTATION_VELOCITY: -1.5,
+            MAX_ROTATION_VELOCITY:  1.5,
+            emitCountPerSpawn: 3,
+            MIN_TIME_TO_SPAWN_PARTICLE: 0.005,
+            MAX_TIME_TO_SPAWN_PARTICLE: 0.012
         }
     },
     rain: {
@@ -324,6 +460,7 @@ const NUMERIC_PARAMS = [
     'maxParticleCount',
     'emitCountPerSpawn',
     'AREA_X1', 'AREA_Y1', 'AREA_X2', 'AREA_Y2',
+    'EMISSION_INNER_RADIUS', 'EMISSION_RADIUS',
     'MIN_INITIAL_VELOCITY', 'MAX_INITIAL_VELOCITY',
     'MIN_DIRECTION_X', 'MAX_DIRECTION_X',
     'MIN_DIRECTION_Y', 'MAX_DIRECTION_Y',
@@ -342,6 +479,7 @@ const NUMERIC_PARAMS = [
 ];
 
 const MIN_MAX_PAIRS = [
+    ['EMISSION_INNER_RADIUS',          'EMISSION_RADIUS'],
     ['MIN_INITIAL_VELOCITY',           'MAX_INITIAL_VELOCITY'],
     ['MIN_DIRECTION_X',                'MAX_DIRECTION_X'],
     ['MIN_DIRECTION_Y',                'MAX_DIRECTION_Y'],
@@ -570,9 +708,27 @@ function syncUIFromConfig() {
     document.getElementById('lbl-dir-mode').textContent =
         dirMode === 'polar' ? 'Polar Cone [MIN_ANGLE, MAX_ANGLE] (rad)' : 'Direction Range [-1, 1]';
 
-    // Show/hide area bounds sub-panel
-    const isArea = currentConfig.emitterType === emitterType.area;
-    document.getElementById('area-bounds-panel').style.display = isArea ? 'block' : 'none';
+    // Show/hide emitter shape sub-panels
+    const emType = Number(currentConfig.emitterType);
+    const isAreaOrLine   = emType === emitterType.area   || emType === emitterType.line;
+    const isCircleOrRing = emType === emitterType.circle || emType === emitterType.ring;
+
+    document.getElementById('area-bounds-panel').style.display   = isAreaOrLine   ? 'block' : 'none';
+    document.getElementById('circle-bounds-panel').style.display = isCircleOrRing ? 'block' : 'none';
+
+    if (isAreaOrLine) {
+        const isLine = emType === emitterType.line;
+        document.getElementById('lbl-area-bounds').textContent = isLine ? 'Line Segment (px)' : 'Area Bounds (px)';
+        document.getElementById('btn-fit-area').style.display    = isLine ? 'none' : '';
+        document.getElementById('btn-center-area').style.display = isLine ? 'none' : '';
+        document.getElementById('btn-horiz-line').style.display  = isLine ? ''     : 'none';
+    }
+    if (isCircleOrRing) {
+        const isRing = emType === emitterType.ring;
+        document.getElementById('lbl-circle-bounds').textContent = isRing ? 'Ring Radii (px)' : 'Circle Radius (px)';
+        document.getElementById('inner-radius-row').style.display = isRing ? 'block' : 'none';
+        document.getElementById('cfg-radialVelocity').checked = Boolean(currentConfig.radialVelocity);
+    }
 
     // Numeric inputs & sliders
     for (const key of NUMERIC_PARAMS) {
@@ -593,11 +749,20 @@ function getExportableConfig() {
         emitterType: Number(currentConfig.emitterType),
     };
 
-    if (out.emitterType === emitterType.area) {
+    if (out.emitterType === emitterType.area || out.emitterType === emitterType.line) {
         out.AREA_X1 = Math.round(currentConfig.AREA_X1);
         out.AREA_Y1 = Math.round(currentConfig.AREA_Y1);
         out.AREA_X2 = Math.round(currentConfig.AREA_X2);
         out.AREA_Y2 = Math.round(currentConfig.AREA_Y2);
+    }
+    else if (out.emitterType === emitterType.circle) {
+        out.EMISSION_RADIUS = Number(currentConfig.EMISSION_RADIUS ?? 50);
+        out.radialVelocity  = Boolean(currentConfig.radialVelocity);
+    }
+    else if (out.emitterType === emitterType.ring) {
+        out.EMISSION_INNER_RADIUS = Number(currentConfig.EMISSION_INNER_RADIUS ?? 0);
+        out.EMISSION_RADIUS       = Number(currentConfig.EMISSION_RADIUS ?? 50);
+        out.radialVelocity        = Boolean(currentConfig.radialVelocity);
     }
 
     out.MIN_INITIAL_VELOCITY = Number(currentConfig.MIN_INITIAL_VELOCITY);
@@ -644,7 +809,14 @@ function formatJSConfigSnippet() {
     const rawName = document.getElementById('config-name').value.trim() || 'particleConfig';
     const safeName = rawName.replace(/[^a-zA-Z0-9_$]/g, '_');
     const c = getExportableConfig();
-    const emTypeStr = c.emitterType === emitterType.point ? 'emitterType.point' : 'emitterType.area';
+    const emTypeNames = {
+        [emitterType.point]:  'emitterType.point',
+        [emitterType.area]:   'emitterType.area',
+        [emitterType.circle]: 'emitterType.circle',
+        [emitterType.ring]:   'emitterType.ring',
+        [emitterType.line]:   'emitterType.line'
+    };
+    const emTypeStr = emTypeNames[c.emitterType] || 'emitterType.point';
     const maxRotStr = Math.abs(c.MAX_INITIAL_ROTATION - PI2) < 0.005 ? 'PI2' : c.MAX_INITIAL_ROTATION;
 
     const lines = [
@@ -654,13 +826,28 @@ function formatJSConfigSnippet() {
         `    emitterType: ${emTypeStr},`,
     ];
 
-    if (c.emitterType === emitterType.area) {
+    if (c.emitterType === emitterType.area || c.emitterType === emitterType.line) {
         lines.push(
             ``,
             `    AREA_X1: ${c.AREA_X1},`,
             `    AREA_Y1: ${c.AREA_Y1},`,
             `    AREA_X2: ${c.AREA_X2},`,
             `    AREA_Y2: ${c.AREA_Y2},`
+        );
+    }
+    else if (c.emitterType === emitterType.circle) {
+        lines.push(
+            ``,
+            `    EMISSION_RADIUS: ${c.EMISSION_RADIUS},`,
+            `    radialVelocity: ${c.radialVelocity},`
+        );
+    }
+    else if (c.emitterType === emitterType.ring) {
+        lines.push(
+            ``,
+            `    EMISSION_INNER_RADIUS: ${c.EMISSION_INNER_RADIUS},`,
+            `    EMISSION_RADIUS: ${c.EMISSION_RADIUS},`,
+            `    radialVelocity: ${c.radialVelocity},`
         );
     }
 
@@ -742,8 +929,13 @@ function resizeCanvas() {
     }
 }
 
+function isPositionBasedEmitter() {
+    const t = Number(currentConfig.emitterType);
+    return t === emitterType.point || t === emitterType.circle || t === emitterType.ring;
+}
+
 function updateEmitterMotion(dt) {
-    if (currentConfig.emitterType !== emitterType.point) return;
+    if (!isPositionBasedEmitter()) return;
 
     const cx = canvas.width / 2;
     const cy = canvas.height / 2;
@@ -814,60 +1006,119 @@ function drawGizmos(ctx) {
     if (!showGizmos) return;
 
     ctx.save();
-    if (currentConfig.emitterType === emitterType.point) {
+    const emType = Number(currentConfig.emitterType);
+
+    if (isPositionBasedEmitter()) {
         const x = emitterPos.x;
         const y = emitterPos.y;
 
-        if (currentConfig.directionMode === 'polar') {
-            // Polar emission cone gizmo (sector + bisector vector)
-            const a1 = (currentConfig.MIN_ANGLE || 0) + emitterRotation;
-            const a2 = (currentConfig.MAX_ANGLE || 0) + emitterRotation;
-            const span = Math.abs(a2 - a1);
-            const r = 38;
+        // Draw Circle or Ring shape boundary
+        if (emType === emitterType.circle || emType === emitterType.ring) {
+            const outerR = Math.max(0, Number(currentConfig.EMISSION_RADIUS ?? 50));
+            const innerR = emType === emitterType.ring
+                ? Math.max(0, Math.min(outerR, Number(currentConfig.EMISSION_INNER_RADIUS ?? 0)))
+                : 0;
 
-            ctx.fillStyle   = 'rgba(255, 152, 0, 0.14)';
-            ctx.strokeStyle = 'rgba(255, 152, 0, 0.8)';
-            ctx.lineWidth   = 1.5;
-
+            ctx.save();
+            ctx.fillStyle = 'rgba(91, 140, 255, 0.08)';
             ctx.beginPath();
-            if (span >= PI2 - 0.01) {
-                ctx.arc(x, y, r, 0, PI2);
-            } else {
-                ctx.moveTo(x, y);
-                ctx.arc(x, y, r, Math.min(a1, a2), Math.max(a1, a2));
-                ctx.closePath();
+            ctx.arc(x, y, outerR, 0, PI2);
+            if (emType === emitterType.ring && innerR > 0) {
+                ctx.arc(x, y, innerR, 0, PI2, true);
             }
             ctx.fill();
+
+            ctx.strokeStyle = 'rgba(91, 140, 255, 0.85)';
+            ctx.lineWidth   = 1.5;
+            ctx.setLineDash([6, 4]);
+            ctx.beginPath();
+            ctx.arc(x, y, outerR, 0, PI2);
             ctx.stroke();
 
-            // Bisector arrow when cone is narrower than full circle
-            if (span < PI2 - 0.05) {
-                const mid = (a1 + a2) * 0.5;
+            if (emType === emitterType.ring && innerR > 0) {
+                ctx.strokeStyle = 'rgba(160, 196, 255, 0.75)';
                 ctx.beginPath();
-                ctx.moveTo(x, y);
-                ctx.lineTo(x + Math.cos(mid) * (r + 8), y + Math.sin(mid) * (r + 8));
+                ctx.arc(x, y, innerR, 0, PI2);
                 ctx.stroke();
             }
-        }
-        else {
-            // Cartesian direction range indicator vector (rotated by emitterRotation)
-            const avgDirX = (currentConfig.MIN_DIRECTION_X + currentConfig.MAX_DIRECTION_X) * 0.5;
-            const avgDirY = (currentConfig.MIN_DIRECTION_Y + currentConfig.MAX_DIRECTION_Y) * 0.5;
-            const dirLen  = Math.hypot(avgDirX, avgDirY);
+            ctx.setLineDash([]);
 
-            if (dirLen > 0.05) {
-                const ux = avgDirX / dirLen;
-                const uy = avgDirY / dirLen;
-                const cos = Math.cos(emitterRotation);
-                const sin = Math.sin(emitterRotation);
-                const nx = ux * cos - uy * sin;
-                const ny = ux * sin + uy * cos;
+            // Radial velocity outward spokes indicator
+            if (currentConfig.radialVelocity) {
                 ctx.strokeStyle = 'rgba(255, 152, 0, 0.75)';
-                ctx.lineWidth = 1.5;
+                ctx.lineWidth   = 1.5;
+                for (let i = 0; i < 8; i++) {
+                    const a = (i * Math.PI * 0.25) + emitterRotation;
+                    const r0 = Math.max(10, innerR > 0 ? innerR : outerR * 0.65);
+                    const r1 = outerR + 14;
+                    ctx.beginPath();
+                    ctx.moveTo(x + Math.cos(a) * r0, y + Math.sin(a) * r0);
+                    ctx.lineTo(x + Math.cos(a) * r1, y + Math.sin(a) * r1);
+                    ctx.stroke();
+                }
+            }
+
+            ctx.font = 'bold 11px monospace';
+            ctx.fillStyle = '#a0c4ff';
+            const label = emType === emitterType.ring
+                ? `RING r=${Math.round(innerR)}..${Math.round(outerR)}px`
+                : `CIRCLE r=${Math.round(outerR)}px`;
+            ctx.fillText(label, x - 36, y - outerR - 8);
+            ctx.restore();
+        }
+
+        if (!currentConfig.radialVelocity || emType === emitterType.point) {
+            if (currentConfig.directionMode === 'polar') {
+                // Polar emission cone gizmo (sector + bisector vector)
+                const a1 = (currentConfig.MIN_ANGLE || 0) + emitterRotation;
+                const a2 = (currentConfig.MAX_ANGLE || 0) + emitterRotation;
+                const span = Math.abs(a2 - a1);
+                const r = 38;
+
+                ctx.fillStyle   = 'rgba(255, 152, 0, 0.14)';
+                ctx.strokeStyle = 'rgba(255, 152, 0, 0.8)';
+                ctx.lineWidth   = 1.5;
+
                 ctx.beginPath();
-                ctx.moveTo(x, y);
-                ctx.lineTo(x + nx * 36, y + ny * 36);
+                if (span >= PI2 - 0.01) {
+                    ctx.arc(x, y, r, 0, PI2);
+                } else {
+                    ctx.moveTo(x, y);
+                    ctx.arc(x, y, r, Math.min(a1, a2), Math.max(a1, a2));
+                    ctx.closePath();
+                }
+                ctx.fill();
                 ctx.stroke();
+
+                // Bisector arrow when cone is narrower than full circle
+                if (span < PI2 - 0.05) {
+                    const mid = (a1 + a2) * 0.5;
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                    ctx.lineTo(x + Math.cos(mid) * (r + 8), y + Math.sin(mid) * (r + 8));
+                    ctx.stroke();
+                }
+            }
+            else {
+                // Cartesian direction range indicator vector (rotated by emitterRotation)
+                const avgDirX = (currentConfig.MIN_DIRECTION_X + currentConfig.MAX_DIRECTION_X) * 0.5;
+                const avgDirY = (currentConfig.MIN_DIRECTION_Y + currentConfig.MAX_DIRECTION_Y) * 0.5;
+                const dirLen  = Math.hypot(avgDirX, avgDirY);
+
+                if (dirLen > 0.05) {
+                    const ux = avgDirX / dirLen;
+                    const uy = avgDirY / dirLen;
+                    const cos = Math.cos(emitterRotation);
+                    const sin = Math.sin(emitterRotation);
+                    const nx = ux * cos - uy * sin;
+                    const ny = ux * sin + uy * cos;
+                    ctx.strokeStyle = 'rgba(255, 152, 0, 0.75)';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                    ctx.lineTo(x + nx * 36, y + ny * 36);
+                    ctx.stroke();
+                }
             }
         }
 
@@ -921,7 +1172,7 @@ function drawGizmos(ctx) {
             ctx.restore();
         }
 
-        // Point emitter crosshair
+        // Point / center emitter crosshair
         ctx.strokeStyle = '#5b8cff';
         ctx.lineWidth = 1.5;
         ctx.beginPath();
@@ -929,6 +1180,33 @@ function drawGizmos(ctx) {
         ctx.moveTo(x - 12, y); ctx.lineTo(x + 12, y);
         ctx.moveTo(x, y - 12); ctx.lineTo(x, y + 12);
         ctx.stroke();
+    }
+    else if (emType === emitterType.line) {
+        // Line segment emitter gizmo
+        const x1 = currentConfig.AREA_X1;
+        const y1 = currentConfig.AREA_Y1;
+        const x2 = currentConfig.AREA_X2;
+        const y2 = currentConfig.AREA_Y2;
+
+        ctx.strokeStyle = 'rgba(91, 140, 255, 0.9)';
+        ctx.lineWidth = 2.0;
+        ctx.setLineDash([6, 4]);
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Endpoint handles
+        ctx.fillStyle = '#5b8cff';
+        ctx.fillRect(x1 - 5, y1 - 5, 10, 10);
+        ctx.fillRect(x2 - 5, y2 - 5, 10, 10);
+
+        const mx = (x1 + x2) * 0.5;
+        const my = (y1 + y2) * 0.5;
+        ctx.font = 'bold 11px monospace';
+        ctx.fillStyle = '#a0c4ff';
+        ctx.fillText(`LINE (${Math.round(x1)}, ${Math.round(y1)}) → (${Math.round(x2)}, ${Math.round(y2)})`, mx + 8, my - 8);
     }
     else {
         // Area emitter rectangle gizmo
@@ -1051,12 +1329,28 @@ function getCanvasCoords(e) {
     };
 }
 
+function distToSegment(px, py, x1, y1, x2, y2) {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const lenSq = dx * dx + dy * dy;
+    if (lenSq === 0) return Math.hypot(px - x1, py - y1);
+    const t = Math.max(0, Math.min(1, ((px - x1) * dx + (py - y1) * dy) / lenSq));
+    return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
+}
+
 function hitTestAreaHandle(mx, my) {
     const x1 = currentConfig.AREA_X1;
     const y1 = currentConfig.AREA_Y1;
     const x2 = currentConfig.AREA_X2;
     const y2 = currentConfig.AREA_Y2;
     const tol = 10;
+
+    if (Number(currentConfig.emitterType) === emitterType.line) {
+        if (Math.hypot(mx - x1, my - y1) <= tol) return 'nw';
+        if (Math.hypot(mx - x2, my - y2) <= tol) return 'se';
+        if (distToSegment(mx, my, x1, y1, x2, y2) <= tol) return 'move';
+        return 'draw';
+    }
 
     if (Math.hypot(mx - x1, my - y1) <= tol) return 'nw';
     if (Math.hypot(mx - x2, my - y1) <= tol) return 'ne';
@@ -1076,7 +1370,7 @@ wrap.addEventListener('mousedown', e => {
     const pt = getCanvasCoords(e);
     mousePos = pt;
 
-    if (currentConfig.emitterType === emitterType.point) {
+    if (isPositionBasedEmitter()) {
         // Switch to manual mode if user clicks canvas while in path motion
         if (motionMode !== 'manual' && motionMode !== 'mouse') {
             motionMode = 'manual';
@@ -1088,7 +1382,7 @@ wrap.addEventListener('mousedown', e => {
         if (particleSystem) particleSystem.SetPosition(pt.x, pt.y);
     }
     else {
-        // Area emitter dragging / resizing
+        // Area / Line emitter dragging / resizing
         areaDragMode = hitTestAreaHandle(pt.x, pt.y);
         areaDragStart = {
             mx: pt.x,
@@ -1105,7 +1399,7 @@ window.addEventListener('mousemove', e => {
     const pt = getCanvasCoords(e);
     mousePos = pt;
 
-    if (isDraggingPos && currentConfig.emitterType === emitterType.point) {
+    if (isDraggingPos && isPositionBasedEmitter()) {
         const dx = pt.x - emitterPos.x;
         const dy = pt.y - emitterPos.y;
         if (dx * dx + dy * dy > 1) {
@@ -1114,9 +1408,11 @@ window.addEventListener('mousemove', e => {
         emitterPos.Set(pt.x, pt.y);
         if (particleSystem) particleSystem.SetPosition(pt.x, pt.y);
     }
-    else if (areaDragMode && areaDragStart && currentConfig.emitterType === emitterType.area) {
+    else if (areaDragMode && areaDragStart &&
+             (currentConfig.emitterType === emitterType.area || currentConfig.emitterType === emitterType.line)) {
         const dx = Math.round(pt.x - areaDragStart.mx);
         const dy = Math.round(pt.y - areaDragStart.my);
+        const isLine = currentConfig.emitterType === emitterType.line;
 
         if (areaDragMode === 'move') {
             currentConfig.AREA_X1 = areaDragStart.x1 + dx;
@@ -1141,10 +1437,17 @@ window.addEventListener('mousemove', e => {
             currentConfig.AREA_Y2 = Math.round(pt.y);
         }
         else if (areaDragMode === 'draw') {
-            currentConfig.AREA_X1 = Math.round(Math.min(areaDragStart.mx, pt.x));
-            currentConfig.AREA_Y1 = Math.round(Math.min(areaDragStart.my, pt.y));
-            currentConfig.AREA_X2 = Math.round(Math.max(areaDragStart.mx, pt.x));
-            currentConfig.AREA_Y2 = Math.round(Math.max(areaDragStart.my, pt.y));
+            if (isLine) {
+                currentConfig.AREA_X1 = Math.round(areaDragStart.mx);
+                currentConfig.AREA_Y1 = Math.round(areaDragStart.my);
+                currentConfig.AREA_X2 = Math.round(pt.x);
+                currentConfig.AREA_Y2 = Math.round(pt.y);
+            } else {
+                currentConfig.AREA_X1 = Math.round(Math.min(areaDragStart.mx, pt.x));
+                currentConfig.AREA_Y1 = Math.round(Math.min(areaDragStart.my, pt.y));
+                currentConfig.AREA_X2 = Math.round(Math.max(areaDragStart.mx, pt.x));
+                currentConfig.AREA_Y2 = Math.round(Math.max(areaDragStart.my, pt.y));
+            }
         }
 
         syncUIFromConfig();
@@ -1367,9 +1670,14 @@ function wireControls() {
 
     document.getElementById('cfg-emitterType').addEventListener('change', e => {
         currentConfig.emitterType = Number(e.target.value);
-        document.getElementById('area-bounds-panel').style.display =
-            currentConfig.emitterType === emitterType.area ? 'block' : 'none';
+        syncUIFromConfig();
         applyConfigChange('emitterType');
+    });
+
+    document.getElementById('cfg-radialVelocity').addEventListener('change', e => {
+        currentConfig.radialVelocity = e.target.checked;
+        syncUIFromConfig();
+        applyConfigChange('radialVelocity');
     });
 
     document.getElementById('cfg-directionMode').addEventListener('change', e => {
@@ -1378,7 +1686,7 @@ function wireControls() {
         applyConfigChange('directionMode');
     });
 
-    // Area helper buttons
+    // Area & Line helper buttons
     document.getElementById('btn-fit-area').addEventListener('click', () => {
         currentConfig.AREA_X1 = 0;
         currentConfig.AREA_Y1 = 0;
@@ -1395,6 +1703,17 @@ function wireControls() {
         currentConfig.AREA_Y1 = cy - 120;
         currentConfig.AREA_X2 = cx + 120;
         currentConfig.AREA_Y2 = cy + 120;
+        syncUIFromConfig();
+        applyConfigChange('AREA');
+    });
+
+    document.getElementById('btn-horiz-line').addEventListener('click', () => {
+        const cx = Math.round(canvas.width / 2);
+        const cy = Math.round(canvas.height / 2);
+        currentConfig.AREA_X1 = cx - 220;
+        currentConfig.AREA_Y1 = cy;
+        currentConfig.AREA_X2 = cx + 220;
+        currentConfig.AREA_Y2 = cy;
         syncUIFromConfig();
         applyConfigChange('AREA');
     });
