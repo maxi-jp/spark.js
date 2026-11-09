@@ -516,9 +516,28 @@ const MIN_MAX_PAIRS = [
 
 // #region ---- STATE ----
 
-const canvas   = document.getElementById('editor-canvas');
-const wrap     = document.getElementById('canvas-wrap');
-const renderer = new Canvas2DRenderer(canvas);
+let canvas          = document.getElementById('editor-canvas');
+const gizmoCanvas   = document.getElementById('gizmo-canvas');
+const gizmoCtx      = gizmoCanvas.getContext('2d');
+const wrap          = document.getElementById('canvas-wrap');
+const urlWantsWebGL = new URLSearchParams(window.location.search).has('webgl');
+let rendererMode    = urlWantsWebGL ? 'webgl' : 'canvas2d';
+
+function createEditorRenderer(targetCanvas, mode) {
+    if (mode === 'webgl') {
+        const gl = targetCanvas.getContext('webgl2') ||
+                   targetCanvas.getContext('webgl') ||
+                   targetCanvas.getContext('experimental-webgl');
+        if (gl) {
+            return new WebGLRenderer(targetCanvas, gl);
+        }
+        console.warn('WebGL not supported on this browser/device; falling back to Canvas2DRenderer.');
+        rendererMode = 'canvas2d';
+    }
+    return new Canvas2DRenderer(targetCanvas);
+}
+
+var renderer = createEditorRenderer(canvas, rendererMode);
 
 let currentImage     = null;
 let currentImageName = 'smoke.png';
@@ -530,6 +549,7 @@ let paused         = false;
 let emitterActive  = true;
 let showGizmos     = true;
 let bgMode         = '#414146'; // hex color or 'checker'
+let bgColorObj     = Color.FromHex('#414146');
 let motionMode     = 'circle';  // 'manual' | 'mouse' | 'circle' | 'figure8' | 'projectile'
 let motionSpeed    = 280;       // px/sec for animated emitter modes
 let motionTime     = 0;
@@ -569,18 +589,16 @@ function createProceduralImage(size = 128) {
     octx.fillStyle = grad;
     octx.fillRect(0, 0, size, size);
 
-    const img = new Image();
-    img.src = off.toDataURL('image/png');
-    img.width = size;
-    img.height = size;
-    img.halfWidth = half;
-    img.halfHeight = half;
-    return img;
+    off.halfWidth  = half;
+    off.halfHeight = half;
+    off.src        = off.toDataURL('image/png');
+    return off;
 }
 
 function applyParticleImage(img, name) {
     img.halfWidth  = img.width  / 2;
     img.halfHeight = img.height / 2;
+    img._webglTexture = null;
     currentImage     = img;
     currentImageName = name;
 
@@ -600,7 +618,6 @@ function applyParticleImage(img, name) {
 function loadBuiltInImage(key) {
     if (key === 'procedural') {
         const proc = createProceduralImage(128);
-        proc.onload = () => applyParticleImage(proc, 'soft_circle.png');
         applyParticleImage(proc, 'soft_circle.png');
         return;
     }
@@ -999,10 +1016,36 @@ function updateJsonPreview() {
 // #region ---- CANVAS RESIZE & GIZMOS ----
 
 function resizeCanvas() {
-    renderer.width  = wrap.clientWidth;
-    renderer.height = wrap.clientHeight;
+    renderer.width     = wrap.clientWidth;
+    renderer.height    = wrap.clientHeight;
+    gizmoCanvas.width  = wrap.clientWidth;
+    gizmoCanvas.height = wrap.clientHeight;
     if (emitterPos.x === 400 && emitterPos.y === 300 && wrap.clientWidth > 0) {
         emitterPos.Set(wrap.clientWidth / 2, wrap.clientHeight / 2);
+    }
+}
+
+function setRendererMode(mode) {
+    const targetMode = mode === 'webgl' ? 'webgl' : 'canvas2d';
+    if (targetMode === rendererMode && renderer) return;
+
+    // A <canvas> locks its context type after getContext() is called,
+    // so replace #editor-canvas with a fresh element when switching renderers.
+    const freshCanvas = document.createElement('canvas');
+    freshCanvas.id = 'editor-canvas';
+    canvas.replaceWith(freshCanvas);
+    canvas = freshCanvas;
+
+    rendererMode = targetMode;
+    renderer = createEditorRenderer(canvas, rendererMode);
+    resizeCanvas();
+
+    // Clear any cached WebGLTexture from a previous WebGL context so it re-uploads cleanly
+    if (currentImage) {
+        currentImage._webglTexture = null;
+    }
+    if (particleSystem) {
+        particleSystem._syncColors();
     }
 }
 
@@ -1340,8 +1383,12 @@ function updateTelemetryBar() {
     const avgLife  = ((avgInc > 0 ? avgMaxOp / avgInc : 0) + avgHold + (avgDec > 0 ? avgMaxOp / avgDec : 0)).toFixed(2);
 
     const poolWarn = alive >= max ? `<span class="warn">⚠ POOL FULL</span>` : '';
+    const rendererInfo = renderer instanceof WebGLRenderer
+        ? `<span>Renderer: <b>WebGL</b> (Draw calls: <b>${renderer.drawCallCount}</b>)</span>`
+        : `<span>Renderer: <b>Canvas2D</b></span>`;
 
     document.getElementById('coord-bar').innerHTML = [
+        rendererInfo,
         `<span>Particles: <b>${alive} / ${max}</b> ${poolWarn}</span>`,
         `<span>Spawn Rate: <b>~${spawnRate}/s</b></span>`,
         `<span>Avg Lifetime: <b>~${avgLife}s</b></span>`,
@@ -1382,15 +1429,17 @@ function loop(now) {
     renderer.Clear();
 
     if (bgMode !== 'checker') {
-        renderer.ctx.fillStyle = bgMode;
-        renderer.ctx.fillRect(0, 0, canvas.width, canvas.height);
+        renderer.DrawFillBasicRectangle(0, 0, canvas.width, canvas.height, bgColorObj);
     }
 
     if (particleSystem) {
         particleSystem.Draw(renderer);
     }
 
-    drawGizmos(renderer.ctx);
+    renderer.FlushAllBatches();
+
+    gizmoCtx.clearRect(0, 0, gizmoCanvas.width, gizmoCanvas.height);
+    drawGizmos(gizmoCtx);
     updateTelemetryBar();
 }
 
@@ -1638,6 +1687,7 @@ function wireControls() {
             document.getElementById('bg-preset').value = preset.bgPreset;
             if (preset.bgPreset.startsWith('#')) {
                 document.getElementById('bg-color').value = preset.bgPreset;
+                bgColorObj = Color.FromHex(preset.bgPreset);
             }
         }
 
@@ -1708,7 +1758,13 @@ function wireControls() {
         rebuildParticleSystem();
     });
 
-    // Canvas overlay controls (Motion, Background, Gizmos)
+    // Canvas overlay controls (Renderer, Motion, Background, Gizmos)
+    const selRenderer = document.getElementById('select-renderer');
+    selRenderer.value = rendererMode;
+    selRenderer.addEventListener('change', () => {
+        setRendererMode(selRenderer.value);
+    });
+
     const selMotion = document.getElementById('select-motion');
     const speedGroup = document.getElementById('motion-speed-group');
     selMotion.addEventListener('change', () => {
@@ -1732,10 +1788,14 @@ function wireControls() {
     const bgColor  = document.getElementById('bg-color');
     bgPreset.addEventListener('change', () => {
         bgMode = bgPreset.value;
-        if (bgMode.startsWith('#')) bgColor.value = bgMode;
+        if (bgMode.startsWith('#')) {
+            bgColor.value = bgMode;
+            bgColorObj = Color.FromHex(bgMode);
+        }
     });
     bgColor.addEventListener('input', () => {
         bgMode = bgColor.value;
+        bgColorObj = Color.FromHex(bgMode);
     });
 
     const chkGizmo = document.getElementById('chk-gizmo');

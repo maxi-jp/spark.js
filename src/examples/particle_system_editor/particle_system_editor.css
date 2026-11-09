@@ -107,6 +107,13 @@ body {
     display: block;
 }
 
+#gizmo-canvas {
+    position: absolute;
+    top: 0; left: 0;
+    display: block;
+    pointer-events: none;
+}
+
 /* Floating canvas controls (top-left of canvas) */
 #canvas-controls {
     position: absolute;

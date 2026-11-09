@@ -1024,6 +1024,9 @@ class Canvas2DRenderer extends Renderer {
 class WebGLRenderer extends Renderer {
     constructor(canvas, gl) {
         super(canvas);
+        if (!gl) {
+            gl = canvas.getContext("webgl2") || canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+        }
         this.gl = gl;
 
         this.viewMatrix = new Float32Array([

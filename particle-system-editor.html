@@ -76,9 +76,20 @@
         <!-- Canvas area -->
         <div id="canvas-wrap">
             <canvas id="editor-canvas"></canvas>
+            <canvas id="gizmo-canvas"></canvas>
 
             <!-- Floating canvas overlay bar (top-left) -->
             <div id="canvas-controls">
+                <div class="cc-group">
+                    <label class="tb-label" for="select-renderer">Renderer</label>
+                    <select id="select-renderer" class="tb-select" title="Switch between Canvas2DRenderer and WebGLRenderer">
+                        <option value="canvas2d">Canvas2D</option>
+                        <option value="webgl">WebGL</option>
+                    </select>
+                </div>
+
+                <div class="tb-sep"></div>
+
                 <div class="cc-group">
                     <label class="tb-label" for="select-motion">Motion</label>
                     <select id="select-motion" class="tb-select" title="Preview emitter movement (Point emitter)">

@@ -343,15 +343,18 @@ The standalone **[Particle System Editor](../particle-system-editor.html ':ignor
   - **Figure-8 Path (`figure8`)** — Moves the emitter along a Lissajous figure-8 curve to test turn banking.
   - **Linear Projectile (`projectile`)** — Flies across the canvas at a slight angle and wraps around.
   - Includes a **Speed** slider (`40–700 px/s`) for the animated path modes.
+- **Live Renderer Switcher (`Canvas2D` / `WebGL`)**:
+  - Toggle live between `Canvas2DRenderer` and `WebGLRenderer` from the top-left **Renderer** dropdown (or open `particle-system-editor.html?webgl` to boot directly into WebGL mode) without losing your active config or particles.
+  - Interactive 2D gizmos render on a dedicated transparent overlay canvas (`#gizmo-canvas`) so they work identically across both backends without inflating WebGL batch draw-call counts.
 - **Interactive Canvas Gizmos & Backgrounds**:
   - **Point / Circle / Ring Gizmos**: Crosshair + dashed circle/annulus boundaries (`EMISSION_INNER_RADIUS`..`EMISSION_RADIUS`) + orange direction indicator (vector in `cartesian` mode, shaded angular sector wedge in `polar` mode, or 8 outward radial spokes when `radialVelocity` is enabled) + cyan dashed gravity vector arrow + optional projectile nose cone.
   - **Area & Line Gizmos**: Dashed bounding rectangle (with 4 draggable corner handles) or dashed line segment (with 2 draggable endpoint handles), interior/segment drag-to-move, outside drag-to-draw, plus quick-fit buttons (**Full Canvas**, **Center Box**, **Horiz Line**).
   - **Background Surfaces**: Switch between *Asphalt (`#414146`)*, *Dark Night (`#1a1a2e`)*, *Grass (`#325023`)*, *Dirt (`#785532`)*, *Pure Black (`#000000`)*, *Checkerboard*, or any custom hex color picker.
 - **Real-Time Parameter Sliders & Smart Clamping**:
-  - Synchronized range sliders and numeric inputs for every `defaultParticleConfig` property (including `startColor`/`endColor` color pickers + quick gradient presets **None**, **Fire**, **Arcane**, **Ice**, `directionMode` toggle between `cartesian` and `polar`, `MIN_ANGLE`/`MAX_ANGLE`, `SetRotation` preview slider + `Auto-Path` rotation toggle, `emitCountPerSpawn`, `GRAVITY_X`, `GRAVITY_Y`, `VELOCITY_DAMPING`, `MIN_MAX_OPACITY`/`MAX_MAX_OPACITY`, `MIN_HOLD_TIME`/`MAX_HOLD_TIME`, and all 14 `MIN_*/MAX_*` pairs).
+  - Synchronized range sliders and numeric inputs for every `defaultParticleConfig` property (including `renderShape` + `PARTICLE_SIZE`, `startColor`/`endColor` color pickers + quick gradient presets **None**, **Fire**, **Arcane**, **Ice**, `directionMode` toggle between `cartesian` and `polar`, `MIN_ANGLE`/`MAX_ANGLE`, `SetRotation` preview slider + `Auto-Path` rotation toggle, `emitCountPerSpawn`, `GRAVITY_X`, `GRAVITY_Y`, `VELOCITY_DAMPING`, `MIN_MAX_OPACITY`/`MAX_MAX_OPACITY`, `MIN_HOLD_TIME`/`MAX_HOLD_TIME`, and all 14 `MIN_*/MAX_*` pairs).
   - Direction quick-buttons (**Omni**, **↑**, **↓**, **←**, **→** — work for both Cartesian and Polar modes), gravity quick-buttons (**0**, **↓ Grav**, **↑ Buoy**), opacity & hold quick-buttons (**Full 1.0**, **Soft 0.5**, **0s Hold**), and rotation quick-buttons (**0**, **0 → 2π**).
 - **Live Telemetry & Export**:
-  - Bottom status bar displays active particle count (`Alive / Max` with a `⚠ POOL FULL` warning), estimated **Spawn Rate (`~N/s`)**, estimated **Avg Lifetime (`~Ns`)**, emitter coordinates, mouse coordinates, and live **FPS**.
+  - Bottom status bar displays active particle count (`Alive / Max` with a `⚠ POOL FULL` warning), estimated **Spawn Rate (`~N/s`)**, estimated **Avg Lifetime (`~Ns`)**, emitter coordinates, mouse coordinates, active **Renderer (`Canvas2D` or `WebGL` with live `Draw calls` count)**, and live **FPS**.
   - **Load JSON** (or drag-and-drop a `.json` file), **Copy JS** (formats a clean `const <name> = { ... };` snippet using `emitterType.*` and `PI2`), **Copy JSON**, and **Export JSON ↓**.
 
 ---
