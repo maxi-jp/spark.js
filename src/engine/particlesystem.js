@@ -125,7 +125,11 @@ const defaultParticleConfig = {
 
     // Optional color tinting / color-over-lifetime (hex string "#rrggbb" or Color instance; null = untinted)
     startColor: null,
-    endColor: null
+    endColor: null,
+
+    // Lifecycle flags for ParticleSystemGO (when emission stops and activeCount reaches 0)
+    autoDeactivateWhenEmpty: false,
+    destroyWhenEmpty: false
 };
 
 /**
@@ -535,6 +539,7 @@ class ParticleSystem {
         if (!this.img && (!config || config.renderShape === undefined)) {
             this.config.renderShape = "circle";
         }
+        
         if (config) {
             if (config.directionMode === undefined &&
                 (config.MIN_ANGLE !== undefined || config.MAX_ANGLE !== undefined)) {
@@ -560,10 +565,10 @@ class ParticleSystem {
             }
         }
 
-        this._startColor     = null;
-        this._endColor       = null;
-        this._isSprite       = false;
-        this._colorFrames    = null;
+        this._startColor  = null;
+        this._endColor    = null;
+        this._isSprite    = false;
+        this._colorFrames = null;
         this._syncColors();
 
         // Create emitter
@@ -814,5 +819,198 @@ class ParticleSystem {
     /** Returns how many particles are currently alive. */
     get activeCount() {
         return this.particles.filter(p => p.active).length;
+    }
+
+    /** Deactivates all currently alive particles and resets the spawn countdown. */
+    Reset() {
+        for (let i = 0; i < this.particles.length; i++) {
+            this.particles[i].active = false;
+        }
+        this.nextTimeToSpawnParticle = RandomBetweenFloat(
+            this.config.MIN_TIME_TO_SPAWN_PARTICLE,
+            this.config.MAX_TIME_TO_SPAWN_PARTICLE
+        );
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ParticleSystemGO (GameObject & Pool wrapper)
+// ─────────────────────────────────────────────────────────────────────────────
+/**
+ * A `GameObject` wrapper around `ParticleSystem` that integrates directly with
+ * `game.AddGameObject(...)` and `Pool`.
+ */
+class ParticleSystemGO extends (typeof GameObject !== "undefined" ? GameObject : Object) {
+    /**
+     * @param {Vector2} [position=Vector2.Zero()] - Initial world position.
+     * @param {HTMLImageElement|HTMLCanvasElement|null} [img=null] - Sprite image for each particle (or null for procedural shapes).
+     * @param {Object} [config={}] - Overrides for `defaultParticleConfig`.
+     */
+    constructor(position = Vector2.Zero(), img = null, config = {}) {
+        super(position);
+
+        this.particleSystem = new ParticleSystem(img, config, this._position);
+        // Share the exact same Vector2 reference so mutating go.x / go.y / go.position
+        // updates emitter.position with zero per-frame copy overhead
+        this.particleSystem.emitter.position = this._position;
+
+        this.autoDeactivateWhenEmpty = Boolean(this.particleSystem.config.autoDeactivateWhenEmpty);
+        this.destroyWhenEmpty        = Boolean(this.particleSystem.config.destroyWhenEmpty);
+    }
+
+    get config() {
+        return this.particleSystem.config;
+    }
+
+    get emitter() {
+        return this.particleSystem.emitter;
+    }
+
+    get particles() {
+        return this.particleSystem.particles;
+    }
+
+    get img() {
+        return this.particleSystem.img;
+    }
+
+    set img(value) {
+        this.particleSystem.img = value;
+        for (let i = 0; i < this.particleSystem.particles.length; i++) {
+            this.particleSystem.particles[i].img = value;
+        }
+        this.particleSystem._syncColors();
+    }
+
+    /** Number of currently active particles in this emitter. */
+    get activeCount() {
+        return this.particleSystem.activeCount;
+    }
+
+    /**
+     * Whether continuous timer-based particle emission is enabled (`particleSystem.active`).
+     * Distinct from `this.active` (which controls whether this `GameObject` updates and draws).
+     */
+    get emitting() {
+        return this.particleSystem.active;
+    }
+
+    set emitting(value) {
+        this.particleSystem.active = Boolean(value);
+    }
+
+    get position() {
+        return this._position;
+    }
+
+    set position(value) {
+        this._position.Set(value.x, value.y);
+    }
+
+    get rotation() {
+        return this._rotation;
+    }
+
+    set rotation(value) {
+        this._rotation = value;
+        this.particleSystem.emitter.rotation = value;
+    }
+
+    /** Move the emitter to `(x, y)` in world space. */
+    SetPosition(x, y) {
+        this._position.x = x;
+        this._position.y = y;
+    }
+
+    /** Rotate the emitter's emission direction by `angle` (in radians). */
+    SetRotation(angle) {
+        this.rotation = angle;
+    }
+
+    /** Sets the start and end tint colors for newly spawned particles. */
+    SetColor(startColor, endColor = startColor) {
+        this.particleSystem.SetColor(startColor, endColor);
+    }
+
+    /** Sets the visual particle shape (`"sprite" | "circle" | "rect" | "line"`) for newly spawned particles. */
+    SetRenderShape(shape) {
+        this.particleSystem.SetRenderShape(shape);
+    }
+
+    /** Immediately spawns `count` particles (optional `(x, y)` overrides spawn position for this burst). */
+    Burst(count = 1, x, y) {
+        return this.particleSystem.Burst(count, x, y);
+    }
+
+    /**
+     * Activates this `ParticleSystemGO` (optionally moving it to `(x, y)`) and enables continuous emission.
+     * @param {number} [x]
+     * @param {number} [y]
+     * @returns {this}
+     */
+    Play(x, y) {
+        if (x !== undefined && y !== undefined) {
+            this.SetPosition(x, y);
+        }
+        this.active = true;
+        this.particleSystem.active = true;
+        return this;
+    }
+
+    /**
+     * Triggers a one-shot burst of `count` particles (optionally at `(x, y)`), disables continuous
+     * emission, and automatically deactivates this `ParticleSystemGO` once all burst particles fade out
+     * (returning it to a `Pool` automatically).
+     * @param {number} [count=this.config.emitCountPerSpawn]
+     * @param {number} [x]
+     * @param {number} [y]
+     * @param {boolean} [autoDeactivate=true]
+     * @returns {number} Number of particles spawned
+     */
+    PlayBurst(count = this.particleSystem.config.emitCountPerSpawn, x, y, autoDeactivate = true) {
+        if (x !== undefined && y !== undefined) {
+            this.SetPosition(x, y);
+        }
+        this.active = true;
+        this.particleSystem.active = false;
+        this.autoDeactivateWhenEmpty = autoDeactivate;
+        return this.particleSystem.Burst(count);
+    }
+
+    /**
+     * Stops continuous particle emission while allowing already-spawned particles to finish fading out.
+     * @param {boolean} [autoDeactivate=this.autoDeactivateWhenEmpty] If true, sets `this.active = false` once `activeCount === 0`.
+     * @returns {this}
+     */
+    Stop(autoDeactivate = this.autoDeactivateWhenEmpty) {
+        this.particleSystem.active = false;
+        this.autoDeactivateWhenEmpty = autoDeactivate;
+        return this;
+    }
+
+    /** Deactivates all currently alive particles and resets the spawn countdown. */
+    Reset() {
+        this.particleSystem.Reset();
+        return this;
+    }
+
+    Update(deltaTime) {
+        super.Update(deltaTime);
+        this.particleSystem.Update(deltaTime);
+
+        if (!this.particleSystem.active && (this.autoDeactivateWhenEmpty || this.destroyWhenEmpty)) {
+            if (this.particleSystem.activeCount === 0) {
+                if (this.destroyWhenEmpty && this.game) {
+                    this.game.Destroy(this);
+                }
+                else {
+                    this.active = false;
+                }
+            }
+        }
+    }
+
+    Draw(renderer) {
+        this.particleSystem.Draw(renderer);
     }
 }

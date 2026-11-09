@@ -1338,5 +1338,94 @@ declare class GOAPAgent {
 /** Standalone helper to render a GOAPAgent's inspector panel onto the canvas. */
 declare function DrawGOAPInspector(renderer: Renderer, agent: GOAPAgent, x: number, y: number, options?: { width?: number; title?: string; subtitle?: string; compact?: boolean; showWorldState?: boolean; showGoals?: boolean; showPlan?: boolean }): number;
 
+// ── Particle System (particlesystem.js) ──────────────────────────────────────
 
+declare const emitterType: {
+    readonly point: 0;
+    readonly area: 1;
+    readonly circle: 2;
+    readonly ring: 3;
+    readonly line: 4;
+};
 
+declare const particleShape: {
+    readonly sprite: 'sprite';
+    readonly circle: 'circle';
+    readonly rect: 'rect';
+    readonly line: 'line';
+};
+
+declare const defaultParticleConfig: { [key: string]: any };
+
+declare class Particle {
+    img: HTMLImageElement | HTMLCanvasElement | null;
+    active: boolean;
+    position: Vector2;
+    opacity: number;
+    maxOpacity: number;
+    holdTime: number;
+    scale: number;
+    rotation: number;
+    velocity: Vector2;
+    tint: Color;
+    renderShape: string;
+    particleSize: number;
+    constructor(img?: HTMLImageElement | HTMLCanvasElement | null);
+    Deactivate(): void;
+    Update(deltaTime: number): void;
+    Draw(renderer: Renderer, colorFrames?: HTMLCanvasElement[] | null): void;
+}
+
+declare class ParticleEmitter {
+    position: Vector2;
+    rotation: number;
+    config: { [key: string]: any };
+    area: { x1: number; y1: number; x2: number; y2: number };
+    constructor(initialPosition: Vector2, config: { [key: string]: any }, initialRotation?: number);
+    GetSpawnPoint(): Vector2;
+    GetInitialVelocity(): Vector2;
+}
+
+declare class ParticleSystem {
+    static COLOR_RAMP_STEPS: number;
+    active: boolean;
+    img: HTMLImageElement | HTMLCanvasElement | null;
+    config: { [key: string]: any };
+    emitter: ParticleEmitter;
+    particles: Particle[];
+    rotation: number;
+    readonly activeCount: number;
+    constructor(img: HTMLImageElement | HTMLCanvasElement | null, config?: { [key: string]: any }, position?: Vector2);
+    SetPosition(x: number, y: number): void;
+    SetRotation(angle: number): void;
+    SetColor(startColor: string | Color | null, endColor?: string | Color | null): void;
+    SetRenderShape(shape: 'sprite' | 'circle' | 'rect' | 'line'): void;
+    Burst(count?: number, x?: number, y?: number): number;
+    Reset(): void;
+    Update(deltaTime: number): void;
+    Draw(renderer: Renderer): void;
+}
+
+declare class ParticleSystemGO extends GameObject {
+    particleSystem: ParticleSystem;
+    readonly config: { [key: string]: any };
+    readonly emitter: ParticleEmitter;
+    readonly particles: Particle[];
+    img: HTMLImageElement | HTMLCanvasElement | null;
+    readonly activeCount: number;
+    emitting: boolean;
+    autoDeactivateWhenEmpty: boolean;
+    destroyWhenEmpty: boolean;
+    constructor(position?: Vector2, img?: HTMLImageElement | HTMLCanvasElement | null, config?: { [key: string]: any });
+    SetPosition(x: number, y: number): void;
+    SetRotation(angle: number): void;
+    SetColor(startColor: string | Color | null, endColor?: string | Color | null): void;
+    SetRenderShape(shape: 'sprite' | 'circle' | 'rect' | 'line'): void;
+    Burst(count?: number, x?: number, y?: number): number;
+    Play(x?: number, y?: number): this;
+    PlayBurst(count?: number, x?: number, y?: number, autoDeactivate?: boolean): number;
+    Stop(autoDeactivate?: boolean): this;
+    Reset(): this;
+    Update(deltaTime: number): void;
+    Draw(renderer: Renderer): void;
+}

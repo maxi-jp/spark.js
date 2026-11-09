@@ -24,11 +24,12 @@ The particle system (`src/engine/particlesystem.js`) provides a flexible, pooled
 
 ## Architecture & Lifecycle
 
-The module is organized into three classes inside `src/engine/particlesystem.js`:
+The module is organized into four classes inside `src/engine/particlesystem.js`:
 
 1. **`Particle`** — A single pooled particle instance storing transform (`position`, `scale`, `rotation`), velocity (`direction`), and lifecycle state (`active`, `appearing`, `opacity`, fade speeds, `scaleVelocity`, `rotationVelocity`). Managed internally by `ParticleSystem`.
-2. **`ParticleEmitter`** — Calculates spawn positions (`GetSpawnPoint()`) for `point` or `area` emitters and generates randomized initial velocity vectors (`GetInitialVelocity()`).
-3. **`ParticleSystem`** — Public controller that merges user configuration with `defaultParticleConfig`, pre-allocates the `Particle` pool, runs the spawn timer and sub-frame catch-up loop in `Update(deltaTime)`, supports immediate one-shot `Burst()` calls, and renders active particles in `Draw(renderer)`.
+2. **`ParticleEmitter`** — Calculates spawn positions (`GetSpawnPoint()`) for `point`, `area`, `circle`, `ring`, or `line` emitters and generates randomized initial velocity vectors (`GetInitialVelocity()`).
+3. **`ParticleSystem`** — Standalone, engine-agnostic controller that merges user configuration with `defaultParticleConfig`, pre-allocates the `Particle` pool, runs the spawn timer and sub-frame catch-up loop in `Update(deltaTime)`, supports immediate one-shot `Burst()` calls, and renders active particles in `Draw(renderer)`.
+4. **`ParticleSystemGO`** — `GameObject` subclass wrapping a `ParticleSystem` for seamless integration with `game.AddGameObject()` and `Pool` (including automatic one-shot cleanup via `autoDeactivateWhenEmpty` and `destroyWhenEmpty`).
 
 ### Particle Lifecycle Details
 
@@ -164,7 +165,11 @@ const defaultParticleConfig = {
     MAX_TIME_TO_SPAWN_PARTICLE: 0.05,
 
     // Number of particles spawned on each timer tick
-    emitCountPerSpawn: 1
+    emitCountPerSpawn: 1,
+
+    // Lifecycle flags for ParticleSystemGO (when emission stops and activeCount reaches 0)
+    autoDeactivateWhenEmpty: false,
+    destroyWhenEmpty: false
 };
 ```
 
@@ -174,15 +179,15 @@ const defaultParticleConfig = {
 
 ### `ParticleSystem`
 
-The main class you interact with. Owns the particle pool, the `ParticleEmitter`, and the update/draw loop.
+The standalone particle controller class. Owns the particle pool, the `ParticleEmitter`, and the update/draw loop.
 
 #### `constructor(img, config, position)`
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `img` | `HTMLImageElement` | Sprite texture drawn for each particle. |
+| `img` | `HTMLImageElement \| null` | Sprite texture drawn for each particle (or `null` when using procedural shapes). |
 | `config` | `Object` *(optional)* | Overrides for `defaultParticleConfig`. Missing keys fall back to defaults. |
-| `position` | `Vector2` *(optional)* | Initial world-space position for `emitterType.point` emitters (defaults to `Vector2.Zero()`). |
+| `position` | `Vector2` *(optional)* | Initial world-space position for `emitterType.point`, `circle`, and `ring` emitters (defaults to `Vector2.Zero()`). |
 
 #### Methods
 
@@ -193,8 +198,9 @@ The main class you interact with. Owns the particle pool, the `ParticleEmitter`,
 | `SetColor(startColor, endColor = startColor)` | `void` | Updates the emitter's color tint or color-over-lifetime gradient at runtime (`"#rrggbb"`, CSS color string, `Color` instance, or `null` to disable tinting). |
 | `SetRenderShape(shape)` | `void` | Updates `config.renderShape` (`"sprite" \| "circle" \| "rect" \| "line"`) at runtime and refreshes cached sprite color frames. |
 | `Burst(count = 1, x, y)` | `number` | Immediately activates up to `count` particles from the pool and returns the number actually spawned. Works even when `this.active === false`. Optional `(x, y)` overrides the emitter's spawn point for that burst. Logs a `console.warn` if the pool is exhausted. |
+| `Reset()` | `void` | Immediately deactivates all alive particles and resets the spawn countdown. |
 | `Update(deltaTime)` | `void` | If `this.active` is `true`, advances the spawn timer and emits particles; then updates all currently active particles. Call once per frame in `Update(deltaTime)`. |
-| `Draw(renderer)` | `void` | Applies `config.globalCompositeOperation` (on `Canvas2DRenderer`), draws all active particles via `renderer.DrawImage`, and restores `"source-over"`. Call once per frame in `Draw()`. |
+| `Draw(renderer)` | `void` | Applies `config.globalCompositeOperation` (on `Canvas2DRenderer`), draws all active particles, and restores `"source-over"`. Call once per frame in `Draw()`. |
 
 #### Properties
 
@@ -206,6 +212,37 @@ The main class you interact with. Owns the particle pool, the `ParticleEmitter`,
 | `config` | `Object` | Merged configuration object for this instance. |
 | `emitter` | `ParticleEmitter` | The internal emitter responsible for spawn points and initial velocity vectors. |
 | `particles` | `Particle[]` | Pre-allocated array of pooled `Particle` instances (`length === config.maxParticleCount`). |
+
+---
+
+### `ParticleSystemGO`
+
+A `GameObject` subclass that wraps a `ParticleSystem` so emitters can be added directly to `this.AddGameObject(...)` or recycled via `Pool`.
+
+- **`this.active`** (inherited from `GameObject`) controls whether the `GameObject` is active in the scene or pool (updating and drawing).
+- **`this.emitting`** (alias for `this.particleSystem.active`) controls whether the emitter is continuously spawning new particles.
+- **`this.position` / `this.x` / `this.y`** and **`this.rotation`** are shared directly with `this.particleSystem.emitter` with zero per-frame copy overhead.
+
+#### `constructor(position, img, config)`
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `position` | `Vector2` *(optional)* | Initial world-space position (defaults to `Vector2.Zero()`). |
+| `img` | `HTMLImageElement \| null` *(optional)* | Sprite texture drawn for each particle (or `null` when using procedural shapes). |
+| `config` | `Object` *(optional)* | Overrides for `defaultParticleConfig`. |
+
+#### Additional Methods & Properties
+
+| Member | Type / Returns | Description |
+|--------|----------------|-------------|
+| `Play(x, y)` | `this` | Optionally moves to `(x, y)`, sets `this.active = true`, and enables continuous emission (`this.emitting = true`). |
+| `PlayBurst(count, x, y, autoDeactivate = true)` | `number` | Optionally moves to `(x, y)`, activates the `GameObject`, disables continuous emission (`this.emitting = false`), spawns `count` particles immediately, and sets `autoDeactivateWhenEmpty = autoDeactivate` so the `ParticleSystemGO` automatically returns to its `Pool` (`this.active = false`) once all burst particles fade out. |
+| `Stop(autoDeactivate)` | `this` | Stops continuous spawning (`this.emitting = false`) while keeping `this.active = true` so in-flight particles finish fading out naturally. |
+| `Reset()` | `this` | Immediately deactivates all alive particles and resets the spawn timer. |
+| `emitting` *(getter/setter)* | `boolean` | Controls continuous particle emission (`this.particleSystem.active`). |
+| `autoDeactivateWhenEmpty` | `boolean` | When `true` and `emitting === false`, automatically sets `this.active = false` once `activeCount === 0` (ideal for `Pool` recycling). |
+| `destroyWhenEmpty` | `boolean` | When `true` and `emitting === false`, automatically calls `this.game.Destroy(this)` once `activeCount === 0` (ideal for fire-and-forget `AddGameObject` effects). |
+| `particleSystem` | `ParticleSystem` | The underlying `ParticleSystem` instance. |
 
 ---
 
@@ -381,6 +418,8 @@ This section tracks all completed and planned improvements for the particle syst
   - *Details*: Added optional `tint` (`Color`) support to `DrawImage`, `DrawImageBasic`, `DrawImageSection`, and `DrawImageSectionBasic` on both `Canvas2DRenderer` (via `_getTintedSource` offscreen canvas cache) and `WebGLRenderer` (expanding `SpriteBatchShader` vertex attributes to `vec4 a_color` for hardware-accelerated per-sprite RGB tinting), plus a dedicated 16-step pre-baked color ramp (`ParticleSystem._getCanvasColorFrames`) inside `ParticleSystem` when rendering with `Canvas2DRenderer`. Added `startColor`, `endColor` (and `tintColor` shorthand) to `defaultParticleConfig`, `SetColor(startColor, endColor)` to `ParticleSystem`, and allocation-free RGB interpolation in `Particle.Update(deltaTime)`. Updated `particles_example.js` and `particle-system-editor.html` presets and added live color gradient pickers to the editor.
 - [x] **Procedural Particle Shapes (`renderShape: "sprite" | "circle" | "rect" | "line"`, `PARTICLE_SIZE`)** ✅ *DONE*
   - *Details*: Added `particleShape` enum (`sprite`, `circle`, `rect`, `line`), `renderShape: "sprite"`, and `PARTICLE_SIZE: 64` to `defaultParticleConfig` and `Particle`. Procedural shapes render via `renderer.DrawFillCircle` (`"circle"`) and `renderer.DrawFillRectangle` (`"rect"` and velocity-aligned `"line"` streaks), batching automatically in `WebGLRenderer` and requiring no external image asset (`new ParticleSystem(null, config)` defaults to `"circle"`). Added `1`/`2`/`3`/`4` live shape switching to `particles_example.js` and `renderShape` + `PARTICLE_SIZE` controls to `particle-system-editor.html`.
+- [x] **`GameObject` & `Pool` Integration (`ParticleSystemGO` / One-Shot Auto-Cleanup)** ✅ *DONE*
+  - *Details*: Added `ParticleSystemGO extends GameObject` to `src/engine/particlesystem.js` while keeping `ParticleSystem` standalone and engine-agnostic. Added `autoDeactivateWhenEmpty`, `destroyWhenEmpty`, `Play(x, y)`, `PlayBurst(count, x, y, autoDeactivate)`, `Stop(autoDeactivate)`, `Reset()`, and shared `Vector2` position/rotation binding. Updated `particles_example.js` to use a `Pool` of `ParticleSystemGO` instances for click/space explosions.
 
 ---
 
@@ -410,14 +449,9 @@ This section tracks all completed and planned improvements for the particle syst
 
 ### Phase 2 — Engine & Gameplay Integration Enhancements
 
-#### 6. `GameObject` & `Pool` Integration (`ParticleSystemGO` / One-Shot Auto-Cleanup)
-- **Status**: `[ ] Pending`
-- **Motivation**: `ParticleSystem` is currently a standalone class rather than a `GameObject` subclass (`src/engine/gameobjects.js`). Users must manually store references, call `Update(deltaTime)` and `Draw(renderer)` in their `Game` class, and cannot drop particle emitters into `this.gameObjects` or manage temporary explosion emitters via the engine's `Pool` class.
-- **Proposed Solution**:
-  - Either make `ParticleSystem extends GameObject` (keeping the existing constructor signature `new ParticleSystem(img, config, position)` working seamlessly) or provide a `ParticleSystemGO extends GameObject` class.
-  - Add lifecycle helpers for one-shot effects:
-    - `autoDeactivateWhenEmpty: false` — When a one-shot burst finishes and `activeCount === 0`, automatically sets the GameObject inactive (returning it to a `Pool` or removing it if `destroyWhenEmpty: true`).
-    - Sync `this.position` and `this.rotation` with the emitter automatically.
+#### 6. ~~`GameObject` & `Pool` Integration (`ParticleSystemGO` / One-Shot Auto-Cleanup)~~ ✅ *DONE*
+- **Status**: `[x] Completed`
+- **Class, Config Keys & API**: `ParticleSystemGO extends GameObject`, `autoDeactivateWhenEmpty: false`, `destroyWhenEmpty: false`, `Play(x, y)`, `PlayBurst(count, x, y, autoDeactivate)`, `Stop(autoDeactivate)`, `Reset()`, `emitting`.
 
 #### 7. Sub-Frame Trail Interpolation for Fast-Moving Emitters
 - **Status**: `[ ] Pending`

@@ -386,9 +386,10 @@ const firewallLineConfig = {
 };
 
 const explosionBurstConfig = {
-    maxParticleCount: 400,
+    maxParticleCount: 80,
     globalCompositeOperation: "lighter",
     emitterType: emitterType.point,
+    autoDeactivateWhenEmpty: true,
 
     // High initial blast speed that rapidly brakes due to VELOCITY_DAMPING
     MIN_INITIAL_VELOCITY: 180,
@@ -451,7 +452,7 @@ class ParticlesExample extends Game {
         };
 
         this._particleSystem = null;
-        this._burstSystem    = null;
+        this._explosionPool  = null;
         this._mode = 'area-smoke';
 
         this.bgColor = Color.FromHex("#1a1a2e");
@@ -464,11 +465,13 @@ class ParticlesExample extends Game {
             this.graphicAssets.smoke.img,
             smokeAreaConfig
         );
-        this._burstSystem = new ParticleSystem(
-            this.graphicAssets.smoke.img,
-            explosionBurstConfig
+        // Pool of reusable ParticleSystemGO instances for one-shot explosion bursts
+        this._explosionPool = new Pool(
+            this,
+            6,
+            ParticleSystemGO,
+            [Vector2.Zero(), this.graphicAssets.smoke.img, explosionBurstConfig]
         );
-        this._burstSystem.active = false; // only spawns on Burst()
         this._mode = 'area-smoke';
     }
 
@@ -546,24 +549,26 @@ class ParticlesExample extends Game {
         // Switch particle renderShape live (1 = sprite, 2 = circle, 3 = rect, 4 = line)
         if (Input.IsKeyPressed(KEY_1)) {
             this._particleSystem.SetRenderShape("sprite");
-            this._burstSystem.SetRenderShape("sprite");
+            this._explosionPool.objects.forEach(fx => fx.SetRenderShape("sprite"));
         }
         if (Input.IsKeyPressed(KEY_2)) {
             this._particleSystem.SetRenderShape("circle");
-            this._burstSystem.SetRenderShape("circle");
+            this._explosionPool.objects.forEach(fx => fx.SetRenderShape("circle"));
         }
         if (Input.IsKeyPressed(KEY_3)) {
             this._particleSystem.SetRenderShape("rect");
-            this._burstSystem.SetRenderShape("rect");
+            this._explosionPool.objects.forEach(fx => fx.SetRenderShape("rect"));
         }
         if (Input.IsKeyPressed(KEY_4)) {
             this._particleSystem.SetRenderShape("line");
-            this._burstSystem.SetRenderShape("line");
+            this._explosionPool.objects.forEach(fx => fx.SetRenderShape("line"));
         }
 
-        // Trigger a one-shot damped explosion burst on Left Click or Space
+        // Trigger a pooled one-shot ParticleSystemGO explosion burst on Left Click or Space
         if (Input.IsMouseDown(0) || Input.IsKeyDown(KEY_SPACE)) {
-            this._burstSystem.Burst(55, Input.mouse.x, Input.mouse.y);
+            const fx = this._explosionPool.Activate();
+            fx.SetRenderShape(this._particleSystem.config.renderShape || "sprite");
+            fx.PlayBurst(55, Input.mouse.x, Input.mouse.y);
         }
 
         // Emitters that track the mouse cursor
@@ -584,7 +589,7 @@ class ParticlesExample extends Game {
         }
 
         this._particleSystem.Update(deltaTime);
-        this._burstSystem.Update(deltaTime);
+        this._explosionPool.Update(deltaTime);
     }
 
     Draw() {
@@ -596,12 +601,12 @@ class ParticlesExample extends Game {
         );
 
         this._particleSystem.Draw(this.renderer);
-        this._burstSystem.Draw(this.renderer);
+        this._explosionPool.Draw(this.renderer);
         this._drawHUD(this.renderer.ctx);
     }
 
     _drawHUD(ctx) {
-        this.renderer.DrawFillBasicRectangle(8, 8, 415, 226, this.semiTransparentBlack);
+        this.renderer.DrawFillBasicRectangle(8, 8, 430, 226, this.semiTransparentBlack);
         this.renderer.DrawFillText("A - Area smoke (default)", 16, 28, "13px monospace", Color.white, "left");
         this.renderer.DrawFillText("S - Smoke following mouse (buoyancy)", 16, 46, "13px monospace", Color.white, "left");
         this.renderer.DrawFillText("D - Rain (line emitter along top)", 16, 64, "13px monospace", Color.white, "left");
@@ -611,12 +616,20 @@ class ParticlesExample extends Game {
         this.renderer.DrawFillText("J - Campfire / Aura (circle emitter)", 16, 136, "13px monospace", Color.white, "left");
         this.renderer.DrawFillText("K - Portal / Shockwave (ring + radial vel)", 16, 154, "13px monospace", Color.white, "left");
         this.renderer.DrawFillText("L - Flame Barrier (line emitter to mouse)", 16, 172, "13px monospace", Color.white, "left");
-        this.renderer.DrawFillText("Click / Space - Explosion burst (drag)", 16, 190, "13px monospace", Color.white, "left");
+        this.renderer.DrawFillText("Click / Space - Pooled ParticleSystemGO burst", 16, 190, "13px monospace", Color.white, "left");
         const ps = this._particleSystem;
-        const bs = this._burstSystem;
         const shape = ps.config.renderShape || "sprite";
+        let burstParticles = 0;
+        let activePoolGOs  = 0;
+        for (let i = 0; i < this._explosionPool.objects.length; i++) {
+            const fx = this._explosionPool.objects[i];
+            if (fx.active) {
+                activePoolGOs++;
+                burstParticles += fx.activeCount;
+            }
+        }
         this.renderer.DrawFillText(`1-4 Shape: [${shape}] (1:sprite 2:circle 3:rect 4:line)`, 16, 208, "13px monospace", Color.white, "left");
-        this.renderer.DrawFillText(`Particles alive: ${ps.activeCount} / ${ps.config.maxParticleCount} (+${bs.activeCount} burst)`, 16, 226, "13px monospace", Color.white, "left");
+        this.renderer.DrawFillText(`Alive: ${ps.activeCount}/${ps.config.maxParticleCount} | Burst: +${burstParticles} (Pool: ${activePoolGOs}/${this._explosionPool.objects.length})`, 16, 226, "13px monospace", Color.white, "left");
     }
 }
 
