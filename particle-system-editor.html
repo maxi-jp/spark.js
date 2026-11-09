@@ -615,12 +615,18 @@
 
                 <!-- 6. Rotation -->
                 <div class="panel-section">
-                    <div class="panel-title">Rotation</div>
+                    <div class="panel-title" style="display:flex;align-items:center;justify-content:space-between">
+                        <span>Rotation</span>
+                        <label style="font-size:10px;color:#9aa4b8;cursor:pointer;display:flex;align-items:center;gap:4px;text-transform:none;font-weight:normal" title="Automatically align particle rotation with its current velocity vector (Math.atan2(vy, vx) + initialRotation)">
+                            <input id="cfg-alignToVelocity" type="checkbox"> alignToVelocity
+                        </label>
+                    </div>
 
                     <div class="param-group-label">
-                        <span>Initial Rotation (radians)</span>
+                        <span id="lbl-initial-rotation">Initial Rotation (radians)</span>
                         <span class="quick-btns">
-                            <button class="mini-btn" id="btn-rot-zero" title="Set initial rotation to 0">0</button>
+                            <button class="mini-btn" id="btn-rot-zero" title="Set initial rotation / offset to 0">0</button>
+                            <button class="mini-btn" id="btn-rot-up"   title="Set rotation offset to -π/2 (-1.5708 rad, for vertically authored sprites like waterdrop.png)">-π/2</button>
                             <button class="mini-btn" id="btn-rot-full" title="Set initial rotation to [0, 2π]">0 → 2π</button>
                         </span>
                     </div>
@@ -641,21 +647,23 @@
                         </div>
                     </div>
 
-                    <div class="param-group-label">Rotation Velocity (radians / sec)</div>
-                    <div class="dual-param">
-                        <div class="param-row">
-                            <div class="param-header">
-                                <label for="cfg-MIN_ROTATION_VELOCITY" title="MIN_ROTATION_VELOCITY">MIN_ROT_VEL</label>
-                                <input id="cfg-MIN_ROTATION_VELOCITY" type="number" min="-20" max="20" step="0.01" class="num-input">
+                    <div id="rotation-vel-panel">
+                        <div class="param-group-label">Rotation Velocity (radians / sec)</div>
+                        <div class="dual-param">
+                            <div class="param-row">
+                                <div class="param-header">
+                                    <label for="cfg-MIN_ROTATION_VELOCITY" title="MIN_ROTATION_VELOCITY">MIN_ROT_VEL</label>
+                                    <input id="cfg-MIN_ROTATION_VELOCITY" type="number" min="-20" max="20" step="0.01" class="num-input">
+                                </div>
+                                <input id="rng-MIN_ROTATION_VELOCITY" type="range" min="-6.28" max="6.28" step="0.01" class="range-input">
                             </div>
-                            <input id="rng-MIN_ROTATION_VELOCITY" type="range" min="-6.28" max="6.28" step="0.01" class="range-input">
-                        </div>
-                        <div class="param-row">
-                            <div class="param-header">
-                                <label for="cfg-MAX_ROTATION_VELOCITY" title="MAX_ROTATION_VELOCITY">MAX_ROT_VEL</label>
-                                <input id="cfg-MAX_ROTATION_VELOCITY" type="number" min="-20" max="20" step="0.01" class="num-input">
+                            <div class="param-row">
+                                <div class="param-header">
+                                    <label for="cfg-MAX_ROTATION_VELOCITY" title="MAX_ROTATION_VELOCITY">MAX_ROT_VEL</label>
+                                    <input id="cfg-MAX_ROTATION_VELOCITY" type="number" min="-20" max="20" step="0.01" class="num-input">
+                                </div>
+                                <input id="rng-MAX_ROTATION_VELOCITY" type="range" min="-6.28" max="6.28" step="0.01" class="range-input">
                             </div>
-                            <input id="rng-MAX_ROTATION_VELOCITY" type="range" min="-6.28" max="6.28" step="0.01" class="range-input">
                         </div>
                     </div>
                 </div>

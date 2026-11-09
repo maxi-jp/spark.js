@@ -1366,6 +1366,8 @@ declare class Particle {
     holdTime: number;
     scale: number;
     rotation: number;
+    initialRotation: number;
+    alignToVelocity: boolean;
     velocity: Vector2;
     tint: Color;
     renderShape: string;

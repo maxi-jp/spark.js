@@ -116,6 +116,9 @@ const defaultParticleConfig = {
     MIN_ROTATION_VELOCITY: 0.05,
     MAX_ROTATION_VELOCITY: 0.15,
 
+    // When true, particle rotation automatically aligns with its velocity vector (Math.atan2(vy, vx) + initialRotation)
+    alignToVelocity: false,
+
     // Time between particle spawns (seconds)
     MIN_TIME_TO_SPAWN_PARTICLE: 0.005,
     MAX_TIME_TO_SPAWN_PARTICLE: 0.05,
@@ -173,7 +176,9 @@ class Particle {
         this.opacityIncrementVelocity = 0.0;
         this.opacityDecrementVelocity = 0.0;
         this.rotation         = 0.0;
+        this.initialRotation  = 0.0;
         this.rotationVelocity = 0.0;
+        this.alignToVelocity  = false;
         this.scale            = 1.0;
         this.scaleVelocity    = 0.0;
         this.gravityX         = 0.0;
@@ -216,12 +221,13 @@ class Particle {
      * @param {Color|null} [endColor=null]   final RGB tint color over lifetime
      * @param {string}  [renderShape="sprite"] "sprite" | "circle" | "rect" | "line"
      * @param {number}  [particleSize=64]   base pixel size for procedural shapes at scale = 1.0
+     * @param {boolean} [alignToVelocity=false] whether rotation tracks the velocity vector
      */
     Activate(initialPosition, opacityIncrementVelocity, opacityDecrementVelocity,
              initialScale, scaleVelocity, initialRotation, rotationVelocity,
              direction, gravityX = 0, gravityY = 0, velocityDamping = 0,
              maxOpacity = 1.0, holdTime = 0.0, startColor = null, endColor = null,
-             renderShape = "sprite", particleSize = 64) {
+             renderShape = "sprite", particleSize = 64, alignToVelocity = false) {
         this.position         = Vector2.Copy(initialPosition);
         this.opacity          = 0;
         this.maxOpacity       = maxOpacity;
@@ -230,14 +236,22 @@ class Particle {
         this.opacityDecrementVelocity = opacityDecrementVelocity;
         this.scale            = initialScale;
         this.scaleVelocity    = scaleVelocity;
-        this.rotation         = initialRotation;
+        this.initialRotation  = initialRotation;
         this.rotationVelocity = rotationVelocity;
+        this.alignToVelocity  = alignToVelocity;
         this.direction        = direction;
         this.gravityX         = gravityX;
         this.gravityY         = gravityY;
         this.velocityDamping  = velocityDamping;
         this.renderShape      = renderShape;
         this.particleSize     = particleSize;
+
+        if (alignToVelocity && (direction.x !== 0 || direction.y !== 0)) {
+            this.rotation = Math.atan2(direction.y, direction.x) + initialRotation;
+        }
+        else {
+            this.rotation = initialRotation;
+        }
 
         const cStart = startColor || endColor;
         const cEnd   = endColor   || startColor;
@@ -320,7 +334,6 @@ class Particle {
             this.Deactivate();
             return;
         }
-        this.rotation += this.rotationVelocity * deltaTime;
 
         // Apply constant acceleration (gravity / wind) and velocity damping
         this.direction.x += this.gravityX * deltaTime;
@@ -330,6 +343,15 @@ class Particle {
             const dragFactor = Math.exp(-this.velocityDamping * deltaTime);
             this.direction.x *= dragFactor;
             this.direction.y *= dragFactor;
+        }
+
+        if (this.alignToVelocity) {
+            if (this.direction.x !== 0 || this.direction.y !== 0) {
+                this.rotation = Math.atan2(this.direction.y, this.direction.x) + this.initialRotation;
+            }
+        }
+        else {
+            this.rotation += this.rotationVelocity * deltaTime;
         }
 
         this.position.x += this.direction.x * deltaTime;
@@ -381,16 +403,13 @@ class Particle {
             );
         }
         else if (this.renderShape === "line") {
-            const vx = this.direction.x;
-            const vy = this.direction.y;
-            const angle = (vx !== 0 || vy !== 0) ? Math.atan2(vy, vx) : this.rotation;
             const length    = Math.max(2.0, size * 1.8);
             const thickness = Math.max(1.5, size * 0.22);
             renderer.DrawFillRectangle(
                 this.position.x, this.position.y,
                 length, thickness,
                 this.tint,
-                angle,
+                this.rotation,
                 Particle.pivot
             );
         }
@@ -743,7 +762,8 @@ class ParticleSystem {
             this._startColor,
             this._endColor,
             this.config.renderShape,
-            this.config.PARTICLE_SIZE
+            this.config.PARTICLE_SIZE,
+            this.config.alignToVelocity
         );
 
         return true;

@@ -208,9 +208,10 @@ const PRESETS = {
             MIN_SCALE_VELOCITY: 0.02,
             MAX_SCALE_VELOCITY: 0.08,
             MIN_INITIAL_ROTATION: 0,
-            MAX_INITIAL_ROTATION: Number(PI2.toFixed(4)),
-            MIN_ROTATION_VELOCITY: -2.0,
-            MAX_ROTATION_VELOCITY:  2.0,
+            MAX_INITIAL_ROTATION: 0,
+            alignToVelocity: true,
+            MIN_ROTATION_VELOCITY: 0,
+            MAX_ROTATION_VELOCITY: 0,
             emitCountPerSpawn: 2,
             MIN_TIME_TO_SPAWN_PARTICLE: 0.008,
             MAX_TIME_TO_SPAWN_PARTICLE: 0.02
@@ -428,10 +429,11 @@ const PRESETS = {
             MAX_INITIAL_SCALE: 0.33,
             MIN_SCALE_VELOCITY: 0,
             MAX_SCALE_VELOCITY: 0,
-            MIN_INITIAL_ROTATION: -0.05,
-            MAX_INITIAL_ROTATION:  0.05,
-            MIN_ROTATION_VELOCITY: 0.001,
-            MAX_ROTATION_VELOCITY: 0.01,
+            MIN_INITIAL_ROTATION: -1.5708,
+            MAX_INITIAL_ROTATION: -1.5708,
+            alignToVelocity: true,
+            MIN_ROTATION_VELOCITY: 0,
+            MAX_ROTATION_VELOCITY: 0,
             MIN_TIME_TO_SPAWN_PARTICLE: 0.001,
             MAX_TIME_TO_SPAWN_PARTICLE: 0.002
         }
@@ -746,6 +748,13 @@ function syncUIFromConfig() {
     document.getElementById('cfg-globalCompositeOperation').value = currentConfig.globalCompositeOperation;
     document.getElementById('cfg-emitterType').value = String(currentConfig.emitterType);
 
+    const alignVel = Boolean(currentConfig.alignToVelocity);
+    currentConfig.alignToVelocity = alignVel;
+    document.getElementById('cfg-alignToVelocity').checked = alignVel;
+    document.getElementById('lbl-initial-rotation').textContent =
+        alignVel ? 'Rotation Offset (radians)' : 'Initial Rotation (radians)';
+    document.getElementById('rotation-vel-panel').style.display = alignVel ? 'none' : 'block';
+
     const rShape = currentConfig.renderShape || 'sprite';
     currentConfig.renderShape = rShape;
     if (currentConfig.PARTICLE_SIZE === undefined) currentConfig.PARTICLE_SIZE = 64;
@@ -875,6 +884,9 @@ function getExportableConfig() {
     out.MAX_SCALE_VELOCITY             = Number(currentConfig.MAX_SCALE_VELOCITY);
     out.MIN_INITIAL_ROTATION           = Number(currentConfig.MIN_INITIAL_ROTATION);
     out.MAX_INITIAL_ROTATION           = Number(currentConfig.MAX_INITIAL_ROTATION);
+    if (currentConfig.alignToVelocity) {
+        out.alignToVelocity = true;
+    }
     out.MIN_ROTATION_VELOCITY          = Number(currentConfig.MIN_ROTATION_VELOCITY);
     out.MAX_ROTATION_VELOCITY          = Number(currentConfig.MAX_ROTATION_VELOCITY);
     out.emitCountPerSpawn              = Math.max(1, Math.round(currentConfig.emitCountPerSpawn || 1));
@@ -991,6 +1003,7 @@ function formatJSConfigSnippet() {
         ``,
         `    MIN_INITIAL_ROTATION: ${c.MIN_INITIAL_ROTATION},`,
         `    MAX_INITIAL_ROTATION: ${maxRotStr},`,
+        ...(c.alignToVelocity ? [`    alignToVelocity: true,`] : []),
         ``,
         `    MIN_ROTATION_VELOCITY: ${c.MIN_ROTATION_VELOCITY},`,
         `    MAX_ROTATION_VELOCITY: ${c.MAX_ROTATION_VELOCITY},`,
@@ -1892,6 +1905,12 @@ function wireControls() {
         applyConfigChange('directionMode');
     });
 
+    document.getElementById('cfg-alignToVelocity').addEventListener('change', e => {
+        currentConfig.alignToVelocity = e.target.checked;
+        syncUIFromConfig();
+        applyConfigChange('alignToVelocity');
+    });
+
     // Area & Line helper buttons
     document.getElementById('btn-fit-area').addEventListener('click', () => {
         currentConfig.AREA_X1 = 0;
@@ -2037,6 +2056,12 @@ function wireControls() {
     document.getElementById('btn-rot-zero').addEventListener('click', () => {
         currentConfig.MIN_INITIAL_ROTATION = 0;
         currentConfig.MAX_INITIAL_ROTATION = 0;
+        syncUIFromConfig();
+        applyConfigChange('ROTATION');
+    });
+    document.getElementById('btn-rot-up').addEventListener('click', () => {
+        currentConfig.MIN_INITIAL_ROTATION = -1.5708;
+        currentConfig.MAX_INITIAL_ROTATION = -1.5708;
         syncUIFromConfig();
         applyConfigChange('ROTATION');
     });

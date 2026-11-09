@@ -152,13 +152,16 @@ const defaultParticleConfig = {
     MIN_SCALE_VELOCITY: 0.5,
     MAX_SCALE_VELOCITY: 0.75,
 
-    // Initial rotation range (radians)
+    // Initial rotation range (radians; acts as angular offset when alignToVelocity is true)
     MIN_INITIAL_ROTATION: 0,
     MAX_INITIAL_ROTATION: PI2,
 
-    // Angular velocity range (radians / sec)
+    // Angular velocity range (radians / sec; ignored when alignToVelocity is true)
     MIN_ROTATION_VELOCITY: 0.05,
     MAX_ROTATION_VELOCITY: 0.15,
+
+    // When true, particle rotation automatically tracks its velocity vector (Math.atan2(vy, vx) + initialRotation)
+    alignToVelocity: false,
 
     // Time between spawn ticks (seconds)
     MIN_TIME_TO_SPAWN_PARTICLE: 0.005,
@@ -420,6 +423,8 @@ This section tracks all completed and planned improvements for the particle syst
   - *Details*: Added `particleShape` enum (`sprite`, `circle`, `rect`, `line`), `renderShape: "sprite"`, and `PARTICLE_SIZE: 64` to `defaultParticleConfig` and `Particle`. Procedural shapes render via `renderer.DrawFillCircle` (`"circle"`) and `renderer.DrawFillRectangle` (`"rect"` and velocity-aligned `"line"` streaks), batching automatically in `WebGLRenderer` and requiring no external image asset (`new ParticleSystem(null, config)` defaults to `"circle"`). Added `1`/`2`/`3`/`4` live shape switching to `particles_example.js` and `renderShape` + `PARTICLE_SIZE` controls to `particle-system-editor.html`.
 - [x] **`GameObject` & `Pool` Integration (`ParticleSystemGO` / One-Shot Auto-Cleanup)** ✅ *DONE*
   - *Details*: Added `ParticleSystemGO extends GameObject` to `src/engine/particlesystem.js` while keeping `ParticleSystem` standalone and engine-agnostic. Added `autoDeactivateWhenEmpty`, `destroyWhenEmpty`, `Play(x, y)`, `PlayBurst(count, x, y, autoDeactivate)`, `Stop(autoDeactivate)`, `Reset()`, and shared `Vector2` position/rotation binding. Updated `particles_example.js` to use a `Pool` of `ParticleSystemGO` instances for click/space explosions.
+- [x] **Velocity-Aligned Particle Rotation (`alignToVelocity`)** ✅ *DONE*
+  - *Details*: Added `alignToVelocity: false` to `defaultParticleConfig` and `Particle`. When enabled, `Particle.Activate` and `Particle.Update` set `this.rotation = Math.atan2(this.direction.y, this.direction.x) + this.initialRotation` across all render shapes (`"sprite"`, `"rect"`, `"line"`), and removed the hardcoded `Math.atan2` from the `"line"` branch in `Particle.Draw`. Enabled `alignToVelocity: true` on `fountainConfig` and `rainConfig`, and added an `alignToVelocity` toggle + `-π/2` offset quick-button to `particle-system-editor.html`.
 
 ---
 
@@ -460,11 +465,9 @@ This section tracks all completed and planned improvements for the particle syst
   - Track `_prevPosition` inside `ParticleEmitter` / `ParticleSystem`.
   - When `SetPosition(x, y)` is called and multiple particles are spawned across sub-frame steps in `Update(deltaTime)`, linearly interpolate (`Vector2.Lerp`) the spawn origin between `_prevPosition` and `position` based on each sub-step's fractional timestamp within `deltaTime`, then update `_prevPosition` at the end of `Update()`.
 
-#### 8. Velocity-Aligned Particle Rotation (`alignToVelocity`)
-- **Status**: `[ ] Pending`
-- **Motivation**: Directional particles like rain streaks, sparks, arrows, or shrapnel should point in the direction they are currently moving—especially once gravity (`GRAVITY_Y`) curves their trajectory along a parabolic arc.
-- **Proposed Config Key**:
-  - `alignToVelocity: false` (when `true`, sets `particle.rotation = Math.atan2(particle.direction.y, particle.direction.x) + config.rotationOffset` each frame instead of integrating `rotationVelocity`).
+#### 8. ~~Velocity-Aligned Particle Rotation (`alignToVelocity`)~~ ✅ *DONE*
+- **Status**: `[x] Completed`
+- **Config Key**: `alignToVelocity: false` (uses `MIN_INITIAL_ROTATION` / `MAX_INITIAL_ROTATION` as the angular offset added to `Math.atan2(direction.y, direction.x)`).
 
 #### 9. Sprite Sheet / `SpriteAtlas` Frame Support
 - **Status**: `[ ] Pending`
