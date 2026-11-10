@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>spark.js — Death Rally Circuit Editor</title>
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="stylesheet" href="src/examples/death_rally/death_rally.css">
+    <link rel="stylesheet" href="src/examples/death_rally/editor/circuit_editor.css">
+
+    <!-- Prevent DeathRallyGame from auto-initializing on window.onload before Test Race is clicked -->
+    <script>
+        window.DEATH_RALLY_DISABLE_AUTO_INIT = true;
+    </script>
+
+    <!-- ── spark.js Engine ─────────────────────────────────────── -->
+    <script src="src/engine/utils_math.js"></script>
+    <script src="src/engine/utils_classes.js"></script>
+    <script src="src/engine/renderer.js"></script>
+    <script src="src/engine/gameobjects.js"></script>
+    <script src="src/engine/input.js"></script>
+    <script src="src/engine/audioplayer.js"></script>
+    <script src="src/engine/particlesystem.js"></script>
+    <script src="src/engine/htmlmenu.js"></script>
+    <script src="src/engine/virtualcontrols.js"></script>
+    <script src="src/engine/game.js"></script>
+    <script src="src/engine/tiled_loader.js"></script>
+    <script src="src/engine/main.js"></script>
+
+    <!-- ── Death Rally Game & Circuits ────────────────────────── -->
+    <script src="src/examples/death_rally/circuit.js"></script>
+    <script src="src/examples/death_rally/death_rally_defs.js"></script>
+    <script src="src/examples/death_rally/death_rally_gameobjects.js"></script>
+    <script src="src/examples/death_rally/death_rally_cars.js"></script>
+    <script src="src/examples/death_rally/death_rally_gamestate.js"></script>
+    <script src="src/examples/death_rally/menus/main_menu.js"></script>
+    <script src="src/examples/death_rally/menus/credits_menu.js"></script>
+    <script src="src/examples/death_rally/menus/hub_menu.js"></script>
+    <script src="src/examples/death_rally/menus/race_summary_menu.js"></script>
+    <script src="src/examples/death_rally/death_rally_game.js"></script>
+
+    <!-- Built-in Circuits -->
+    <script src="src/examples/death_rally/circuits/playground.js"></script>
+    <script src="src/examples/death_rally/circuits/oval_track.js"></script>
+    <script src="src/examples/death_rally/circuits/figure_eight.js"></script>
+    <script src="src/examples/death_rally/circuits/final_circuit.js"></script>
+</head>
+<body>
+    <div id="editor-app">
+        <!-- ═══════════ TOP TOOLBAR ═══════════ -->
+        <header id="editor-toolbar">
+            <div class="tb-group tb-brand">
+                <a href="death-rally.html" class="tb-back-link" title="Back to Death Rally Game">← Game</a>
+                <span class="tb-logo">💀 CIRCUIT EDITOR</span>
+            </div>
+
+            <div class="tb-divider"></div>
+
+            <!-- Load / Preset / New -->
+            <div class="tb-group">
+                <label class="tb-label" for="preset-select">Preset:</label>
+                <select id="preset-select" class="tb-select" title="Load a built-in circuit or start blank">
+                    <option value="OVAL_TRACK">Oval Track</option>
+                    <option value="FIGURE_EIGHT">Figure Eight</option>
+                    <option value="FINAL_CIRCUIT">Final Circuit</option>
+                    <option value="PLAYGROUND_CIRCUIT">Playground Loop</option>
+                    <option value="BLANK">✦ New Blank Circuit</option>
+                </select>
+                <button id="btn-load-preset" class="tb-btn" title="Load selected preset">Load Preset</button>
+
+                <label for="file-load-input" class="tb-btn" title="Load a .js or .json circuit file from disk">
+                    📂 Load File
+                </label>
+                <input id="file-load-input" type="file" accept=".js,.json,text/javascript,application/json" style="display:none">
+                <button id="btn-import-code" class="tb-btn" title="Paste JS or JSON circuit definition">📋 Paste JS/JSON</button>
+            </div>
+
+            <div class="tb-divider"></div>
+
+            <!-- Undo / Redo -->
+            <div class="tb-group">
+                <button id="btn-undo" class="tb-btn tb-btn-icon" title="Undo (Ctrl+Z)" disabled>↶</button>
+                <button id="btn-redo" class="tb-btn tb-btn-icon" title="Redo (Ctrl+Y)" disabled>↷</button>
+            </div>
+
+            <div class="tb-divider"></div>
+
+            <!-- Grid & Snap -->
+            <div class="tb-group">
+                <label class="tb-checkbox-label" title="Toggle visual grid (G)">
+                    <input type="checkbox" id="chk-show-grid" checked> Grid
+                </label>
+                <label class="tb-label" for="snap-select">Snap:</label>
+                <select id="snap-select" class="tb-select tb-select-sm" title="Grid snap size in world pixels (Hold Alt to bypass)">
+                    <option value="0">Off</option>
+                    <option value="5">5 px</option>
+                    <option value="10" selected>10 px</option>
+                    <option value="20">20 px</option>
+                    <option value="25">25 px</option>
+                    <option value="50">50 px</option>
+                </select>
+            </div>
+
+            <div class="tb-spacer"></div>
+
+            <!-- Test & Export -->
+            <div class="tb-group">
+                <button id="btn-test-race" class="tb-btn tb-btn-success" title="Test drive this circuit right now!">
+                    ▶ Test Race
+                </button>
+                <button id="btn-export-js" class="tb-btn tb-btn-primary" title="Download .js circuit file for src/examples/death_rally/circuits/">
+                    ⬇ Export .JS
+                </button>
+                <button id="btn-export-json" class="tb-btn" title="Download .json circuit file">
+                    ⬇ .JSON
+                </button>
+                <button id="btn-view-code" class="tb-btn" title="Preview & copy generated JavaScript code">
+                    { } Code
+                </button>
+            </div>
+        </header>
+
+        <!-- ═══════════ MAIN WORKSPACE ═══════════ -->
+        <div id="editor-main">
+            <!-- ── LEFT PANEL: TOOLS & LAYERS ── -->
+            <aside id="editor-left-panel">
+                <div class="panel-section">
+                    <div class="panel-section-title">🛠 Authoring Tools</div>
+                    <div class="tool-grid" id="tool-buttons">
+                        <button class="tool-btn active" data-tool="select" title="Select, Move, Resize & Rotate (Shortcut: V)">
+                            <span class="tool-icon">↖</span>
+                            <span class="tool-name">Select / Edit</span>
+                            <kbd>V</kbd>
+                        </button>
+                        <button class="tool-btn" data-tool="surface_rect" title="Draw Rectangular Surface Zone (Shortcut: S)">
+                            <span class="tool-icon">▭</span>
+                            <span class="tool-name">Surface Rect</span>
+                            <kbd>S</kbd>
+                        </button>
+                        <button class="tool-btn" data-tool="surface_poly" title="Draw Polygon Surface Zone (Shortcut: P)">
+                            <span class="tool-icon">⬠</span>
+                            <span class="tool-name">Surface Poly</span>
+                            <kbd>P</kbd>
+                        </button>
+                        <button class="tool-btn" data-tool="road_brush" title="Click centerline points to build road strips & waypoints (Shortcut: R)">
+                            <span class="tool-icon">🛣</span>
+                            <span class="tool-name">Road Path</span>
+                            <kbd>R</kbd>
+                        </button>
+                        <button class="tool-btn" data-tool="obstacle_wall" title="Draw Wall / Barrier Obstacle (Shortcut: O)">
+                            <span class="tool-icon">🧱</span>
+                            <span class="tool-name">Wall Barrier</span>
+                            <kbd>O</kbd>
+                        </button>
+                        <button class="tool-btn" data-tool="obstacle_barrel" title="Place Circular Barrel / Tire Obstacle (Shortcut: B)">
+                            <span class="tool-icon">🛢</span>
+                            <span class="tool-name">Barrel / Tire</span>
+                            <kbd>B</kbd>
+                        </button>
+                        <button class="tool-btn" data-tool="checkpoint" title="Place Checkpoint / Start-Finish Gate (Shortcut: C)">
+                            <span class="tool-icon">🏁</span>
+                            <span class="tool-name">Checkpoint</span>
+                            <kbd>C</kbd>
+                        </button>
+                        <button class="tool-btn" data-tool="spawn" title="Place Vehicle Starting Grid Spawn (Shortcut: K)">
+                            <span class="tool-icon">🏎</span>
+                            <span class="tool-name">Car Spawn</span>
+                            <kbd>K</kbd>
+                        </button>
+                        <button class="tool-btn" data-tool="waypoint" title="Place / Insert AI Racing Line Waypoints (Shortcut: W)">
+                            <span class="tool-icon">📍</span>
+                            <span class="tool-name">AI Waypoints</span>
+                            <kbd>W</kbd>
+                        </button>
+                        <button class="tool-btn" data-tool="pickup" title="Place Power-Up / Pickup with Lap or Time Schedule (Shortcut: U)">
+                            <span class="tool-icon">⚡</span>
+                            <span class="tool-name">Power-Up</span>
+                            <kbd>U</kbd>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Contextual Tool Defaults (updates based on active tool) -->
+                <div class="panel-section" id="tool-options-section">
+                    <div class="panel-section-title" id="tool-options-title">⚙ Tool Defaults</div>
+                    <div id="tool-options-body" class="panel-body"></div>
+                </div>
+
+                <!-- Layer Visibility & Lock -->
+                <div class="panel-section">
+                    <div class="panel-section-title">👁 Layers (Visible / Lock)</div>
+                    <div class="layer-list" id="layer-toggles">
+                        <div class="layer-row" data-layer="surfaces">
+                            <input type="checkbox" class="layer-vis" checked title="Show/Hide Surface Zones">
+                            <span class="layer-swatch" style="background:#414146"></span>
+                            <span class="layer-label">Surfaces</span>
+                            <span class="layer-count" id="count-surfaces">0</span>
+                            <button class="layer-lock-btn" title="Lock/Unlock layer selection">🔓</button>
+                        </div>
+                        <div class="layer-row" data-layer="obstacles">
+                            <input type="checkbox" class="layer-vis" checked title="Show/Hide Obstacles">
+                            <span class="layer-swatch" style="background:#c8c8d2"></span>
+                            <span class="layer-label">Obstacles</span>
+                            <span class="layer-count" id="count-obstacles">0</span>
+                            <button class="layer-lock-btn" title="Lock/Unlock layer selection">🔓</button>
+                        </div>
+                        <div class="layer-row" data-layer="checkpoints">
+                            <input type="checkbox" class="layer-vis" checked title="Show/Hide Checkpoints">
+                            <span class="layer-swatch" style="background:#ffd54f"></span>
+                            <span class="layer-label">Checkpoints</span>
+                            <span class="layer-count" id="count-checkpoints">0</span>
+                            <button class="layer-lock-btn" title="Lock/Unlock layer selection">🔓</button>
+                        </div>
+                        <div class="layer-row" data-layer="spawns">
+                            <input type="checkbox" class="layer-vis" checked title="Show/Hide Vehicle Spawns">
+                            <span class="layer-swatch" style="background:#ff3b30"></span>
+                            <span class="layer-label">Car Spawns</span>
+                            <span class="layer-count" id="count-spawns">0</span>
+                            <button class="layer-lock-btn" title="Lock/Unlock layer selection">🔓</button>
+                        </div>
+                        <div class="layer-row" data-layer="waypoints">
+                            <input type="checkbox" class="layer-vis" checked title="Show/Hide AI Waypoints">
+                            <span class="layer-swatch" style="background:#38bdf8"></span>
+                            <span class="layer-label">AI Waypoints</span>
+                            <span class="layer-count" id="count-waypoints">0</span>
+                            <button class="layer-lock-btn" title="Lock/Unlock layer selection">🔓</button>
+                        </div>
+                        <div class="layer-row" data-layer="pickups">
+                            <input type="checkbox" class="layer-vis" checked title="Show/Hide Power-Ups & Pickups">
+                            <span class="layer-swatch" style="background:#22c55e"></span>
+                            <span class="layer-label">Power-Ups</span>
+                            <span class="layer-count" id="count-pickups">0</span>
+                            <button class="layer-lock-btn" title="Lock/Unlock layer selection">🔓</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Validation & Quick Helpers -->
+                <div class="panel-section">
+                    <div class="panel-section-title">✅ Track Checklist</div>
+                    <div id="validation-list" class="validation-list"></div>
+                </div>
+            </aside>
+
+            <!-- ── CENTER: CANVAS VIEWPORT ── -->
+            <main id="editor-viewport">
+                <canvas id="editor-canvas"></canvas>
+
+                <!-- Floating Zoom / Camera Bar -->
+                <div id="viewport-controls">
+                    <button id="btn-zoom-out" class="vp-btn" title="Zoom Out (-)">−</button>
+                    <span id="zoom-label" class="vp-zoom-label" title="Click to reset zoom to 100%">100%</span>
+                    <button id="btn-zoom-in" class="vp-btn" title="Zoom In (+)">+</button>
+                    <button id="btn-zoom-fit" class="vp-btn" title="Fit Entire Circuit in View (F)">Fit</button>
+                </div>
+
+                <!-- Floating Active Path / Poly Banner -->
+                <div id="active-drawing-banner" style="display:none">
+                    <span id="active-drawing-text">Drawing polygon...</span>
+                    <button id="btn-finish-drawing" class="tb-btn tb-btn-primary tb-btn-sm">✓ Finish (Enter)</button>
+                    <button id="btn-cancel-drawing" class="tb-btn tb-btn-sm">✕ Cancel (Esc)</button>
+                </div>
+
+                <!-- Bottom Status Bar -->
+                <div id="viewport-statusbar">
+                    <span id="status-coords">X: 0, Y: 0</span>
+                    <span class="status-sep">|</span>
+                    <span id="status-surface">Surface: Grass</span>
+                    <span class="status-sep">|</span>
+                    <span id="status-hint">Wheel: Zoom • Middle/Right-Drag or Space+Drag: Pan • Click: Select</span>
+                </div>
+            </main>
+
+            <!-- ── RIGHT PANEL: CIRCUIT SETTINGS, INSPECTOR & ELEMENT LIST ── -->
+            <aside id="editor-right-panel">
+                <!-- Circuit Global Properties -->
+                <div class="panel-section">
+                    <div class="panel-section-title">🏁 Circuit Properties</div>
+                    <div class="panel-body form-grid">
+                        <div class="form-row">
+                            <label for="prop-circuit-name">Name</label>
+                            <input type="text" id="prop-circuit-name" class="form-input" value="Custom Circuit">
+                        </div>
+                        <div class="form-row">
+                            <label for="prop-circuit-const">JS Const</label>
+                            <input type="text" id="prop-circuit-const" class="form-input" value="CUSTOM_CIRCUIT" title="Variable name used when exporting .js">
+                        </div>
+                        <div class="form-row-2col">
+                            <div class="form-field">
+                                <label for="prop-circuit-laps">Laps</label>
+                                <input type="number" id="prop-circuit-laps" class="form-input" min="1" max="99" value="3">
+                            </div>
+                            <div class="form-field">
+                                <label>World Size</label>
+                                <div class="inline-pair">
+                                    <input type="number" id="prop-circuit-w" class="form-input" min="600" max="12000" step="100" value="2400" title="World Width (px)">
+                                    <span>×</span>
+                                    <input type="number" id="prop-circuit-h" class="form-input" min="600" max="12000" step="100" value="1800" title="World Height (px)">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Selected Object Inspector -->
+                <div class="panel-section" id="inspector-section">
+                    <div class="panel-section-title" id="inspector-title">🔍 Selected Element</div>
+                    <div id="inspector-body" class="panel-body">
+                        <div class="empty-hint">Click any object on the canvas to inspect or edit its properties.</div>
+                    </div>
+                </div>
+
+                <!-- Scene Outliner / Object List -->
+                <div class="panel-section outliner-section">
+                    <div class="panel-section-title">
+                        <span>📋 Elements</span>
+                        <select id="outliner-filter" class="tb-select tb-select-sm">
+                            <option value="all">All Layers</option>
+                            <option value="surfaces">Surfaces</option>
+                            <option value="obstacles">Obstacles</option>
+                            <option value="checkpoints">Checkpoints</option>
+                            <option value="spawns">Car Spawns</option>
+                            <option value="waypoints">Waypoints</option>
+                            <option value="pickups">Power-Ups</option>
+                        </select>
+                    </div>
+                    <div id="outliner-list" class="outliner-list"></div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <!-- ═══════════ CODE PREVIEW / IMPORT MODAL ═══════════ -->
+    <div id="code-modal" class="editor-modal" style="display:none">
+        <div class="editor-modal-card">
+            <div class="editor-modal-header">
+                <h3 id="code-modal-title">Circuit Code</h3>
+                <button id="btn-close-modal" class="tb-btn tb-btn-icon">✕</button>
+            </div>
+            <p id="code-modal-desc" class="editor-modal-desc">
+                Copy this definition into a file inside <code>src/examples/death_rally/circuits/</code> or paste an existing circuit definition below to import it.
+            </p>
+            <textarea id="code-modal-textarea" spellcheck="false"></textarea>
+            <div class="editor-modal-footer">
+                <span id="code-modal-feedback" class="modal-feedback"></span>
+                <div class="modal-actions">
+                    <button id="btn-modal-copy" class="tb-btn">📋 Copy to Clipboard</button>
+                    <button id="btn-modal-import-apply" class="tb-btn tb-btn-primary" style="display:none">📥 Load into Editor</button>
+                    <button id="btn-modal-download-js" class="tb-btn tb-btn-primary">⬇ Download .JS</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ LIVE TEST RACE OVERLAY ═══════════ -->
+    <div id="test-race-overlay" style="display:none">
+        <div id="test-race-topbar">
+            <div class="tb-group">
+                <button id="btn-stop-test" class="tb-btn tb-btn-danger">⏹ Stop Test &amp; Return to Editor (Esc)</button>
+                <button id="btn-restart-test" class="tb-btn">↻ Restart Race</button>
+                <button id="btn-test-toggle-colliders" class="tb-btn">📐 Toggle Colliders</button>
+                <button id="btn-test-toggle-debug" class="tb-btn">📍 Toggle Waypoints</button>
+                <button id="btn-test-heal" class="tb-btn">❤ Heal Player</button>
+            </div>
+            <div id="test-race-telemetry">
+                <span id="test-telemetry-status">Race Time: 0.0s | Leading Lap: 1 | Pending Pickups: 0</span>
+            </div>
+        </div>
+
+        <div id="test-race-stage">
+            <div id="canvasContainer">
+                <canvas id="canvas"></canvas>
+
+                <!-- Race HUD -->
+                <div id="hud" style="display:none">
+                    <div id="hud-health">
+                        <div id="hud-health-label">Health</div>
+                        <div id="hud-health-track"><div id="hud-hp-fill"></div></div>
+                    </div>
+                    <div id="hud-timer"><span id="hud-time">0:00</span></div>
+                    <div id="hud-race-info">
+                        <span id="hud-lap">Lap 1/3</span>
+                        <span id="hud-position"></span>
+                    </div>
+                    <div id="hud-money-wrap"><span id="hud-money">$0</span></div>
+                    <div id="hud-weapon">
+                        <div id="hud-weapon-label">Weapon</div>
+                        <div id="hud-weapon-row">
+                            <span id="hud-weapon-name">None</span>
+                            <span id="hud-ammo"></span>
+                        </div>
+                    </div>
+                    <div id="hud-status">
+                        <div id="hud-speed">0 km/h</div>
+                        <div id="hud-surface">Asphalt</div>
+                    </div>
+                </div>
+
+                <!-- Debug overlay -->
+                <div id="debug-overlay" style="display:none">
+                    <div id="debug-panel">
+                        <h3>⚙ Debug</h3>
+                        <div class="dbg-section">
+                            <div class="dbg-section-label">Vehicle</div>
+                            <div class="dbg-row">
+                                <button id="dbg-sports">Sports</button>
+                                <button id="dbg-muscle">Muscle</button>
+                                <button id="dbg-truck">Truck</button>
+                                <button id="dbg-buggy">Buggy</button>
+                            </div>
+                        </div>
+                        <div class="dbg-section">
+                            <div class="dbg-section-label">Weapon</div>
+                            <div class="dbg-row">
+                                <button id="dbg-give-mg">Machine Gun</button>
+                                <button id="dbg-give-msl">Missile</button>
+                                <button id="dbg-give-mine">Mine</button>
+                            </div>
+                        </div>
+                        <div class="dbg-section">
+                            <div class="dbg-section-label">Misc</div>
+                            <div class="dbg-row">
+                                <button id="dbg-heal">Heal</button>
+                                <button id="dbg-money">+$500</button>
+                                <button id="dbg-spawn">Spawn Enemy</button>
+                            </div>
+                        </div>
+                        <div class="dbg-section">
+                            <div class="dbg-section-label">Race</div>
+                            <div class="dbg-row">
+                                <button id="dbg-restart">Restart Race</button>
+                            </div>
+                        </div>
+                        <div class="dbg-section">
+                            <div class="dbg-section-label">View</div>
+                            <div class="dbg-row">
+                                <button id="dbg-colliders">Colliders</button>
+                                <button id="dbg-debug">Debug Mode</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Circuit Editor Logic -->
+    <script src="src/examples/death_rally/editor/circuit_editor.js"></script>
+</body>
+</html>
+

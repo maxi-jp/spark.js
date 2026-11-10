@@ -551,9 +551,7 @@ class Vector2 {
 
     /** @returns {number} The squared magnitude. Faster than `Length()` for comparisons. */
     SqrLength() {
-        const x2 = this._x * this._x;
-        const y2 = this._y * this._y;
-        return x2 + y2;
+        return this._x * this._x + this._y * this._y;
     }
 
     /** @returns {boolean} True if both x and y are exactly 0. */

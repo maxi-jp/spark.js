@@ -137,31 +137,34 @@ const missileSmokeConfig = {
     MIN_ROTATION_VELOCITY: 0.05,
     MAX_ROTATION_VELOCITY: 0.15,
 
-    MIN_TIME_TO_SPAWN_PARTICLE: 0.0001,
-    MAX_TIME_TO_SPAWN_PARTICLE: 0.005
+    MIN_TIME_TO_SPAWN_PARTICLE: 0.005,
+    MAX_TIME_TO_SPAWN_PARTICLE: 0.04,
+
+    emitCountPerSpawn: 1
 };
 
 // ── Color constants (keep Draw() hot-paths allocation-free) ──────────
 const C_WHITE     = new Color(1,  1,  1,  1  );
 const C_BLACK     = new Color(0,  0,  0,  1  );
 const C_HALFBLACK = new Color(0,  0,  0,  0.5);
-const C_DARKROAD  = Color.FromRGB( 40, 40, 45);
-const C_WALL      = Color.FromRGB( 80, 70, 60);
-const C_WALL_OVAL = Color.FromRGB(200,200,210);
-const C_BARREL    = Color.FromRGB(190, 80, 20);
-const C_HP_BG     = Color.FromRGB( 40, 40, 40);
-const C_HP_HIGH   = Color.FromRGB( 50,200, 50);
-const C_HP_MED    = Color.FromRGB(220,180,  0);
-const C_HP_LOW    = Color.FromRGB(220, 40, 40);
-const C_ARMOUR    = Color.FromRGB( 80,150,255);
-const C_HEADLIGHT = Color.FromRGB(255,255,200);
-const C_MINE_BODY = Color.FromRGB( 50, 50, 55);
-const C_MINE_RIM  = Color.FromRGB(100,100,100);
-const C_MINE_LED  = Color.FromRGB(255, 50, 50);
-const C_PICK_HP   = Color.FromRGB( 50,200, 80);
-const C_PICK_COIN = Color.FromRGB(255,210,  0);
-const C_PICK_MG   = Color.FromRGB(255,220, 50);
-const C_PICK_MSL  = Color.FromRGB(255,100, 30);
-const C_PICK_MINE = Color.FromRGB(100,100,100);
-const C_COIN_TEXT = Color.FromRGB(130, 90,  0);
-const C_WRECKED   = Color.FromRGB(255, 50, 50);
+const C_DARKROAD  = Color.FromRGB( 40,  40,  45);
+const C_WALL      = Color.FromRGB( 80,  70,  60);
+const C_WALL_OVAL = Color.FromRGB(200, 200, 210);
+const C_BARREL    = Color.FromRGB(190,  80,  20);
+const C_TIRE      = Color.FromRGB(200, 200, 200);
+const C_HP_BG     = Color.FromRGB( 40,  40,  40);
+const C_HP_HIGH   = Color.FromRGB( 50, 200,  50);
+const C_HP_MED    = Color.FromRGB(220, 180,   0);
+const C_HP_LOW    = Color.FromRGB(220,  40,  40);
+const C_ARMOUR    = Color.FromRGB( 80, 150, 255);
+const C_HEADLIGHT = Color.FromRGB(255, 255, 200);
+const C_MINE_BODY = Color.FromRGB( 50,  50,  55);
+const C_MINE_RIM  = Color.FromRGB(100, 100, 100);
+const C_MINE_LED  = Color.FromRGB(255,  50,  50);
+const C_PICK_HP   = Color.FromRGB( 50, 200,  80);
+const C_PICK_COIN = Color.FromRGB(255, 210,   0);
+const C_PICK_MG   = Color.FromRGB(255, 220,  50);
+const C_PICK_MSL  = Color.FromRGB(255, 100,  30);
+const C_PICK_MINE = Color.FromRGB(100, 100, 100);
+const C_COIN_TEXT = Color.FromRGB(130,  90,   0);
+const C_WRECKED   = Color.FromRGB(255,  50,  50);

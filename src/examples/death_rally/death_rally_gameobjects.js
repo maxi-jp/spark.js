@@ -229,9 +229,11 @@ class Projectile extends GameObject {
         this._position.y += this.vel.y * dt;
         this.life -= dt;
         super.Update(dt);
+        const worldW = game.raceManager?.circuit?.width ?? WORLD_W;
+        const worldH = game.raceManager?.circuit?.height ?? WORLD_H;
         if (this.life <= 0 ||
-            this._position.x < 0 || this._position.x > WORLD_W ||
-            this._position.y < 0 || this._position.y > WORLD_H) {
+            this._position.x < 0 || this._position.x > worldW ||
+            this._position.y < 0 || this._position.y > worldH) {
             game.Destroy(this);
         }
     }
@@ -320,11 +322,14 @@ class Missile extends SpriteObject {
             );
             this.particleSystem.SetPosition(this.smokePosition.x, this.smokePosition.y);
 
+            const worldW = this.game.raceManager?.circuit?.width ?? WORLD_W;
+            const worldH = this.game.raceManager?.circuit?.height ?? WORLD_H;
+
             if (this.fuel <= 0) {
                 this.Explode();
             }
-            else if (this._position.x < 0 || this._position.x > WORLD_W ||
-                    this._position.y < 0 || this._position.y > WORLD_H) {
+            else if (this._position.x < 0 || this._position.x > worldW ||
+                    this._position.y < 0 || this._position.y > worldH) {
                 this.exploded = true;
                 this.particleSystem.active = false;
 
