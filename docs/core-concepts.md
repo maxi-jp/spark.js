@@ -91,7 +91,7 @@ this.graphicAssets = {
 };
 ```
 
-The colour-key pass happens once at load time (the result is cached as an offscreen `<canvas>`), so there is no per-frame cost. The processed image is a drop-in replacement for the raw `Image` — use it exactly the same way with `DrawImage`, `DrawImageSection`, `Sprite`, etc.
+The colour-key pass happens once at load time (the result is cached as an offscreen `<canvas>`), so there is no per-frame cost. The processed image is a drop-in replacement for the raw `Image` — use it exactly the same way with `DrawImage`, `DrawImageBasic`, `DrawImageSection`, and `DrawImageSectionBasic` (including optional `tint`), `Sprite`, etc.
 
 > **Tip:** Use an image editor's colour-picker to find the exact hex value used in your sprite sheet. Common chroma-key colours are `#FF00FF` (magenta) and `#00FF00` (green).
 

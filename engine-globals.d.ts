@@ -663,14 +663,14 @@ declare class Renderer {
     MeasureText(text: string, font?: string): number;
     
     // Images
-    /** Draws an image centered on (x, y) with scale, rotation, and alpha. */
-    DrawImage(img: HTMLImageElement, x: number, y: number, scaleX: number, scaleY: number, rot?: number, pivot?: {x: number, y: number}, alpha?: number): void;
+    /** Draws an image centered on (x, y) with scale, rotation, alpha, and optional tint. */
+    DrawImage(img: HTMLImageElement, x: number, y: number, scaleX: number, scaleY: number, rot?: number, pivot?: {x: number, y: number}, alpha?: number, tint?: Color | null): void;
     /** Draws an image with top-left at (x, y). No rotation — fast path for backgrounds and UI. */
-    DrawImageBasic(img: HTMLImageElement, x: number, y: number, w?: number, h?: number, alpha?: number): void;
-    /** Draws a rectangular sub-region of an image centered on (x, y) with scale, rotation, and alpha. */
+    DrawImageBasic(img: HTMLImageElement, x: number, y: number, w?: number, h?: number, alpha?: number, tint?: Color | null): void;
+    /** Draws a rectangular sub-region of an image centered on (x, y) with scale, rotation, alpha, and optional tint. */
     DrawImageSection(img: HTMLImageElement, x: number, y: number, sx: number, sy: number, sw: number, sh: number, scaleX: number, scaleY: number, rot?: number, pivot?: {x: number, y: number}, alpha?: number, tint?: Color | null): void;
     /** Draws a rectangular sub-region of an image with top-left at (x, y). No rotation. */
-    DrawImageSectionBasic(img: HTMLImageElement, x: number, y: number, sx: number, sy: number, sw: number, sh: number, scaleX: number, scaleY: number, alpha?: number): void;
+    DrawImageSectionBasic(img: HTMLImageElement, x: number, y: number, sx: number, sy: number, sw: number, sh: number, scaleX: number, scaleY: number, alpha?: number, tint?: Color | null): void;
     
     // Other
     /** Draws a rectangle with a LinearGradient fill, top-left at (x, y). */

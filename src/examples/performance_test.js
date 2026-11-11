@@ -259,6 +259,72 @@ class PerformanceTestSpritesBasic extends PerformanceTest {
     }
 }
 
+class BouncingSpriteBasicTintGO extends BouncingSpriteBasicGO {
+    constructor(position, img, velocity, tint) {
+        super(position, img, velocity);
+        this.tint = tint;
+        this.tintEnabled = true;
+    }
+
+    Draw(renderer) {
+        renderer.DrawImageBasic(
+            this.sprite.img,
+            this.position.x - this.halfW,
+            this.position.y - this.halfH,
+            this.sprite.img.width,
+            this.sprite.img.height,
+            1.0,
+            this.tintEnabled ? this.tint : null
+        );
+    }
+}
+
+class PerformanceTestSpritesBasicTint extends PerformanceTest {
+    constructor(renderer) {
+        super(renderer);
+
+        this.graphicAssets = {
+            snake: { path: "src/examples/common_assets/snake.png", img: null }
+        };
+
+        this.tintEnabled = true;
+    }
+
+    Start() {
+        super.Start();
+        this._updateLabel();
+    }
+
+    _spawnObject() {
+        const position = new Vector2(
+            RandomBetweenFloat(0, this.screenWidth),
+            RandomBetweenFloat(0, this.screenHeight)
+        );
+        const velocity = new Vector2(RandomBetweenFloat(-150, 150), RandomBetweenFloat(-150, 150));
+        const go = new BouncingSpriteBasicTintGO(position, this.graphicAssets.snake.img, velocity, Color.red);
+        go.tintEnabled = this.tintEnabled;
+        return go;
+    }
+
+    _updateLabel() {
+        const rendererType = this.renderer instanceof WebGLRenderer ? "WebGL" : "2D Canvas";
+        const tintMode = this.tintEnabled ? "ON" : "OFF";
+        this.infoLabel.text = `${rendererType} - ${this.numObjects} objects  [↑/↓ or wheel to adjust] [T tint: ${tintMode}]`;
+    }
+
+    Update(deltaTime) {
+        if (Input.IsKeyDown(KEY_T)) {
+            this.tintEnabled = !this.tintEnabled;
+            this.gameObjects.forEach(go => {
+                go.tintEnabled = this.tintEnabled;
+            });
+            this._updateLabel();
+        }
+
+        super.Update(deltaTime);
+    }
+}
+
 // ── Rotating sprites ──────────────────────────────────────────────────────────
 
 class BouncingSpriteGO extends SpriteObject {

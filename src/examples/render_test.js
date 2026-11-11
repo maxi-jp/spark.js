@@ -135,6 +135,15 @@ class BasicGame extends Game {
 
         this.snakeSprite.DrawBasic(this.renderer);
         this.portalSprite.Draw(this.renderer);
+        this.renderer.DrawImage(
+            this.graphicAssets.portal.img,
+            250, this.screenHalfHeight,
+            1, 1,
+            this.portalSprite.rotation,
+            coord,
+            1.0,
+            Color.red
+        );
         this.rupeeSprite.Draw(this.renderer);
 
         this.blueCircle.Draw(this.renderer);
@@ -171,6 +180,7 @@ class BasicGame extends Game {
         this.renderer.DrawFillText("Watson!!! O_O", this.screenHalfWidth, 20, "20px Comic Sans MS");
         this.renderer.DrawFillText("Top-left corner", 0, 0, "16px Comic Sans MS", Color.green, "left", "top");
         this.renderer.DrawFillText("Top-right corner", this.screenWidth, 0, "16px Comic Sans MS", Color.pink, "right", "top");
+        this.renderer.DrawFillText("DrawImage tint = Color.red", 250, this.screenHalfHeight - 40, "14px Comic Sans MS", Color.red, "center", "middle");
         this.renderer.DrawFillText("Middle-left", 0, this.screenHalfHeight, "16px Comic Sans MS", Color.orange, "left", "middle");
         this.renderer.DrawFillText("Middle-right", this.screenWidth, this.screenHalfHeight, "16px Comic Sans MS", Color.orange, "right", "middle");
         this.renderer.DrawFillText("Bottom-left corner", 0, this.screenHeight, "16px Comic Sans MS", Color.lime, "left", "bottom");

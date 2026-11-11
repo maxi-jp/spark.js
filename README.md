@@ -108,7 +108,7 @@ Documentation can be consulted [here](https://maxi-jp.github.io/spark.js/docs/).
   - rumble_test.js        # Gamepad haptic/rumble feedback demo
   - lines_intersection.js # Line intersection algorithms
   - object_pooling.js     # Object pooling performance demo
-  - performance_test.js   # Performance benchmarking — rectangles, circles, sprites (basic & rotating); append ?webgl to compare renderers
+  - performance_test.js   # Performance benchmarking — rectangles, circles, sprites (basic, basic+tint & rotating), and text labels; append ?webgl to compare renderers
   - puzzlebobble.js       # Puzzle Bobble clone
   - render_test.js        # Renderer feature testing
   - pathfinding/          # Interactive A* pathfinding demo (paint walls, switch heuristics live)

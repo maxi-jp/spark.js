@@ -241,14 +241,14 @@ All methods are called on `renderer` (or `this.renderer` inside Game). Colors us
 ### Images (centered on x,y with rotation)
 | Method | Notes |
 |---|---|
-| `DrawImage(img, x, y, scaleX, scaleY, rot?, pivot?, alpha?)` | Full-featured image draw |
-| `DrawImageSection(img, x, y, sx, sy, sw, sh, scaleX, scaleY, rot?, pivot?, alpha?)` | Sprite sheet / cropped region |
+| `DrawImage(img, x, y, scaleX, scaleY, rot?, pivot?, alpha?, tint?)` | Full-featured image draw |
+| `DrawImageSection(img, x, y, sx, sy, sw, sh, scaleX, scaleY, rot?, pivot?, alpha?, tint?)` | Sprite sheet / cropped region |
 
 ### Images (top-left at x,y — faster, no rotation)
 | Method | Notes |
 |---|---|
-| `DrawImageBasic(img, x, y, w?, h?, alpha?)` | **Fastest** — use when no rotation needed |
-| `DrawImageSectionBasic(img, x, y, sx, sy, sw, sh, scaleX, scaleY, alpha?)` | Sprite sheet, no rotation |
+| `DrawImageBasic(img, x, y, w?, h?, alpha?, tint?)` | **Fastest** — use when no rotation needed |
+| `DrawImageSectionBasic(img, x, y, sx, sy, sw, sh, scaleX, scaleY, alpha?, tint?)` | Sprite sheet, no rotation |
 
 ### Other
 | Method | Notes |

@@ -906,11 +906,14 @@ class Canvas2DRenderer extends Renderer {
      * quantized to 5 bits per channel and cached on `img._tintCache` (LRU max 64).
      */
     _getTintedSource(img, tint) {
-        if (!tint) return img;
+        if (!tint)
+            return img;
+
         const r5 = Math.max(0, Math.min(31, (tint.r * 31 + 0.5) | 0));
         const g5 = Math.max(0, Math.min(31, (tint.g * 31 + 0.5) | 0));
         const b5 = Math.max(0, Math.min(31, (tint.b * 31 + 0.5) | 0));
-        if (r5 === 31 && g5 === 31 && b5 === 31) return img;
+        if (r5 === 31 && g5 === 31 && b5 === 31)
+            return img;
 
         const key = (r5 << 10) | (g5 << 5) | b5;
         let cache = img._tintCache;
@@ -919,7 +922,8 @@ class Canvas2DRenderer extends Renderer {
             img._tintCache = cache;
         }
         let tinted = cache.get(key);
-        if (tinted) return tinted;
+        if (tinted)
+            return tinted;
 
         const w = img.width  || img.naturalWidth  || 64;
         const h = img.height || img.naturalHeight || 64;
@@ -941,6 +945,7 @@ class Canvas2DRenderer extends Renderer {
             cache.delete(cache.keys().next().value);
         }
         cache.set(key, off);
+
         return off;
     }
 
@@ -1725,9 +1730,12 @@ class WebGLRenderer extends Renderer {
     // without a glyph atlas. Uses the static-buffer spriteShader path (no bufferData per call)
     // and only flushes pending batches when they actually have queued geometry.
     DrawTextCached(texture, x, y, width, height) {
-        if (this._spriteBatchCount > 0) this.FlushSpriteBatch();
-        if (this._rectBatchCount   > 0) this.FlushRectBatch();
-        if (this._circleBatchCount > 0) this.FlushCircleBatch();
+        if (this._spriteBatchCount > 0)
+            this.FlushSpriteBatch();
+        if (this._rectBatchCount   > 0)
+            this.FlushRectBatch();
+        if (this._circleBatchCount > 0)
+            this.FlushCircleBatch();
 
         const gl = this.gl;
         this.spriteShader.Use(gl);
@@ -1757,7 +1765,8 @@ class WebGLRenderer extends Renderer {
             x1 = x + lx1*cos - ly1*sin;  y1 = y + lx1*sin + ly1*cos;
             x2 = x + lx2*cos - ly2*sin;  y2 = y + lx2*sin + ly2*cos;
             x3 = x + lx3*cos - ly3*sin;  y3 = y + lx3*sin + ly3*cos;
-        } else {
+        }
+        else {
             x0 = x + lx0; y0 = y + ly0;
             x1 = x + lx1; y1 = y + ly1;
             x2 = x + lx2; y2 = y + ly2;
@@ -1800,7 +1809,8 @@ class WebGLRenderer extends Renderer {
             x1 = x + lx1*cos - ly1*sin;  y1 = y + lx1*sin + ly1*cos;
             x2 = x + lx2*cos - ly2*sin;  y2 = y + lx2*sin + ly2*cos;
             x3 = x + lx3*cos - ly3*sin;  y3 = y + lx3*sin + ly3*cos;
-        } else {
+        }
+        else {
             x0 = x + lx0; y0 = y + ly0;
             x1 = x + lx1; y1 = y + ly1;
             x2 = x + lx2; y2 = y + ly2;
@@ -1851,9 +1861,8 @@ class WebGLRenderer extends Renderer {
         shader.Use(gl);
         
         // Create batch buffer on first use
-        if (!this._batchBuffer) {
+        if (!this._batchBuffer)
             this._batchBuffer = gl.createBuffer();
-        }
         
         // Upload interleaved vertex data (position + texcoord)
         gl.bindBuffer(gl.ARRAY_BUFFER, this._batchBuffer);
@@ -1947,7 +1956,8 @@ class WebGLRenderer extends Renderer {
 
     /** Flush any pending colored-quad batch to the GPU. */
     FlushRectBatch() {
-        if (this._rectBatchCount === 0) return;
+        if (this._rectBatchCount === 0)
+            return;
 
         const gl     = this.gl;
         const shader = this._coloredQuadBatchShader;
@@ -1982,7 +1992,8 @@ class WebGLRenderer extends Renderer {
 
     /** Flush the pending circle (SDF quad) batch to the GPU. */
     FlushCircleBatch() {
-        if (this._circleBatchCount === 0) return;
+        if (this._circleBatchCount === 0)
+            return;
 
         const gl     = this.gl;
         const shader = this._circleBatchShader;
@@ -2015,9 +2026,12 @@ class WebGLRenderer extends Renderer {
      * Uses an SDF test in the fragment shader — zero trig per call.
      */
     _pushCircleQuad(x, y, radius, r, g, b, a) {
-        if (this._spriteBatchCount > 0) this.FlushSpriteBatch();
-        if (this._rectBatchCount   > 0) this.FlushRectBatch();
-        if (this._circleBatchCount + 6 > this._circleBatchMaxVerts) this.FlushCircleBatch();
+        if (this._spriteBatchCount > 0)
+            this.FlushSpriteBatch();
+        if (this._rectBatchCount   > 0)
+            this.FlushRectBatch();
+        if (this._circleBatchCount + 6 > this._circleBatchMaxVerts)
+            this.FlushCircleBatch();
 
         const buf = this._circleBatchVerts;
         let i = this._circleBatchCount * 8;
@@ -2046,11 +2060,12 @@ class WebGLRenderer extends Renderer {
      * Corners: TL(x0,y0), TR(x1,y1), BL(x2,y2), BR(x3,y3).
      */
     _pushColoredQuad(x0, y0, x1, y1, x2, y2, x3, y3, r, g, b, a) {
-        if (this._spriteBatchCount > 0) this.FlushSpriteBatch();
-        if (this._circleBatchCount > 0) this.FlushCircleBatch();
-        if (this._rectBatchCount + 6 > this._rectBatchMaxVerts) {
+        if (this._spriteBatchCount > 0)
+            this.FlushSpriteBatch();
+        if (this._circleBatchCount > 0)
+            this.FlushCircleBatch();
+        if (this._rectBatchCount + 6 > this._rectBatchMaxVerts)
             this.FlushRectBatch();
-        }
 
         const buf = this._rectBatchVerts;
         let i = this._rectBatchCount * 6;
