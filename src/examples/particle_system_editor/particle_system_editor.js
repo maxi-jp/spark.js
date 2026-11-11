@@ -663,9 +663,6 @@ function applyParticleImage(img, name) {
 
     if (particleSystem) {
         particleSystem.img = img;
-        for (let i = 0; i < particleSystem.particles.length; i++) {
-            particleSystem.particles[i].img = img;
-        }
         particleSystem._syncColors();
     }
     updateSheetFrameInfo();
@@ -769,7 +766,7 @@ function applyConfigChange(changedKey) {
         particleSystem.config.maxParticleCount = target;
 
         while (particleSystem.particles.length < target) {
-            particleSystem.particles.push(new Particle(currentImage));
+            particleSystem.particles.push(new Particle(particleSystem));
         }
         if (particleSystem.particles.length > target) {
             particleSystem.particles.length = target;

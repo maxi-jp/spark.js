@@ -173,152 +173,181 @@ class Particle {
     
     static pivot = { x: 0, y: 0 };
 
-    constructor(img) {
-        this.img = img;
+    /**
+     * @param {ParticleSystem|HTMLImageElement|HTMLCanvasElement|null} [systemOrImg=null] Owning ParticleSystem (or legacy image)
+     */
+    constructor(systemOrImg = null) {
+        if (systemOrImg && typeof systemOrImg.emitter !== "undefined") {
+            this.system = systemOrImg;
+            this._img   = null;
+        }
+        else {
+            this.system = null;
+            this._img   = systemOrImg;
+        }
 
         this.active    = false;
         this.appearing = false;
 
-        this.position         = Vector2.Zero();
-        this.direction        = Vector2.Zero();
-        this.opacity          = 0.0;
-        this.maxOpacity       = 1.0;
-        this.holdTime         = 0.0;
+        this.position                 = Vector2.Zero();
+        this.direction                = Vector2.Zero();
+        this.opacity                  = 0.0;
+        this.maxOpacity               = 1.0;
+        this.holdTime                 = 0.0;
         this.opacityIncrementVelocity = 0.0;
         this.opacityDecrementVelocity = 0.0;
-        this.rotation         = 0.0;
-        this.initialRotation  = 0.0;
-        this.rotationVelocity = 0.0;
-        this.alignToVelocity  = false;
-        this.scale            = 1.0;
-        this.scaleVelocity    = 0.0;
-        this.gravityX         = 0.0;
-        this.gravityY         = 0.0;
-        this.velocityDamping  = 0.0;
-        this.renderShape      = "sprite";
-        this.particleSize     = 64;
+        this.scale                    = 1.0;
+        this.scaleVelocity            = 0.0;
+        this.rotation                 = 0.0;
+        this.initialRotation          = 0.0;
+        this.rotationVelocity         = 0.0;
 
-        // Color-over-lifetime state
-        this.age              = 0.0;
-        this.invLifetime      = 0.0;
-        this.lifeProgress     = 0.0;
-        this.hasColorTint     = false;
-        this.hasColorGradient = false;
-        this.startR           = 1.0;
-        this.startG           = 1.0;
-        this.startB           = 1.0;
-        this.endR             = 1.0;
-        this.endG             = 1.0;
-        this.endB             = 1.0;
-        this.tint             = new Color(1, 1, 1, 1);
+        // Individual lifetime progress & tint color
+        this.age          = 0.0;
+        this.invLifetime  = 0.0;
+        this.lifeProgress = 0.0;
+        this.tint         = new Color(1, 1, 1, 1);
 
-        // Lifetime progress tracking (needed by color gradients and/or frame animation)
-        this.trackLifeProgress = false;
+        // Current sprite sheet crop rectangle ({ x, y, w, h } or null for full image)
+        this.frame = null;
+    }
 
-        // Sprite-sheet / SpriteAtlas frame state
-        this.frames        = null;   // shared array of { x, y, w, h } crop rects (owned by ParticleSystem)
-        this.frame         = null;   // current crop rect (null = draw the full image)
-        this.animateFrames = false;
+    /** Backward-compatible accessor for particle texture image. */
+    get img() {
+        return this._img || (this.system ? this.system.img : null);
+    }
+
+    set img(value) {
+        this._img = value;
+    }
+
+    /** Backward-compatible accessor for particle visual shape. */
+    get renderShape() {
+        return this.system ? (this.system.config.renderShape || "sprite") : "sprite";
+    }
+
+    /** Backward-compatible accessor for particle base procedural size. */
+    get particleSize() {
+        return this.system ? (this.system.config.PARTICLE_SIZE || 64) : 64;
+    }
+
+    /** Backward-compatible accessor for velocity-aligned rotation flag. */
+    get alignToVelocity() {
+        return this.system ? Boolean(this.system.config.alignToVelocity) : false;
     }
 
     /**
      * Activate the particle with initial parameters.
      * @param {Vector2} initialPosition
-     * @param {number}  opacityIncrementVelocity
-     * @param {number}  opacityDecrementVelocity
-     * @param {number}  initialScale
-     * @param {number}  scaleVelocity
-     * @param {number}  initialRotation
-     * @param {number}  rotationVelocity
-     * @param {Vector2} direction           velocity vector (pixels/sec)
-     * @param {number}  [gravityX=0]        horizontal acceleration (pixels/sec²)
-     * @param {number}  [gravityY=0]        vertical acceleration (pixels/sec²)
-     * @param {number}  [velocityDamping=0] air drag coefficient (1/sec)
-     * @param {number}  [maxOpacity=1.0]    peak opacity target in (0, 1]
-     * @param {number}  [holdTime=0.0]      duration in seconds held at peak opacity
-     * @param {Color|null} [startColor=null] initial RGB tint color
-     * @param {Color|null} [endColor=null]   final RGB tint color over lifetime
-     * @param {string}  [renderShape="sprite"] "sprite" | "circle" | "rect" | "line"
-     * @param {number}  [particleSize=64]   base pixel size for procedural shapes at scale = 1.0
-     * @param {boolean} [alignToVelocity=false] whether rotation tracks the velocity vector
-     * @param {Array<{x:number,y:number,w:number,h:number}>|null} [frames=null] resolved sprite-sheet crop rects
-     * @param {string}  [frameMode="random"] "random" (random frame at spawn) | "animate" (frame 0 -> N-1 over lifetime)
+     * @param {Vector2|number} velocityOrOpacityInc  velocity Vector2 (pixels/sec) in new signature, or opacityIncrementVelocity in legacy signature
      */
-    Activate(initialPosition, opacityIncrementVelocity, opacityDecrementVelocity,
-             initialScale, scaleVelocity, initialRotation, rotationVelocity,
-             direction, gravityX = 0, gravityY = 0, velocityDamping = 0,
-             maxOpacity = 1.0, holdTime = 0.0, startColor = null, endColor = null,
-             renderShape = "sprite", particleSize = 64, alignToVelocity = false,
-             frames = null, frameMode = "random") {
-        this.position         = Vector2.Copy(initialPosition);
-        this.opacity          = 0;
-        this.maxOpacity       = maxOpacity;
-        this.holdTime         = holdTime;
+    Activate(initialPosition, velocityOrOpacityInc, ...args) {
+        // Support legacy 20-argument signature:
+        // Activate(initialPosition, opacityIncrementVelocity, opacityDecrementVelocity, initialScale, scaleVelocity,
+        //          initialRotation, rotationVelocity, direction, gravityX, gravityY, velocityDamping, maxOpacity,
+        //          holdTime, startColor, endColor, renderShape, particleSize, alignToVelocity, frames, frameMode)
+        if (typeof velocityOrOpacityInc === "number") {
+            const opacityIncrementVelocity = velocityOrOpacityInc;
+            const opacityDecrementVelocity = args[0];
+            const initialScale             = args[1];
+            const scaleVelocity            = args[2];
+            const initialRotation          = args[3];
+            const rotationVelocity         = args[4];
+            const direction                = args[5];
+            const maxOpacity               = args[9] ?? 1.0;
+            const holdTime                 = args[10] ?? 0.0;
+            return this._activateInternal(
+                initialPosition, direction,
+                opacityIncrementVelocity, opacityDecrementVelocity,
+                maxOpacity, holdTime,
+                initialScale, scaleVelocity,
+                initialRotation, rotationVelocity,
+                this.system
+            );
+        }
+
+        // Streamlined signature:
+        // Activate(initialPosition, velocity, opacityIncrementVelocity, opacityDecrementVelocity,
+        //          maxOpacity, holdTime, initialScale, scaleVelocity, initialRotation, rotationVelocity, system)
+        const velocity                 = velocityOrOpacityInc;
+        const opacityIncrementVelocity = args[0];
+        const opacityDecrementVelocity = args[1];
+        const maxOpacity               = args[2] ?? 1.0;
+        const holdTime                 = args[3] ?? 0.0;
+        const initialScale             = args[4];
+        const scaleVelocity            = args[5];
+        const initialRotation          = args[6];
+        const rotationVelocity         = args[7];
+        const system                   = args[8] || this.system;
+
+        return this._activateInternal(
+            initialPosition, velocity,
+            opacityIncrementVelocity, opacityDecrementVelocity,
+            maxOpacity, holdTime,
+            initialScale, scaleVelocity,
+            initialRotation, rotationVelocity,
+            system
+        );
+    }
+
+    /** @private */
+    _activateInternal(initialPosition, velocity,
+                      opacityIncrementVelocity, opacityDecrementVelocity,
+                      maxOpacity, holdTime,
+                      initialScale, scaleVelocity,
+                      initialRotation, rotationVelocity,
+                      system) {
+        const sys = system || this.system;
+
+        this.position.Set(initialPosition.x, initialPosition.y);
+        this.direction.Set(velocity.x, velocity.y);
+        this.opacity                  = 0.0;
+        this.maxOpacity               = maxOpacity;
+        this.holdTime                 = holdTime;
         this.opacityIncrementVelocity = opacityIncrementVelocity;
         this.opacityDecrementVelocity = opacityDecrementVelocity;
-        this.scale            = initialScale;
-        this.scaleVelocity    = scaleVelocity;
-        this.initialRotation  = initialRotation;
-        this.rotationVelocity = rotationVelocity;
-        this.alignToVelocity  = alignToVelocity;
-        this.direction        = direction;
-        this.gravityX         = gravityX;
-        this.gravityY         = gravityY;
-        this.velocityDamping  = velocityDamping;
-        this.renderShape      = renderShape;
-        this.particleSize     = particleSize;
+        this.scale                    = initialScale;
+        this.scaleVelocity            = scaleVelocity;
+        this.initialRotation          = initialRotation;
+        this.rotationVelocity         = rotationVelocity;
 
-        if (alignToVelocity && (direction.x !== 0 || direction.y !== 0)) {
-            this.rotation = Math.atan2(direction.y, direction.x) + initialRotation;
+        const align = sys ? Boolean(sys.config.alignToVelocity) : false;
+        if (align && (this.direction.x !== 0 || this.direction.y !== 0)) {
+            this.rotation = Math.atan2(this.direction.y, this.direction.x) + initialRotation;
         }
         else {
             this.rotation = initialRotation;
         }
 
-        const cStart = startColor || endColor;
-        const cEnd   = endColor   || startColor;
-        if (cStart) {
-            this.hasColorTint = true;
-            this.startR = cStart.r;
-            this.startG = cStart.g;
-            this.startB = cStart.b;
-            this.endR   = cEnd.r;
-            this.endG   = cEnd.g;
-            this.endB   = cEnd.b;
-            this.tint._r = this.tint._rgba[0] = this.startR;
-            this.tint._g = this.tint._rgba[1] = this.startG;
-            this.tint._b = this.tint._rgba[2] = this.startB;
-            this.hasColorGradient = (this.startR !== this.endR || this.startG !== this.endG || this.startB !== this.endB);
+        // Tint initialization
+        if (sys && sys._hasColorTint) {
+            this.tint._r = this.tint._rgba[0] = sys._startR;
+            this.tint._g = this.tint._rgba[1] = sys._startG;
+            this.tint._b = this.tint._rgba[2] = sys._startB;
         }
         else {
-            this.hasColorTint     = false;
-            this.hasColorGradient = false;
             this.tint._r = this.tint._rgba[0] = 1.0;
             this.tint._g = this.tint._rgba[1] = 1.0;
             this.tint._b = this.tint._rgba[2] = 1.0;
         }
 
-        // Sprite-sheet frame selection (random frame picked once at spawn: zero per-frame cost)
+        // Frame selection
+        const frames = sys ? sys._frames : null;
         if (frames && frames.length > 0) {
-            this.frames = frames;
-            if (frameMode === "animate" && frames.length > 1) {
-                this.animateFrames = true;
+            if (sys && sys._animateFrames) {
                 this.frame = frames[0];
             }
             else {
-                this.animateFrames = false;
                 this.frame = frames[(Math.random() * frames.length) | 0];
             }
         }
         else {
-            this.frames        = null;
-            this.frame         = null;
-            this.animateFrames = false;
+            this.frame = null;
         }
 
-        this.lifeProgress      = 0.0;
-        this.trackLifeProgress = this.hasColorGradient || this.animateFrames;
-        if (this.trackLifeProgress) {
+        this.lifeProgress = 0.0;
+        const trackProgress = sys ? sys._trackLifeProgress : false;
+        if (trackProgress) {
             this.age = 0.0;
             const totalLife =
                 (opacityIncrementVelocity > 0 ? maxOpacity / opacityIncrementVelocity : 0) +
@@ -327,15 +356,23 @@ class Particle {
             this.invLifetime = totalLife > 0.0001 ? 1.0 / totalLife : 0.0;
         }
 
-        this.active           = true;
-        this.appearing        = true;
+        this.active    = true;
+        this.appearing = true;
     }
 
     Deactivate() {
         this.active = false;
     }
 
-    Update(deltaTime) {
+    /**
+     * Updates particle lifetime, transform, and kinematics.
+     * @param {number} deltaTime
+     * @param {number} [gdx=0] Constant horizontal acceleration step (`GRAVITY_X * dt`) precalculated by ParticleSystem
+     * @param {number} [gdy=0] Constant vertical acceleration step (`GRAVITY_Y * dt`) precalculated by ParticleSystem
+     * @param {number} [drag=1.0] Velocity damping multiplier (`Math.exp(-damping * dt)`) precalculated by ParticleSystem
+     * @param {ParticleSystem} [system=this.system]
+     */
+    Update(deltaTime, gdx = 0, gdy = 0, drag = 1.0, system = this.system) {
         if (this.appearing) {
             // Fade in up to maxOpacity
             this.opacity += this.opacityIncrementVelocity * deltaTime;
@@ -357,45 +394,49 @@ class Particle {
             }
         }
 
-        // Interpolate RGB tint color and/or advance sprite-sheet frame over particle lifetime
-        if (this.trackLifeProgress) {
+        const sys = system || this.system;
+
+        // Advance lifetime progress for color gradients and/or sprite-sheet animation
+        if (sys ? sys._trackLifeProgress : false) {
             this.age += deltaTime;
             let t = this.age * this.invLifetime;
             if (t > 1.0)
                 t = 1.0;
             this.lifeProgress = t;
 
-            if (this.hasColorGradient) {
-                this.tint._r = this.tint._rgba[0] = this.startR + (this.endR - this.startR) * t;
-                this.tint._g = this.tint._rgba[1] = this.startG + (this.endG - this.startG) * t;
-                this.tint._b = this.tint._rgba[2] = this.startB + (this.endB - this.startB) * t;
+            if (sys._hasColorGradient) {
+                this.tint._r = this.tint._rgba[0] = sys._startR + (sys._endR - sys._startR) * t;
+                this.tint._g = this.tint._rgba[1] = sys._startG + (sys._endG - sys._startG) * t;
+                this.tint._b = this.tint._rgba[2] = sys._startB + (sys._endB - sys._startB) * t;
             }
 
-            if (this.animateFrames) {
-                const last = this.frames.length - 1;
-                const idx  = (t * this.frames.length) | 0;
-                this.frame = this.frames[idx < last ? idx : last];
+            if (sys._animateFrames) {
+                const frames = sys._frames;
+                const last = frames.length - 1;
+                const idx  = (t * frames.length) | 0;
+                this.frame = frames[idx < last ? idx : last];
             }
         }
 
-        // Update transform
+        // Update scale
         this.scale += this.scaleVelocity * deltaTime;
         if (this.scale <= 0.0) {
             this.Deactivate();
             return;
         }
 
-        // Apply constant acceleration (gravity / wind) and velocity damping
-        this.direction.x += this.gravityX * deltaTime;
-        this.direction.y += this.gravityY * deltaTime;
+        // Apply precomputed constant acceleration and air drag
+        this.direction.x += gdx;
+        this.direction.y += gdy;
 
-        if (this.velocityDamping > 0) {
-            const dragFactor = Math.exp(-this.velocityDamping * deltaTime);
-            this.direction.x *= dragFactor;
-            this.direction.y *= dragFactor;
+        if (drag !== 1.0) {
+            this.direction.x *= drag;
+            this.direction.y *= drag;
         }
 
-        if (this.alignToVelocity) {
+        // Update rotation
+        const align = sys ? Boolean(sys.config.alignToVelocity) : false;
+        if (align) {
             if (this.direction.x !== 0 || this.direction.y !== 0) {
                 this.rotation = Math.atan2(this.direction.y, this.direction.x) + this.initialRotation;
             }
@@ -408,18 +449,30 @@ class Particle {
         this.position.y += this.direction.y * deltaTime;
     }
 
-    Draw(renderer, colorFrames = null) {
-        if (this.renderShape === "sprite" && this.img) {
-            // Canvas2D: use the pre-baked tinted sheet; WebGL: hardware tint via vertex color
-            let src  = this.img;
+    /**
+     * Draws the particle using its owning system's visual configuration.
+     * @param {Renderer} renderer
+     * @param {HTMLCanvasElement[]|null} [colorFrames=null] Pre-baked Canvas2D tinted offscreen canvases
+     * @param {ParticleSystem} [system=this.system]
+     */
+    Draw(renderer, colorFrames = null, system = this.system) {
+        const sys   = system || this.system;
+        const shape = sys ? (sys.config.renderShape || "sprite") : (this.renderShape || "sprite");
+        const img   = sys ? sys.img : this.img;
+
+        if (shape === "sprite" && img) {
+            const hasTint = sys ? sys._hasColorTint : false;
+            let src  = img;
             let tint = null;
-            if (colorFrames && this.hasColorTint) {
-                const idx = this.hasColorGradient
+
+            if (colorFrames && hasTint) {
+                const hasGrad = sys ? sys._hasColorGradient : false;
+                const idx = hasGrad
                     ? ((this.lifeProgress * (colorFrames.length - 1) + 0.5) | 0)
                     : 0;
                 src = colorFrames[idx];
             }
-            else if (this.hasColorTint) {
+            else if (hasTint) {
                 tint = this.tint;
             }
 
@@ -450,13 +503,14 @@ class Particle {
             return;
         }
 
-        const size = this.particleSize * this.scale;
+        const baseSize = sys ? (sys.config.PARTICLE_SIZE || 64) : 64;
+        const size = baseSize * this.scale;
         if (size <= 0.0)
             return;
 
         this.tint._a = this.tint._rgba[3] = this.opacity;
 
-        if (this.renderShape === "rect") {
+        if (shape === "rect") {
             renderer.DrawFillRectangle(
                 this.position.x, this.position.y,
                 size, size,
@@ -465,7 +519,7 @@ class Particle {
                 Particle.pivot
             );
         }
-        else if (this.renderShape === "line") {
+        else if (shape === "line") {
             const length    = Math.max(2.0, size * 1.8);
             const thickness = Math.max(1.5, size * 0.22);
             renderer.DrawFillRectangle(
@@ -477,7 +531,7 @@ class Particle {
             );
         }
         else {
-            // "circle" (or fallback when this.img is null)
+            // "circle" (or fallback when img is null)
             renderer.DrawFillCircle(
                 this.position.x, this.position.y,
                 size * 0.5,
@@ -647,11 +701,21 @@ class ParticleSystem {
             }
         }
 
-        this._startColor  = null;
-        this._endColor    = null;
-        this._isSprite    = false;
-        this._colorFrames = null;
-        this._frames      = null;
+        this._startColor        = null;
+        this._endColor          = null;
+        this._startR            = 1.0;
+        this._startG            = 1.0;
+        this._startB            = 1.0;
+        this._endR              = 1.0;
+        this._endG              = 1.0;
+        this._endB              = 1.0;
+        this._hasColorTint      = false;
+        this._hasColorGradient  = false;
+        this._isSprite          = false;
+        this._colorFrames       = null;
+        this._frames            = null;
+        this._animateFrames     = false;
+        this._trackLifeProgress = false;
         this._syncColors();
 
         // Create emitter
@@ -663,7 +727,7 @@ class ParticleSystem {
         // Build the particle pool
         this.particles = [];
         for (let i = 0; i < this.config.maxParticleCount; i++) {
-            this.particles.push(new Particle(this.img));
+            this.particles.push(new Particle(this));
         }
 
         // Randomise the first spawn time
@@ -701,6 +765,31 @@ class ParticleSystem {
         this._startColor = _parseParticleColor(this.config.startColor);
         this._endColor   = _parseParticleColor(this.config.endColor);
         this._isSprite   = (this.config.renderShape === "sprite" || !this.config.renderShape) && Boolean(this.img);
+
+        const cStart = this._startColor || this._endColor;
+        const cEnd   = this._endColor   || this._startColor;
+        if (cStart) {
+            this._hasColorTint = true;
+            this._startR = cStart.r;
+            this._startG = cStart.g;
+            this._startB = cStart.b;
+            this._endR   = cEnd.r;
+            this._endG   = cEnd.g;
+            this._endB   = cEnd.b;
+            this._hasColorGradient = (this._startR !== this._endR || this._startG !== this._endG || this._startB !== this._endB);
+        }
+        else {
+            this._hasColorTint     = false;
+            this._hasColorGradient = false;
+            this._startR = 1.0;
+            this._startG = 1.0;
+            this._startB = 1.0;
+            this._endR   = 1.0;
+            this._endG   = 1.0;
+            this._endB   = 1.0;
+        }
+
+        this._trackLifeProgress = this._hasColorGradient || this._animateFrames;
 
         // Pre-bake tinted offscreen canvases only when using sprite particles in Canvas2D
         const useCanvasBake = typeof WebGLRenderer === "undefined" ||
@@ -763,7 +852,9 @@ class ParticleSystem {
      * stored once in `this._frames` (`null` = draw the full image).
      */
     _syncFrames() {
-        this._frames = ParticleSystem.ResolveFrames(this.img, this.config);
+        this._frames            = ParticleSystem.ResolveFrames(this.img, this.config);
+        this._animateFrames     = Boolean(this._frames && this._frames.length > 1 && this.config.frameMode === "animate");
+        this._trackLifeProgress = this._hasColorGradient || this._animateFrames;
     }
 
     /**
@@ -898,25 +989,16 @@ class ParticleSystem {
 
         particle.Activate(
             spawnPoint,
+            this.emitter.GetInitialVelocity(),
             RandomBetweenFloat(this.config.MIN_OPACITY_INCREMENT_VELOCITY, this.config.MAX_OPACITY_INCREMENT_VELOCITY),
             RandomBetweenFloat(this.config.MIN_OPACITY_DECREMENT_VELOCITY, this.config.MAX_OPACITY_DECREMENT_VELOCITY),
+            RandomBetweenFloat(this.config.MIN_MAX_OPACITY,                this.config.MAX_MAX_OPACITY),
+            RandomBetweenFloat(this.config.MIN_HOLD_TIME,                  this.config.MAX_HOLD_TIME),
             RandomBetweenFloat(this.config.MIN_INITIAL_SCALE,              this.config.MAX_INITIAL_SCALE),
             RandomBetweenFloat(this.config.MIN_SCALE_VELOCITY,             this.config.MAX_SCALE_VELOCITY),
             RandomBetweenFloat(this.config.MIN_INITIAL_ROTATION,           this.config.MAX_INITIAL_ROTATION),
             RandomBetweenFloat(this.config.MIN_ROTATION_VELOCITY,          this.config.MAX_ROTATION_VELOCITY),
-            this.emitter.GetInitialVelocity(),
-            this.config.GRAVITY_X,
-            this.config.GRAVITY_Y,
-            this.config.VELOCITY_DAMPING,
-            RandomBetweenFloat(this.config.MIN_MAX_OPACITY,                this.config.MAX_MAX_OPACITY),
-            RandomBetweenFloat(this.config.MIN_HOLD_TIME,                  this.config.MAX_HOLD_TIME),
-            this._startColor,
-            this._endColor,
-            this.config.renderShape,
-            this.config.PARTICLE_SIZE,
-            this.config.alignToVelocity,
-            this._frames,
-            this.config.frameMode
+            this
         );
 
         return true;
@@ -963,11 +1045,21 @@ class ParticleSystem {
             }
         }
 
+        // Precalculate shared per-frame physics parameters ONCE for all particles
+        const dt      = deltaTime;
+        const gdx     = this.config.GRAVITY_X * dt;
+        const gdy     = this.config.GRAVITY_Y * dt;
+        const damping = this.config.VELOCITY_DAMPING;
+        const drag    = damping > 0 ? Math.exp(-damping * dt) : 1.0;
+
         // Update all active particles
-        this.particles.forEach(particle => {
+        const particles = this.particles;
+        const len       = particles.length;
+        for (let i = 0; i < len; i++) {
+            const particle = particles[i];
             if (particle.active)
-                particle.Update(deltaTime);
-        });
+                particle.Update(dt, gdx, gdy, drag, this);
+        }
     }
 
     Draw(renderer) {
@@ -977,11 +1069,14 @@ class ParticleSystem {
         }
 
         const colorFrames = renderer.ctx ? this._colorFrames : null;
+        const particles   = this.particles;
+        const len         = particles.length;
 
-        this.particles.forEach(particle => {
+        for (let i = 0; i < len; i++) {
+            const particle = particles[i];
             if (particle.active)
-                particle.Draw(renderer, colorFrames);
-        });
+                particle.Draw(renderer, colorFrames, this);
+        }
 
         // Restore defaults
         if (renderer.ctx) {
@@ -991,13 +1086,22 @@ class ParticleSystem {
 
     /** Returns how many particles are currently alive. */
     get activeCount() {
-        return this.particles.filter(p => p.active).length;
+        let count = 0;
+        const particles = this.particles;
+        const len = particles.length;
+        for (let i = 0; i < len; i++) {
+            if (particles[i].active)
+                count++;
+        }
+        return count;
     }
 
     /** Deactivates all currently alive particles and resets the spawn countdown. */
     Reset() {
-        for (let i = 0; i < this.particles.length; i++) {
-            this.particles[i].active = false;
+        const particles = this.particles;
+        const len = particles.length;
+        for (let i = 0; i < len; i++) {
+            particles[i].active = false;
         }
         this.nextTimeToSpawnParticle = RandomBetweenFloat(
             this.config.MIN_TIME_TO_SPAWN_PARTICLE,
@@ -1049,9 +1153,6 @@ class ParticleSystemGO extends (typeof GameObject !== "undefined" ? GameObject :
 
     set img(value) {
         this.particleSystem.img = value;
-        for (let i = 0; i < this.particleSystem.particles.length; i++) {
-            this.particleSystem.particles[i].img = value;
-        }
         this.particleSystem._syncColors();
     }
 
