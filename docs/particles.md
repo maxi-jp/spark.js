@@ -468,6 +468,8 @@ This section tracks all completed and planned improvements for the particle syst
   - *Details*: Streamlined `Particle` to store only its own mutable per-instance state (`position`, `direction`, `opacity`, `scale`, `rotation`, `age`, `invLifetime`, `lifeProgress`, `tint`, `frame`). Shared system-wide properties (`renderShape`, `PARTICLE_SIZE`, `alignToVelocity`, `frames`, `animateFrames`, color bounds) are kept in `ParticleSystem` and accessed directly via the passed `system` reference with zero per-particle/per-frame fallback checks. Physics steps (`gdx = GRAVITY_X * dt`, `gdy = GRAVITY_Y * dt`, `drag = Math.exp(-damping * dt)`) are calculated **once per frame** in `ParticleSystem.Update(dt)` instead of per particle. Replaced `.filter(p => p.active).length` with an allocation-free counting loop in `activeCount`.
 - [x] **Zero-Allocation Particle Spawning (`GetSpawnPoint(out)`, `GetInitialVelocity(out)`, in-place `Burst` / `Activate`)** ✅ *DONE*
   - *Details*: Updated `ParticleEmitter.GetSpawnPoint(out = Vector2.Zero())` and `ParticleEmitter.GetInitialVelocity(out = Vector2.Zero())` to write coordinates directly into the caller-supplied `Vector2` (`particle.position` / `particle.direction`), removed the `new Vector2(x, y)` allocation in `Burst(count, x, y)`, and mutated particle `Vector2` fields in-place inside `_spawnSingleParticle` and `Particle.Activate` for zero per-spawn heap allocations.
+- [x] **$O(1)$ Incremental `activeCount` Tracking & Idle Early-Out** ✅ *DONE*
+  - *Details*: Added `this._activeCount = 0` on `ParticleSystem`, incremented on `Particle.Activate` and decremented on `Particle.Deactivate` (and zeroed in `Reset()`). `get activeCount()` now returns `this._activeCount` in $O(1)$ time, `ParticleSystem.Update` / `Draw` skip scanning idle pools when `_activeCount === 0`, and `particle_system_editor.js` cleanly deactivates truncated particles when shrinking `maxParticleCount`.
 
 ---
 
@@ -536,11 +538,9 @@ This section tracks all completed and planned improvements for the particle syst
 - **Status**: `[x] Completed`
 - **API & Solution**: `ParticleEmitter.GetSpawnPoint(out = Vector2.Zero())` and `ParticleEmitter.GetInitialVelocity(out = Vector2.Zero())` write directly into the target particle's existing `particle.position` and `particle.direction` via `.Set(x, y)` in-place (preserving optional allocation only if `out` is omitted by external callers). `Burst(count, x, y)` and `_spawnSingleParticle(overrideX, overrideY)` pass numeric coordinates directly without creating a temporary `Vector2`, achieving **0 heap allocations per spawn**.
 
-#### 13. $O(1)$ Incremental `activeCount` Tracking
-- **Status**: `[ ] Pending`
-- **Motivation**: `get activeCount()` currently executes `this.particles.filter(p => p.active).length`. Because `Array.prototype.filter` allocates a new array and scans all `maxParticleCount` elements every time it is read (such as every frame in the HUD of `particles_example.js` and `particle-system-editor.html`), it adds unnecessary per-frame work and GC churn.
-- **Proposed Solution**:
-  - Maintain an integer `this._activeCount = 0` on `ParticleSystem`, incremented when a particle is activated and decremented when a particle deactivates. `get activeCount()` becomes an $O(1)$ property read with zero allocations.
+#### 13. ~~$O(1)$ Incremental `activeCount` Tracking~~ ✅ *DONE*
+- **Status**: `[x] Completed`
+- **Solution**: Added `this._activeCount = 0` on `ParticleSystem`, maintained incrementally in `Particle.Activate()`, `Particle.Deactivate()`, `ParticleSystem.Reset()`, and `particle_system_editor.js` pool truncation. `get activeCount()` is now an $O(1)$ property read, and `ParticleSystem.Update` / `Draw` early-return when `_activeCount === 0`.
 
 #### 14. $O(1)$ Ring-Cursor / Free-List Pool Lookup
 - **Status**: `[ ] Pending`

@@ -52,47 +52,40 @@ const PRESETS = {
         motion: 'manual',
         config: {
             maxParticleCount: 250,
-            globalCompositeOperation: 'source-over',
-            emitterType: emitterType.circle,
-            EMISSION_RADIUS: 18,
-            EMISSION_INNER_RADIUS: 0,
-            radialVelocity: false,
+            globalCompositeOperation: "source-over",
             sheetColumns: 4,
             sheetRows: 4,
-            sheetFrameCount: 0,
-            frameMode: 'animate',
-            AREA_X1: 0, AREA_Y1: 0, AREA_X2: 800, AREA_Y2: 640,
-            MIN_INITIAL_VELOCITY: 20,
-            MAX_INITIAL_VELOCITY: 55,
-            directionMode: 'polar',
+            frameMode: "animate",
+            emitterType: emitterType.circle,
+            EMISSION_RADIUS: 18,
+            radialVelocity: false,
+            MIN_INITIAL_VELOCITY: 144,
+            MAX_INITIAL_VELOCITY: 144,
+            directionMode: "polar",
             MIN_ANGLE: -1.95,
             MAX_ANGLE: -1.19,
-            MIN_DIRECTION_X: -1,
-            MAX_DIRECTION_X:  1,
-            MIN_DIRECTION_Y: -1,
-            MAX_DIRECTION_Y:  1,
             GRAVITY_X: 12,
-            GRAVITY_Y: -45,
-            VELOCITY_DAMPING: 0.35,
-            MIN_OPACITY_INCREMENT_VELOCITY: 2.5,
-            MAX_OPACITY_INCREMENT_VELOCITY: 4.0,
-            MIN_MAX_OPACITY: 0.55,
-            MAX_MAX_OPACITY: 0.85,
-            MIN_HOLD_TIME: 0.3,
-            MAX_HOLD_TIME: 0.6,
-            MIN_OPACITY_DECREMENT_VELOCITY: 0.35,
-            MAX_OPACITY_DECREMENT_VELOCITY: 0.6,
-            MIN_INITIAL_SCALE: 0.12,
-            MAX_INITIAL_SCALE: 0.2,
-            MIN_SCALE_VELOCITY: 0.12,
-            MAX_SCALE_VELOCITY: 0.22,
+            GRAVITY_Y: -90,
+            VELOCITY_DAMPING: 0.1,
+            MIN_OPACITY_INCREMENT_VELOCITY: 3.5,
+            MAX_OPACITY_INCREMENT_VELOCITY: 7,
+            MIN_MAX_OPACITY: 1,
+            MAX_MAX_OPACITY: 1,
+            MIN_HOLD_TIME: 0.16,
+            MAX_HOLD_TIME: 0.38,
+            MIN_OPACITY_DECREMENT_VELOCITY: 1,
+            MAX_OPACITY_DECREMENT_VELOCITY: 2,
+            MIN_INITIAL_SCALE: 0.4,
+            MAX_INITIAL_SCALE: 0.6,
+            MIN_SCALE_VELOCITY: 1,
+            MAX_SCALE_VELOCITY: 1.5,
             MIN_INITIAL_ROTATION: -0.25,
-            MAX_INITIAL_ROTATION:  0.25,
+            MAX_INITIAL_ROTATION: 0.25,
             MIN_ROTATION_VELOCITY: -0.1,
-            MAX_ROTATION_VELOCITY:  0.1,
+            MAX_ROTATION_VELOCITY: 0.1,
             emitCountPerSpawn: 1,
-            MIN_TIME_TO_SPAWN_PARTICLE: 0.03,
-            MAX_TIME_TO_SPAWN_PARTICLE: 0.07
+            MIN_TIME_TO_SPAWN_PARTICLE: 1,
+            MAX_TIME_TO_SPAWN_PARTICLE: 1.5
         }
     },
     defaultArea: {
@@ -608,7 +601,7 @@ let bgColorObj     = Color.FromHex('#414146');
 let motionMode     = 'circle';  // 'manual' | 'mouse' | 'circle' | 'figure8' | 'projectile'
 let motionSpeed    = 280;       // px/sec for animated emitter modes
 let motionTime     = 0;
-let emitterPos     = new Vector2(400, 300);
+let emitterPos     = new Vector2(canvas.width / 2, canvas.height / 2);
 let emitterHeading = 0;         // radians, for drawing directional gizmo on moving emitter
 let emitterRotation = 0;        // radians, passed to particleSystem.SetRotation()
 let autoRotateWithMotion = false;
@@ -769,6 +762,9 @@ function applyConfigChange(changedKey) {
             particleSystem.particles.push(new Particle(particleSystem));
         }
         if (particleSystem.particles.length > target) {
+            for (let i = target; i < particleSystem.particles.length; i++) {
+                particleSystem.particles[i].Deactivate();
+            }
             particleSystem.particles.length = target;
         }
     }

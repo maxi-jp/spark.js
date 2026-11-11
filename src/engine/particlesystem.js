@@ -290,12 +290,18 @@ class Particle {
             this.invLifetime = totalLife > 0.0001 ? 1.0 / totalLife : 0.0;
         }
 
-        this.active    = true;
+        if (!this.active) {
+            this.active = true;
+            system._activeCount++;
+        }
         this.appearing = true;
     }
 
     Deactivate() {
-        this.active = false;
+        if (this.active) {
+            this.active = false;
+            this.system._activeCount--;
+        }
     }
 
     /**
@@ -674,6 +680,7 @@ class ParticleSystem {
         for (let i = 0; i < this.config.maxParticleCount; i++) {
             this.particles.push(new Particle(this));
         }
+        this._activeCount = 0;
 
         // Randomise the first spawn time
         this.nextTimeToSpawnParticle = RandomBetweenFloat(
@@ -991,6 +998,9 @@ class ParticleSystem {
             }
         }
 
+        if (this._activeCount === 0)
+            return;
+
         // Precalculate shared per-frame physics parameters once for all particles
         const dt      = deltaTime;
         const gdx     = this.config.GRAVITY_X * dt;
@@ -1007,6 +1017,9 @@ class ParticleSystem {
     }
 
     Draw(renderer) {
+        if (this._activeCount === 0)
+            return;
+
         // globalCompositeOperation is a Canvas 2D concept only
         if (renderer.ctx) {
             renderer.ctx.globalCompositeOperation = this.config.globalCompositeOperation;
@@ -1028,12 +1041,7 @@ class ParticleSystem {
 
     /** Returns how many particles are currently alive. */
     get activeCount() {
-        let count = 0;
-        for (let i = 0; i < this.particles.length; i++) {
-            if (this.particles[i].active)
-                count++;
-        }
-        return count;
+        return this._activeCount;
     }
 
     /** Deactivates all currently alive particles and resets the spawn countdown. */
@@ -1041,6 +1049,7 @@ class ParticleSystem {
         for (let i = 0; i < this.particles.length; i++) {
             this.particles[i].active = false;
         }
+        this._activeCount = 0;
 
         this.nextTimeToSpawnParticle = RandomBetweenFloat(
             this.config.MIN_TIME_TO_SPAWN_PARTICLE,
