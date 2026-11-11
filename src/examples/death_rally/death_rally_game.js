@@ -45,6 +45,8 @@ class DeathRallyGame extends Game {
         };
 
         this.spriteAtlas = null;
+        this._activePickups  = [];
+        this._pendingPickups = [];
     }
 
     Start() {
@@ -71,12 +73,27 @@ class DeathRallyGame extends Game {
         this._buildCircuitMap();
 
         // Set up menus (constructed here — canvas global is available)
-        this.mainMenu          = new MainMenu(this);
-        this.creditsMenu       = new CreditsMenu(this);
-        this.hubMenu           = new HubMenu(this);
-        this.raceSummaryMenu   = new RaceSummaryMenu(this);
-        this.compSummaryMenu   = new CompetitionSummaryMenu(this);
+        if (document.querySelector('#main-menu'))           this.mainMenu        = new MainMenu(this);
+        if (document.querySelector('#credits-panel'))       this.creditsMenu     = new CreditsMenu(this);
+        if (document.querySelector('#hub-menu'))            this.hubMenu         = new HubMenu(this);
+        if (document.querySelector('#race-summary'))        this.raceSummaryMenu = new RaceSummaryMenu(this);
+        if (document.querySelector('#competition-summary')) this.compSummaryMenu = new CompetitionSummaryMenu(this);
         this._setupHUD();
+
+        // If launched with a pending test circuit in sessionStorage + #test-circuit hash, start immediately
+        if (window.location.hash === '#test-circuit') {
+            try {
+                const raw = sessionStorage.getItem('DEATH_RALLY_TEST_CIRCUIT');
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    this._hideAllMenus();
+                    this._startRaceWith(CircuitLoader.FromInline(parsed), null, GAME_SCREEN.PLAYGROUND);
+                    return;
+                }
+            } catch (err) {
+                console.warn('Failed to load test circuit from sessionStorage:', err);
+            }
+        }
 
         // Transition to main menu
         this._showMainMenu();
@@ -106,20 +123,22 @@ class DeathRallyGame extends Game {
     // ── Screen transitions ───────────────────────────────────────────
 
     _hideAllMenus() {
-        this.mainMenu.Hide();
-        this.creditsMenu.Hide();
-        this.hubMenu.Hide();
-        this.raceSummaryMenu.Hide();
-        this.compSummaryMenu.Hide();
-        document.getElementById('hud').style.display          = 'none';
-        document.getElementById('debug-overlay').style.display = 'none';
+        this.mainMenu?.Hide();
+        this.creditsMenu?.Hide();
+        this.hubMenu?.Hide();
+        this.raceSummaryMenu?.Hide();
+        this.compSummaryMenu?.Hide();
+        const hudEl = document.getElementById('hud');
+        if (hudEl) hudEl.style.display = 'none';
+        const dbgEl = document.getElementById('debug-overlay');
+        if (dbgEl) dbgEl.style.display = 'none';
         this.debugVisible = false;
     }
 
     _showMainMenu() {
         this._hideAllMenus();
         this.gameScreen = GAME_SCREEN.MAIN_MENU;
-        this.mainMenu.Show();
+        this.mainMenu?.Show();
     }
 
     _showHub() {
@@ -176,6 +195,18 @@ class DeathRallyGame extends Game {
         this._startRaceWith(CircuitLoader.FromInline(PLAYGROUND_CIRCUIT), null, GAME_SCREEN.PLAYGROUND);
     }
 
+    /** Main Menu / Debug → open Circuit Editor */
+    OnOpenCircuitEditor() {
+        window.location.href = 'death-rally-editor.html';
+    }
+
+    /** Direct helper used by Circuit Editor's built-in Test Race mode */
+    TestCustomCircuit(circuitDef) {
+        this._hideAllMenus();
+        this.gameState = null;
+        this._startRaceWith(CircuitLoader.FromInline(circuitDef), null, GAME_SCREEN.PLAYGROUND);
+    }
+
     /** Hub → open dealership panel */
     OnOpenDealership() {
         this.hubMenu.OpenDealership();
@@ -230,6 +261,9 @@ class DeathRallyGame extends Game {
      */
     _startRaceWith(circuitData, gs, screen) {
         this.DestroyAllGameObjects();
+        this._activePickups  = [];
+        this._pendingPickups = [];
+
         this.raceManager = new RaceManager();
         this.timer   = 0;
         this.msgText = '';
@@ -247,23 +281,8 @@ class DeathRallyGame extends Game {
         for (const ob of circuitData.obstacles)
             this.AddGameObject(new Obstacle(ob.cx, ob.cy, ob.w, ob.h, ob.color ?? C_WALL, ob.isBarrel ?? false, ob.rotation ?? 0));
         
-        // Pickups
-        for (const pk of circuitData.pickups) {
-            switch (pk.type) {
-                case 'money':
-                    this.AddGameObject(new PickupMoney(pk.x, pk.y, pk.data, this.graphicAssets.sprites.img));
-                    break;
-                case 'health':
-                    this.AddGameObject(new PickupHealth(pk.x, pk.y, pk.data, this.graphicAssets.sprites.img));
-                    break;
-                case 'weapon':
-                    this.AddGameObject(new PickupWeapon(pk.x, pk.y, this.graphicAssets.sprites.img, pk.data));
-                    break;
-                default:
-                    console.warn(`Unable to load pickup (unknown type ${pk.type}).`);
-                    break;
-            }
-        }
+        // Pickups (immediate + lap/time scheduled)
+        this._resetRacePickups(circuitData);
 
         if (gs) {
             // Campaign race — use player's selected car with upgrades
@@ -274,22 +293,114 @@ class DeathRallyGame extends Game {
             this._createPlaygroundCars(circuitData);
         }
 
+        const worldW = circuitData.width ?? WORLD_W;
+        const worldH = circuitData.height ?? WORLD_H;
+
         this.camera = new FollowCamera(
             Vector2.Zero(), this.playerCar,
-            0, WORLD_W - SCREEN_W, 0, WORLD_H - SCREEN_H, 6
+            0, Math.max(0, worldW - SCREEN_W), 0, Math.max(0, worldH - SCREEN_H), 6
         );
         this.camera.Start();
 
         this.raceManager.StartRace();
 
         // Show HUD
-        document.getElementById('hud').style.display = 'flex';
+        const hudEl = document.getElementById('hud');
+        if (hudEl) hudEl.style.display = 'flex';
         this._updateHUD();
+    }
+
+    /**
+     * Clears any existing pickup objects and re-initialises immediate and scheduled pickups.
+     * Called on race start and `RaceManager.RestartRace()`.
+     * @param {object} [circuitData]
+     */
+    _resetRacePickups(circuitData) {
+        if (this._activePickups) {
+            for (const p of this._activePickups) {
+                if (p && !p.taken) {
+                    this.Destroy(p);
+                }
+            }
+        }
+        this._activePickups  = [];
+        this._pendingPickups = [];
+
+        const cData = circuitData ?? this.raceManager?.circuit;
+        if (!cData || !Array.isArray(cData.pickups)) return;
+
+        for (const pk of cData.pickups) {
+            const sLap  = pk.spawnLap ?? 1;
+            const sTime = pk.spawnTime ?? 0;
+            if (sLap <= 1 && sTime <= 0) {
+                this._spawnPickupInstance(pk);
+            } else {
+                this._pendingPickups.push({ ...pk, spawnLap: sLap, spawnTime: sTime });
+            }
+        }
+    }
+
+    /**
+     * Instantiates a single pickup GameObject in the world.
+     * @param {object} pk
+     */
+    _spawnPickupInstance(pk) {
+        let go = null;
+        switch (pk.type) {
+            case 'money':
+                go = new PickupMoney(pk.x, pk.y, pk.data, this.graphicAssets.sprites.img);
+                break;
+            case 'health':
+                go = new PickupHealth(pk.x, pk.y, pk.data, this.graphicAssets.sprites.img);
+                break;
+            case 'weapon':
+                go = new PickupWeapon(pk.x, pk.y, this.graphicAssets.sprites.img, pk.data);
+                break;
+            default:
+                console.warn(`Unable to load pickup (unknown type ${pk.type}).`);
+                return null;
+        }
+        this.AddGameObject(go);
+        this._activePickups.push(go);
+        return go;
+    }
+
+    /**
+     * Checks pending pickups and spawns any whose lap or race time condition is met.
+     */
+    _updatePendingPickups() {
+        if (!this._pendingPickups || this._pendingPickups.length === 0) return;
+        if (this.raceManager.state !== RACE_STATE.RACING) return;
+
+        const raceTime = this.raceManager.raceElapsedTime;
+        const leadLap  = this.raceManager.GetLeadingLap();
+
+        for (let i = this._pendingPickups.length - 1; i >= 0; i--) {
+            const pk = this._pendingPickups[i];
+            const hasLapCond  = (pk.spawnLap ?? 1) > 1;
+            const hasTimeCond = (pk.spawnTime ?? 0) > 0;
+
+            let shouldSpawn = false;
+            if (hasLapCond && hasTimeCond) {
+                shouldSpawn = (leadLap >= pk.spawnLap) || (raceTime >= pk.spawnTime);
+            } else if (hasLapCond) {
+                shouldSpawn = (leadLap >= pk.spawnLap);
+            } else if (hasTimeCond) {
+                shouldSpawn = (raceTime >= pk.spawnTime);
+            } else {
+                shouldSpawn = true;
+            }
+
+            if (shouldSpawn) {
+                this._pendingPickups.splice(i, 1);
+                this._spawnPickupInstance(pk);
+            }
+        }
     }
 
     _createCampaignCars(circuitData, gs) {
         const ownedCar = gs.selectedCar;
-        const s0       = circuitData.spawns[0];
+        const s0       = circuitData.spawns[0] ?? { x: 200, y: 200, rotation: 0 };
         const effDef   = ownedCar.getEffectiveDef();
 
         this.playerCar = this.AddGameObject(new PlayerCar(new Vector2(s0.x, s0.y), ownedCar.vehicleKey, effDef));
@@ -305,8 +416,8 @@ class DeathRallyGame extends Game {
 
         gs.opponents.forEach((opp, i) => {
             const slotIdx = Math.min(i + 1, circuitData.spawns.length - 1);
-            const s       = circuitData.spawns[slotIdx];
-            const wpStart = Math.floor(circuitData.waypoints.length * ((i + 1) / (gs.opponents.length + 1)));
+            const s       = circuitData.spawns[slotIdx] ?? s0;
+            const wpStart = 0;
             const e = this.AddGameObject(new EnemyCar(new Vector2(s.x, s.y), opp.vehicleKey, wpStart, opp.getEffectiveDef()));
             e._rotation                  = s.rotation;
             e.health                     = opp.health;
@@ -324,18 +435,16 @@ class DeathRallyGame extends Game {
     }
 
     _createPlaygroundCars(circuitData) {
-        const s0 = circuitData.spawns[0];
+        const s0 = circuitData.spawns[0] ?? { x: 200, y: 200, rotation: 0 };
         this.playerCar = this.AddGameObject(new PlayerCar(new Vector2(s0.x, s0.y), 'SPORTS'));
         this.playerCar._rotation = s0.rotation;
         this.raceManager.RegisterCar(this.playerCar);
 
-        const enemyDefs = [
-            { slotIdx:1, vehicleKey:'MUSCLE', wpStart: Math.floor(circuitData.waypoints.length * 0.30) },
-            { slotIdx:2, vehicleKey:'BUGGY',  wpStart: Math.floor(circuitData.waypoints.length * 0.65) },
-        ];
-        for (const ed of enemyDefs) {
-            const s = circuitData.spawns[Math.min(ed.slotIdx, circuitData.spawns.length - 1)];
-            const e = this.AddGameObject(new EnemyCar(new Vector2(s.x, s.y), ed.vehicleKey, ed.wpStart));
+        const vehiclePool = ['MUSCLE', 'BUGGY', 'TRUCK'];
+        const maxEnemies  = Math.min(vehiclePool.length, Math.max(0, circuitData.spawns.length - 1));
+        for (let i = 0; i < maxEnemies; i++) {
+            const s = circuitData.spawns[i + 1];
+            const e = this.AddGameObject(new EnemyCar(new Vector2(s.x, s.y), vehiclePool[i], 0));
             e._rotation = s.rotation;
             e.aiTarget  = this.playerCar;
             e.EquipWeapon('MACHINEGUN');
@@ -375,17 +484,20 @@ class DeathRallyGame extends Game {
 
     _switchCircuit(circuitDef) {
         this._startRaceWith(CircuitLoader.FromInline(circuitDef), null, GAME_SCREEN.PLAYGROUND);
-        document.getElementById('hud').style.display = 'flex';
+        const hudEl = document.getElementById('hud');
+        if (hudEl) hudEl.style.display = 'flex';
     }
 
     _spawnRandomEnemy() {
         if (!this.playerCar) return;
-        const keys = ['SPORTS','MUSCLE','TRUCK','BUGGY'];
-        const wps  = this.raceManager?.circuit?.waypoints;
+        const keys   = ['SPORTS','MUSCLE','TRUCK','BUGGY'];
+        const wps    = this.raceManager?.circuit?.waypoints;
+        const worldW = this.raceManager?.circuit?.width ?? WORLD_W;
+        const worldH = this.raceManager?.circuit?.height ?? WORLD_H;
         const e = this.AddGameObject(new EnemyCar(
-            new Vector2(RandomBetweenFloat(200, WORLD_W - 200), RandomBetweenFloat(200, WORLD_H - 200)),
+            new Vector2(RandomBetweenFloat(200, worldW - 200), RandomBetweenFloat(200, worldH - 200)),
             keys[RandomBetweenInt(0, keys.length - 1)],
-            wps ? RandomBetweenInt(0, wps.length - 1) : 0
+            wps && wps.length > 0 ? RandomBetweenInt(0, wps.length - 1) : 0
         ));
         e.aiTarget = this.playerCar;
         e.EquipWeapon('MACHINEGUN');
@@ -396,30 +508,35 @@ class DeathRallyGame extends Game {
     // ── HUD ─────────────────────────────────────────────────────────
 
     _setupHUD() {
-        this.hud = new HTMLMenu(this, '#hud', '#canvasContainer', canvas, true, false);
-        this.hud.Start();
+        if (document.getElementById('hud')) {
+            this.hud = new HTMLMenu(this, '#hud', '#canvasContainer', canvas, true, false);
+            this.hud.Start();
+        }
 
-        this.debugMenu = new HTMLMenu(this, '#debug-overlay', '#canvasContainer', canvas, true, false);
-        this.debugMenu.Start();
-        this.debugMenu.SetupButtons([
-            { selector:'#dbg-sports',    callback: () => this.playerCar?.SwapVehicle('SPORTS')     },
-            { selector:'#dbg-muscle',    callback: () => this.playerCar?.SwapVehicle('MUSCLE')     },
-            { selector:'#dbg-truck',     callback: () => this.playerCar?.SwapVehicle('TRUCK')      },
-            { selector:'#dbg-buggy',     callback: () => this.playerCar?.SwapVehicle('BUGGY')      },
-            { selector:'#dbg-give-mg',   callback: () => this.playerCar?.EquipWeapon('MACHINEGUN') },
-            { selector:'#dbg-give-msl',  callback: () => this.playerCar?.EquipWeapon('MISSILE')    },
-            { selector:'#dbg-give-mine', callback: () => this.playerCar?.EquipWeapon('MINE')       },
-            { selector:'#dbg-heal',      callback: () => { if (this.playerCar) { this.playerCar.health = this.playerCar.maxHealth; this.playerCar.isDead = false; } } },
-            { selector:'#dbg-money',     callback: () => { if (this.gameState) this.gameState.money += 500; } },
-            { selector:'#dbg-spawn',     callback: () => this._spawnRandomEnemy()                  },
-            { selector:'#dbg-restart',   callback: () => this.raceManager.RestartRace()            },
-            { selector:'#dbg-track-playground', callback: () => this._switchCircuit(PLAYGROUND_CIRCUIT)  },
-            { selector:'#dbg-track-oval',       callback: () => this._switchCircuit(OVAL_TRACK)          },
-            { selector:'#dbg-track-figure8',    callback: () => this._switchCircuit(FIGURE_EIGHT)        },
-            { selector:'#dbg-track-final',      callback: () => this._switchCircuit(FINAL_CIRCUIT)       },
-            { selector:'#dbg-colliders', callback: () => { this.config.drawColliders = !this.config.drawColliders; } },
-            { selector:'#dbg-debug',     callback: () => { debugMode = !debugMode; } },
-        ]);
+        if (document.getElementById('debug-overlay')) {
+            this.debugMenu = new HTMLMenu(this, '#debug-overlay', '#canvasContainer', canvas, true, false);
+            this.debugMenu.Start();
+            this.debugMenu.SetupButtons([
+                { selector:'#dbg-sports',    callback: () => this.playerCar?.SwapVehicle('SPORTS')     },
+                { selector:'#dbg-muscle',    callback: () => this.playerCar?.SwapVehicle('MUSCLE')     },
+                { selector:'#dbg-truck',     callback: () => this.playerCar?.SwapVehicle('TRUCK')      },
+                { selector:'#dbg-buggy',     callback: () => this.playerCar?.SwapVehicle('BUGGY')      },
+                { selector:'#dbg-give-mg',   callback: () => this.playerCar?.EquipWeapon('MACHINEGUN') },
+                { selector:'#dbg-give-msl',  callback: () => this.playerCar?.EquipWeapon('MISSILE')    },
+                { selector:'#dbg-give-mine', callback: () => this.playerCar?.EquipWeapon('MINE')       },
+                { selector:'#dbg-heal',      callback: () => { if (this.playerCar) { this.playerCar.health = this.playerCar.maxHealth; this.playerCar.isDead = false; } } },
+                { selector:'#dbg-money',     callback: () => { if (this.gameState) this.gameState.money += 500; } },
+                { selector:'#dbg-spawn',     callback: () => this._spawnRandomEnemy()                  },
+                { selector:'#dbg-restart',   callback: () => this.raceManager.RestartRace()            },
+                { selector:'#dbg-track-playground', callback: () => this._switchCircuit(PLAYGROUND_CIRCUIT)  },
+                { selector:'#dbg-track-oval',       callback: () => this._switchCircuit(OVAL_TRACK)          },
+                { selector:'#dbg-track-figure8',    callback: () => this._switchCircuit(FIGURE_EIGHT)        },
+                { selector:'#dbg-track-final',      callback: () => this._switchCircuit(FINAL_CIRCUIT)       },
+                { selector:'#dbg-colliders', callback: () => { this.config.drawColliders = !this.config.drawColliders; } },
+                { selector:'#dbg-debug',     callback: () => { debugMode = !debugMode; } },
+                { selector:'#dbg-editor',    callback: () => this.OnOpenCircuitEditor() },
+            ]);
+        }
     }
 
     // ── Queries ─────────────────────────────────────────────────────
@@ -428,7 +545,7 @@ class DeathRallyGame extends Game {
         const zones = this.raceManager?.circuit?.surfaceZones ?? [];
         for (let i = zones.length - 1; i >= 0; i--) {
             const z = zones[i];
-            if (x >= z.x && x < z.x + z.w && y >= z.y && y < z.y + z.h)
+            if (CircuitLoader.IsPointInSurfaceZone(z, x, y))
                 return z.surface;
         }
         return SURFACE.GRASS;
@@ -454,6 +571,7 @@ class DeathRallyGame extends Game {
             if (this.msgTimer > 0) this.msgTimer -= dt;
 
             this.raceManager.Update(dt);
+            this._updatePendingPickups();
             this.camera.Update(dt);
 
             this.playerCar.inputDisabled = this.raceManager.inputLocked;
@@ -473,7 +591,8 @@ class DeathRallyGame extends Game {
 
         if (Input.GetActionDown('debugToggle') && racing) {
             this.debugVisible = !this.debugVisible;
-            document.getElementById('debug-overlay').style.display = this.debugVisible ? 'block' : 'none';
+            const dbgEl = document.getElementById('debug-overlay');
+            if (dbgEl) dbgEl.style.display = this.debugVisible ? 'block' : 'none';
         }
 
         if (racing) this._updateHUD();
@@ -482,6 +601,7 @@ class DeathRallyGame extends Game {
     _updateHUD() {
         const p   = this.playerCar;
         const rm  = this.raceManager;
+        if (!p || !rm) return;
         const prog = rm.progress.get(p);
 
         const fill = document.getElementById('hud-hp-fill');
@@ -549,10 +669,13 @@ class DeathRallyGame extends Game {
 
         this.camera.PreDraw(renderer);
 
-        renderer.DrawFillBasicRectangle(0, 0, WORLD_W, WORLD_H, SURFACE.GRASS.color);
+        const worldW = this.raceManager?.circuit?.width ?? WORLD_W;
+        const worldH = this.raceManager?.circuit?.height ?? WORLD_H;
+
+        renderer.DrawFillBasicRectangle(0, 0, worldW, worldH, SURFACE.GRASS.color);
         const zones = this.raceManager?.circuit?.surfaceZones ?? [];
         for (const z of zones) {
-            renderer.DrawFillBasicRectangle(z.x, z.y, z.w, z.h, z.surface.color);
+            CircuitLoader.DrawSurfaceZone(renderer, z);
         }
 
         this._drawStartFinishLine();
@@ -560,7 +683,7 @@ class DeathRallyGame extends Game {
         if (debugMode) {
             this._drawDebugWaypoints();
             const name = this.raceManager?.circuit?.name ?? '';
-            renderer.DrawFillText(name, WORLD_W * 0.5, 50, '14px Arial', new Color(1,1,1,0.35), 'center');
+            renderer.DrawFillText(name, worldW * 0.5, 50, '14px Arial', new Color(1,1,1,0.35), 'center');
         }
 
         super.Draw();
@@ -569,16 +692,47 @@ class DeathRallyGame extends Game {
     }
 
     _drawStartFinishLine() {
-        const sf = this.raceManager?.circuit?.checkpoints?.[0];
+        const cps = this.raceManager?.circuit?.checkpoints;
+        if (!cps || cps.length === 0) return;
+        const sf = cps.find(c => c.id === 0) ?? cps[0];
         if (!sf) return;
-        const sqW = 22, sqH = sf.h;
-        const count = Math.ceil(sf.w / sqW);
-        for (let i = 0; i < count; i++) {
-            renderer.DrawFillBasicRectangle(
-                sf.x - sf.w * 0.5 + i * sqW, sf.y - sf.h * 0.5,
-                sqW, sqH, i % 2 === 0 ? C_WHITE : C_BLACK
-            );
+
+        const rot = sf.rotation ?? 0;
+        const isVerticalGate = sf.h > sf.w;
+        const sq = 11;
+        const ctx = renderer.ctx;
+
+        ctx.save();
+        ctx.translate(sf.x, sf.y);
+        if (rot) ctx.rotate(rot);
+
+        if (isVerticalGate) {
+            const stripW = Math.min(sf.w, sq * 2);
+            const cols   = Math.max(1, Math.round(stripW / sq));
+            const cellW  = stripW / cols;
+            const rows   = Math.max(1, Math.ceil(sf.h / sq));
+            for (let r = 0; r < rows; r++) {
+                const h = Math.min(sq, sf.h - r * sq);
+                for (let c = 0; c < cols; c++) {
+                    ctx.fillStyle = ((r + c) % 2 === 0 ? C_WHITE : C_BLACK).toString();
+                    ctx.fillRect(-stripW * 0.5 + c * cellW, -sf.h * 0.5 + r * sq, cellW, h);
+                }
+            }
+        } else {
+            const stripH = Math.min(sf.h, sq * 2);
+            const rows   = Math.max(1, Math.round(stripH / sq));
+            const cellH  = stripH / rows;
+            const cols   = Math.max(1, Math.ceil(sf.w / sq));
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const w = Math.min(sq, sf.w - c * sq);
+                    ctx.fillStyle = ((r + c) % 2 === 0 ? C_WHITE : C_BLACK).toString();
+                    ctx.fillRect(-sf.w * 0.5 + c * sq, -stripH * 0.5 + r * cellH, w, cellH);
+                }
+            }
         }
+
+        ctx.restore();
     }
 
     _drawDebugWaypoints() {
@@ -635,4 +789,6 @@ class DeathRallyGame extends Game {
     }
 }
 
-window.onload = () => { Init(DeathRallyGame); };
+if (typeof DEATH_RALLY_DISABLE_AUTO_INIT === 'undefined' || !DEATH_RALLY_DISABLE_AUTO_INIT) {
+    window.onload = () => { Init(DeathRallyGame); };
+}

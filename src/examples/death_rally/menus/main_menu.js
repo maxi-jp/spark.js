@@ -9,13 +9,14 @@ class MainMenu extends HTMLMenu {
         super(game, '#main-menu', '#canvasContainer', canvas, true, false);
         this.Start();
         this.SetupButtons([
-            { selector: '#btn-start-game', callback: () => game.OnStartGame()    },
-            { selector: '#btn-playground', callback: () => game.OnPlayground()   },
-            { selector: '#btn-main-credits', callback: () => game.OnCredits()    },
+            { selector: '#btn-start-game',     callback: () => game.OnStartGame()          },
+            { selector: '#btn-playground',     callback: () => game.OnPlayground()         },
+            { selector: '#btn-circuit-editor', callback: () => game.OnOpenCircuitEditor()  },
+            { selector: '#btn-main-credits',   callback: () => game.OnCredits()            },
         ]);
         this.Hide();
     }
 
-    Show() { this.container.style.display = 'flex'; }
-    Hide() { this.container.style.display = 'none'; }
+    Show() { if (this.container) this.container.style.display = 'flex'; }
+    Hide() { if (this.container) this.container.style.display = 'none'; }
 }

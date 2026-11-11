@@ -1,7 +1,7 @@
 // =====================================================================
 // Death Rally — Car classes
 // Globals: Car, PlayerCar, EnemyCar
-// Requires: death_rally_defs.js, game_objects.js (for Obstacle ref in OnCollisionEnter)
+// Requires: death_rally_defs.js, death_rally_gameobjects.js (for Obstacle ref in OnCollisionEnter)
 // =====================================================================
 
 // #region ---- CAR (base) ----
@@ -24,23 +24,23 @@ class Car extends GameObject {
         this.maxHealth = this.def.health;  // base health never changes with upgrades
 
         // Upgrade-driven stats applied by the game before a race starts
-        this.armour                  = 0;   // flat damage reduction per hit (from ARMOUR upgrade)
+        this.armour                    = 0;   // flat damage reduction per hit (from ARMOUR upgrade)
         this.collisionDamageMultiplier = 1.0; // extra damage other cars take when hitting this car (BUMPER upgrade)
 
         // Per-race tracking (reset each race)
-        this.damageDealt             = 0;
-        this.moneyCollected          = 0;
-        this.raceStartHealth         = this.def.health;
+        this.damageDealt     = 0;
+        this.moneyCollected  = 0;
+        this.raceStartHealth = this.def.health;
 
-        this.currentWeapon     = 'NONE';
-        this.ammo              = 0;
-        this.fireCooldown      = 0;
-        this.surfaceType       = SURFACE.ASPHALT;
-        this.isDead            = false;
-        this.hitFlash          = 0;
-        this.carHitCooldown    = 0;
+        this.currentWeapon      = 'NONE';
+        this.ammo               = 0;
+        this.fireCooldown       = 0;
+        this.surfaceType        = SURFACE.ASPHALT;
+        this.isDead             = false;
+        this.hitFlash           = 0;
+        this.carHitCooldown     = 0;
         this.wallDamageCooldown = 0;
-        this._pushedThisFrame  = false;
+        this._pushedThisFrame   = false;
     }
 
     Start() {
@@ -50,7 +50,7 @@ class Car extends GameObject {
     }
 
     get speed() {
-        return Math.sqrt(this.velocity.x * this.velocity.x + this.velocity.y * this.velocity.y);
+        return this.velocity.Length();
     }
 
     /** Forward unit vector (Y-down canvas: rotation=0 → pointing up). */
@@ -108,12 +108,14 @@ class Car extends GameObject {
         this._position.x += this.velocity.x * dt;
         this._position.y += this.velocity.y * dt;
 
-        // World boundary bounce
+        // World boundary bounce (uses circuit dimensions when available)
+        const worldW = game.raceManager?.circuit?.width  ?? WORLD_W;
+        const worldH = game.raceManager?.circuit?.height ?? WORLD_H;
         const margin = Math.max(this.def.width, this.def.height) * 0.5 + 2;
-        if (this._position.x < margin)            { this._position.x = margin;            if (this.velocity.x < 0) this.velocity.x *= -0.25; }
-        else if (this._position.x > WORLD_W - margin) { this._position.x = WORLD_W - margin; if (this.velocity.x > 0) this.velocity.x *= -0.25; }
-        if (this._position.y < margin)            { this._position.y = margin;            if (this.velocity.y < 0) this.velocity.y *= -0.25; }
-        else if (this._position.y > WORLD_H - margin) { this._position.y = WORLD_H - margin; if (this.velocity.y > 0) this.velocity.y *= -0.25; }
+        if (this._position.x < margin)             { this._position.x = margin;          if (this.velocity.x < 0) this.velocity.x *= -0.25; }
+        else if (this._position.x > worldW - margin) { this._position.x = worldW - margin; if (this.velocity.x > 0) this.velocity.x *= -0.25; }
+        if (this._position.y < margin)             { this._position.y = margin;          if (this.velocity.y < 0) this.velocity.y *= -0.25; }
+        else if (this._position.y > worldH - margin) { this._position.y = worldH - margin; if (this.velocity.y > 0) this.velocity.y *= -0.25; }
     }
 
     Update(dt) {
@@ -223,24 +225,43 @@ class Car extends GameObject {
                 nx = dx / dist;
                 ny = dy / dist;
             } else {
-                // Closest point on AABB → correct normal on flat faces regardless
-                // of how far the obstacle centre is from the contact point.
-                const hw = go.w * 0.5, hh = go.h * 0.5;
-                const ox = go._position.x, oy = go._position.y;
-                const cpx = Clamp(this._position.x, ox - hw, ox + hw);
-                const cpy = Clamp(this._position.y, oy - hh, oy + hh);
-                const dx  = this._position.x - cpx;
-                const dy  = this._position.y - cpy;
-                const dist = Math.sqrt(dx * dx + dy * dy);
+                // Closest point on OBB (supports both axis-aligned and rotated walls).
+                const hw  = go.w * 0.5, hh = go.h * 0.5;
+                const ox  = go._position.x, oy = go._position.y;
+                const rot = go._rotation || 0;
+
+                // Transform car position into obstacle local space
+                const relX   = this._position.x - ox;
+                const relY   = this._position.y - oy;
+                const cosNeg = Math.cos(-rot), sinNeg = Math.sin(-rot);
+                const localX = cosNeg * relX - sinNeg * relY;
+                const localY = sinNeg * relX + cosNeg * relY;
+
+                const cpx  = Clamp(localX, -hw, hw);
+                const cpy  = Clamp(localY, -hh, hh);
+                const ldx  = localX - cpx;
+                const ldy  = localY - cpy;
+                const dist = Math.sqrt(ldx * ldx + ldy * ldy);
 
                 if (dist < 0.5) {
-                    // Deep penetration — escape along reversed velocity.
-                    const spd = this.speed || 1;
-                    nx = -this.velocity.x / spd;
-                    ny = -this.velocity.y / spd;
+                    // Deep penetration — push out along closest local face or reversed velocity
+                    const distToX = hw - Math.abs(localX);
+                    const distToY = hh - Math.abs(localY);
+                    let lnx = 0, lny = 0;
+                    if (distToX < distToY) {
+                        lnx = localX >= 0 ? 1 : -1;
+                    } else {
+                        lny = localY >= 0 ? 1 : -1;
+                    }
+                    const cosPos = Math.cos(rot), sinPos = Math.sin(rot);
+                    nx = cosPos * lnx - sinPos * lny;
+                    ny = sinPos * lnx + cosPos * lny;
                 } else {
-                    nx = dx / dist;
-                    ny = dy / dist;
+                    const lnx    = ldx / dist;
+                    const lny    = ldy / dist;
+                    const cosPos = Math.cos(rot), sinPos = Math.sin(rot);
+                    nx = cosPos * lnx - sinPos * lny;
+                    ny = sinPos * lnx + cosPos * lny;
                 }
             }
 
@@ -251,14 +272,14 @@ class Car extends GameObject {
                 this.velocity.y -= 1.6 * dot * ny;
             }
 
-        // Push car clear of the surface using a small fixed offset — velocity is
-        // already reflected so the car naturally moves away. A per-frame flag
-        // prevents multiple same-frame pushouts (corner hits) from stacking.
-        if (!this._pushedThisFrame) {
-            this._position.x += nx * 6;
-            this._position.y += ny * 6;
-            this._pushedThisFrame = true;
-        }
+            // Push car clear of the surface using a small fixed offset — velocity is
+            // already reflected so the car naturally moves away. A per-frame flag
+            // prevents multiple same-frame pushouts (corner hits) from stacking.
+            if (!this._pushedThisFrame) {
+                this._position.x += nx * 6;
+                this._position.y += ny * 6;
+                this._pushedThisFrame = true;
+            }
 
             // Damage — throttled so rapid wall contacts don't stack hits.
             if (this.wallDamageCooldown <= 0) {
@@ -332,17 +353,6 @@ class PlayerCar extends Car {
         super.Update(dt);
     }
 
-    // CollectPickup(pickup) {
-    //     switch (pickup.type) {
-    //         case 'weapon': this.EquipWeapon(pickup.data);  break;
-    //         case 'health': this.Heal(pickup.data);          break;
-    //         case 'money':
-    //             this.moneyCollected += pickup.data;
-    //             break;
-    //     }
-    //     game.ShowPickupMessage(pickup);
-    // }
-
     CollectMoney(quantity) {
         this.moneyCollected += quantity;
         this.game.ShowPickupMessage(`+ $${quantity}`);
@@ -381,7 +391,7 @@ class EnemyCar extends Car {
     /**
      * @param {Vector2} position
      * @param {string}  vehicleKey
-     * @param {number}  [wpStartIndex=0]  Starting waypoint — stagger enemies around the circuit
+     * @param {number}  [wpStartIndex=0]  Starting waypoint
      */
     constructor(position, vehicleKey, wpStartIndex = 0, upgradedDef = null) {
         super(position, vehicleKey, upgradedDef);
@@ -391,7 +401,7 @@ class EnemyCar extends Car {
     }
 
     Update(dt) {
-        // ── BUG FIX: enemies wait for RACING state — do not move during countdown ──
+        // ── Enemies wait for RACING state — do not move during countdown ──
         if (!this.isDead && game.raceManager?.state === RACE_STATE.RACING) {
             const waypoints = game.raceManager?.circuit?.waypoints;
             if (waypoints?.length > 0) {
@@ -404,7 +414,7 @@ class EnemyCar extends Car {
     }
 
     _followWaypoints(dt, waypoints) {
-        const wp   = waypoints[this.wpIndex];
+        const wp   = waypoints[this.wpIndex % waypoints.length];
         const dx   = wp.x - this._position.x;
         const dy   = wp.y - this._position.y;
         const dist = Math.sqrt(dx * dx + dy * dy);

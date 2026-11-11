@@ -31,7 +31,7 @@ class RaceProgress {
         this.totalCheckpoints = totalCheckpoints;
         this.totalLaps        = totalLaps;
         this.currentLap       = 0;
-        this.nextCheckpoint   = 1;   // id expected next (0 = Start/Finish line)
+        this.nextCheckpoint   = totalCheckpoints > 1 ? 1 : 0;   // id expected next (0 = Start/Finish line)
         this.lapTimes         = [];
         this.lapStartTime     = 0;
         this.finished         = false;
@@ -51,7 +51,7 @@ class RaceProgress {
             this.currentLap++;
             this.lapTimes.push(totalTime - this.lapStartTime);
             this.lapStartTime    = totalTime;
-            this.nextCheckpoint  = 1;
+            this.nextCheckpoint  = this.totalCheckpoints > 1 ? 1 : 0;
             if (this.currentLap >= this.totalLaps) {
                 this.finished   = true;
                 this.finishTime = totalTime;
@@ -88,17 +88,27 @@ class RaceProgress {
  * Uses go.isRacer tag to avoid a circular dependency on the Car class.
  */
 class CheckpointZone extends GameObject {
-    /** @param {{ id:number, x:number, y:number, w:number, h:number }} def */
+    /** @param {{ id:number, x:number, y:number, w:number, h:number, rotation?:number }} def */
     constructor(def) {
         super(new Vector2(def.x, def.y));
-        this.id       = def.id;
-        this.w        = def.w;
-        this.h        = def.h;
-        this.isFinish = def.id === 0;
+        this.id        = def.id;
+        this.w         = def.w;
+        this.h         = def.h;
+        this._rotation = def.rotation ?? 0;
+        this.isFinish  = def.id === 0;
     }
 
     Start() {
-        this._collider = new RectangleCollider(Vector2.Zero(), this.w, this.h, this);
+        if (this._rotation !== 0) {
+            const hw = this.w * 0.5, hh = this.h * 0.5;
+            const pts = [
+                new Vector2(-hw, -hh), new Vector2( hw, -hh),
+                new Vector2( hw,  hh), new Vector2(-hw,  hh),
+            ];
+            this._collider = new PolygonCollider(Vector2.Zero(), this._rotation, pts, this);
+        } else {
+            this._collider = new RectangleCollider(Vector2.Zero(), this.w, this.h, this);
+        }
         game.AddCollider(this._collider);
     }
 
@@ -107,9 +117,9 @@ class CheckpointZone extends GameObject {
         const col = this.isFinish
             ? new Color(1, 0.84, 0, 0.30)
             : new Color(0, 0.85, 0.5, 0.25);
-        r.DrawFillRectangle(this._position.x, this._position.y, this.w, this.h, col, 0);
+        r.DrawFillRectangle(this._position.x, this._position.y, this.w, this.h, col, this._rotation);
         r.DrawStrokeRectangle(this._position.x, this._position.y, this.w, this.h,
-            this.isFinish ? Color.FromRGB(255,215,0) : Color.FromRGB(0,220,140), 2, 0);
+            this.isFinish ? Color.FromRGB(255,215,0) : Color.FromRGB(0,220,140), 2, this._rotation);
         r.DrawFillText(
             this.isFinish ? 'S/F' : `CP${this.id}`,
             this._position.x, this._position.y,
@@ -166,16 +176,18 @@ class RaceManager {
     }
 
     /**
-     * Reposition all registered cars to their spawn slots and restart the countdown.
-     * Note: collected pickups are not respawned in this version.
+     * Reposition all registered cars to their spawn slots, reset pickups, and restart countdown.
      */
     RestartRace() {
+        if (!this.circuit)
+            return;
+
         const spawns = this.circuit.spawns;
         let si = 0;
         for (const [car, prog] of this.progress) {
-            const spawn = spawns[Math.min(si++, spawns.length - 1)];
+            const spawn = spawns[Math.min(si++, spawns.length - 1)] ?? { x: 400, y: 400, rotation: 0 };
             car._position.Set(spawn.x, spawn.y);
-            car._rotation        = spawn.rotation;
+            car._rotation        = spawn.rotation ?? 0;
             car.velocity.Set(0, 0);
             car.health           = car.maxHealth;
             car.isDead           = false;
@@ -183,13 +195,17 @@ class RaceManager {
             car.hitFlash         = 0;
             car.currentWeapon    = 'NONE';
             car.ammo             = 0;
+            if ('wpIndex' in car) car.wpIndex = 0;
             prog.currentLap      = 0;
-            prog.nextCheckpoint  = 1;
+            prog.nextCheckpoint  = prog.totalCheckpoints > 1 ? 1 : 0;
             prog.lapTimes        = [];
             prog.finished        = false;
         }
         this.finishOrder = [];
         this.state = RACE_STATE.IDLE;
+        if (typeof game !== 'undefined' && typeof game._resetRacePickups === 'function') {
+            game._resetRacePickups();
+        }
         this.StartRace();
     }
 
@@ -226,6 +242,28 @@ class RaceManager {
     }
 
     /**
+     * Returns the highest 1-based lap number currently reached by any registered racer.
+     * @returns {number}
+     */
+    GetLeadingLap() {
+        let maxLap = 1;
+        for (const prog of this.progress.values()) {
+            const lap1Based = prog.currentLap + 1;
+            if (lap1Based > maxLap) maxLap = lap1Based;
+        }
+        return maxLap;
+    }
+
+    /**
+     * Elapsed seconds since the race switched to RACING state (0 while in GRID/IDLE).
+     * @returns {number}
+     */
+    get raceElapsedTime() {
+        if (this.state !== RACE_STATE.RACING && this.state !== RACE_STATE.RESULTS) return 0;
+        return Math.max(0, totalTime - this.raceStartTime);
+    }
+
+    /**
      * Returns all racers sorted by race position (1st = index 0).
      * @returns {{ car:object, prog:RaceProgress, position:number }[]}
      */
@@ -250,51 +288,197 @@ class RaceManager {
 
 /**
  * Produces a normalised CircuitData object from either an inline JS definition
- * (Option A — rapid prototyping) or a parsed Tiled JSON map (Option B — production).
+ * (Option A — rapid prototyping / Circuit Editor) or a parsed Tiled JSON map (Option B).
  *
  * CircuitData shape:
  * {
  *   name:        string,
  *   laps:        number,
- *   checkpoints: { id, x, y, w, h }[],   // id=0 is Start/Finish
- *   spawns:      { x, y, rotation }[],   // slot 0 = player
- *   waypoints:   { x, y }[],             // ordered AI racing line
- *   surfaceZones:{ x, y, w, h, surface }[],
- *   obstacles:   { cx, cy, w, h, isBarrel?, color? }[],
- *   pickups:     { x, y, type, data }[],
+ *   width:       number,                            // world width (default 2400)
+ *   height:      number,                            // world height (default 1800)
+ *   checkpoints: { id, x, y, w, h, rotation? }[],   // id=0 is Start/Finish
+ *   spawns:      { x, y, rotation }[],              // slot 0 = player
+ *   waypoints:   { x, y }[],                        // ordered AI racing line
+ *   surfaceZones:{ x?, y?, w?, h?, rotation?, points?:{x,y}[], surface }[],
+ *   obstacles:   { cx, cy, w, h, isBarrel?, color?, rotation? }[],
+ *   pickups:     { x, y, type, data, spawnLap?, spawnTime? }[],
  * }
  */
 const CircuitLoader = {
 
+    /**
+     * Resolves a surface reference (string key like 'ASPHALT' or SURFACE.* object).
+     * @param {string|object} surf
+     */
+    ResolveSurface(surf) {
+        if (!surf) return SURFACE.ASPHALT;
+        if (typeof surf === 'string') return SURFACE[surf.toUpperCase()] ?? SURFACE.ASPHALT;
+        if (typeof surf.id === 'string' && SURFACE[surf.id]) return SURFACE[surf.id];
+        return surf;
+    },
+
+    /**
+     * Resolves an obstacle color (Color instance, constant name, hex/rgb string, or {r,g,b,a} object).
+     * @param {any} col
+     * @param {boolean} [isBarrel=false]
+     */
+    ResolveObstacleColor(col, isBarrel = false) {
+        const fallback = isBarrel ? C_BARREL : C_WALL;
+        if (!col) return fallback;
+        if (col instanceof Color) return col;
+        if (typeof col === 'string') {
+            if (col === 'C_WALL')      return C_WALL;
+            if (col === 'C_WALL_OVAL') return C_WALL_OVAL;
+            if (col === 'C_BARREL')    return C_BARREL;
+            if (col === 'C_TIRE')      return C_TIRE;
+            if (col === 'C_DARKROAD')  return C_DARKROAD;
+            try { return Color.FromString(col); } catch (_) { return fallback; }
+        }
+        if (typeof col === 'object') {
+            const r = col.r ?? col._r ?? ( Array.isArray(col._rgba) ? col._rgba[0] : 0.31 );
+            const g = col.g ?? col._g ?? ( Array.isArray(col._rgba) ? col._rgba[1] : 0.27 );
+            const b = col.b ?? col._b ?? ( Array.isArray(col._rgba) ? col._rgba[2] : 0.24 );
+            const a = col.a ?? col._a ?? ( Array.isArray(col._rgba) ? col._rgba[3] : 1.0  );
+            return new Color(r, g, b, a);
+        }
+        return fallback;
+    },
+
+    /**
+     * Point-in-surface-zone query supporting axis-aligned rects, rotated rects, and arbitrary polygons.
+     * @param {object} z - Normalised surfaceZone entry
+     * @param {number} px - World X
+     * @param {number} py - World Y
+     * @returns {boolean}
+     */
+    IsPointInSurfaceZone(z, px, py) {
+        if (Array.isArray(z.points) && z.points.length >= 3) {
+            let inside = false;
+            const pts = z.points;
+            for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+                const xi = pts[i].x, yi = pts[i].y;
+                const xj = pts[j].x, yj = pts[j].y;
+                const intersect = ((yi > py) !== (yj > py)) &&
+                    (px < (xj - xi) * (py - yi) / ((yj - yi) || 1e-9) + xi);
+                if (intersect) inside = !inside;
+            }
+            return inside;
+        }
+        if (z.rotation && z.rotation !== 0) {
+            const cx = z.x + z.w * 0.5;
+            const cy = z.y + z.h * 0.5;
+            const dx = px - cx, dy = py - cy;
+            const cosR = Math.cos(-z.rotation), sinR = Math.sin(-z.rotation);
+            const lx = cosR * dx - sinR * dy;
+            const ly = sinR * dx + cosR * dy;
+            return Math.abs(lx) <= z.w * 0.5 && Math.abs(ly) <= z.h * 0.5;
+        }
+        return px >= z.x && px < z.x + z.w && py >= z.y && py < z.y + z.h;
+    },
+
+    /**
+     * Renders a single surface zone using the provided spark.js renderer.
+     * @param {Renderer} r
+     * @param {object} z
+     */
+    DrawSurfaceZone(r, z) {
+        const surf = CircuitLoader.ResolveSurface(z.surface);
+        const col  = surf?.color ?? Color.FromRGB(65, 65, 70);
+        if (Array.isArray(z.points) && z.points.length >= 3) {
+            r.DrawPolygon(z.points, col, 1, true, col);
+        } else if (z.rotation && z.rotation !== 0) {
+            r.DrawFillRectangle(z.x + z.w * 0.5, z.y + z.h * 0.5, z.w, z.h, col, z.rotation);
+        } else {
+            r.DrawFillBasicRectangle(z.x, z.y, z.w, z.h, col);
+        }
+    },
+
     // ------------------------------------------------------------------
-    // Option A: inline JavaScript circuit definition
+    // Option A: inline JavaScript or JSON circuit definition
     // ------------------------------------------------------------------
 
-    /** @param {object} def - CIRCUIT_NAME constant from circuits/*.js */
+    /** @param {object} def - CIRCUIT_NAME constant from circuits/*.js or parsed JSON */
     FromInline(def) {
+        const defaultW = typeof WORLD_W !== 'undefined' ? WORLD_W : 2400;
+        const defaultH = typeof WORLD_H !== 'undefined' ? WORLD_H : 1800;
+
+        const checkpoints = (def.checkpoints ?? []).map((cp, idx) => ({
+            id:       cp.id ?? idx,
+            x:        Number(cp.x) || 0,
+            y:        Number(cp.y) || 0,
+            w:        Number(cp.w) || 160,
+            h:        Number(cp.h) || 22,
+            rotation: Number(cp.rotation) || 0,
+        }));
+
+        const spawns = (def.spawns ?? []).map(s => ({
+            x:        Number(s.x) || 0,
+            y:        Number(s.y) || 0,
+            rotation: Number(s.rotation) || 0,
+        }));
+
+        const waypoints = (def.waypoints ?? []).map(wp => ({
+            x: Number(wp.x) || 0,
+            y: Number(wp.y) || 0,
+        }));
+
+        const surfaceZones = (def.surfaceZones ?? []).map(z => {
+            const surface = CircuitLoader.ResolveSurface(z.surface ?? z.surfaceKey);
+            if (Array.isArray(z.points) && z.points.length >= 3) {
+                return {
+                    points:  z.points.map(p => ({ x: Number(p.x) || 0, y: Number(p.y) || 0 })),
+                    surface,
+                };
+            }
+            return {
+                x:        Number(z.x) || 0,
+                y:        Number(z.y) || 0,
+                w:        Number(z.w) || 100,
+                h:        Number(z.h) || 100,
+                rotation: Number(z.rotation) || 0,
+                surface,
+            };
+        });
+
+        const obstacles = (def.obstacles ?? []).map(ob => {
+            const isBarrel = !!ob.isBarrel;
+            const rawColor = ob.color ?? (ob.colorKey === 'CUSTOM' ? ob.customHex : ob.colorKey);
+            return {
+                cx:       Number(ob.cx) || 0,
+                cy:       Number(ob.cy) || 0,
+                w:        Number(ob.w)  || (isBarrel ? 30 : 100),
+                h:        Number(ob.h)  || (isBarrel ? 30 : 28),
+                isBarrel,
+                rotation: Number(ob.rotation) || 0,
+                color:    CircuitLoader.ResolveObstacleColor(rawColor, isBarrel),
+            };
+        });
+
+        const pickups = (def.pickups ?? []).map(pk => ({
+            x:         Number(pk.x) || 0,
+            y:         Number(pk.y) || 0,
+            type:      pk.type || 'weapon',
+            data:      pk.data ?? (pk.type === 'weapon' ? 'MACHINEGUN' : 40),
+            spawnLap:  Math.max(1, Math.round(Number(pk.spawnLap) || 1)),
+            spawnTime: Math.max(0, Number(pk.spawnTime) || 0),
+        }));
+
         return {
-            name:         def.name,
-            laps:         def.laps         ?? 3,
-            checkpoints:  def.checkpoints,
-            spawns:       def.spawns,
-            waypoints:    def.waypoints,
-            surfaceZones: def.surfaceZones,
-            obstacles:    def.obstacles    ?? [],
-            pickups:      def.pickups      ?? [],
+            name:         def.name   ?? 'Unnamed Circuit',
+            laps:         Math.max(1, Math.round(Number(def.laps) || 3)),
+            width:        Math.max(600, Math.round(Number(def.width)  || defaultW)),
+            height:       Math.max(600, Math.round(Number(def.height) || defaultH)),
+            checkpoints,
+            spawns,
+            waypoints,
+            surfaceZones,
+            obstacles,
+            pickups,
         };
     },
 
     // ------------------------------------------------------------------
     // Option B: Tiled Map Editor (.tmj exported from Tiled 1.11+)
-    //
-    // Tiled setup requirements:
-    //   • Tile Layer Format: CSV
-    //   • Embed tilesets: checked
-    //   • Object layer "checkpoints" — rectangle objects, property {order: number}
-    //   • Object layer "waypoints"   — point objects,     property {order: number}
-    //   • Object layer "spawns"      — point objects,     property {slot: number, rotation?: degrees}
-    //   • Tile layer "road"          — tile IDs mapped via tileToSurface
-    //   • Map custom properties: name (string), laps (int)
     // ------------------------------------------------------------------
 
     /**
@@ -309,7 +493,7 @@ const CircuitLoader = {
 
         // Checkpoints
         const checkpoints = (getLayer('checkpoints')?.objects ?? [])
-            .map(o => { const p = getProps(o); return { id: p.order ?? 0, x: o.x, y: o.y, w: o.width, h: o.height }; })
+            .map(o => { const p = getProps(o); return { id: p.order ?? 0, x: o.x, y: o.y, w: o.width, h: o.height, rotation: (o.rotation ?? 0) * Math.PI / 180 }; })
             .sort((a, b) => a.id - b.id);
 
         // Waypoints
@@ -329,10 +513,14 @@ const CircuitLoader = {
 
         // Map-level properties
         const mapProps = Object.fromEntries((tiledJSON.properties ?? []).map(p => [p.name, p.value]));
+        const defaultW = typeof WORLD_W !== 'undefined' ? WORLD_W : 2400;
+        const defaultH = typeof WORLD_H !== 'undefined' ? WORLD_H : 1800;
 
         return {
-            name: mapProps.name ?? 'Unnamed',
-            laps: mapProps.laps ?? 3,
+            name:   mapProps.name ?? 'Unnamed',
+            laps:   mapProps.laps ?? 3,
+            width:  (tiledJSON.width && tiledJSON.tilewidth) ? tiledJSON.width * tiledJSON.tilewidth : defaultW,
+            height: (tiledJSON.height && tiledJSON.tileheight) ? tiledJSON.height * tiledJSON.tileheight : defaultH,
             checkpoints, spawns, waypoints, surfaceZones,
             obstacles: [], pickups: [],
         };
@@ -351,7 +539,7 @@ const CircuitLoader = {
                 const tid = col < cols ? data[row * cols + col] : 0;
                 if (tid !== runTile || col === cols) {
                     if (runTile && tileToSurface[runTile]) {
-                        zones.push({ x: runStart * tw, y: row * th, w: (col - runStart) * tw, h: th, surface: tileToSurface[runTile] });
+                        zones.push({ x: runStart * tw, y: row * th, w: (col - runStart) * tw, h: th, rotation: 0, surface: tileToSurface[runTile] });
                     }
                     runStart = col; runTile = tid;
                 }
