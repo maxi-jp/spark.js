@@ -236,8 +236,10 @@ class Particle {
              initialScale, scaleVelocity,
              initialRotation, rotationVelocity,
              system = this.system) {
-        this.position.Set(initialPosition.x, initialPosition.y);
-        this.direction.Set(velocity.x, velocity.y);
+        if (initialPosition !== this.position)
+            this.position.Set(initialPosition.x, initialPosition.y);
+        if (velocity !== this.direction)
+            this.direction.Set(velocity.x, velocity.y);
         this.opacity                  = 0.0;
         this.maxOpacity               = maxOpacity;
         this.holdTime                 = holdTime;
@@ -492,27 +494,34 @@ class ParticleEmitter {
         };
     }
 
-    /** Returns a Vector2 with the spawn position for the next particle. */
-    GetSpawnPoint() {
+    /**
+     * Writes the spawn position for the next particle into `out` (allocating a new Vector2 only if omitted).
+     * @param {Vector2} [out]
+     * @returns {Vector2}
+     */
+    GetSpawnPoint(out = Vector2.Zero()) {
         switch (this.config.emitterType) {
             case emitterType.point:
-                return Vector2.Copy(this.position);
+                out.Set(this.position.x, this.position.y);
+                return out;
 
             case emitterType.area:
-                return new Vector2(
+                out.Set(
                     RandomBetweenFloat(this.area.x1, this.area.x2),
                     RandomBetweenFloat(this.area.y1, this.area.y2)
                 );
+                return out;
 
             case emitterType.circle: {
                 const radius = Math.max(0, this.config.EMISSION_RADIUS);
                 const angle  = RandomBetweenFloat(0, PI2);
                 const r      = radius * Math.max(Math.random(), Math.random());
                 this._lastSpawnAngle = angle;
-                return new Vector2(
+                out.Set(
                     this.position.x + Math.cos(angle) * r,
                     this.position.y + Math.sin(angle) * r
                 );
+                return out;
             }
 
             case emitterType.ring: {
@@ -521,63 +530,71 @@ class ParticleEmitter {
                 const angle  = RandomBetweenFloat(0, PI2);
                 const r      = RandomBetweenFloat(innerR, outerR);
                 this._lastSpawnAngle = angle;
-                return new Vector2(
+                out.Set(
                     this.position.x + Math.cos(angle) * r,
                     this.position.y + Math.sin(angle) * r
                 );
+                return out;
             }
 
             case emitterType.line: {
                 const t = Math.random();
-                return new Vector2(
+                out.Set(
                     this.area.x1 + (this.area.x2 - this.area.x1) * t,
                     this.area.y1 + (this.area.y2 - this.area.y1) * t
                 );
+                return out;
             }
 
             default:
-                return Vector2.Copy(this.position);
+                out.Set(this.position.x, this.position.y);
+                return out;
         }
     }
 
-    /** Returns a velocity Vector2 for the next particle. */
-    GetInitialVelocity() {
+    /**
+     * Writes the initial velocity (pixels/sec) for the next particle into `out` (allocating a new Vector2 only if omitted).
+     * @param {Vector2} [out]
+     * @returns {Vector2}
+     */
+    GetInitialVelocity(out = Vector2.Zero()) {
         const speed = RandomBetweenFloat(this.config.MIN_INITIAL_VELOCITY, this.config.MAX_INITIAL_VELOCITY);
 
         if (this.config.radialVelocity &&
             (this.config.emitterType === emitterType.circle || this.config.emitterType === emitterType.ring)) {
             const angle = this._lastSpawnAngle + this.rotation;
-            return new Vector2(
+            out.Set(
                 Math.cos(angle) * speed,
                 Math.sin(angle) * speed
             );
+            return out;
         }
 
         if (this.config.directionMode === "polar") {
             const angle = RandomBetweenFloat(this.config.MIN_ANGLE, this.config.MAX_ANGLE) + this.rotation;
-            return new Vector2(
+            out.Set(
                 Math.cos(angle) * speed,
                 Math.sin(angle) * speed
             );
+            return out;
         }
 
-        const direction = new Vector2(
+        out.Set(
             RandomBetweenFloat(this.config.MIN_DIRECTION_X, this.config.MAX_DIRECTION_X),
             RandomBetweenFloat(this.config.MIN_DIRECTION_Y, this.config.MAX_DIRECTION_Y)
         );
-        direction.Normalize();
+        out.Normalize();
 
         if (this.rotation !== 0) {
             const cos = Math.cos(this.rotation);
             const sin = Math.sin(this.rotation);
-            const rx = direction.x * cos - direction.y * sin;
-            const ry = direction.x * sin + direction.y * cos;
-            direction.x = rx;
-            direction.y = ry;
+            const rx = out.x * cos - out.y * sin;
+            const ry = out.x * sin + out.y * cos;
+            out.Set(rx, ry);
         }
 
-        direction.MultiplyScalar(speed);
-        return direction;
+        out.MultiplyScalar(speed);
+        return out;
     }
 }
 
@@ -882,11 +899,12 @@ class ParticleSystem {
     }
 
     /**
-     * Internal helper that activates a single pooled particle.
-     * @param {Vector2} [overridePosition]
+     * Internal helper that activates a single pooled particle with zero heap allocations.
+     * @param {number} [overrideX]
+     * @param {number} [overrideY]
      * @returns {boolean} true if a particle was available and activated
      */
-    _spawnSingleParticle(overridePosition) {
+    _spawnSingleParticle(overrideX, overrideY) {
         let particle = null;
         for (let i = 0; i < this.particles.length && particle === null; i++) {
             if (!this.particles[i].active)
@@ -896,28 +914,29 @@ class ParticleSystem {
         if (!particle)
             return false;
 
-        let spawnPoint;
-        if (overridePosition) {
+        if (overrideX !== undefined && overrideY !== undefined) {
             if (this.config.emitterType === emitterType.circle || this.config.emitterType === emitterType.ring) {
                 const savedX = this.emitter.position.x;
                 const savedY = this.emitter.position.y;
-                this.emitter.position.x = overridePosition.x;
-                this.emitter.position.y = overridePosition.y;
-                spawnPoint = this.emitter.GetSpawnPoint();
+                this.emitter.position.x = overrideX;
+                this.emitter.position.y = overrideY;
+                this.emitter.GetSpawnPoint(particle.position);
                 this.emitter.position.x = savedX;
                 this.emitter.position.y = savedY;
             }
             else {
-                spawnPoint = overridePosition;
+                particle.position.Set(overrideX, overrideY);
             }
         }
         else {
-            spawnPoint = this.emitter.GetSpawnPoint();
+            this.emitter.GetSpawnPoint(particle.position);
         }
 
+        this.emitter.GetInitialVelocity(particle.direction);
+
         particle.Activate(
-            spawnPoint,
-            this.emitter.GetInitialVelocity(),
+            particle.position,
+            particle.direction,
             RandomBetweenFloat(this.config.MIN_OPACITY_INCREMENT_VELOCITY, this.config.MAX_OPACITY_INCREMENT_VELOCITY),
             RandomBetweenFloat(this.config.MIN_OPACITY_DECREMENT_VELOCITY, this.config.MAX_OPACITY_DECREMENT_VELOCITY),
             RandomBetweenFloat(this.config.MIN_MAX_OPACITY,                this.config.MAX_MAX_OPACITY),
@@ -941,10 +960,9 @@ class ParticleSystem {
      * @returns {number} Number of particles actually spawned
      */
     Burst(count = 1, x, y) {
-        const overridePos = (x !== undefined && y !== undefined) ? new Vector2(x, y) : null;
         let spawned = 0;
         for (let i = 0; i < count; i++) {
-            if (this._spawnSingleParticle(overridePos)) {
+            if (this._spawnSingleParticle(x, y)) {
                 spawned++;
             }
             else {

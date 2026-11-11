@@ -393,50 +393,49 @@ const firewallLineConfig = {
 const spriteSheetSmokeConfig = {
     maxParticleCount: 250,
     globalCompositeOperation: "source-over",
-    emitterType: emitterType.circle,
-    EMISSION_RADIUS: 18,
-
-    // Sprite sheet: each particle plays frame 0 -> 15 over its lifetime
     sheetColumns: 4,
     sheetRows: 4,
     frameMode: "animate",
+    emitterType: emitterType.circle,
 
-    MIN_INITIAL_VELOCITY: 20,
-    MAX_INITIAL_VELOCITY: 55,
+    EMISSION_RADIUS: 18,
+    radialVelocity: false,
+
+    MIN_INITIAL_VELOCITY: 144,
+    MAX_INITIAL_VELOCITY: 144,
 
     directionMode: "polar",
-    MIN_ANGLE: -Math.PI * 0.62,
-    MAX_ANGLE: -Math.PI * 0.38,
+    MIN_ANGLE: -1.95,
+    MAX_ANGLE: -1.19,
 
-    // Thermal buoyancy & air drag
     GRAVITY_X: 12,
-    GRAVITY_Y: -45,
-    VELOCITY_DAMPING: 0.35,
+    GRAVITY_Y: -90,
+    VELOCITY_DAMPING: 0.1,
 
-    MIN_OPACITY_INCREMENT_VELOCITY: 2.5,
-    MAX_OPACITY_INCREMENT_VELOCITY: 4.0,
-    MIN_OPACITY_DECREMENT_VELOCITY: 0.35,
-    MAX_OPACITY_DECREMENT_VELOCITY: 0.6,
+    MIN_OPACITY_INCREMENT_VELOCITY: 3.5,
+    MAX_OPACITY_INCREMENT_VELOCITY: 7,
+    MIN_MAX_OPACITY: 1,
+    MAX_MAX_OPACITY: 1,
+    MIN_HOLD_TIME: 0.16,
+    MAX_HOLD_TIME: 0.38,
+    MIN_OPACITY_DECREMENT_VELOCITY: 1,
+    MAX_OPACITY_DECREMENT_VELOCITY: 2,
 
-    MIN_MAX_OPACITY: 0.55,
-    MAX_MAX_OPACITY: 0.85,
-    MIN_HOLD_TIME: 0.3,
-    MAX_HOLD_TIME: 0.6,
+    MIN_INITIAL_SCALE: 0.4,
+    MAX_INITIAL_SCALE: 0.6,
 
-    // Frames are 256x256 px, so keep scale small
-    MIN_INITIAL_SCALE: 0.12,
-    MAX_INITIAL_SCALE: 0.2,
-    MIN_SCALE_VELOCITY: 0.12,
-    MAX_SCALE_VELOCITY: 0.22,
+    MIN_SCALE_VELOCITY: 1,
+    MAX_SCALE_VELOCITY: 1.5,
 
-    // Smoke puffs have a natural "up" orientation: keep rotation subtle
     MIN_INITIAL_ROTATION: -0.25,
-    MAX_INITIAL_ROTATION:  0.25,
-    MIN_ROTATION_VELOCITY: -0.1,
-    MAX_ROTATION_VELOCITY:  0.1,
+    MAX_INITIAL_ROTATION: 0.25,
 
-    MIN_TIME_TO_SPAWN_PARTICLE: 0.03,
-    MAX_TIME_TO_SPAWN_PARTICLE: 0.07
+    MIN_ROTATION_VELOCITY: -0.1,
+    MAX_ROTATION_VELOCITY: 0.1,
+
+    emitCountPerSpawn: 1,
+    MIN_TIME_TO_SPAWN_PARTICLE: 1,
+    MAX_TIME_TO_SPAWN_PARTICLE: 1.5
 };
 
 const explosionBurstConfig = {

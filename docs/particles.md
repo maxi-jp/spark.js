@@ -466,6 +466,8 @@ This section tracks all completed and planned improvements for the particle syst
   - *Details*: Added `frames`, `sheetColumns`, `sheetRows`, `sheetFrameCount`, and `frameMode` (`"random"` | `"animate"`) to `defaultParticleConfig`, `ParticleSystem.ResolveFrames()`, and `SetFrames()` on both `ParticleSystem` and `ParticleSystemGO`. Supports uniform grids, `{ x, y, w, h }[]`, `SpriteAtlas` instances, or raw atlas JSON, and works with both `Canvas2DRenderer` (cropping from pre-baked `colorFrames` when tinted) and `WebGLRenderer`. Added `Z` (`spriteSheetSmokeConfig` using `smoke2.png` 4×4) + `X` (`frameMode` toggle) to `particles_example.js`, and Sprite Sheet Frames controls + *Sprite-Sheet Smoke (smoke2.png 4×4)* preset to `particle-system-editor.html`.
 - [x] **Thin Particle Model & Precomputed Per-Frame System Physics ("Thin Particle, Fat System")** ✅ *DONE*
   - *Details*: Streamlined `Particle` to store only its own mutable per-instance state (`position`, `direction`, `opacity`, `scale`, `rotation`, `age`, `invLifetime`, `lifeProgress`, `tint`, `frame`). Shared system-wide properties (`renderShape`, `PARTICLE_SIZE`, `alignToVelocity`, `frames`, `animateFrames`, color bounds) are kept in `ParticleSystem` and accessed directly via the passed `system` reference with zero per-particle/per-frame fallback checks. Physics steps (`gdx = GRAVITY_X * dt`, `gdy = GRAVITY_Y * dt`, `drag = Math.exp(-damping * dt)`) are calculated **once per frame** in `ParticleSystem.Update(dt)` instead of per particle. Replaced `.filter(p => p.active).length` with an allocation-free counting loop in `activeCount`.
+- [x] **Zero-Allocation Particle Spawning (`GetSpawnPoint(out)`, `GetInitialVelocity(out)`, in-place `Burst` / `Activate`)** ✅ *DONE*
+  - *Details*: Updated `ParticleEmitter.GetSpawnPoint(out = Vector2.Zero())` and `ParticleEmitter.GetInitialVelocity(out = Vector2.Zero())` to write coordinates directly into the caller-supplied `Vector2` (`particle.position` / `particle.direction`), removed the `new Vector2(x, y)` allocation in `Burst(count, x, y)`, and mutated particle `Vector2` fields in-place inside `_spawnSingleParticle` and `Particle.Activate` for zero per-spawn heap allocations.
 
 ---
 
@@ -530,15 +532,9 @@ This section tracks all completed and planned improvements for the particle syst
 
 ### Phase 3 — Performance & Zero-Allocation Optimizations
 
-#### 12. Eliminate Per-Spawn `Vector2` Heap Allocations
-- **Status**: `[ ] Pending`
-- **Motivation**: Although `Particle` instances are pooled, spawning a single particle currently allocates **2 to 3 new `Vector2` objects** on the heap:
-  1. `ParticleEmitter.GetSpawnPoint()` allocates `Vector2.Copy(this.position)` or `new Vector2(x, y)`.
-  2. `ParticleEmitter.GetInitialVelocity()` allocates `new Vector2(...)`.
-  3. `Particle.Activate()` calls `this.position = Vector2.Copy(initialPosition)`.
-  - At high spawn rates (e.g. `1,000` particles/sec in `rainConfig`), this creates `~3,000` short-lived objects per second, triggering avoidable garbage collection pauses.
-- **Proposed Solution**:
-  - Change `ParticleEmitter` helpers to write directly into the target particle's existing `Vector2` fields (`this.emitter.WriteSpawnPoint(particle.position)` and `this.emitter.WriteInitialVelocity(particle.direction)`), and update `Particle.Activate` to mutate `this.position.Set(x, y)` and `this.direction.Set(vx, vy)` in-place. Zero objects allocated per spawn!
+#### 12. ~~Eliminate Per-Spawn `Vector2` Heap Allocations~~ ✅ *DONE*
+- **Status**: `[x] Completed`
+- **API & Solution**: `ParticleEmitter.GetSpawnPoint(out = Vector2.Zero())` and `ParticleEmitter.GetInitialVelocity(out = Vector2.Zero())` write directly into the target particle's existing `particle.position` and `particle.direction` via `.Set(x, y)` in-place (preserving optional allocation only if `out` is omitted by external callers). `Burst(count, x, y)` and `_spawnSingleParticle(overrideX, overrideY)` pass numeric coordinates directly without creating a temporary `Vector2`, achieving **0 heap allocations per spawn**.
 
 #### 13. $O(1)$ Incremental `activeCount` Tracking
 - **Status**: `[ ] Pending`

@@ -1404,8 +1404,8 @@ declare class ParticleEmitter {
     config: { [key: string]: any };
     area: { x1: number; y1: number; x2: number; y2: number };
     constructor(initialPosition: Vector2, config: { [key: string]: any }, initialRotation?: number);
-    GetSpawnPoint(): Vector2;
-    GetInitialVelocity(): Vector2;
+    GetSpawnPoint(out?: Vector2): Vector2;
+    GetInitialVelocity(out?: Vector2): Vector2;
 }
 
 declare class ParticleSystem {
