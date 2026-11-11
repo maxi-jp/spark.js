@@ -1359,12 +1359,10 @@ declare const defaultParticleConfig: { [key: string]: any };
 
 declare class Particle {
     system: ParticleSystem | null;
-    img: HTMLImageElement | HTMLCanvasElement | null;
     active: boolean;
     appearing: boolean;
     position: Vector2;
     direction: Vector2;
-    velocity: Vector2;
     opacity: number;
     maxOpacity: number;
     holdTime: number;
@@ -1379,20 +1377,25 @@ declare class Particle {
     invLifetime: number;
     lifeProgress: number;
     tint: Color;
-    alignToVelocity: boolean;
-    renderShape: string;
-    particleSize: number;
     /** Current crop rect drawn via DrawImageSection (null = DrawImage of the full image). */
     frame: { x: number; y: number; w: number; h: number } | null;
-    constructor(systemOrImg?: ParticleSystem | HTMLImageElement | HTMLCanvasElement | null);
+    constructor(system?: ParticleSystem | null);
     Activate(
         initialPosition: Vector2,
-        velocityOrOpacityInc: Vector2 | number,
-        ...args: any[]
+        velocity: Vector2,
+        opacityIncrementVelocity: number,
+        opacityDecrementVelocity: number,
+        maxOpacity: number,
+        holdTime: number,
+        initialScale: number,
+        scaleVelocity: number,
+        initialRotation: number,
+        rotationVelocity: number,
+        system?: ParticleSystem
     ): void;
     Deactivate(): void;
-    Update(deltaTime: number, gdx?: number, gdy?: number, drag?: number, system?: ParticleSystem | null): void;
-    Draw(renderer: Renderer, colorFrames?: HTMLCanvasElement[] | null, system?: ParticleSystem | null): void;
+    Update(deltaTime: number, gdx?: number, gdy?: number, drag?: number, system?: ParticleSystem): void;
+    Draw(renderer: Renderer, colorFrames?: HTMLCanvasElement[] | null, system?: ParticleSystem): void;
 }
 
 declare class ParticleEmitter {

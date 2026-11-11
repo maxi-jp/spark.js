@@ -152,16 +152,27 @@ const defaultParticleConfig = {
  * @returns {Color|null}
  */
 function _parseParticleColor(val) {
-    if (!val) return null;
-    if (val instanceof Color) return Color.Copy(val);
+    if (!val)
+        return null;
+
+    if (val instanceof Color)
+        return Color.Copy(val);
+
     if (typeof val === "string") {
         const s = val.trim();
-        if (!s || s === "none" || s === "null") return null;
+        if (!s || s === "none" || s === "null")
+            return null;
+
         return Color.FromString(s);
     }
-    if (typeof val === "object" && val.r !== undefined && val.g !== undefined && val.b !== undefined) {
+
+    if (typeof val === "object" &&
+        val.r !== undefined &&
+        val.g !== undefined &&
+        val.b !== undefined) {
         return new Color(val.r, val.g, val.b, val.a ?? 1);
     }
+
     return null;
 }
 
@@ -174,17 +185,10 @@ class Particle {
     static pivot = { x: 0, y: 0 };
 
     /**
-     * @param {ParticleSystem|HTMLImageElement|HTMLCanvasElement|null} [systemOrImg=null] Owning ParticleSystem (or legacy image)
+     * @param {ParticleSystem} system Owning ParticleSystem
      */
-    constructor(systemOrImg = null) {
-        if (systemOrImg && typeof systemOrImg.emitter !== "undefined") {
-            this.system = systemOrImg;
-            this._img   = null;
-        }
-        else {
-            this.system = null;
-            this._img   = systemOrImg;
-        }
+    constructor(system = null) {
+        this.system = system;
 
         this.active    = false;
         this.appearing = false;
@@ -212,93 +216,26 @@ class Particle {
         this.frame = null;
     }
 
-    /** Backward-compatible accessor for particle texture image. */
-    get img() {
-        return this._img || (this.system ? this.system.img : null);
-    }
-
-    set img(value) {
-        this._img = value;
-    }
-
-    /** Backward-compatible accessor for particle visual shape. */
-    get renderShape() {
-        return this.system ? (this.system.config.renderShape || "sprite") : "sprite";
-    }
-
-    /** Backward-compatible accessor for particle base procedural size. */
-    get particleSize() {
-        return this.system ? (this.system.config.PARTICLE_SIZE || 64) : 64;
-    }
-
-    /** Backward-compatible accessor for velocity-aligned rotation flag. */
-    get alignToVelocity() {
-        return this.system ? Boolean(this.system.config.alignToVelocity) : false;
-    }
-
     /**
-     * Activate the particle with initial parameters.
+     * Activate the particle with initial spawn parameters.
      * @param {Vector2} initialPosition
-     * @param {Vector2|number} velocityOrOpacityInc  velocity Vector2 (pixels/sec) in new signature, or opacityIncrementVelocity in legacy signature
+     * @param {Vector2} velocity                    velocity vector (pixels/sec)
+     * @param {number}  opacityIncrementVelocity    fade-in rate (units/sec)
+     * @param {number}  opacityDecrementVelocity    fade-out rate (units/sec)
+     * @param {number}  maxOpacity                  peak opacity in (0, 1]
+     * @param {number}  holdTime                    hold duration at peak opacity (seconds)
+     * @param {number}  initialScale
+     * @param {number}  scaleVelocity               scale rate (units/sec)
+     * @param {number}  initialRotation             radians (or angular offset when alignToVelocity is true)
+     * @param {number}  rotationVelocity            radians/sec
+     * @param {ParticleSystem} [system=this.system]
      */
-    Activate(initialPosition, velocityOrOpacityInc, ...args) {
-        // Support legacy 20-argument signature:
-        // Activate(initialPosition, opacityIncrementVelocity, opacityDecrementVelocity, initialScale, scaleVelocity,
-        //          initialRotation, rotationVelocity, direction, gravityX, gravityY, velocityDamping, maxOpacity,
-        //          holdTime, startColor, endColor, renderShape, particleSize, alignToVelocity, frames, frameMode)
-        if (typeof velocityOrOpacityInc === "number") {
-            const opacityIncrementVelocity = velocityOrOpacityInc;
-            const opacityDecrementVelocity = args[0];
-            const initialScale             = args[1];
-            const scaleVelocity            = args[2];
-            const initialRotation          = args[3];
-            const rotationVelocity         = args[4];
-            const direction                = args[5];
-            const maxOpacity               = args[9] ?? 1.0;
-            const holdTime                 = args[10] ?? 0.0;
-            return this._activateInternal(
-                initialPosition, direction,
-                opacityIncrementVelocity, opacityDecrementVelocity,
-                maxOpacity, holdTime,
-                initialScale, scaleVelocity,
-                initialRotation, rotationVelocity,
-                this.system
-            );
-        }
-
-        // Streamlined signature:
-        // Activate(initialPosition, velocity, opacityIncrementVelocity, opacityDecrementVelocity,
-        //          maxOpacity, holdTime, initialScale, scaleVelocity, initialRotation, rotationVelocity, system)
-        const velocity                 = velocityOrOpacityInc;
-        const opacityIncrementVelocity = args[0];
-        const opacityDecrementVelocity = args[1];
-        const maxOpacity               = args[2] ?? 1.0;
-        const holdTime                 = args[3] ?? 0.0;
-        const initialScale             = args[4];
-        const scaleVelocity            = args[5];
-        const initialRotation          = args[6];
-        const rotationVelocity         = args[7];
-        const system                   = args[8] || this.system;
-
-        return this._activateInternal(
-            initialPosition, velocity,
-            opacityIncrementVelocity, opacityDecrementVelocity,
-            maxOpacity, holdTime,
-            initialScale, scaleVelocity,
-            initialRotation, rotationVelocity,
-            system
-        );
-    }
-
-    /** @private */
-    _activateInternal(initialPosition, velocity,
-                      opacityIncrementVelocity, opacityDecrementVelocity,
-                      maxOpacity, holdTime,
-                      initialScale, scaleVelocity,
-                      initialRotation, rotationVelocity,
-                      system) {
-        const sys = system || this.system;
-
+    Activate(initialPosition, velocity,
+             opacityIncrementVelocity, opacityDecrementVelocity,
+             maxOpacity, holdTime,
+             initialScale, scaleVelocity,
+             initialRotation, rotationVelocity,
+             system = this.system) {
         this.position.Set(initialPosition.x, initialPosition.y);
         this.direction.Set(velocity.x, velocity.y);
         this.opacity                  = 0.0;
@@ -311,8 +248,7 @@ class Particle {
         this.initialRotation          = initialRotation;
         this.rotationVelocity         = rotationVelocity;
 
-        const align = sys ? Boolean(sys.config.alignToVelocity) : false;
-        if (align && (this.direction.x !== 0 || this.direction.y !== 0)) {
+        if (system.config.alignToVelocity && (this.direction.x !== 0 || this.direction.y !== 0)) {
             this.rotation = Math.atan2(this.direction.y, this.direction.x) + initialRotation;
         }
         else {
@@ -320,10 +256,10 @@ class Particle {
         }
 
         // Tint initialization
-        if (sys && sys._hasColorTint) {
-            this.tint._r = this.tint._rgba[0] = sys._startR;
-            this.tint._g = this.tint._rgba[1] = sys._startG;
-            this.tint._b = this.tint._rgba[2] = sys._startB;
+        if (system._hasColorTint) {
+            this.tint._r = this.tint._rgba[0] = system._startR;
+            this.tint._g = this.tint._rgba[1] = system._startG;
+            this.tint._b = this.tint._rgba[2] = system._startB;
         }
         else {
             this.tint._r = this.tint._rgba[0] = 1.0;
@@ -332,22 +268,18 @@ class Particle {
         }
 
         // Frame selection
-        const frames = sys ? sys._frames : null;
-        if (frames && frames.length > 0) {
-            if (sys && sys._animateFrames) {
-                this.frame = frames[0];
-            }
-            else {
-                this.frame = frames[(Math.random() * frames.length) | 0];
-            }
+        const frames = system._frames;
+        if (frames) {
+            this.frame = system._animateFrames
+                ? frames[0]
+                : frames[(Math.random() * frames.length) | 0];
         }
         else {
             this.frame = null;
         }
 
         this.lifeProgress = 0.0;
-        const trackProgress = sys ? sys._trackLifeProgress : false;
-        if (trackProgress) {
+        if (system._trackLifeProgress) {
             this.age = 0.0;
             const totalLife =
                 (opacityIncrementVelocity > 0 ? maxOpacity / opacityIncrementVelocity : 0) +
@@ -394,27 +326,26 @@ class Particle {
             }
         }
 
-        const sys = system || this.system;
-
         // Advance lifetime progress for color gradients and/or sprite-sheet animation
-        if (sys ? sys._trackLifeProgress : false) {
+        if (system._trackLifeProgress) {
             this.age += deltaTime;
             let t = this.age * this.invLifetime;
             if (t > 1.0)
                 t = 1.0;
+
             this.lifeProgress = t;
 
-            if (sys._hasColorGradient) {
-                this.tint._r = this.tint._rgba[0] = sys._startR + (sys._endR - sys._startR) * t;
-                this.tint._g = this.tint._rgba[1] = sys._startG + (sys._endG - sys._startG) * t;
-                this.tint._b = this.tint._rgba[2] = sys._startB + (sys._endB - sys._startB) * t;
+            if (system._hasColorGradient) {
+                this.tint._r = this.tint._rgba[0] = system._startR + (system._endR - system._startR) * t;
+                this.tint._g = this.tint._rgba[1] = system._startG + (system._endG - system._startG) * t;
+                this.tint._b = this.tint._rgba[2] = system._startB + (system._endB - system._startB) * t;
             }
 
-            if (sys._animateFrames) {
-                const frames = sys._frames;
-                const last = frames.length - 1;
-                const idx  = (t * frames.length) | 0;
-                this.frame = frames[idx < last ? idx : last];
+            if (system._animateFrames) {
+                const frames = system._frames;
+                const last   = frames.length - 1;
+                const idx    = (t * frames.length) | 0;
+                this.frame   = frames[idx < last ? idx : last];
             }
         }
 
@@ -435,8 +366,7 @@ class Particle {
         }
 
         // Update rotation
-        const align = sys ? Boolean(sys.config.alignToVelocity) : false;
-        if (align) {
+        if (system.config.alignToVelocity) {
             if (this.direction.x !== 0 || this.direction.y !== 0) {
                 this.rotation = Math.atan2(this.direction.y, this.direction.x) + this.initialRotation;
             }
@@ -456,24 +386,23 @@ class Particle {
      * @param {ParticleSystem} [system=this.system]
      */
     Draw(renderer, colorFrames = null, system = this.system) {
-        const sys   = system || this.system;
-        const shape = sys ? (sys.config.renderShape || "sprite") : (this.renderShape || "sprite");
-        const img   = sys ? sys.img : this.img;
+        const shape = system.config.renderShape;
+        const img   = system.img;
 
         if (shape === "sprite" && img) {
-            const hasTint = sys ? sys._hasColorTint : false;
             let src  = img;
             let tint = null;
 
-            if (colorFrames && hasTint) {
-                const hasGrad = sys ? sys._hasColorGradient : false;
-                const idx = hasGrad
-                    ? ((this.lifeProgress * (colorFrames.length - 1) + 0.5) | 0)
-                    : 0;
-                src = colorFrames[idx];
-            }
-            else if (hasTint) {
-                tint = this.tint;
+            if (system._hasColorTint) {
+                if (colorFrames) {
+                    const idx = system._hasColorGradient
+                        ? ((this.lifeProgress * (colorFrames.length - 1) + 0.5) | 0)
+                        : 0;
+                    src = colorFrames[idx];
+                }
+                else {
+                    tint = this.tint;
+                }
             }
 
             const f = this.frame;
@@ -503,8 +432,7 @@ class Particle {
             return;
         }
 
-        const baseSize = sys ? (sys.config.PARTICLE_SIZE || 64) : 64;
-        const size = baseSize * this.scale;
+        const size = system.config.PARTICLE_SIZE * this.scale;
         if (size <= 0.0)
             return;
 
@@ -1045,7 +973,7 @@ class ParticleSystem {
             }
         }
 
-        // Precalculate shared per-frame physics parameters ONCE for all particles
+        // Precalculate shared per-frame physics parameters once for all particles
         const dt      = deltaTime;
         const gdx     = this.config.GRAVITY_X * dt;
         const gdy     = this.config.GRAVITY_Y * dt;
@@ -1053,10 +981,8 @@ class ParticleSystem {
         const drag    = damping > 0 ? Math.exp(-damping * dt) : 1.0;
 
         // Update all active particles
-        const particles = this.particles;
-        const len       = particles.length;
-        for (let i = 0; i < len; i++) {
-            const particle = particles[i];
+        for (let i = 0; i < this.particles.length; i++) {
+            const particle = this.particles[i];
             if (particle.active)
                 particle.Update(dt, gdx, gdy, drag, this);
         }
@@ -1069,11 +995,9 @@ class ParticleSystem {
         }
 
         const colorFrames = renderer.ctx ? this._colorFrames : null;
-        const particles   = this.particles;
-        const len         = particles.length;
 
-        for (let i = 0; i < len; i++) {
-            const particle = particles[i];
+        for (let i = 0; i < this.particles.length; i++) {
+            const particle = this.particles[i];
             if (particle.active)
                 particle.Draw(renderer, colorFrames, this);
         }
@@ -1087,10 +1011,8 @@ class ParticleSystem {
     /** Returns how many particles are currently alive. */
     get activeCount() {
         let count = 0;
-        const particles = this.particles;
-        const len = particles.length;
-        for (let i = 0; i < len; i++) {
-            if (particles[i].active)
+        for (let i = 0; i < this.particles.length; i++) {
+            if (this.particles[i].active)
                 count++;
         }
         return count;
@@ -1098,11 +1020,10 @@ class ParticleSystem {
 
     /** Deactivates all currently alive particles and resets the spawn countdown. */
     Reset() {
-        const particles = this.particles;
-        const len = particles.length;
-        for (let i = 0; i < len; i++) {
-            particles[i].active = false;
+        for (let i = 0; i < this.particles.length; i++) {
+            this.particles[i].active = false;
         }
+
         this.nextTimeToSpawnParticle = RandomBetweenFloat(
             this.config.MIN_TIME_TO_SPAWN_PARTICLE,
             this.config.MAX_TIME_TO_SPAWN_PARTICLE

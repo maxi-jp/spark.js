@@ -674,6 +674,8 @@ class ParticlesExample extends Game {
     }
 
     _drawHUD(ctx) {
+        const ps = this._particleSystem;
+
         this.renderer.DrawFillBasicRectangle(8, 8, 430, 262, this.semiTransparentBlack);
         this.renderer.DrawFillText("A - Area smoke (default)", 16, 28, "13px monospace", Color.white, "left");
         this.renderer.DrawFillText("S - Smoke following mouse (buoyancy)", 16, 46, "13px monospace", Color.white, "left");
@@ -684,10 +686,9 @@ class ParticlesExample extends Game {
         this.renderer.DrawFillText("J - Campfire / Aura (circle emitter)", 16, 136, "13px monospace", Color.white, "left");
         this.renderer.DrawFillText("K - Portal / Shockwave (ring + radial vel)", 16, 154, "13px monospace", Color.white, "left");
         this.renderer.DrawFillText("L - Flame Barrier (line emitter to mouse)", 16, 172, "13px monospace", Color.white, "left");
-        this.renderer.DrawFillText("Click / Space - Pooled ParticleSystemGO burst", 16, 190, "13px monospace", Color.white, "left");
-        const ps = this._particleSystem;
         const frameInfo = this._mode === 'spritesheet-smoke' ? ` [${ps.config.frameMode}]` : "";
-        this.renderer.DrawFillText(`Z - Sprite-sheet smoke 4x4 (X: frameMode)${frameInfo}`, 16, 208, "13px monospace", Color.white, "left");
+        this.renderer.DrawFillText(`Z - Sprite-sheet smoke 4x4 (X: frameMode)${frameInfo}`, 16, 190, "13px monospace", Color.white, "left");
+        this.renderer.DrawFillText("Click / Space - Pooled ParticleSystemGO burst", 16, 208, "13px monospace", Color.white, "left");
         const shape = ps.config.renderShape || "sprite";
         let burstParticles = 0;
         let activePoolGOs  = 0;
