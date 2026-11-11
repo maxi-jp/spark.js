@@ -45,6 +45,56 @@ const PRESETS = {
             MAX_TIME_TO_SPAWN_PARTICLE: 0.04,
         }
     },
+    spriteSheetSmoke: {
+        name: 'spriteSheetSmokeConfig',
+        builtinImg: 'smoke2',
+        bgPreset: '#1a1a2e',
+        motion: 'manual',
+        config: {
+            maxParticleCount: 250,
+            globalCompositeOperation: 'source-over',
+            emitterType: emitterType.circle,
+            EMISSION_RADIUS: 18,
+            EMISSION_INNER_RADIUS: 0,
+            radialVelocity: false,
+            sheetColumns: 4,
+            sheetRows: 4,
+            sheetFrameCount: 0,
+            frameMode: 'animate',
+            AREA_X1: 0, AREA_Y1: 0, AREA_X2: 800, AREA_Y2: 640,
+            MIN_INITIAL_VELOCITY: 20,
+            MAX_INITIAL_VELOCITY: 55,
+            directionMode: 'polar',
+            MIN_ANGLE: -1.95,
+            MAX_ANGLE: -1.19,
+            MIN_DIRECTION_X: -1,
+            MAX_DIRECTION_X:  1,
+            MIN_DIRECTION_Y: -1,
+            MAX_DIRECTION_Y:  1,
+            GRAVITY_X: 12,
+            GRAVITY_Y: -45,
+            VELOCITY_DAMPING: 0.35,
+            MIN_OPACITY_INCREMENT_VELOCITY: 2.5,
+            MAX_OPACITY_INCREMENT_VELOCITY: 4.0,
+            MIN_MAX_OPACITY: 0.55,
+            MAX_MAX_OPACITY: 0.85,
+            MIN_HOLD_TIME: 0.3,
+            MAX_HOLD_TIME: 0.6,
+            MIN_OPACITY_DECREMENT_VELOCITY: 0.35,
+            MAX_OPACITY_DECREMENT_VELOCITY: 0.6,
+            MIN_INITIAL_SCALE: 0.12,
+            MAX_INITIAL_SCALE: 0.2,
+            MIN_SCALE_VELOCITY: 0.12,
+            MAX_SCALE_VELOCITY: 0.22,
+            MIN_INITIAL_ROTATION: -0.25,
+            MAX_INITIAL_ROTATION:  0.25,
+            MIN_ROTATION_VELOCITY: -0.1,
+            MAX_ROTATION_VELOCITY:  0.1,
+            emitCountPerSpawn: 1,
+            MIN_TIME_TO_SPAWN_PARTICLE: 0.03,
+            MAX_TIME_TO_SPAWN_PARTICLE: 0.07
+        }
+    },
     defaultArea: {
         name: 'smokeAreaConfig',
         builtinImg: 'smoke',
@@ -477,6 +527,7 @@ const PRESETS = {
 const NUMERIC_PARAMS = [
     'maxParticleCount',
     'PARTICLE_SIZE',
+    'sheetColumns', 'sheetRows', 'sheetFrameCount',
     'emitCountPerSpawn',
     'AREA_X1', 'AREA_Y1', 'AREA_X2', 'AREA_Y2',
     'EMISSION_INNER_RADIUS', 'EMISSION_RADIUS',
@@ -540,6 +591,8 @@ function createEditorRenderer(targetCanvas, mode) {
 }
 
 var renderer = createEditorRenderer(canvas, rendererMode);
+
+var debugMode = false;
 
 let currentImage     = null;
 let currentImageName = 'smoke.png';
@@ -615,6 +668,7 @@ function applyParticleImage(img, name) {
         }
         particleSystem._syncColors();
     }
+    updateSheetFrameInfo();
 }
 
 function loadBuiltInImage(key) {
@@ -736,6 +790,7 @@ function applyConfigChange(changedKey) {
         particleSystem.nextTimeToSpawnParticle = currentConfig.MAX_TIME_TO_SPAWN_PARTICLE;
     }
 
+    updateSheetFrameInfo();
     updateJsonPreview();
 }
 
@@ -760,6 +815,15 @@ function syncUIFromConfig() {
     if (currentConfig.PARTICLE_SIZE === undefined) currentConfig.PARTICLE_SIZE = 64;
     document.getElementById('cfg-renderShape').value = rShape;
     document.getElementById('particle-size-panel').style.display = rShape !== 'sprite' ? 'block' : 'none';
+
+    // Sprite sheet frames
+    currentConfig.sheetColumns    = Math.max(1, Math.round(currentConfig.sheetColumns    || 1));
+    currentConfig.sheetRows       = Math.max(1, Math.round(currentConfig.sheetRows       || 1));
+    currentConfig.sheetFrameCount = Math.max(0, Math.round(currentConfig.sheetFrameCount || 0));
+    currentConfig.frameMode       = currentConfig.frameMode === 'animate' ? 'animate' : 'random';
+    document.getElementById('sprite-sheet-panel').style.display = rShape === 'sprite' ? 'block' : 'none';
+    document.getElementById('cfg-frameMode').value = currentConfig.frameMode;
+    updateSheetFrameInfo();
 
     // Color tinting / Color-over-Lifetime controls
     const hasTint = Boolean(currentConfig.startColor || currentConfig.endColor);
@@ -828,6 +892,14 @@ function getExportableConfig() {
     if (rShape !== 'sprite') {
         out.renderShape   = rShape;
         out.PARTICLE_SIZE = Number(currentConfig.PARTICLE_SIZE ?? 64);
+    }
+    else if (hasSheetFrames()) {
+        out.sheetColumns = Math.max(1, Math.round(currentConfig.sheetColumns || 1));
+        out.sheetRows    = Math.max(1, Math.round(currentConfig.sheetRows    || 1));
+        if (currentConfig.sheetFrameCount > 0) {
+            out.sheetFrameCount = Math.round(currentConfig.sheetFrameCount);
+        }
+        out.frameMode = currentConfig.frameMode === 'animate' ? 'animate' : 'random';
     }
 
     if (currentConfig.startColor || currentConfig.endColor) {
@@ -920,6 +992,15 @@ function formatJSConfigSnippet() {
         lines.push(
             `    renderShape: "${c.renderShape}",`,
             `    PARTICLE_SIZE: ${c.PARTICLE_SIZE},`
+        );
+    }
+
+    if (c.sheetColumns !== undefined) {
+        lines.push(
+            `    sheetColumns: ${c.sheetColumns},`,
+            `    sheetRows: ${c.sheetRows},`,
+            ...(c.sheetFrameCount ? [`    sheetFrameCount: ${c.sheetFrameCount},`] : []),
+            `    frameMode: "${c.frameMode}",`
         );
     }
 
@@ -1022,6 +1103,30 @@ function updateJsonPreview() {
     if (previewEl) {
         previewEl.textContent = JSON.stringify(getExportableConfig(), null, 2);
     }
+}
+
+/** True when the current config splits the particle image into more than one frame. */
+function hasSheetFrames() {
+    return (currentConfig.sheetColumns || 1) > 1 || (currentConfig.sheetRows || 1) > 1;
+}
+
+/** Shows the resolved frame count / size under the Sprite Sheet Frames controls. */
+function updateSheetFrameInfo() {
+    const el = document.getElementById('sheet-frame-info');
+    if (!el) return;
+    const frames = ParticleSystem.ResolveFrames(currentImage, currentConfig);
+    el.textContent = frames
+        ? `${frames.length} frames · ${frames[0].w} × ${frames[0].h} px each`
+        : 'Full image (no frames)';
+}
+
+/** Applies a uniform sheetColumns × sheetRows grid and refreshes the UI + live system. */
+function applySheetGrid(cols, rows) {
+    currentConfig.sheetColumns    = cols;
+    currentConfig.sheetRows       = rows;
+    currentConfig.sheetFrameCount = 0;
+    syncUIFromConfig();
+    applyConfigChange('SHEET');
 }
 
 // #endregion
@@ -1679,8 +1784,20 @@ function wireControls() {
     document.getElementById('select-builtin-img').addEventListener('change', e => {
         if (e.target.value !== 'custom') {
             loadBuiltInImage(e.target.value);
+            // smoke2.png is a 4×4 sprite sheet: auto-split it unless a grid is already configured
+            if (e.target.value === 'smoke2' && !hasSheetFrames()) {
+                applySheetGrid(4, 4);
+            }
         }
     });
+
+    // Sprite sheet frame controls
+    document.getElementById('cfg-frameMode').addEventListener('change', e => {
+        currentConfig.frameMode = e.target.value;
+        applyConfigChange('frameMode');
+    });
+    document.getElementById('btn-sheet-1x1').addEventListener('click', () => applySheetGrid(1, 1));
+    document.getElementById('btn-sheet-4x4').addEventListener('click', () => applySheetGrid(4, 4));
 
     // Preset selector
     document.getElementById('select-preset').addEventListener('change', e => {

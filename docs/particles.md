@@ -170,6 +170,13 @@ const defaultParticleConfig = {
     // Number of particles spawned on each timer tick
     emitCountPerSpawn: 1,
 
+    // Sprite sheet / SpriteAtlas frames (renderShape === "sprite" only)
+    frames: null,          // [{ x, y, w, h }, ...], a SpriteAtlas, or atlas JSON (overrides the grid below)
+    sheetColumns: 1,       // uniform grid columns (1x1 = draw the full image)
+    sheetRows: 1,          // uniform grid rows
+    sheetFrameCount: 0,    // use only the first N grid frames (0 = sheetColumns * sheetRows)
+    frameMode: "random",   // "random" (frame picked at spawn) | "animate" (frame 0 -> N-1 over lifetime)
+
     // Lifecycle flags for ParticleSystemGO (when emission stops and activeCount reaches 0)
     autoDeactivateWhenEmpty: false,
     destroyWhenEmpty: false
@@ -200,6 +207,7 @@ The standalone particle controller class. Owns the particle pool, the `ParticleE
 | `SetRotation(angle)` | `void` | Rotates the emitter's emission direction by `angle` (in radians). Works with both `"polar"` cones and `"cartesian"` direction ranges. |
 | `SetColor(startColor, endColor = startColor)` | `void` | Updates the emitter's color tint or color-over-lifetime gradient at runtime (`"#rrggbb"`, CSS color string, `Color` instance, or `null` to disable tinting). |
 | `SetRenderShape(shape)` | `void` | Updates `config.renderShape` (`"sprite" \| "circle" \| "rect" \| "line"`) at runtime and refreshes cached sprite color frames. |
+| `SetFrames(framesOrColumns, rows = 1, frameMode, frameCount = 0)` | `void` | Configures sprite-sheet frames for newly spawned particles. Pass numbers for a uniform grid (`SetFrames(4, 4, "animate")`), or an array of `{ x, y, w, h }` rects / a `SpriteAtlas` / atlas JSON (`SetFrames(atlas, 1, "random")`). `SetFrames(null)` disables frames. Also available on `ParticleSystemGO`. |
 | `Burst(count = 1, x, y)` | `number` | Immediately activates up to `count` particles from the pool and returns the number actually spawned. Works even when `this.active === false`. Optional `(x, y)` overrides the emitter's spawn point for that burst. Logs a `console.warn` if the pool is exhausted. |
 | `Reset()` | `void` | Immediately deactivates all alive particles and resets the spawn countdown. |
 | `Update(deltaTime)` | `void` | If `this.active` is `true`, advances the spawn timer and emits particles; then updates all currently active particles. Call once per frame in `Update(deltaTime)`. |
@@ -331,7 +339,30 @@ this.hitSparks.active = false; // only emit when Burst() is called
 this.hitSparks.Burst(35, hitX, hitY);
 ```
 
-### 3. Interactive Demo (`src/examples/particles/particles_example.js`)
+### 3. Sprite Sheet Frames (`smoke2.png`, 4×4 grid)
+
+`smoke2.png` is a `1024×1024` sheet with 16 frames of `256×256` px. Split it with `sheetColumns` / `sheetRows` and choose a `frameMode`:
+
+```javascript
+this.smokeColumn = new ParticleSystem(this.graphicAssets.smoke2.img, {
+    emitterType: emitterType.point,
+    sheetColumns: 4,
+    sheetRows: 4,
+    frameMode: "animate",       // each particle plays frames 0 -> 15 over its lifetime
+    MIN_INITIAL_SCALE: 0.12,    // frames are 256px: keep scales small
+    MAX_INITIAL_SCALE: 0.2,
+    GRAVITY_Y: -45
+});
+
+// Random variation instead of a flipbook (e.g. debris / leaves from a SpriteAtlas):
+this.debris.SetFrames(new SpriteAtlas(this.graphicAssets.debris.atlas), 1, "random");
+```
+
+- Frame rects are resolved **once** (on construction, `SetFrames`, `SetColor`, `SetRenderShape`, or image change) into a shared array — no per-particle allocations.
+- `"random"` picks a frame in `Activate()` with zero per-frame cost; `"animate"` reuses the same lifetime progress already tracked for color gradients.
+- Works with color tinting on both renderers: `Canvas2DRenderer` crops the frame out of the pre-baked tinted sheet, and `WebGLRenderer` pushes the cropped UVs into the same tinted sprite batch.
+
+### 4. Interactive Demo (`src/examples/particles/particles_example.js`)
 
 The included demo project ([`particles_example.js`](../src/examples/particles/particles_example.js ':ignore')) demonstrates switching between preset configurations at runtime using keyboard keys:
 
@@ -344,6 +375,7 @@ The included demo project ([`particles_example.js`](../src/examples/particles/pa
 - **`J` — Campfire / Fire Aura (`circleCampfireConfig`)**: Uses `emitterType.circle` (`EMISSION_RADIUS: 60`) following the mouse cursor with uniform disk sampling (`r = R * Math.max(Math.random(), Math.random())`) and upward thermal buoyancy (`GRAVITY_Y: -90`).
 - **`K` — Portal Ring / Shockwave (`portalRingConfig`)**: Uses `emitterType.ring` (`EMISSION_INNER_RADIUS: 75, EMISSION_RADIUS: 90`) following the mouse cursor with `radialVelocity: true` so particles expand radially outward from the ring perimeter and decelerate under `VELOCITY_DAMPING: 2.2`.
 - **`L` — Flame Barrier (`firewallLineConfig`)**: Uses `emitterType.line` anchored at `(150, 480)` with its second endpoint `(AREA_X2, AREA_Y2)` tracking the mouse cursor in real time, spawning a rising wall of fire along the segment.
+- **`Z` — Sprite-Sheet Smoke Column (`spriteSheetSmokeConfig`)**: Uses `smoke2.png` split into a `4×4` grid (`sheetColumns: 4, sheetRows: 4`) with `frameMode: "animate"`, so each puff plays all 16 frames over its lifetime while rising from a small circle emitter following the mouse. Press **`X`** to toggle `frameMode` between `"animate"` and `"random"` via `SetFrames()`.
 - **`1 / 2 / 3 / 4` — Live Particle Shape Switch (`renderShape`)**: Switches the active emitter and burst emitter live between `"sprite"` (`1`), `"circle"` (`2`), `"rect"` (`3`), and `"line"` (`4`).
 - **`Click / Space` — Explosion Burst (`explosionBurstConfig`)**: Fires a 55-particle one-shot `Burst()` at the cursor using a uniform 360° polar distribution (`MIN_ANGLE: 0, MAX_ANGLE: PI2`) and high initial speed (`180–520 px/s`) that rapidly decelerates mid-air via `VELOCITY_DAMPING: 3.5` while drifting downward under `GRAVITY_Y: 160`.
 
@@ -358,8 +390,9 @@ The standalone **[Particle System Editor](../particle-system-editor.html ':ignor
 - **Particle Textures (Built-in & Custom)**:
   - Switch between 4 built-in sample assets (`smoke.png`, `smoke2.png`, `snow.png`, `waterdrop.png`) and a procedural radial-gradient fallback (`Built-in: Soft Circle`).
   - Load any custom image via the **Load Image** button, by clicking the sprite thumbnail preview, or by dragging and dropping an image file anywhere onto the window.
-- **12 Built-in Presets**:
+- **13 Built-in Presets**:
   - *Missile Smoke (Death Rally)* (`missileSmokeConfig`)
+  - *Sprite-Sheet Smoke (smoke2.png 4×4)* (`spriteSheetSmokeConfig` — `sheetColumns: 4, sheetRows: 4, frameMode: "animate"`)
   - *Default (Area Smoke)* (`smokeAreaConfig`)
   - *Point Smoke* (`smokePointConfig`)
   - *Fire / Exhaust* (`fireExhaustConfig` — additive `"lighter"` blending with upward thermal buoyancy `GRAVITY_Y: -60`)
@@ -425,6 +458,8 @@ This section tracks all completed and planned improvements for the particle syst
   - *Details*: Added `ParticleSystemGO extends GameObject` to `src/engine/particlesystem.js` while keeping `ParticleSystem` standalone and engine-agnostic. Added `autoDeactivateWhenEmpty`, `destroyWhenEmpty`, `Play(x, y)`, `PlayBurst(count, x, y, autoDeactivate)`, `Stop(autoDeactivate)`, `Reset()`, and shared `Vector2` position/rotation binding. Updated `particles_example.js` to use a `Pool` of `ParticleSystemGO` instances for click/space explosions.
 - [x] **Velocity-Aligned Particle Rotation (`alignToVelocity`)** ✅ *DONE*
   - *Details*: Added `alignToVelocity: false` to `defaultParticleConfig` and `Particle`. When enabled, `Particle.Activate` and `Particle.Update` set `this.rotation = Math.atan2(this.direction.y, this.direction.x) + this.initialRotation` across all render shapes (`"sprite"`, `"rect"`, `"line"`), and removed the hardcoded `Math.atan2` from the `"line"` branch in `Particle.Draw`. Enabled `alignToVelocity: true` on `fountainConfig` and `rainConfig`, and added an `alignToVelocity` toggle + `-π/2` offset quick-button to `particle-system-editor.html`.
+- [x] **Sprite Sheet / `SpriteAtlas` Frame Support (`frames`, `sheetColumns`, `sheetRows`, `sheetFrameCount`, `frameMode`, `SetFrames`)** ✅ *DONE*
+  - *Details*: Added `frames`, `sheetColumns`, `sheetRows`, `sheetFrameCount`, and `frameMode` (`"random"` | `"animate"`) to `defaultParticleConfig`, `ParticleSystem.ResolveFrames()`, and `SetFrames()` on both `ParticleSystem` and `ParticleSystemGO`. Supports uniform grids, `{ x, y, w, h }[]`, `SpriteAtlas` instances, or raw atlas JSON, and works with both `Canvas2DRenderer` (cropping from pre-baked `colorFrames` when tinted) and `WebGLRenderer`. Added `Z` (`spriteSheetSmokeConfig` using `smoke2.png` 4×4) + `X` (`frameMode` toggle) to `particles_example.js`, and Sprite Sheet Frames controls + *Sprite-Sheet Smoke (smoke2.png 4×4)* preset to `particle-system-editor.html`.
 
 ---
 
@@ -469,14 +504,9 @@ This section tracks all completed and planned improvements for the particle syst
 - **Status**: `[x] Completed`
 - **Config Key**: `alignToVelocity: false` (uses `MIN_INITIAL_ROTATION` / `MAX_INITIAL_ROTATION` as the angular offset added to `Math.atan2(direction.y, direction.x)`).
 
-#### 9. Sprite Sheet / `SpriteAtlas` Frame Support
-- **Status**: `[ ] Pending`
-- **Motivation**: Using a single static image per `ParticleSystem` means every debris chunk or leaf looks identical, and flipbook animations (like animated fire/explosion sheets) aren't supported.
-- **Proposed Config Keys**:
-  - Support passing an array of crop rects (`frames: [{ x, y, w, h }, ...]`) or a `SpriteAtlas` to `ParticleSystem`.
-  - Two frame modes:
-    - `"random"`: Each particle picks a random sprite frame from the sheet upon `Activate()` (great for varied rock debris, foliage, shell casings, orgore/sparks).
-    - `"animate"`: Each particle steps through the frames over its lifetime from `0` to `frames.length - 1`.
+#### 9. ~~Sprite Sheet / `SpriteAtlas` Frame Support~~ ✅ *DONE*
+- **Status**: `[x] Completed`
+- **Config Keys & API**: `frames: null`, `sheetColumns: 1`, `sheetRows: 1`, `sheetFrameCount: 0`, `frameMode: "random" | "animate"`, `particleSystem.SetFrames(framesOrColumns, rows, frameMode, frameCount)`, `ParticleSystem.ResolveFrames(img, config)`.
 
 #### 10. Local vs. World Simulation Space (`simulationSpace`)
 - **Status**: `[ ] Pending`

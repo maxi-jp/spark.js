@@ -130,6 +130,17 @@ const defaultParticleConfig = {
     startColor: null,
     endColor: null,
 
+    // Optional sprite sheet / SpriteAtlas frame support (used when renderShape === "sprite")
+    // - frames: Array of { x, y, w, h } crop rectangles, a SpriteAtlas instance, or raw atlas JSON (null = use sheetColumns/sheetRows or full image)
+    // - sheetColumns / sheetRows: uniform grid subdivisions (1x1 = full image)
+    // - sheetFrameCount: optional cap on total frames in a uniform grid (0 = sheetColumns * sheetRows)
+    // - frameMode: "random" (pick a random frame on spawn) | "animate" (step from frame 0 to N-1 over particle lifetime)
+    frames: null,
+    sheetColumns: 1,
+    sheetRows: 1,
+    sheetFrameCount: 0,
+    frameMode: "random",
+
     // Lifecycle flags for ParticleSystemGO (when emission stops and activeCount reaches 0)
     autoDeactivateWhenEmpty: false,
     destroyWhenEmpty: false
@@ -200,6 +211,14 @@ class Particle {
         this.endG             = 1.0;
         this.endB             = 1.0;
         this.tint             = new Color(1, 1, 1, 1);
+
+        // Lifetime progress tracking (needed by color gradients and/or frame animation)
+        this.trackLifeProgress = false;
+
+        // Sprite-sheet / SpriteAtlas frame state
+        this.frames        = null;   // shared array of { x, y, w, h } crop rects (owned by ParticleSystem)
+        this.frame         = null;   // current crop rect (null = draw the full image)
+        this.animateFrames = false;
     }
 
     /**
@@ -222,12 +241,15 @@ class Particle {
      * @param {string}  [renderShape="sprite"] "sprite" | "circle" | "rect" | "line"
      * @param {number}  [particleSize=64]   base pixel size for procedural shapes at scale = 1.0
      * @param {boolean} [alignToVelocity=false] whether rotation tracks the velocity vector
+     * @param {Array<{x:number,y:number,w:number,h:number}>|null} [frames=null] resolved sprite-sheet crop rects
+     * @param {string}  [frameMode="random"] "random" (random frame at spawn) | "animate" (frame 0 -> N-1 over lifetime)
      */
     Activate(initialPosition, opacityIncrementVelocity, opacityDecrementVelocity,
              initialScale, scaleVelocity, initialRotation, rotationVelocity,
              direction, gravityX = 0, gravityY = 0, velocityDamping = 0,
              maxOpacity = 1.0, holdTime = 0.0, startColor = null, endColor = null,
-             renderShape = "sprite", particleSize = 64, alignToVelocity = false) {
+             renderShape = "sprite", particleSize = 64, alignToVelocity = false,
+             frames = null, frameMode = "random") {
         this.position         = Vector2.Copy(initialPosition);
         this.opacity          = 0;
         this.maxOpacity       = maxOpacity;
@@ -257,7 +279,6 @@ class Particle {
         const cEnd   = endColor   || startColor;
         if (cStart) {
             this.hasColorTint = true;
-            this.lifeProgress = 0.0;
             this.startR = cStart.r;
             this.startG = cStart.g;
             this.startB = cStart.b;
@@ -268,14 +289,6 @@ class Particle {
             this.tint._g = this.tint._rgba[1] = this.startG;
             this.tint._b = this.tint._rgba[2] = this.startB;
             this.hasColorGradient = (this.startR !== this.endR || this.startG !== this.endG || this.startB !== this.endB);
-            if (this.hasColorGradient) {
-                this.age = 0.0;
-                const totalLife =
-                    (opacityIncrementVelocity > 0 ? maxOpacity / opacityIncrementVelocity : 0) +
-                    holdTime +
-                    (opacityDecrementVelocity > 0 ? maxOpacity / opacityDecrementVelocity : 0);
-                this.invLifetime = totalLife > 0.0001 ? 1.0 / totalLife : 0.0;
-            }
         }
         else {
             this.hasColorTint     = false;
@@ -283,6 +296,35 @@ class Particle {
             this.tint._r = this.tint._rgba[0] = 1.0;
             this.tint._g = this.tint._rgba[1] = 1.0;
             this.tint._b = this.tint._rgba[2] = 1.0;
+        }
+
+        // Sprite-sheet frame selection (random frame picked once at spawn: zero per-frame cost)
+        if (frames && frames.length > 0) {
+            this.frames = frames;
+            if (frameMode === "animate" && frames.length > 1) {
+                this.animateFrames = true;
+                this.frame = frames[0];
+            }
+            else {
+                this.animateFrames = false;
+                this.frame = frames[(Math.random() * frames.length) | 0];
+            }
+        }
+        else {
+            this.frames        = null;
+            this.frame         = null;
+            this.animateFrames = false;
+        }
+
+        this.lifeProgress      = 0.0;
+        this.trackLifeProgress = this.hasColorGradient || this.animateFrames;
+        if (this.trackLifeProgress) {
+            this.age = 0.0;
+            const totalLife =
+                (opacityIncrementVelocity > 0 ? maxOpacity / opacityIncrementVelocity : 0) +
+                holdTime +
+                (opacityDecrementVelocity > 0 ? maxOpacity / opacityDecrementVelocity : 0);
+            this.invLifetime = totalLife > 0.0001 ? 1.0 / totalLife : 0.0;
         }
 
         this.active           = true;
@@ -315,17 +357,25 @@ class Particle {
             }
         }
 
-        // Interpolate RGB tint color over particle lifetime
-        if (this.hasColorGradient) {
+        // Interpolate RGB tint color and/or advance sprite-sheet frame over particle lifetime
+        if (this.trackLifeProgress) {
             this.age += deltaTime;
             let t = this.age * this.invLifetime;
             if (t > 1.0)
                 t = 1.0;
             this.lifeProgress = t;
-            
-            this.tint._r = this.tint._rgba[0] = this.startR + (this.endR - this.startR) * t;
-            this.tint._g = this.tint._rgba[1] = this.startG + (this.endG - this.startG) * t;
-            this.tint._b = this.tint._rgba[2] = this.startB + (this.endB - this.startB) * t;
+
+            if (this.hasColorGradient) {
+                this.tint._r = this.tint._rgba[0] = this.startR + (this.endR - this.startR) * t;
+                this.tint._g = this.tint._rgba[1] = this.startG + (this.endG - this.startG) * t;
+                this.tint._b = this.tint._rgba[2] = this.startB + (this.endB - this.startB) * t;
+            }
+
+            if (this.animateFrames) {
+                const last = this.frames.length - 1;
+                const idx  = (t * this.frames.length) | 0;
+                this.frame = this.frames[idx < last ? idx : last];
+            }
         }
 
         // Update transform
@@ -360,28 +410,41 @@ class Particle {
 
     Draw(renderer, colorFrames = null) {
         if (this.renderShape === "sprite" && this.img) {
+            // Canvas2D: use the pre-baked tinted sheet; WebGL: hardware tint via vertex color
+            let src  = this.img;
+            let tint = null;
             if (colorFrames && this.hasColorTint) {
                 const idx = this.hasColorGradient
                     ? ((this.lifeProgress * (colorFrames.length - 1) + 0.5) | 0)
                     : 0;
-                renderer.DrawImage(
-                    colorFrames[idx],
+                src = colorFrames[idx];
+            }
+            else if (this.hasColorTint) {
+                tint = this.tint;
+            }
+
+            const f = this.frame;
+            if (f) {
+                renderer.DrawImageSection(
+                    src,
                     this.position.x, this.position.y,
+                    f.x, f.y, f.w, f.h,
                     this.scale, this.scale,
                     this.rotation,
                     Particle.pivot,
-                    this.opacity
+                    this.opacity,
+                    tint
                 );
             }
             else {
                 renderer.DrawImage(
-                    this.img,
+                    src,
                     this.position.x, this.position.y,
                     this.scale, this.scale,
                     this.rotation,
                     Particle.pivot,
                     this.opacity,
-                    this.hasColorTint ? this.tint : null
+                    tint
                 );
             }
             return;
@@ -588,6 +651,7 @@ class ParticleSystem {
         this._endColor    = null;
         this._isSprite    = false;
         this._colorFrames = null;
+        this._frames      = null;
         this._syncColors();
 
         // Create emitter
@@ -631,6 +695,9 @@ class ParticleSystem {
 
     /** Re-parses `config.startColor` and `config.endColor` and pre-bakes Canvas2D color frames if needed. */
     _syncColors() {
+        // Sprite-sheet frame rects depend on the image size, so keep them in sync too
+        this._syncFrames();
+
         this._startColor = _parseParticleColor(this.config.startColor);
         this._endColor   = _parseParticleColor(this.config.endColor);
         this._isSprite   = (this.config.renderShape === "sprite" || !this.config.renderShape) && Boolean(this.img);
@@ -688,6 +755,90 @@ class ParticleSystem {
         }
 
         return frames;
+    }
+
+    /**
+     * Resolves `config.frames` (array / `SpriteAtlas` / atlas JSON) or the uniform
+     * `sheetColumns` × `sheetRows` grid into a flat array of `{ x, y, w, h }` crop rects,
+     * stored once in `this._frames` (`null` = draw the full image).
+     */
+    _syncFrames() {
+        this._frames = ParticleSystem.ResolveFrames(this.img, this.config);
+    }
+
+    /**
+     * Builds the crop-rect array for a particle image and config. Returns `null` when the
+     * image should be drawn whole (no frames, 1×1 grid, or image not loaded yet).
+     * @param {HTMLImageElement|HTMLCanvasElement|null} img
+     * @param {Object} config
+     * @returns {Array<{x:number,y:number,w:number,h:number}>|null}
+     */
+    static ResolveFrames(img, config) {
+        const src = config.frames;
+        if (src) {
+            let list = null;
+            if (Array.isArray(src)) {
+                list = src;
+            }
+            else if (typeof src === "object") {
+                // SpriteAtlas instance (_sprites), editor atlas JSON ({ sprites }), or flat { id: rect } map
+                const map = src._sprites ?? src.sprites ?? src;
+                list = Object.values(map);
+            }
+            if (list) {
+                list = list.filter(r => r && r.w > 0 && r.h > 0);
+                return list.length > 0 ? list : null;
+            }
+            return null;
+        }
+
+        const cols = Math.max(1, config.sheetColumns | 0);
+        const rows = Math.max(1, config.sheetRows    | 0);
+        if (cols === 1 && rows === 1)
+            return null;
+
+        const w = img ? (img.width  || img.naturalWidth  || 0) : 0;
+        const h = img ? (img.height || img.naturalHeight || 0) : 0;
+        if (w === 0 || h === 0)
+            return null;
+
+        const fw = Math.floor(w / cols);
+        const fh = Math.floor(h / rows);
+        const total = cols * rows;
+        const count = config.sheetFrameCount > 0 ? Math.min(total, config.sheetFrameCount | 0) : total;
+
+        const list = new Array(count);
+        for (let i = 0; i < count; i++) {
+            list[i] = { x: (i % cols) * fw, y: ((i / cols) | 0) * fh, w: fw, h: fh };
+        }
+        return list;
+    }
+
+    /**
+     * Configures sprite-sheet frames for newly spawned particles.
+     * - `SetFrames(4, 4)` → uniform 4×4 grid
+     * - `SetFrames(4, 4, "animate", 14)` → 4×4 grid limited to the first 14 frames, animated over lifetime
+     * - `SetFrames(atlas)` / `SetFrames([{x,y,w,h}, ...])` → explicit crop rects
+     * - `SetFrames(null)` → disable frames (draw full image)
+     * @param {number|Array|SpriteAtlas|Object|null} framesOrColumns
+     * @param {number} [rows=1]
+     * @param {string} [frameMode=this.config.frameMode] "random" | "animate"
+     * @param {number} [frameCount=0] total frame cap for a uniform grid (0 = columns × rows)
+     */
+    SetFrames(framesOrColumns, rows = 1, frameMode = this.config.frameMode, frameCount = 0) {
+        if (typeof framesOrColumns === "number") {
+            this.config.frames          = null;
+            this.config.sheetColumns    = framesOrColumns;
+            this.config.sheetRows       = rows;
+            this.config.sheetFrameCount = frameCount;
+        }
+        else {
+            this.config.frames       = framesOrColumns;
+            this.config.sheetColumns = 1;
+            this.config.sheetRows    = 1;
+        }
+        this.config.frameMode = frameMode;
+        this._syncFrames();
     }
 
     /**
@@ -763,7 +914,9 @@ class ParticleSystem {
             this._endColor,
             this.config.renderShape,
             this.config.PARTICLE_SIZE,
-            this.config.alignToVelocity
+            this.config.alignToVelocity,
+            this._frames,
+            this.config.frameMode
         );
 
         return true;
@@ -955,6 +1108,11 @@ class ParticleSystemGO extends (typeof GameObject !== "undefined" ? GameObject :
     /** Sets the visual particle shape (`"sprite" | "circle" | "rect" | "line"`) for newly spawned particles. */
     SetRenderShape(shape) {
         this.particleSystem.SetRenderShape(shape);
+    }
+
+    /** Configures sprite-sheet frames for newly spawned particles (see `ParticleSystem.SetFrames`). */
+    SetFrames(framesOrColumns, rows = 1, frameMode = this.particleSystem.config.frameMode, frameCount = 0) {
+        this.particleSystem.SetFrames(framesOrColumns, rows, frameMode, frameCount);
     }
 
     /** Immediately spawns `count` particles (optional `(x, y)` overrides spawn position for this burst). */

@@ -10,6 +10,8 @@
 //   J – Campfire / Fire Aura (circle emitter following mouse + upward buoyancy)
 //   K – Portal Ring / Shockwave (ring emitter following mouse + radial outward velocity)
 //   L – Energy Beam / Firewall (line emitter between two points + rising flames)
+//   Z – Sprite-sheet smoke column (smoke2.png 4x4 frames, follows mouse)
+//   X – Toggle frameMode ("animate" / "random") on the sprite-sheet smoke
 //   1 / 2 / 3 / 4 – Switch renderShape ("sprite" / "circle" / "rect" / "line")
 //   Click / Space – Explosion burst at cursor (velocity damping + gravity)
 // ============================================================
@@ -387,6 +389,56 @@ const firewallLineConfig = {
     endColor:   "#0066ff"
 };
 
+// Billowing smoke column using smoke2.png (1024x1024 sprite sheet: 4x4 grid of 256x256 frames)
+const spriteSheetSmokeConfig = {
+    maxParticleCount: 250,
+    globalCompositeOperation: "source-over",
+    emitterType: emitterType.circle,
+    EMISSION_RADIUS: 18,
+
+    // Sprite sheet: each particle plays frame 0 -> 15 over its lifetime
+    sheetColumns: 4,
+    sheetRows: 4,
+    frameMode: "animate",
+
+    MIN_INITIAL_VELOCITY: 20,
+    MAX_INITIAL_VELOCITY: 55,
+
+    directionMode: "polar",
+    MIN_ANGLE: -Math.PI * 0.62,
+    MAX_ANGLE: -Math.PI * 0.38,
+
+    // Thermal buoyancy & air drag
+    GRAVITY_X: 12,
+    GRAVITY_Y: -45,
+    VELOCITY_DAMPING: 0.35,
+
+    MIN_OPACITY_INCREMENT_VELOCITY: 2.5,
+    MAX_OPACITY_INCREMENT_VELOCITY: 4.0,
+    MIN_OPACITY_DECREMENT_VELOCITY: 0.35,
+    MAX_OPACITY_DECREMENT_VELOCITY: 0.6,
+
+    MIN_MAX_OPACITY: 0.55,
+    MAX_MAX_OPACITY: 0.85,
+    MIN_HOLD_TIME: 0.3,
+    MAX_HOLD_TIME: 0.6,
+
+    // Frames are 256x256 px, so keep scale small
+    MIN_INITIAL_SCALE: 0.12,
+    MAX_INITIAL_SCALE: 0.2,
+    MIN_SCALE_VELOCITY: 0.12,
+    MAX_SCALE_VELOCITY: 0.22,
+
+    // Smoke puffs have a natural "up" orientation: keep rotation subtle
+    MIN_INITIAL_ROTATION: -0.25,
+    MAX_INITIAL_ROTATION:  0.25,
+    MIN_ROTATION_VELOCITY: -0.1,
+    MAX_ROTATION_VELOCITY:  0.1,
+
+    MIN_TIME_TO_SPAWN_PARTICLE: 0.03,
+    MAX_TIME_TO_SPAWN_PARTICLE: 0.07
+};
+
 const explosionBurstConfig = {
     maxParticleCount: 80,
     globalCompositeOperation: "lighter",
@@ -547,6 +599,19 @@ class ParticlesExample extends Game {
             );
             this._mode = 'firewall-line';
         }
+        if (Input.IsKeyPressed(KEY_Z)) {
+            this._particleSystem = new ParticleSystem(
+                this.graphicAssets.smoke2.img,
+                spriteSheetSmokeConfig,
+                new Vector2(Input.mouse.x, Input.mouse.y)
+            );
+            this._mode = 'spritesheet-smoke';
+        }
+        if (Input.IsKeyDown(KEY_X) && this._mode === 'spritesheet-smoke') {
+            const cfg = this._particleSystem.config;
+            const nextMode = cfg.frameMode === "animate" ? "random" : "animate";
+            this._particleSystem.SetFrames(cfg.sheetColumns, cfg.sheetRows, nextMode);
+        }
 
         // Switch particle renderShape live (1 = sprite, 2 = circle, 3 = rect, 4 = line)
         if (Input.IsKeyPressed(KEY_1)) {
@@ -575,7 +640,8 @@ class ParticlesExample extends Game {
 
         // Emitters that track the mouse cursor
         if (this._mode === 'point-smoke' || this._mode === 'fountain' ||
-            this._mode === 'circle-campfire' || this._mode === 'portal-ring') {
+            this._mode === 'circle-campfire' || this._mode === 'portal-ring' ||
+            this._mode === 'spritesheet-smoke') {
             this._particleSystem.SetPosition(Input.mouse.x, Input.mouse.y);
         }
         else if (this._mode === 'thruster') {
@@ -608,7 +674,7 @@ class ParticlesExample extends Game {
     }
 
     _drawHUD(ctx) {
-        this.renderer.DrawFillBasicRectangle(8, 8, 430, 226, this.semiTransparentBlack);
+        this.renderer.DrawFillBasicRectangle(8, 8, 430, 262, this.semiTransparentBlack);
         this.renderer.DrawFillText("A - Area smoke (default)", 16, 28, "13px monospace", Color.white, "left");
         this.renderer.DrawFillText("S - Smoke following mouse (buoyancy)", 16, 46, "13px monospace", Color.white, "left");
         this.renderer.DrawFillText("D - Rain (line emitter along top)", 16, 64, "13px monospace", Color.white, "left");
@@ -620,6 +686,8 @@ class ParticlesExample extends Game {
         this.renderer.DrawFillText("L - Flame Barrier (line emitter to mouse)", 16, 172, "13px monospace", Color.white, "left");
         this.renderer.DrawFillText("Click / Space - Pooled ParticleSystemGO burst", 16, 190, "13px monospace", Color.white, "left");
         const ps = this._particleSystem;
+        const frameInfo = this._mode === 'spritesheet-smoke' ? ` [${ps.config.frameMode}]` : "";
+        this.renderer.DrawFillText(`Z - Sprite-sheet smoke 4x4 (X: frameMode)${frameInfo}`, 16, 208, "13px monospace", Color.white, "left");
         const shape = ps.config.renderShape || "sprite";
         let burstParticles = 0;
         let activePoolGOs  = 0;
@@ -630,8 +698,8 @@ class ParticlesExample extends Game {
                 burstParticles += fx.activeCount;
             }
         }
-        this.renderer.DrawFillText(`1-4 Shape: [${shape}] (1:sprite 2:circle 3:rect 4:line)`, 16, 208, "13px monospace", Color.white, "left");
-        this.renderer.DrawFillText(`Alive: ${ps.activeCount}/${ps.config.maxParticleCount} | Burst: +${burstParticles} (Pool: ${activePoolGOs}/${this._explosionPool.objects.length})`, 16, 226, "13px monospace", Color.white, "left");
+        this.renderer.DrawFillText(`1-4 Shape: [${shape}] (1:sprite 2:circle 3:rect 4:line)`, 16, 226, "13px monospace", Color.white, "left");
+        this.renderer.DrawFillText(`Alive: ${ps.activeCount}/${ps.config.maxParticleCount} | Burst: +${burstParticles} (Pool: ${activePoolGOs}/${this._explosionPool.objects.length})`, 16, 244, "13px monospace", Color.white, "left");
     }
 }
 

@@ -668,7 +668,7 @@ declare class Renderer {
     /** Draws an image with top-left at (x, y). No rotation — fast path for backgrounds and UI. */
     DrawImageBasic(img: HTMLImageElement, x: number, y: number, w?: number, h?: number, alpha?: number): void;
     /** Draws a rectangular sub-region of an image centered on (x, y) with scale, rotation, and alpha. */
-    DrawImageSection(img: HTMLImageElement, x: number, y: number, sx: number, sy: number, sw: number, sh: number, scaleX: number, scaleY: number, rot?: number, pivot?: {x: number, y: number}, alpha?: number): void;
+    DrawImageSection(img: HTMLImageElement, x: number, y: number, sx: number, sy: number, sw: number, sh: number, scaleX: number, scaleY: number, rot?: number, pivot?: {x: number, y: number}, alpha?: number, tint?: Color | null): void;
     /** Draws a rectangular sub-region of an image with top-left at (x, y). No rotation. */
     DrawImageSectionBasic(img: HTMLImageElement, x: number, y: number, sx: number, sy: number, sw: number, sh: number, scaleX: number, scaleY: number, alpha?: number): void;
     
@@ -1372,6 +1372,11 @@ declare class Particle {
     tint: Color;
     renderShape: string;
     particleSize: number;
+    /** Shared array of sprite-sheet crop rects (null = full image). */
+    frames: Array<{ x: number; y: number; w: number; h: number }> | null;
+    /** Current crop rect drawn via DrawImageSection (null = DrawImage of the full image). */
+    frame: { x: number; y: number; w: number; h: number } | null;
+    animateFrames: boolean;
     constructor(img?: HTMLImageElement | HTMLCanvasElement | null);
     Deactivate(): void;
     Update(deltaTime: number): void;
@@ -1402,6 +1407,13 @@ declare class ParticleSystem {
     SetRotation(angle: number): void;
     SetColor(startColor: string | Color | null, endColor?: string | Color | null): void;
     SetRenderShape(shape: 'sprite' | 'circle' | 'rect' | 'line'): void;
+    /**
+     * Configures sprite-sheet frames: `SetFrames(cols, rows, frameMode?, frameCount?)` for a uniform grid,
+     * or `SetFrames(rects | SpriteAtlas | atlasJson | null, ..., frameMode?)` for explicit crop rects.
+     */
+    SetFrames(framesOrColumns: number | Array<{ x: number; y: number; w: number; h: number }> | SpriteAtlas | object | null, rows?: number, frameMode?: 'random' | 'animate', frameCount?: number): void;
+    /** Resolves `config.frames` or the `sheetColumns` × `sheetRows` grid into crop rects (null = full image). */
+    static ResolveFrames(img: HTMLImageElement | HTMLCanvasElement | null, config: { [key: string]: any }): Array<{ x: number; y: number; w: number; h: number }> | null;
     Burst(count?: number, x?: number, y?: number): number;
     Reset(): void;
     Update(deltaTime: number): void;
@@ -1423,6 +1435,7 @@ declare class ParticleSystemGO extends GameObject {
     SetRotation(angle: number): void;
     SetColor(startColor: string | Color | null, endColor?: string | Color | null): void;
     SetRenderShape(shape: 'sprite' | 'circle' | 'rect' | 'line'): void;
+    SetFrames(framesOrColumns: number | Array<{ x: number; y: number; w: number; h: number }> | SpriteAtlas | object | null, rows?: number, frameMode?: 'random' | 'animate', frameCount?: number): void;
     Burst(count?: number, x?: number, y?: number): number;
     Play(x?: number, y?: number): this;
     PlayBurst(count?: number, x?: number, y?: number, autoDeactivate?: boolean): number;

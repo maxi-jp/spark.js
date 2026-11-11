@@ -38,6 +38,7 @@
         <label for="select-preset" class="tb-label">Preset</label>
         <select id="select-preset" class="tb-select" title="Load a preset configuration">
             <option value="missileSmoke">Missile Smoke (Death Rally)</option>
+            <option value="spriteSheetSmoke">Sprite-Sheet Smoke (smoke2.png 4×4)</option>
             <option value="defaultArea">Default (Area Smoke)</option>
             <option value="pointSmoke">Point Smoke</option>
             <option value="fire">Fire / Exhaust</option>
@@ -207,6 +208,37 @@
                             <input id="cfg-PARTICLE_SIZE" type="number" min="1" max="512" step="1" class="num-input">
                         </div>
                         <input id="rng-PARTICLE_SIZE" type="range" min="2" max="256" step="1" class="range-input">
+                    </div>
+
+                    <!-- Sprite Sheet / Frames (only visible when renderShape === "sprite") -->
+                    <div id="sprite-sheet-panel" class="sub-panel" style="margin-top:10px">
+                        <div class="sub-panel-header">
+                            <span title="Split the particle image into a uniform grid of frames (sheetColumns × sheetRows)">Sprite Sheet Frames</span>
+                            <button id="btn-sheet-1x1" class="mini-btn" title="Disable frames (use the full image)">1×1</button>
+                            <button id="btn-sheet-4x4" class="mini-btn" title="Uniform 4×4 grid (e.g. smoke2.png)">4×4</button>
+                        </div>
+                        <div class="coord-grid">
+                            <div class="coord-field">
+                                <label for="cfg-sheetColumns" title="Number of horizontal grid columns">sheetColumns</label>
+                                <input id="cfg-sheetColumns" type="number" min="1" max="64" step="1">
+                            </div>
+                            <div class="coord-field">
+                                <label for="cfg-sheetRows" title="Number of vertical grid rows">sheetRows</label>
+                                <input id="cfg-sheetRows" type="number" min="1" max="64" step="1">
+                            </div>
+                            <div class="coord-field">
+                                <label for="cfg-sheetFrameCount" title="Use only the first N frames (0 = sheetColumns × sheetRows)">sheetFrameCount</label>
+                                <input id="cfg-sheetFrameCount" type="number" min="0" max="4096" step="1">
+                            </div>
+                            <div class="coord-field">
+                                <label for="cfg-frameMode" title="random: pick a frame at spawn · animate: play frame 0 → N-1 over the particle lifetime">frameMode</label>
+                                <select id="cfg-frameMode">
+                                    <option value="random">random</option>
+                                    <option value="animate">animate</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="sheet-frame-info" class="sprite-dims" style="margin-top:4px"></div>
                     </div>
 
                     <!-- Color Tinting / Color-over-Lifetime -->
