@@ -542,11 +542,12 @@ This section tracks all completed and planned improvements for the particle syst
 - **Status**: `[x] Completed`
 - **Solution**: Added `this._activeCount = 0` on `ParticleSystem`, maintained incrementally in `Particle.Activate()`, `Particle.Deactivate()`, `ParticleSystem.Reset()`, and `particle_system_editor.js` pool truncation. `get activeCount()` is now an $O(1)$ property read, and `ParticleSystem.Update` / `Draw` early-return when `_activeCount === 0`.
 
-#### 14. $O(1)$ Ring-Cursor / Free-List Pool Lookup
-- **Status**: `[ ] Pending`
-- **Motivation**: `_spawnSingleParticle` currently scans `this.particles` from index `0` on every spawn (`for (let i = 0; i < this.particles.length; i++)`). When 900 out of 1,000 particles are active, spawning a burst of 50 particles performs up to `45,000` iterations.
-- **Proposed Solution**:
-  - Maintain a `this._searchCursor = 0` index that wraps around `this.particles.length` (or an explicit free-list stack of inactive indices), reducing average particle lookup time from $O(N)$ to $O(1)$.
+#### 14. ~~$O(1)$ Swap-and-Pop Compact Pool~~ ✅ *DONE*
+- **Status**: `[x] Completed`
+- **Solution**: Replaced the $O(N)$ pool scan and full-array `Update`/`Draw`/`Reset` loops with a contiguous **Swap-and-Pop** active partition (`this.particles[0 .. _activeCount - 1]` are always active, `[_activeCount .. length - 1]` are always inactive).
+  - `_spawnSingleParticle` grabs `this.particles[this._activeCount]` in $O(1)$ with zero loops.
+  - `Particle.Update` returns `boolean` (`true` if alive, `false` if deactivated); `ParticleSystem.Update` swaps dead particles with the last active element and decrements `_activeCount` without advancing the loop index.
+  - `ParticleSystem.Draw` and `ParticleSystem.Reset` iterate only `0 .. _activeCount - 1` with no `if (particle.active)` branch.
 
 ---
 

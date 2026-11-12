@@ -1394,7 +1394,7 @@ declare class Particle {
         system?: ParticleSystem
     ): void;
     Deactivate(): void;
-    Update(deltaTime: number, gdx?: number, gdy?: number, drag?: number, system?: ParticleSystem): void;
+    Update(deltaTime: number, gdx?: number, gdy?: number, drag?: number, system?: ParticleSystem): boolean;
     Draw(renderer: Renderer, colorFrames?: HTMLCanvasElement[] | null, system?: ParticleSystem): void;
 }
 

@@ -766,8 +766,8 @@ function applyConfigChange(changedKey) {
             particleSystem.particles.push(new Particle(particleSystem));
         }
         if (particleSystem.particles.length > target) {
-            for (let i = target; i < particleSystem.particles.length; i++) {
-                particleSystem.particles[i].Deactivate();
+            while (particleSystem.activeCount > target) {
+                particleSystem.particles[particleSystem.activeCount - 1].Deactivate();
             }
             particleSystem.particles.length = target;
         }

@@ -316,6 +316,7 @@ class Particle {
      * @param {number} [gdy=0] Constant vertical acceleration step (`GRAVITY_Y * dt`) precalculated by ParticleSystem
      * @param {number} [drag=1.0] Velocity damping multiplier (`Math.exp(-damping * dt)`) precalculated by ParticleSystem
      * @param {ParticleSystem} [system=this.system]
+     * @returns {boolean} `true` if the particle remains active, `false` if it died and was deactivated
      */
     Update(deltaTime, gdx = 0, gdy = 0, drag = 1.0, system = this.system) {
         if (this.appearing) {
@@ -335,7 +336,7 @@ class Particle {
             this.opacity -= this.opacityDecrementVelocity * deltaTime;
             if (this.opacity <= 0.0) {
                 this.Deactivate();
-                return;
+                return false;
             }
         }
 
@@ -366,7 +367,7 @@ class Particle {
         this.scale += this.scaleVelocity * deltaTime;
         if (this.scale <= 0.0) {
             this.Deactivate();
-            return;
+            return false;
         }
 
         // Apply precomputed constant acceleration and air drag
@@ -390,6 +391,8 @@ class Particle {
 
         this.position.x += this.direction.x * deltaTime;
         this.position.y += this.direction.y * deltaTime;
+
+        return true;
     }
 
     /**
@@ -919,20 +922,18 @@ class ParticleSystem {
     }
 
     /**
-     * Internal helper that activates a single pooled particle with zero heap allocations.
+     * Internal helper that activates a single pooled particle in O(1) with zero heap allocations.
+     * Active particles are kept contiguous at `particles[0 .. _activeCount - 1]`, so the next
+     * available inactive slot is always `particles[_activeCount]`.
      * @param {number} [overrideX]
      * @param {number} [overrideY]
      * @returns {boolean} true if a particle was available and activated
      */
     _spawnSingleParticle(overrideX, overrideY) {
-        let particle = null;
-        for (let i = 0; i < this.particles.length && particle === null; i++) {
-            if (!this.particles[i].active)
-                particle = this.particles[i];
-        }
-
-        if (!particle)
+        if (this._activeCount >= this.particles.length)
             return false;
+
+        const particle = this.particles[this._activeCount];
 
         if (overrideX !== undefined && overrideY !== undefined) {
             if (this.config.emitterType === emitterType.circle || this.config.emitterType === emitterType.ring) {
@@ -1021,11 +1022,22 @@ class ParticleSystem {
         const damping = this.config.VELOCITY_DAMPING;
         const drag    = damping > 0 ? Math.exp(-damping * dt) : 1.0;
 
-        // Update all active particles
-        for (let i = 0; i < this.particles.length; i++) {
+        // Update all active particles using swap-and-pop to keep the active slice contiguous
+        let i = 0;
+        while (i < this._activeCount) {
             const particle = this.particles[i];
-            if (particle.active)
-                particle.Update(dt, gdx, gdy, drag, this);
+            if (particle.Update(dt, gdx, gdy, drag, this)) {
+                i++;
+            }
+            else {
+                // particle.Deactivate() already decremented this._activeCount;
+                // move the last active particle into slot i and inspect it on the next iteration
+                const last = this._activeCount;
+                if (i !== last) {
+                    this.particles[i]    = this.particles[last];
+                    this.particles[last] = particle;
+                }
+            }
         }
     }
 
@@ -1040,10 +1052,8 @@ class ParticleSystem {
 
         const colorFrames = renderer.ctx ? this._colorFrames : null;
 
-        for (let i = 0; i < this.particles.length; i++) {
-            const particle = this.particles[i];
-            if (particle.active)
-                particle.Draw(renderer, colorFrames, this);
+        for (let i = 0; i < this._activeCount; i++) {
+            this.particles[i].Draw(renderer, colorFrames, this);
         }
 
         // Restore defaults
@@ -1059,7 +1069,7 @@ class ParticleSystem {
 
     /** Deactivates all currently alive particles and resets the spawn countdown. */
     Reset() {
-        for (let i = 0; i < this.particles.length; i++) {
+        for (let i = 0; i < this._activeCount; i++) {
             this.particles[i].active = false;
         }
         this._activeCount = 0;
