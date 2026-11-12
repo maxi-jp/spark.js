@@ -470,6 +470,8 @@ This section tracks all completed and planned improvements for the particle syst
   - *Details*: Updated `ParticleEmitter.GetSpawnPoint(out = Vector2.Zero())` and `ParticleEmitter.GetInitialVelocity(out = Vector2.Zero())` to write coordinates directly into the caller-supplied `Vector2` (`particle.position` / `particle.direction`), removed the `new Vector2(x, y)` allocation in `Burst(count, x, y)`, and mutated particle `Vector2` fields in-place inside `_spawnSingleParticle` and `Particle.Activate` for zero per-spawn heap allocations.
 - [x] **$O(1)$ Incremental `activeCount` Tracking & Idle Early-Out** ✅ *DONE*
   - *Details*: Added `this._activeCount = 0` on `ParticleSystem`, incremented on `Particle.Activate` and decremented on `Particle.Deactivate` (and zeroed in `Reset()`). `get activeCount()` now returns `this._activeCount` in $O(1)$ time, `ParticleSystem.Update` / `Draw` skip scanning idle pools when `_activeCount === 0`, and `particle_system_editor.js` cleanly deactivates truncated particles when shrinking `maxParticleCount`.
+- [x] **Prewarm Simulation (`Prewarm(duration, fixedStep)` / `prewarm`, `prewarmTime`, `prewarmStep`)** ✅ *DONE*
+  - *Details*: Added `prewarm: false`, `prewarmTime: 2.0`, and `prewarmStep: 0.05` to `defaultParticleConfig`, plus `Prewarm(duration, fixedStep)` on `ParticleSystem` and `ParticleSystemGO`. Automatically runs fixed-step updates during construction when `prewarm: true` (or `prewarmTime > 0`) so ambient effects start in steady state on frame 1. Enabled on `smokeAreaConfig`, `rainConfig`, and `snowConfig` in `particles_example.js`.
 
 ---
 
@@ -524,11 +526,9 @@ This section tracks all completed and planned improvements for the particle syst
 - **Proposed Config Key**:
   - `simulationSpace: "world"` (`"world"` | `"local"`).
 
-#### 11. Prewarm Simulation (`Prewarm(seconds, step)` / `prewarm: true`)
-- **Status**: `[ ] Pending`
-- **Motivation**: For ambient environmental effects like `rainConfig`, `snowConfig`, or `smokeAreaConfig`, starting the scene (or switching modes in `particles_example.js`) begins with a blank screen while the first wave of particles slowly falls from the top.
-- **Proposed API & Config Key**:
-  - `prewarm: false` (or `prewarmTime: 0` in config) and method `particleSystem.Prewarm(duration = 2.0, fixedStep = 0.05)`: runs `Update(fixedStep)` in a fast loop during initialization so ambient weather/smoke is already in steady state on frame 1.
+#### 11. ~~Prewarm Simulation (`Prewarm(seconds, step)` / `prewarm: true`)~~ ✅ *DONE*
+- **Status**: `[x] Completed`
+- **API & Config Keys**: `prewarm: false`, `prewarmTime: 2.0`, `prewarmStep: 0.05`, and `particleSystem.Prewarm(duration, fixedStep)` (also exposed on `ParticleSystemGO`). Runs fixed-step `Update(step)` loops during initialization when `prewarm: true` (or `prewarmTime > 0`), and is enabled on `smokeAreaConfig`, `rainConfig`, and `snowConfig` in `particles_example.js`.
 
 ---
 

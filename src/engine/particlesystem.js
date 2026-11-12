@@ -141,6 +141,11 @@ const defaultParticleConfig = {
     sheetFrameCount: 0,
     frameMode: "random",
 
+    // Prewarm simulation: fast-forwards the emitter on creation so ambient effects start in steady state
+    prewarm: false,
+    prewarmTime: 2.0,
+    prewarmStep: 0.05,
+
     // Lifecycle flags for ParticleSystemGO (when emission stops and activeCount reaches 0)
     autoDeactivateWhenEmpty: false,
     destroyWhenEmpty: false
@@ -687,6 +692,14 @@ class ParticleSystem {
             this.config.MIN_TIME_TO_SPAWN_PARTICLE,
             this.config.MAX_TIME_TO_SPAWN_PARTICLE
         );
+
+        // Prewarm simulation if requested in config
+        if (this.config.prewarm || (config && config.prewarmTime > 0 && config.prewarm !== false)) {
+            this.Prewarm(
+                this.config.prewarmTime > 0 ? this.config.prewarmTime : 2.0,
+                this.config.prewarmStep > 0 ? this.config.prewarmStep : 0.05
+            );
+        }
     }
 
     /** Move the emitter to a new world position. */
@@ -1056,6 +1069,33 @@ class ParticleSystem {
             this.config.MAX_TIME_TO_SPAWN_PARTICLE
         );
     }
+
+    /**
+     * Fast-forwards the particle simulation by `duration` seconds in `fixedStep` increments
+     * so ambient effects (rain, snow, area smoke, etc.) start already in steady state on frame 1.
+     * @param {number} [duration=this.config.prewarmTime || 2.0] Seconds to simulate
+     * @param {number} [fixedStep=this.config.prewarmStep || 0.05] Step size in seconds
+     * @returns {this}
+     */
+    Prewarm(duration = (this.config.prewarmTime > 0 ? this.config.prewarmTime : 2.0),
+            fixedStep = (this.config.prewarmStep > 0 ? this.config.prewarmStep : 0.05)) {
+        if (duration <= 0)
+            return this;
+
+        const step      = Math.max(0.001, fixedStep);
+        const wasActive = this.active;
+        this.active     = true;
+
+        let remaining = duration;
+        while (remaining > 0) {
+            const dt = remaining < step ? remaining : step;
+            this.Update(dt);
+            remaining -= step;
+        }
+
+        this.active = wasActive;
+        return this;
+    }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1218,6 +1258,12 @@ class ParticleSystemGO extends (typeof GameObject !== "undefined" ? GameObject :
     /** Deactivates all currently alive particles and resets the spawn countdown. */
     Reset() {
         this.particleSystem.Reset();
+        return this;
+    }
+
+    /** Fast-forwards the particle simulation by `duration` seconds in `fixedStep` increments. */
+    Prewarm(duration, fixedStep) {
+        this.particleSystem.Prewarm(duration, fixedStep);
         return this;
     }
 

@@ -1431,6 +1431,7 @@ declare class ParticleSystem {
     static ResolveFrames(img: HTMLImageElement | HTMLCanvasElement | null, config: { [key: string]: any }): Array<{ x: number; y: number; w: number; h: number }> | null;
     Burst(count?: number, x?: number, y?: number): number;
     Reset(): void;
+    Prewarm(duration?: number, fixedStep?: number): this;
     Update(deltaTime: number): void;
     Draw(renderer: Renderer): void;
 }
@@ -1456,6 +1457,7 @@ declare class ParticleSystemGO extends GameObject {
     PlayBurst(count?: number, x?: number, y?: number, autoDeactivate?: boolean): number;
     Stop(autoDeactivate?: boolean): this;
     Reset(): this;
+    Prewarm(duration?: number, fixedStep?: number): this;
     Update(deltaTime: number): void;
     Draw(renderer: Renderer): void;
 }

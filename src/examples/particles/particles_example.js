@@ -20,6 +20,8 @@
 
 const smokeAreaConfig = {
     // inherits defaultParticleConfig – just a nice smoke cloud over the whole canvas
+    prewarm: true,
+    prewarmTime: 2.0
 };
 
 const smokePointConfig = {
@@ -68,12 +70,12 @@ const smokePointConfig = {
 };
 
 const rainConfig = {
-    maxParticleCount: 1000,
+    maxParticleCount: 2000,
     globalCompositeOperation: "source-over",
     emitterType: emitterType.line,
 
     AREA_X1: -200, AREA_Y1: -100,
-    AREA_X2:  700, AREA_Y2: -100,
+    AREA_X2:  1124, AREA_Y2: -100,
 
     MIN_INITIAL_VELOCITY: 400,
     MAX_INITIAL_VELOCITY: 800,
@@ -102,7 +104,10 @@ const rainConfig = {
     MAX_ROTATION_VELOCITY: 0,
 
     MIN_TIME_TO_SPAWN_PARTICLE: 0.001,
-    MAX_TIME_TO_SPAWN_PARTICLE: 0.002
+    MAX_TIME_TO_SPAWN_PARTICLE: 0.002,
+
+    prewarm: true,
+    prewarmTime: 1.5
 };
 
 const snowConfig = {
@@ -111,7 +116,7 @@ const snowConfig = {
     emitterType: emitterType.area,
 
     AREA_X1: -100, AREA_Y1: -100,
-    AREA_X2:  750, AREA_Y2: -100,
+    AREA_X2:  1124, AREA_Y2: -100,
 
     MIN_INITIAL_VELOCITY: 30,
     MAX_INITIAL_VELOCITY: 60,
@@ -138,8 +143,11 @@ const snowConfig = {
     MIN_ROTATION_VELOCITY: 0.1,
     MAX_ROTATION_VELOCITY: 0.5,
 
-    MIN_TIME_TO_SPAWN_PARTICLE: 0.001,
-    MAX_TIME_TO_SPAWN_PARTICLE: 0.002
+    MIN_TIME_TO_SPAWN_PARTICLE: 0.01,
+    MAX_TIME_TO_SPAWN_PARTICLE: 0.02,
+
+    prewarm: true,
+    prewarmTime: 15.0
 };
 
 const fountainConfig = {
@@ -344,7 +352,7 @@ const firewallLineConfig = {
     emitterType: emitterType.line,
 
     // Diagonal energy / flame barrier segment across the screen
-    AREA_X1: 150, AREA_Y1: 480,
+    AREA_X1: 150, AREA_Y1: 768,
     AREA_X2: 650, AREA_Y2: 240,
 
     MIN_INITIAL_VELOCITY: 30,
@@ -492,8 +500,8 @@ class ParticlesExample extends Game {
         super(renderer);
 
         this.Configure({
-            screenWidth:  800,
-            screenHeight: 640,
+            screenWidth:  1024,
+            screenHeight: 768,
             imageSmoothingEnabled: true
         });
 
@@ -530,14 +538,14 @@ class ParticlesExample extends Game {
 
     Update(deltaTime) {
         // Switch particle system modes
-        if (Input.IsKeyPressed(KEY_A)) {
+        if (Input.IsKeyDown(KEY_A)) {
             this._particleSystem = new ParticleSystem(
                 this.graphicAssets.smoke.img,
                 smokeAreaConfig
             );
             this._mode = 'area-smoke';
         }
-        if (Input.IsKeyPressed(KEY_S)) {
+        if (Input.IsKeyDown(KEY_S)) {
             this._particleSystem = new ParticleSystem(
                 this.graphicAssets.smoke.img,
                 smokePointConfig,
@@ -545,21 +553,21 @@ class ParticlesExample extends Game {
             );
             this._mode = 'point-smoke';
         }
-        if (Input.IsKeyPressed(KEY_D)) {
+        if (Input.IsKeyDown(KEY_D)) {
             this._particleSystem = new ParticleSystem(
                 this.graphicAssets.waterdrop.img,
                 rainConfig
             );
             this._mode = 'rain';
         }
-        if (Input.IsKeyPressed(KEY_F)) {
+        if (Input.IsKeyDown(KEY_F)) {
             this._particleSystem = new ParticleSystem(
                 this.graphicAssets.snow.img,
                 snowConfig
             );
             this._mode = 'snow';
         }
-        if (Input.IsKeyPressed(KEY_G)) {
+        if (Input.IsKeyDown(KEY_G)) {
             this._particleSystem = new ParticleSystem(
                 this.graphicAssets.smoke.img,
                 fountainConfig,
@@ -567,7 +575,7 @@ class ParticlesExample extends Game {
             );
             this._mode = 'fountain';
         }
-        if (Input.IsKeyPressed(KEY_H)) {
+        if (Input.IsKeyDown(KEY_H)) {
             this._particleSystem = new ParticleSystem(
                 this.graphicAssets.smoke.img,
                 thrusterConfig,
@@ -575,7 +583,7 @@ class ParticlesExample extends Game {
             );
             this._mode = 'thruster';
         }
-        if (Input.IsKeyPressed(KEY_J)) {
+        if (Input.IsKeyDown(KEY_J)) {
             this._particleSystem = new ParticleSystem(
                 this.graphicAssets.smoke.img,
                 circleCampfireConfig,
@@ -583,7 +591,7 @@ class ParticlesExample extends Game {
             );
             this._mode = 'circle-campfire';
         }
-        if (Input.IsKeyPressed(KEY_K)) {
+        if (Input.IsKeyDown(KEY_K)) {
             this._particleSystem = new ParticleSystem(
                 this.graphicAssets.smoke.img,
                 portalRingConfig,
@@ -591,14 +599,14 @@ class ParticlesExample extends Game {
             );
             this._mode = 'portal-ring';
         }
-        if (Input.IsKeyPressed(KEY_L)) {
+        if (Input.IsKeyDown(KEY_L)) {
             this._particleSystem = new ParticleSystem(
                 this.graphicAssets.smoke.img,
                 firewallLineConfig
             );
             this._mode = 'firewall-line';
         }
-        if (Input.IsKeyPressed(KEY_Z)) {
+        if (Input.IsKeyDown(KEY_Z)) {
             this._particleSystem = new ParticleSystem(
                 this.graphicAssets.smoke2.img,
                 spriteSheetSmokeConfig,
@@ -613,19 +621,19 @@ class ParticlesExample extends Game {
         }
 
         // Switch particle renderShape live (1 = sprite, 2 = circle, 3 = rect, 4 = line)
-        if (Input.IsKeyPressed(KEY_1)) {
+        if (Input.IsKeyDown(KEY_1)) {
             this._particleSystem.SetRenderShape("sprite");
             this._explosionPool.objects.forEach(fx => fx.SetRenderShape("sprite"));
         }
-        if (Input.IsKeyPressed(KEY_2)) {
+        if (Input.IsKeyDown(KEY_2)) {
             this._particleSystem.SetRenderShape("circle");
             this._explosionPool.objects.forEach(fx => fx.SetRenderShape("circle"));
         }
-        if (Input.IsKeyPressed(KEY_3)) {
+        if (Input.IsKeyDown(KEY_3)) {
             this._particleSystem.SetRenderShape("rect");
             this._explosionPool.objects.forEach(fx => fx.SetRenderShape("rect"));
         }
-        if (Input.IsKeyPressed(KEY_4)) {
+        if (Input.IsKeyDown(KEY_4)) {
             this._particleSystem.SetRenderShape("line");
             this._explosionPool.objects.forEach(fx => fx.SetRenderShape("line"));
         }
@@ -678,8 +686,8 @@ class ParticlesExample extends Game {
         this.renderer.DrawFillBasicRectangle(8, 8, 430, 262, this.semiTransparentBlack);
         this.renderer.DrawFillText("A - Area smoke (default)", 16, 28, "13px monospace", Color.white, "left");
         this.renderer.DrawFillText("S - Smoke following mouse (buoyancy)", 16, 46, "13px monospace", Color.white, "left");
-        this.renderer.DrawFillText("D - Rain (line emitter along top)", 16, 64, "13px monospace", Color.white, "left");
-        this.renderer.DrawFillText("F - Snow (area emitter)", 16, 82, "13px monospace", Color.white, "left");
+        this.renderer.DrawFillText("D - Rain (line emitter along top, 2s prewarm)", 16, 64, "13px monospace", Color.white, "left");
+        this.renderer.DrawFillText("F - Snow (area emitter, 15s prewarm)", 16, 82, "13px monospace", Color.white, "left");
         this.renderer.DrawFillText("G - Sparks fountain (line shape + gravity)", 16, 100, "13px monospace", Color.white, "left");
         this.renderer.DrawFillText("H - Rotating thruster (polar + SetRotation)", 16, 118, "13px monospace", Color.white, "left");
         this.renderer.DrawFillText("J - Campfire / Aura (circle emitter)", 16, 136, "13px monospace", Color.white, "left");

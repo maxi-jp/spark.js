@@ -273,6 +273,27 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Prewarm Simulation -->
+                    <div class="sub-panel" style="margin-top:10px">
+                        <div class="sub-panel-header">
+                            <span style="display:flex;align-items:center;gap:6px">
+                                <input id="cfg-prewarm" type="checkbox" style="cursor:pointer">
+                                <label for="cfg-prewarm" style="cursor:pointer" title="Fast-forward simulation on creation so ambient effects start in steady state">prewarm</label>
+                            </span>
+                            <button id="btn-prewarm-now" class="mini-btn" title="Reset and run particleSystem.Prewarm(prewarmTime, prewarmStep) now">Run Now</button>
+                        </div>
+                        <div id="prewarm-panel" class="coord-grid" style="display:none;margin-top:6px">
+                            <div class="coord-field">
+                                <label for="cfg-prewarmTime" title="Duration in seconds to fast-forward on creation">prewarmTime (s)</label>
+                                <input id="cfg-prewarmTime" type="number" min="0" max="60" step="0.1">
+                            </div>
+                            <div class="coord-field">
+                                <label for="cfg-prewarmStep" title="Fixed simulation step size in seconds during prewarm">prewarmStep (s)</label>
+                                <input id="cfg-prewarmStep" type="number" min="0.005" max="0.5" step="0.005">
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- 2. Emitter Shape & Spawn Timing -->

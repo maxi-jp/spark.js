@@ -453,7 +453,7 @@ const PRESETS = {
         bgPreset: '#1a1a2e',
         motion: 'manual',
         config: {
-            maxParticleCount: 1000,
+            maxParticleCount: 2000,
             globalCompositeOperation: 'source-over',
             emitterType: emitterType.area,
             AREA_X1: -200, AREA_Y1: -60,
@@ -478,7 +478,9 @@ const PRESETS = {
             MIN_ROTATION_VELOCITY: 0,
             MAX_ROTATION_VELOCITY: 0,
             MIN_TIME_TO_SPAWN_PARTICLE: 0.001,
-            MAX_TIME_TO_SPAWN_PARTICLE: 0.002
+            MAX_TIME_TO_SPAWN_PARTICLE: 0.002,
+            prewarm: true,
+            prewarmTime: 1.5
         }
     },
     snow: {
@@ -510,8 +512,10 @@ const PRESETS = {
             MAX_INITIAL_ROTATION: Number(PI2.toFixed(4)),
             MIN_ROTATION_VELOCITY: 0.1,
             MAX_ROTATION_VELOCITY: 0.5,
-            MIN_TIME_TO_SPAWN_PARTICLE: 0.001,
-            MAX_TIME_TO_SPAWN_PARTICLE: 0.002
+            MIN_TIME_TO_SPAWN_PARTICLE: 0.01,
+            MAX_TIME_TO_SPAWN_PARTICLE: 0.02,
+            prewarm: true,
+            prewarmTime: 15.0
         }
     }
 };
@@ -775,6 +779,14 @@ function applyConfigChange(changedKey) {
         particleSystem.config.emitCountPerSpawn = count;
     }
 
+    if (changedKey === 'prewarm' && currentConfig.prewarm) {
+        particleSystem.Reset();
+        particleSystem.Prewarm(
+            currentConfig.prewarmTime > 0 ? currentConfig.prewarmTime : 2.0,
+            currentConfig.prewarmStep > 0 ? currentConfig.prewarmStep : 0.05
+        );
+    }
+
     // Keep area bounds synced
     syncEmitterArea();
 
@@ -795,6 +807,16 @@ function syncUIFromConfig() {
     // Select inputs
     document.getElementById('cfg-globalCompositeOperation').value = currentConfig.globalCompositeOperation;
     document.getElementById('cfg-emitterType').value = String(currentConfig.emitterType);
+
+    // Prewarm controls
+    const hasPrewarm = Boolean(currentConfig.prewarm);
+    currentConfig.prewarm     = hasPrewarm;
+    currentConfig.prewarmTime = currentConfig.prewarmTime > 0 ? Number(currentConfig.prewarmTime) : 2.0;
+    currentConfig.prewarmStep = currentConfig.prewarmStep > 0 ? Number(currentConfig.prewarmStep) : 0.05;
+    document.getElementById('cfg-prewarm').checked         = hasPrewarm;
+    document.getElementById('prewarm-panel').style.display = hasPrewarm ? 'grid' : 'none';
+    document.getElementById('cfg-prewarmTime').value       = currentConfig.prewarmTime;
+    document.getElementById('cfg-prewarmStep').value       = currentConfig.prewarmStep;
 
     const alignVel = Boolean(currentConfig.alignToVelocity);
     currentConfig.alignToVelocity = alignVel;
@@ -957,6 +979,13 @@ function getExportableConfig() {
     out.emitCountPerSpawn              = Math.max(1, Math.round(currentConfig.emitCountPerSpawn || 1));
     out.MIN_TIME_TO_SPAWN_PARTICLE     = Number(currentConfig.MIN_TIME_TO_SPAWN_PARTICLE);
     out.MAX_TIME_TO_SPAWN_PARTICLE     = Number(currentConfig.MAX_TIME_TO_SPAWN_PARTICLE);
+    if (currentConfig.prewarm) {
+        out.prewarm     = true;
+        out.prewarmTime = Number(currentConfig.prewarmTime > 0 ? currentConfig.prewarmTime : 2.0);
+        if (currentConfig.prewarmStep > 0 && currentConfig.prewarmStep !== 0.05) {
+            out.prewarmStep = Number(currentConfig.prewarmStep);
+        }
+    }
 
     return out;
 }
@@ -1084,7 +1113,13 @@ function formatJSConfigSnippet() {
         ``,
         `    emitCountPerSpawn: ${c.emitCountPerSpawn},`,
         `    MIN_TIME_TO_SPAWN_PARTICLE: ${c.MIN_TIME_TO_SPAWN_PARTICLE},`,
-        `    MAX_TIME_TO_SPAWN_PARTICLE: ${c.MAX_TIME_TO_SPAWN_PARTICLE}`,
+        `    MAX_TIME_TO_SPAWN_PARTICLE: ${c.MAX_TIME_TO_SPAWN_PARTICLE}${c.prewarm ? ',' : ''}`,
+        ...(c.prewarm ? [
+            ``,
+            `    prewarm: true,`,
+            `    prewarmTime: ${c.prewarmTime}${c.prewarmStep !== undefined ? ',' : ''}`,
+            ...(c.prewarmStep !== undefined ? [`    prewarmStep: ${c.prewarmStep}`] : [])
+        ] : []),
         `};`
     );
 
@@ -2019,6 +2054,33 @@ function wireControls() {
         currentConfig.alignToVelocity = e.target.checked;
         syncUIFromConfig();
         applyConfigChange('alignToVelocity');
+    });
+
+    // Prewarm controls
+    document.getElementById('cfg-prewarm').addEventListener('change', e => {
+        currentConfig.prewarm = e.target.checked;
+        syncUIFromConfig();
+        applyConfigChange('prewarm');
+    });
+    document.getElementById('cfg-prewarmTime').addEventListener('change', e => {
+        const val = Math.max(0, Math.min(60, Number(e.target.value) || 0));
+        currentConfig.prewarmTime = val;
+        e.target.value = val;
+        applyConfigChange('prewarmTime');
+    });
+    document.getElementById('cfg-prewarmStep').addEventListener('change', e => {
+        const val = Math.max(0.005, Math.min(0.5, Number(e.target.value) || 0.05));
+        currentConfig.prewarmStep = val;
+        e.target.value = val;
+        applyConfigChange('prewarmStep');
+    });
+    document.getElementById('btn-prewarm-now').addEventListener('click', () => {
+        if (!particleSystem) return;
+        particleSystem.Reset();
+        particleSystem.Prewarm(
+            currentConfig.prewarmTime > 0 ? currentConfig.prewarmTime : 2.0,
+            currentConfig.prewarmStep > 0 ? currentConfig.prewarmStep : 0.05
+        );
     });
 
     // Area & Line helper buttons
