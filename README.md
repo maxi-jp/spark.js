@@ -300,9 +300,9 @@ class MyGame extends Game {
             // ... any other overrides
         };
 
+        const smokeImg = this.graphicAssets.smoke.img;
         this.particles = new ParticleSystem(smokeImg, config);
-        this.particles.SetPointPosition(400, 320);  // emit from canvas centre
-        this.particles.Start();
+        this.particles.SetPosition(400, 320);  // emit from canvas centre
     }
 
     Update(deltaTime) {
@@ -313,7 +313,7 @@ class MyGame extends Game {
     Draw() {
         this.renderer.DrawFillBasicRectangle(0, 0, this.screenWidth, this.screenHeight, Color.black);
         super.Draw();
-        this.particles.Draw(this.renderer.ctx);
+        this.particles.Draw(this.renderer);
     }
 }
 ```

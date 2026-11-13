@@ -369,6 +369,54 @@ this.debris.SetFrames(new SpriteAtlas(this.graphicAssets.debris.atlas), 1, "rand
 - `"random"` picks a frame in `Activate()` with zero per-frame cost; `"animate"` reuses the same lifetime progress already tracked for color gradients.
 - Works with color tinting on both renderers: `Canvas2DRenderer` crops the frame out of the pre-baked tinted sheet, and `WebGLRenderer` pushes the cropped UVs into the same tinted sprite batch.
 
+### 4. `ParticleSystemGO` (`AddGameObject` & `Pool` Recycling)
+
+Wrap an emitter as a `GameObject` so `Game` updates and draws it automatically (no manual `Update`/`Draw` calls needed):
+
+```javascript
+// Option A: Fire-and-forget one-shot effect via AddGameObject
+const fx = new ParticleSystemGO(new Vector2(hitX, hitY), this.graphicAssets.smoke.img, {
+    emitterType: emitterType.point,
+    globalCompositeOperation: "lighter",
+    destroyWhenEmpty: true
+});
+this.AddGameObject(fx);
+fx.PlayBurst(40, hitX, hitY, false); // auto-destroys itself once all 40 particles fade out
+
+// Option B: Pooled one-shot explosions (zero GC)
+// In Start():
+this._explosionPool = new Pool(
+    this,
+    6,
+    ParticleSystemGO,
+    [Vector2.Zero(), this.graphicAssets.smoke.img, explosionBurstConfig]
+);
+
+// On impact:
+const burst = this._explosionPool.Activate();
+burst.PlayBurst(55, hitX, hitY); // sets autoDeactivateWhenEmpty = true, returning to Pool when empty
+```
+
+### 5. Camera-Following Rain / Snow (`relativeArea: true`)
+
+For scrolling worlds using `renderer.ApplyCameraTransform(this.camera)`, enable `relativeArea: true` so `area` / `line` bounds act as offsets around `emitter.position`:
+
+```javascript
+// In Start():
+this.rain = new ParticleSystem(this.graphicAssets.waterdrop.img, {
+    emitterType: emitterType.line,
+    relativeArea: true,
+    AREA_X1: -100, AREA_Y1: -50,
+    AREA_X2:  900, AREA_Y2: -50,
+    prewarm: true,
+    prewarmTime: 1.5
+});
+
+// In Update(deltaTime): keep the rain line anchored to the camera's top-left
+this.rain.SetPosition(this.camera.x, this.camera.y);
+this.rain.Update(deltaTime);
+```
+
 ### 4. Interactive Demo (`src/examples/particles/particles_example.js`)
 
 The included demo project ([`particles_example.js`](../src/examples/particles/particles_example.js ':ignore')) demonstrates switching between preset configurations at runtime using keyboard keys:
@@ -575,9 +623,9 @@ This section tracks all completed and planned improvements for the particle syst
   - **Camera Transforms**: Verified that `ParticleSystem.Draw(renderer)` works seamlessly between `renderer.ApplyCameraTransform(camera)` and `renderer.RestoreCameraTransform()` on both `Canvas2DRenderer` (Canvas 2D transform stack) and `WebGLRenderer` (`viewMatrix` uniform in all batch shaders, preserved across `SetBlendMode()`).
   - **`relativeArea: false`**: Added `relativeArea` to `defaultParticleConfig`. When `true` on `emitterType.area` or `emitterType.line`, `AREA_X1..AREA_Y2` are treated as offsets relative to `emitter.position` (both in `ParticleEmitter.GetSpawnPoint` and `Burst(count, x, y)`), allowing rain/snow emitters to follow a scrolling camera via `SetPosition(camera.x, camera.y)`. Enabled on `rainConfig` and `snowConfig` in `particles_example.js`, and added the `relativeArea` checkbox, gizmo offset/anchor crosshair, and motion-following support in `particle-system-editor.html` / `particle_system_editor.js`.
 
-#### 17. Sync `README.md` Quick-Start Snippet
-- **Status**: `[ ] Pending`
-- **Motivation**: The particle system snippet in `README.md` currently references legacy methods (`SetPointPosition`, `Start()`, `Draw(this.renderer.ctx)`) instead of `SetPosition(x, y)` and `Draw(this.renderer)`.
+#### 17. ~~Sync `README.md` Quick-Start Snippet~~ ✅ *DONE*
+- **Status**: `[x] Completed`
+- **Solution**: Updated the `ParticleSystem` quick-start snippet in `README.md` to read `this.graphicAssets.smoke.img`, use `SetPosition(400, 320)` instead of `SetPointPosition`, remove the non-existent `Start()` call, and pass `this.renderer` to `Draw(this.renderer)` instead of `this.renderer.ctx`.
 
 ---
 
