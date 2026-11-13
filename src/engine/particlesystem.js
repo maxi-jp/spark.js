@@ -51,6 +51,11 @@ const defaultParticleConfig = {
 
     emitterType: emitterType.area,
 
+    // Simulation coordinate space:
+    // "world" (default): spawned particles stay behind in world space when the emitter moves (smoke trails)
+    // "local": active particles move and rotate together with emitter.position / emitter.rotation (auras, shields, attached flames)
+    simulationSpace: "world",
+
     // Area / Line emitter bounds (used when emitterType === area or emitterType === line)
     AREA_X1: 0,
     AREA_Y1: 0,
@@ -694,6 +699,9 @@ class ParticleSystem {
             position ? position : Vector2.Zero(),
             this.config
         );
+        this._prevEmitterX   = this.emitter.position.x;
+        this._prevEmitterY   = this.emitter.position.y;
+        this._prevEmitterRot = this.emitter.rotation;
 
         // Build the particle pool
         this.particles = [];
@@ -995,6 +1003,11 @@ class ParticleSystem {
      * @returns {number} Number of particles actually spawned
      */
     Burst(count = 1, x, y) {
+        if (this._activeCount === 0) {
+            this._prevEmitterX   = this.emitter.position.x;
+            this._prevEmitterY   = this.emitter.position.y;
+            this._prevEmitterRot = this.emitter.rotation;
+        }
         let spawned = 0;
         for (let i = 0; i < count; i++) {
             if (this._spawnSingleParticle(x, y)) {
@@ -1008,7 +1021,65 @@ class ParticleSystem {
         return spawned;
     }
 
+    /**
+     * Carries existing active particles along with emitter movement/rotation when `simulationSpace === "local"`.
+     */
+    _applyLocalDelta() {
+        const ex = this.emitter.position.x;
+        const ey = this.emitter.position.y;
+        const er = this.emitter.rotation;
+
+        if (this._activeCount === 0) {
+            this._prevEmitterX   = ex;
+            this._prevEmitterY   = ey;
+            this._prevEmitterRot = er;
+            return;
+        }
+
+        const prevEx = this._prevEmitterX;
+        const prevEy = this._prevEmitterY;
+        const dx     = ex - prevEx;
+        const dy     = ey - prevEy;
+        const rawDr  = er - this._prevEmitterRot;
+        const dr     = rawDr !== 0 ? NormalizeAngle(rawDr) : 0;
+
+        // Skip tiny emitter deltas: position < 1e-5 px and rotation < 1e-7 rad
+        if ((dx * dx + dy * dy) < 1e-10 && Math.abs(dr) < 1e-7)
+            return;
+
+        this._prevEmitterX   = ex;
+        this._prevEmitterY   = ey;
+        this._prevEmitterRot = er;
+
+        if (Math.abs(dr) < 1e-7) {
+            for (let i = 0; i < this._activeCount; i++) {
+                const p = this.particles[i];
+                p.position.x += dx;
+                p.position.y += dy;
+            }
+        }
+        else {
+            const cos = Math.cos(dr);
+            const sin = Math.sin(dr);
+            for (let i = 0; i < this._activeCount; i++) {
+                const p  = this.particles[i];
+                const rx = p.position.x - prevEx;
+                const ry = p.position.y - prevEy;
+                p.position.x = ex + rx * cos - ry * sin;
+                p.position.y = ey + rx * sin + ry * cos;
+                const vx = p.direction.x;
+                const vy = p.direction.y;
+                p.direction.x = vx * cos - vy * sin;
+                p.direction.y = vx * sin + vy * cos;
+                p.rotation   += dr;
+            }
+        }
+    }
+
     Update(deltaTime) {
+        if (this.config.simulationSpace === "local")
+            this._applyLocalDelta();
+
         if (this.active) {
             this.nextTimeToSpawnParticle -= deltaTime;
 
@@ -1084,6 +1155,10 @@ class ParticleSystem {
             this.particles[i].active = false;
         }
         this._activeCount = 0;
+
+        this._prevEmitterX   = this.emitter.position.x;
+        this._prevEmitterY   = this.emitter.position.y;
+        this._prevEmitterRot = this.emitter.rotation;
 
         this.nextTimeToSpawnParticle = RandomBetweenFloat(
             this.config.MIN_TIME_TO_SPAWN_PARTICLE,

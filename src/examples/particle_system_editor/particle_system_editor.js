@@ -401,6 +401,45 @@ const PRESETS = {
             MAX_TIME_TO_SPAWN_PARTICLE: 0.014
         }
     },
+    localAura: {
+        name: 'localAuraConfig',
+        builtinImg: 'smoke',
+        bgPreset: '#0f172a',
+        motion: 'circle',
+        config: {
+            maxParticleCount: 350,
+            globalCompositeOperation: 'lighter',
+            renderShape: 'circle',
+            PARTICLE_SIZE: 18,
+            startColor: '#5bf2ff',
+            endColor: '#2f5bff',
+            emitterType: emitterType.ring,
+            simulationSpace: 'local',
+            EMISSION_INNER_RADIUS: 42,
+            EMISSION_RADIUS: 52,
+            radialVelocity: true,
+            AREA_X1: 0, AREA_Y1: 0, AREA_X2: 800, AREA_Y2: 640,
+            MIN_INITIAL_VELOCITY: 12,
+            MAX_INITIAL_VELOCITY: 28,
+            GRAVITY_X: 0,
+            GRAVITY_Y: 0,
+            VELOCITY_DAMPING: 1.5,
+            MIN_OPACITY_INCREMENT_VELOCITY: 4.0,
+            MAX_OPACITY_INCREMENT_VELOCITY: 7.0,
+            MIN_MAX_OPACITY: 0.55,
+            MAX_MAX_OPACITY: 0.9,
+            MIN_HOLD_TIME: 0.2,
+            MAX_HOLD_TIME: 0.45,
+            MIN_OPACITY_DECREMENT_VELOCITY: 1.8,
+            MAX_OPACITY_DECREMENT_VELOCITY: 3.0,
+            MIN_INITIAL_SCALE: 0.5,
+            MAX_INITIAL_SCALE: 1.0,
+            MIN_SCALE_VELOCITY: -0.4,
+            MAX_SCALE_VELOCITY: -0.1,
+            MIN_TIME_TO_SPAWN_PARTICLE: 0.008,
+            MAX_TIME_TO_SPAWN_PARTICLE: 0.015
+        }
+    },
     firewallLine: {
         name: 'firewallLineConfig',
         builtinImg: 'smoke',
@@ -865,6 +904,7 @@ function syncUIFromConfig() {
 
     // Show/hide emitter shape sub-panels
     const emType = Number(currentConfig.emitterType);
+    document.getElementById('cfg-simulationSpace').value = currentConfig.simulationSpace === 'local' ? 'local' : 'world';
     const isAreaOrLine   = emType === emitterType.area   || emType === emitterType.line;
     const isCircleOrRing = emType === emitterType.circle || emType === emitterType.ring;
 
@@ -924,6 +964,9 @@ function getExportableConfig() {
     }
 
     out.emitterType = Number(currentConfig.emitterType);
+    if (currentConfig.simulationSpace === 'local') {
+        out.simulationSpace = 'local';
+    }
 
     if (out.emitterType === emitterType.area || out.emitterType === emitterType.line) {
         out.AREA_X1 = Math.round(currentConfig.AREA_X1);
@@ -1038,6 +1081,9 @@ function formatJSConfigSnippet() {
     }
 
     lines.push(`    emitterType: ${emTypeStr},`);
+    if (c.simulationSpace === 'local') {
+        lines.push(`    simulationSpace: "local",`);
+    }
 
     if (c.emitterType === emitterType.area || c.emitterType === emitterType.line) {
         lines.push(
@@ -2066,6 +2112,12 @@ function wireControls() {
         currentConfig.emitterType = Number(e.target.value);
         syncUIFromConfig();
         applyConfigChange('emitterType');
+    });
+
+    document.getElementById('cfg-simulationSpace').addEventListener('change', e => {
+        currentConfig.simulationSpace = e.target.value === 'local' ? 'local' : 'world';
+        syncUIFromConfig();
+        applyConfigChange('simulationSpace');
     });
 
     document.getElementById('cfg-relativeArea').addEventListener('change', e => {

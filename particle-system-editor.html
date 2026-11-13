@@ -47,6 +47,7 @@
             <option value="explosionBurst">Explosion / Debris (Drag + Gravity)</option>
             <option value="circleCampfire">Campfire / Aura (Circle Emitter)</option>
             <option value="portalRing">Portal / Shockwave (Ring + Radial)</option>
+            <option value="localAura">Shield Aura (Local Space)</option>
             <option value="firewallLine">Flame Barrier (Line Emitter)</option>
             <option value="rain">Rain</option>
             <option value="snow">Snow</option>
@@ -310,6 +311,16 @@
                             <option value="2">2 — emitterType.circle (Filled Disk)</option>
                             <option value="3">3 — emitterType.ring (Annulus / Perimeter)</option>
                             <option value="4">4 — emitterType.line (Line Segment)</option>
+                        </select>
+                    </div>
+
+                    <div class="param-row" style="margin-top:8px">
+                        <div class="param-header">
+                            <label for="cfg-simulationSpace" title="world: spawned particles stay in world space (trails); local: active particles move & rotate with emitter.position / emitter.rotation">simulationSpace</label>
+                        </div>
+                        <select id="cfg-simulationSpace" class="full-select">
+                            <option value="world">"world" — World Space (Trails)</option>
+                            <option value="local">"local" — Local Space (Attached Aura / Shield)</option>
                         </select>
                     </div>
 

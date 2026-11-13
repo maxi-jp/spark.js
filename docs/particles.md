@@ -101,6 +101,7 @@ const defaultParticleConfig = {
     endColor: null,
 
     emitterType: emitterType.area,            // point (0), area (1), circle (2), ring (3), or line (4)
+    simulationSpace: "world",                 // "world" (particles stay in world) | "local" (particles move & rotate with emitter)
 
     // Area / Line emitter bounds in pixels (used when emitterType === area or emitterType === line)
     AREA_X1: 0,   AREA_Y1: 0,
@@ -571,11 +572,10 @@ This section tracks all completed and planned improvements for the particle syst
 - **Status**: `[x] Completed`
 - **Config Keys & API**: `frames: null`, `sheetColumns: 1`, `sheetRows: 1`, `sheetFrameCount: 0`, `frameMode: "random" | "animate"`, `particleSystem.SetFrames(framesOrColumns, rows, frameMode, frameCount)`, `ParticleSystem.ResolveFrames(img, config)`.
 
-#### 10. Local vs. World Simulation Space (`simulationSpace`)
-- **Status**: `[ ] Pending`
-- **Motivation**: Currently all particles are simulated in `"world"` space—once spawned, they stay behind in the world when the emitter moves (ideal for smoke trails). However, effects like a character aura, shield glow, or torch flame attached to a moving platform often need `"local"` space, where particles move together with the emitter's position/rotation.
-- **Proposed Config Key**:
-  - `simulationSpace: "world"` (`"world"` | `"local"`).
+#### 10. ~~Local vs. World Simulation Space (`simulationSpace`)~~ ✅ *DONE*
+- **Status**: `[x] Completed`
+- **Config Key**: `simulationSpace: "world"` (`"world"` | `"local"`).
+- **Solution**: When `simulationSpace === "local"`, `ParticleSystem.Update(deltaTime)` tracks per-frame emitter position/rotation deltas (`dx`, `dy`, `dr`) and translates/rotates existing active particles (positions, velocities, and rotations) rigidly with the emitter before spawning new particles. Works seamlessly with `Canvas2DRenderer`, `WebGLRenderer`, `ApplyCameraTransform`, and `ParticleSystemGO`. Added `C` (`localAuraConfig`) to `particles_example.js` and the `simulationSpace` selector + *Shield Aura (Local Space)* preset to `particle-system-editor.html`.
 
 #### 11. ~~Prewarm Simulation (`Prewarm(seconds, step)` / `prewarm: true`)~~ ✅ *DONE*
 - **Status**: `[x] Completed`

@@ -495,6 +495,44 @@ const explosionBurstConfig = {
     endColor:   "#ff2a00"
 };
 
+const localAuraConfig = {
+    maxParticleCount: 350,
+    globalCompositeOperation: "lighter",
+    renderShape: "circle",
+    PARTICLE_SIZE: 18,
+
+    // Local simulation space: particles move & rotate rigidly with the emitter
+    simulationSpace: "local",
+    emitterType: emitterType.ring,
+    EMISSION_INNER_RADIUS: 42,
+    EMISSION_RADIUS: 52,
+    radialVelocity: true,
+
+    MIN_INITIAL_VELOCITY: 12,
+    MAX_INITIAL_VELOCITY: 28,
+    VELOCITY_DAMPING: 1.5,
+
+    MIN_OPACITY_INCREMENT_VELOCITY: 4.0,
+    MAX_OPACITY_INCREMENT_VELOCITY: 7.0,
+    MIN_HOLD_TIME: 0.2,
+    MAX_HOLD_TIME: 0.45,
+    MIN_OPACITY_DECREMENT_VELOCITY: 1.8,
+    MAX_OPACITY_DECREMENT_VELOCITY: 3.0,
+    MIN_MAX_OPACITY: 0.55,
+    MAX_MAX_OPACITY: 0.9,
+
+    MIN_INITIAL_SCALE: 0.5,
+    MAX_INITIAL_SCALE: 1.0,
+    MIN_SCALE_VELOCITY: -0.4,
+    MAX_SCALE_VELOCITY: -0.1,
+
+    MIN_TIME_TO_SPAWN_PARTICLE: 0.008,
+    MAX_TIME_TO_SPAWN_PARTICLE: 0.015,
+
+    startColor: "#5bf2ff",
+    endColor:   "#2f5bff"
+};
+
 // ── Game setup ───────────────────────────────────────────────
 
 class ParticlesExample extends Game {
@@ -616,6 +654,14 @@ class ParticlesExample extends Game {
             );
             this._mode = 'spritesheet-smoke';
         }
+        if (Input.IsKeyDown(KEY_C)) {
+            this._particleSystem = new ParticleSystem(
+                null,
+                localAuraConfig,
+                new Vector2(Input.mouse.x, Input.mouse.y)
+            );
+            this._mode = 'local-aura';
+        }
         if (Input.IsKeyDown(KEY_X) && this._mode === 'spritesheet-smoke') {
             const cfg = this._particleSystem.config;
             const nextMode = cfg.frameMode === "animate" ? "random" : "animate";
@@ -650,7 +696,7 @@ class ParticlesExample extends Game {
         // Emitters that track the mouse cursor
         if (this._mode === 'point-smoke' || this._mode === 'fountain' ||
             this._mode === 'circle-campfire' || this._mode === 'portal-ring' ||
-            this._mode === 'spritesheet-smoke') {
+            this._mode === 'spritesheet-smoke' || this._mode === 'local-aura') {
             this._particleSystem.SetPosition(Input.mouse.x, Input.mouse.y);
         }
         else if (this._mode === 'thruster') {
@@ -685,7 +731,7 @@ class ParticlesExample extends Game {
     _drawHUD(ctx) {
         const ps = this._particleSystem;
 
-        this.renderer.DrawFillBasicRectangle(8, 8, 430, 262, this.semiTransparentBlack);
+        this.renderer.DrawFillBasicRectangle(8, 8, 430, 280, this.semiTransparentBlack);
         this.renderer.DrawFillText("A - Area smoke (default)", 16, 28, "13px monospace", Color.white, "left");
         this.renderer.DrawFillText("S - Smoke following mouse (buoyancy)", 16, 46, "13px monospace", Color.white, "left");
         this.renderer.DrawFillText("D - Rain (line emitter along top, 2s prewarm)", 16, 64, "13px monospace", Color.white, "left");
@@ -697,7 +743,8 @@ class ParticlesExample extends Game {
         this.renderer.DrawFillText("L - Flame Barrier (line emitter to mouse)", 16, 172, "13px monospace", Color.white, "left");
         const frameInfo = this._mode === 'spritesheet-smoke' ? ` [${ps.config.frameMode}]` : "";
         this.renderer.DrawFillText(`Z - Sprite-sheet smoke 4x4 (X: frameMode)${frameInfo}`, 16, 190, "13px monospace", Color.white, "left");
-        this.renderer.DrawFillText("Click / Space - Pooled ParticleSystemGO burst", 16, 208, "13px monospace", Color.white, "left");
+        this.renderer.DrawFillText("C - Shield Aura (simulationSpace: 'local')", 16, 208, "13px monospace", Color.white, "left");
+        this.renderer.DrawFillText("Click / Space - Pooled ParticleSystemGO burst", 16, 226, "13px monospace", Color.white, "left");
         const shape = ps.config.renderShape || "sprite";
         let burstParticles = 0;
         let activePoolGOs  = 0;
@@ -708,8 +755,8 @@ class ParticlesExample extends Game {
                 burstParticles += fx.activeCount;
             }
         }
-        this.renderer.DrawFillText(`1-4 Shape: [${shape}] (1:sprite 2:circle 3:rect 4:line)`, 16, 226, "13px monospace", Color.white, "left");
-        this.renderer.DrawFillText(`Alive: ${ps.activeCount}/${ps.config.maxParticleCount} | Burst: +${burstParticles} (Pool: ${activePoolGOs}/${this._explosionPool.objects.length})`, 16, 244, "13px monospace", Color.white, "left");
+        this.renderer.DrawFillText(`1-4 Shape: [${shape}] (1:sprite 2:circle 3:rect 4:line)`, 16, 244, "13px monospace", Color.white, "left");
+        this.renderer.DrawFillText(`Alive: ${ps.activeCount}/${ps.config.maxParticleCount} | Burst: +${burstParticles} (Pool: ${activePoolGOs}/${this._explosionPool.objects.length})`, 16, 262, "13px monospace", Color.white, "left");
     }
 }
 
