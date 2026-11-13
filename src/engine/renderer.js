@@ -138,6 +138,54 @@ class Renderer {
     /** Flushes all pending batches (sprites, colored quads, circles). Overridden in WebGLRenderer. */
     FlushAllBatches() {}
 
+    /** Lookup table mapping blend mode aliases to canonical names. */
+    static _blendModeAliases = Object.assign(Object.create(null), {
+        "source-over": "source-over",
+        "normal":      "source-over",
+        "default":     "source-over",
+        "lighter":     "lighter",
+        "add":         "lighter",
+        "additive":    "lighter",
+        "screen":      "screen",
+        "multiply":    "multiply",
+        "copy":        "copy",
+        "none":        "copy"
+    });
+
+    /**
+     * Normalizes aliases ("add", "normal", etc.) to standard blend mode names.
+     * Standard names: "source-over", "lighter", "multiply", "screen", "copy".
+     * @param {string|null|undefined} mode
+     * @returns {string}
+     */
+    static NormalizeBlendMode(mode) {
+        if (!mode)
+            return "source-over";
+
+        const direct = Renderer._blendModeAliases[mode];
+        if (direct !== undefined)
+            return direct;
+        
+        const m = String(mode).trim().toLowerCase();
+        return Renderer._blendModeAliases[m] || m;
+    }
+
+    /**
+     * Sets the blending mode for subsequent draw operations.
+     * Standard cross-renderer modes: "source-over" (or "normal"), "lighter" (or "add"), "multiply", "screen", "copy".
+     * Overridden in `Canvas2DRenderer` and `WebGLRenderer`.
+     * @param {string} [mode="source-over"]
+     */
+    SetBlendMode(mode = "source-over") {}
+
+    /**
+     * Returns the currently active blend mode.
+     * @returns {string}
+     */
+    GetBlendMode() {
+        return "source-over";
+    }
+
     /** Number of `gl.drawArrays` calls issued in the current frame. Always 0 on Canvas2D. */
     get drawCallCount() { return 0; }
 
@@ -597,6 +645,7 @@ class Canvas2DRenderer extends Renderer {
     constructor(canvas) {
         super(canvas);
         this.ctx = canvas.getContext("2d");
+        this._blendMode = "source-over";
     }
 
     get width() {
@@ -625,6 +674,30 @@ class Canvas2DRenderer extends Renderer {
 
     Clear() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.SetBlendMode("source-over");
+    }
+
+    /**
+     * Sets the active Canvas 2D composite operation.
+     * @param {string} [mode="source-over"]
+     */
+    SetBlendMode(mode = "source-over") {
+        if (this._blendMode === mode)
+            return;
+
+        const normalized = Renderer.NormalizeBlendMode(mode);
+        if (this._blendMode !== normalized) {
+            this._blendMode = normalized;
+            this.ctx.globalCompositeOperation = normalized;
+        }
+    }
+
+    /**
+     * Returns the active Canvas 2D composite operation.
+     * @returns {string}
+     */
+    GetBlendMode() {
+        return this._blendMode || "source-over";
     }
 
     DrawLine(x1, y1, x2, y2, color=Color.black, lineWidth=1) {
@@ -1099,6 +1172,14 @@ class WebGLRenderer extends Renderer {
         // enable blending for pngs transparency
         this.gl.enable(this.gl.BLEND);
         this.gl.blendFunc(this.gl.ONE, this.gl.ONE_MINUS_SRC_ALPHA);
+        this._blendMode = "source-over";
+        this._blendFuncs = Object.assign(Object.create(null), {
+            "source-over": [gl.ONE,       gl.ONE_MINUS_SRC_ALPHA],
+            "lighter":     [gl.ONE,       gl.ONE],
+            "screen":      [gl.ONE,       gl.ONE_MINUS_SRC_COLOR],
+            "multiply":    [gl.DST_COLOR, gl.ONE_MINUS_SRC_ALPHA],
+            "copy":        [gl.ONE,       gl.ZERO]
+        });
         
         // Shaders
         this.basicRectShader = new BasicRectShader(this.gl);
@@ -1276,6 +1357,7 @@ class WebGLRenderer extends Renderer {
 
     Clear() {
         this.FlushAllBatches();
+        this.SetBlendMode("source-over");
         this._drawCallCount = 0;
         this.gl.clear(this.gl.COLOR_BUFFER_BIT);
     }
@@ -2019,6 +2101,52 @@ class WebGLRenderer extends Renderer {
         gl.disableVertexAttribArray(shader.colorLoc);
 
         this._circleBatchCount = 0;
+    }
+
+    /** Set of unsupported blend mode strings already warned about in WebGL to prevent console spam. */
+    static _unsupportedBlendWarned = new Set();
+
+    /**
+     * Sets the active WebGL blend mode for subsequent batched and immediate draws.
+     * If the mode changes, all pending batches (sprites, rects, circles) are flushed
+     * with the previous mode before applying the new GPU blend state.
+     * Unsupported Canvas2D modes (such as "overlay", "color-dodge", etc.) fall back
+     * to "source-over" and log a one-time console warning.
+     * @param {string} [mode="source-over"]
+     */
+    SetBlendMode(mode = "source-over") {
+        if (this._blendMode === mode)
+            return;
+
+        const normalized = Renderer.NormalizeBlendMode(mode);
+        if (this._blendMode === normalized)
+            return;
+
+        let pair = this._blendFuncs[normalized];
+        if (!pair) {
+            if (!WebGLRenderer._unsupportedBlendWarned.has(normalized)) {
+                WebGLRenderer._unsupportedBlendWarned.add(normalized);
+                console.warn(`[WebGLRenderer] Blend mode '${normalized}' is not supported by fixed-function WebGL blending; falling back to 'source-over'.`);
+            }
+            if (this._blendMode === "source-over")
+                return;
+            pair = this._blendFuncs["source-over"];
+            this._blendMode = "source-over";
+        }
+        else {
+            this._blendMode = normalized;
+        }
+
+        this.FlushAllBatches();
+        this.gl.blendFunc(pair[0], pair[1]);
+    }
+
+    /**
+     * Returns the currently active WebGL blend mode.
+     * @returns {string}
+     */
+    GetBlendMode() {
+        return this._blendMode || "source-over";
     }
 
     /**

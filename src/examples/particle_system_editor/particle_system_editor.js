@@ -874,6 +874,7 @@ function syncUIFromConfig() {
     if (isAreaOrLine) {
         const isLine = emType === emitterType.line;
         document.getElementById('lbl-area-bounds').textContent = isLine ? 'Line Segment (px)' : 'Area Bounds (px)';
+        document.getElementById('cfg-relativeArea').checked    = Boolean(currentConfig.relativeArea);
         document.getElementById('btn-fit-area').style.display    = isLine ? 'none' : '';
         document.getElementById('btn-center-area').style.display = isLine ? 'none' : '';
         document.getElementById('btn-horiz-line').style.display  = isLine ? ''     : 'none';
@@ -929,6 +930,9 @@ function getExportableConfig() {
         out.AREA_Y1 = Math.round(currentConfig.AREA_Y1);
         out.AREA_X2 = Math.round(currentConfig.AREA_X2);
         out.AREA_Y2 = Math.round(currentConfig.AREA_Y2);
+        if (currentConfig.relativeArea) {
+            out.relativeArea = true;
+        }
     }
     else if (out.emitterType === emitterType.circle) {
         out.EMISSION_RADIUS = Number(currentConfig.EMISSION_RADIUS ?? 50);
@@ -1043,6 +1047,9 @@ function formatJSConfigSnippet() {
             `    AREA_X2: ${c.AREA_X2},`,
             `    AREA_Y2: ${c.AREA_Y2},`
         );
+        if (c.relativeArea) {
+            lines.push(`    relativeArea: true,`);
+        }
     }
     else if (c.emitterType === emitterType.circle) {
         lines.push(
@@ -1201,7 +1208,7 @@ function isPositionBasedEmitter() {
 }
 
 function updateEmitterMotion(dt) {
-    if (!isPositionBasedEmitter()) return;
+    if (!isPositionBasedEmitter() && !currentConfig.relativeArea) return;
 
     const cx = canvas.width / 2;
     const cy = canvas.height / 2;
@@ -1449,10 +1456,12 @@ function drawGizmos(ctx) {
     }
     else if (emType === emitterType.line) {
         // Line segment emitter gizmo
-        const x1 = currentConfig.AREA_X1;
-        const y1 = currentConfig.AREA_Y1;
-        const x2 = currentConfig.AREA_X2;
-        const y2 = currentConfig.AREA_Y2;
+        const offX = currentConfig.relativeArea ? emitterPos.x : 0;
+        const offY = currentConfig.relativeArea ? emitterPos.y : 0;
+        const x1 = currentConfig.AREA_X1 + offX;
+        const y1 = currentConfig.AREA_Y1 + offY;
+        const x2 = currentConfig.AREA_X2 + offX;
+        const y2 = currentConfig.AREA_Y2 + offY;
 
         ctx.strokeStyle = 'rgba(91, 140, 255, 0.9)';
         ctx.lineWidth = 2.0;
@@ -1476,10 +1485,12 @@ function drawGizmos(ctx) {
     }
     else {
         // Area emitter rectangle gizmo
-        const x1 = currentConfig.AREA_X1;
-        const y1 = currentConfig.AREA_Y1;
-        const x2 = currentConfig.AREA_X2;
-        const y2 = currentConfig.AREA_Y2;
+        const offX = currentConfig.relativeArea ? emitterPos.x : 0;
+        const offY = currentConfig.relativeArea ? emitterPos.y : 0;
+        const x1 = currentConfig.AREA_X1 + offX;
+        const y1 = currentConfig.AREA_Y1 + offY;
+        const x2 = currentConfig.AREA_X2 + offX;
+        const y2 = currentConfig.AREA_Y2 + offY;
         const rx = Math.min(x1, x2);
         const ry = Math.min(y1, y2);
         const rw = Math.abs(x2 - x1);
@@ -1509,6 +1520,17 @@ function drawGizmos(ctx) {
         ctx.font = 'bold 11px monospace';
         ctx.fillStyle = '#a0c4ff';
         ctx.fillText(`AREA (${Math.round(x1)}, ${Math.round(y1)}) → (${Math.round(x2)}, ${Math.round(y2)})`, rx + 6, ry + 15);
+    }
+
+    if (!isPositionBasedEmitter() && currentConfig.relativeArea) {
+        // Draw emitter.position anchor crosshair for relativeArea
+        ctx.strokeStyle = 'rgba(255, 196, 91, 0.85)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(emitterPos.x, emitterPos.y, 5, 0, PI2);
+        ctx.moveTo(emitterPos.x - 10, emitterPos.y); ctx.lineTo(emitterPos.x + 10, emitterPos.y);
+        ctx.moveTo(emitterPos.x, emitterPos.y - 10); ctx.lineTo(emitterPos.x, emitterPos.y + 10);
+        ctx.stroke();
     }
     ctx.restore();
 }
@@ -1611,10 +1633,12 @@ function distToSegment(px, py, x1, y1, x2, y2) {
 }
 
 function hitTestAreaHandle(mx, my) {
-    const x1 = currentConfig.AREA_X1;
-    const y1 = currentConfig.AREA_Y1;
-    const x2 = currentConfig.AREA_X2;
-    const y2 = currentConfig.AREA_Y2;
+    const offX = currentConfig.relativeArea ? emitterPos.x : 0;
+    const offY = currentConfig.relativeArea ? emitterPos.y : 0;
+    const x1 = currentConfig.AREA_X1 + offX;
+    const y1 = currentConfig.AREA_Y1 + offY;
+    const x2 = currentConfig.AREA_X2 + offX;
+    const y2 = currentConfig.AREA_Y2 + offY;
     const tol = 10;
 
     if (Number(currentConfig.emitterType) === emitterType.line) {
@@ -1685,6 +1709,12 @@ window.addEventListener('mousemove', e => {
         const dx = Math.round(pt.x - areaDragStart.mx);
         const dy = Math.round(pt.y - areaDragStart.my);
         const isLine = currentConfig.emitterType === emitterType.line;
+        const offX = currentConfig.relativeArea ? emitterPos.x : 0;
+        const offY = currentConfig.relativeArea ? emitterPos.y : 0;
+        const localX = pt.x - offX;
+        const localY = pt.y - offY;
+        const startLocalX = areaDragStart.mx - offX;
+        const startLocalY = areaDragStart.my - offY;
 
         if (areaDragMode === 'move') {
             currentConfig.AREA_X1 = areaDragStart.x1 + dx;
@@ -1693,32 +1723,32 @@ window.addEventListener('mousemove', e => {
             currentConfig.AREA_Y2 = areaDragStart.y2 + dy;
         }
         else if (areaDragMode === 'nw') {
-            currentConfig.AREA_X1 = Math.round(pt.x);
-            currentConfig.AREA_Y1 = Math.round(pt.y);
+            currentConfig.AREA_X1 = Math.round(localX);
+            currentConfig.AREA_Y1 = Math.round(localY);
         }
         else if (areaDragMode === 'ne') {
-            currentConfig.AREA_X2 = Math.round(pt.x);
-            currentConfig.AREA_Y1 = Math.round(pt.y);
+            currentConfig.AREA_X2 = Math.round(localX);
+            currentConfig.AREA_Y1 = Math.round(localY);
         }
         else if (areaDragMode === 'sw') {
-            currentConfig.AREA_X1 = Math.round(pt.x);
-            currentConfig.AREA_Y2 = Math.round(pt.y);
+            currentConfig.AREA_X1 = Math.round(localX);
+            currentConfig.AREA_Y2 = Math.round(localY);
         }
         else if (areaDragMode === 'se') {
-            currentConfig.AREA_X2 = Math.round(pt.x);
-            currentConfig.AREA_Y2 = Math.round(pt.y);
+            currentConfig.AREA_X2 = Math.round(localX);
+            currentConfig.AREA_Y2 = Math.round(localY);
         }
         else if (areaDragMode === 'draw') {
             if (isLine) {
-                currentConfig.AREA_X1 = Math.round(areaDragStart.mx);
-                currentConfig.AREA_Y1 = Math.round(areaDragStart.my);
-                currentConfig.AREA_X2 = Math.round(pt.x);
-                currentConfig.AREA_Y2 = Math.round(pt.y);
+                currentConfig.AREA_X1 = Math.round(startLocalX);
+                currentConfig.AREA_Y1 = Math.round(startLocalY);
+                currentConfig.AREA_X2 = Math.round(localX);
+                currentConfig.AREA_Y2 = Math.round(localY);
             } else {
-                currentConfig.AREA_X1 = Math.round(Math.min(areaDragStart.mx, pt.x));
-                currentConfig.AREA_Y1 = Math.round(Math.min(areaDragStart.my, pt.y));
-                currentConfig.AREA_X2 = Math.round(Math.max(areaDragStart.mx, pt.x));
-                currentConfig.AREA_Y2 = Math.round(Math.max(areaDragStart.my, pt.y));
+                currentConfig.AREA_X1 = Math.round(Math.min(startLocalX, localX));
+                currentConfig.AREA_Y1 = Math.round(Math.min(startLocalY, localY));
+                currentConfig.AREA_X2 = Math.round(Math.max(startLocalX, localX));
+                currentConfig.AREA_Y2 = Math.round(Math.max(startLocalY, localY));
             }
         }
 
@@ -2038,6 +2068,22 @@ function wireControls() {
         applyConfigChange('emitterType');
     });
 
+    document.getElementById('cfg-relativeArea').addEventListener('change', e => {
+        const nextVal = e.target.checked;
+        if (Boolean(currentConfig.relativeArea) !== nextVal) {
+            const sign = nextVal ? -1 : 1;
+            const ox = Math.round(emitterPos.x) * sign;
+            const oy = Math.round(emitterPos.y) * sign;
+            currentConfig.AREA_X1 = Math.round(currentConfig.AREA_X1 + ox);
+            currentConfig.AREA_Y1 = Math.round(currentConfig.AREA_Y1 + oy);
+            currentConfig.AREA_X2 = Math.round(currentConfig.AREA_X2 + ox);
+            currentConfig.AREA_Y2 = Math.round(currentConfig.AREA_Y2 + oy);
+        }
+        currentConfig.relativeArea = nextVal;
+        syncUIFromConfig();
+        applyConfigChange('relativeArea');
+    });
+
     document.getElementById('cfg-radialVelocity').addEventListener('change', e => {
         currentConfig.radialVelocity = e.target.checked;
         syncUIFromConfig();
@@ -2085,17 +2131,19 @@ function wireControls() {
 
     // Area & Line helper buttons
     document.getElementById('btn-fit-area').addEventListener('click', () => {
-        currentConfig.AREA_X1 = 0;
-        currentConfig.AREA_Y1 = 0;
-        currentConfig.AREA_X2 = canvas.width;
-        currentConfig.AREA_Y2 = canvas.height;
+        const ox = currentConfig.relativeArea ? Math.round(emitterPos.x) : 0;
+        const oy = currentConfig.relativeArea ? Math.round(emitterPos.y) : 0;
+        currentConfig.AREA_X1 = -ox;
+        currentConfig.AREA_Y1 = -oy;
+        currentConfig.AREA_X2 = canvas.width - ox;
+        currentConfig.AREA_Y2 = canvas.height - oy;
         syncUIFromConfig();
         applyConfigChange('AREA');
     });
 
     document.getElementById('btn-center-area').addEventListener('click', () => {
-        const cx = Math.round(canvas.width / 2);
-        const cy = Math.round(canvas.height / 2);
+        const cx = currentConfig.relativeArea ? 0 : Math.round(canvas.width / 2);
+        const cy = currentConfig.relativeArea ? 0 : Math.round(canvas.height / 2);
         currentConfig.AREA_X1 = cx - 120;
         currentConfig.AREA_Y1 = cy - 120;
         currentConfig.AREA_X2 = cx + 120;
@@ -2105,8 +2153,8 @@ function wireControls() {
     });
 
     document.getElementById('btn-horiz-line').addEventListener('click', () => {
-        const cx = Math.round(canvas.width / 2);
-        const cy = Math.round(canvas.height / 2);
+        const cx = currentConfig.relativeArea ? 0 : Math.round(canvas.width / 2);
+        const cy = currentConfig.relativeArea ? 0 : Math.round(canvas.height / 2);
         currentConfig.AREA_X1 = cx - 220;
         currentConfig.AREA_Y1 = cy;
         currentConfig.AREA_X2 = cx + 220;

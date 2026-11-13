@@ -494,3 +494,5 @@ Batching has no effect on the Canvas 2D renderer. All draw methods behave identi
 | `SetScreenSize(width,height)` | Resize canvas to given dimensions |
 | `SetCanvasFillWindow(matchNative,usePixelRatio,preserveAspect)` | Enable fill-window mode |
 | `RestoreCanvasOriginalSize()` | Exit fill-window mode |
+| `SetBlendMode(mode)` | Set active blend mode (`"source-over"` / `"normal"`, `"lighter"` / `"add"`, `"screen"`, `"multiply"`, `"copy"`); flushes batches on WebGL mode transitions |
+| `GetBlendMode()` | Get the currently active blend mode string |

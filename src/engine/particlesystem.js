@@ -39,6 +39,8 @@ const particleShape = {
 const defaultParticleConfig = {
     maxParticleCount: 500,
 
+    // Blend mode applied during rendering ("source-over" / "normal", "lighter" / "add", "screen", "multiply", etc.)
+    // Works across both Canvas2DRenderer and WebGLRenderer via renderer.SetBlendMode().
     globalCompositeOperation: "source-over",
 
     // Visual particle shape: "sprite" | "circle" | "rect" | "line"
@@ -54,6 +56,9 @@ const defaultParticleConfig = {
     AREA_Y1: 0,
     AREA_X2: 800,
     AREA_Y2: 640,
+    // When true on area/line emitters, AREA_X1..AREA_Y2 are offsets relative to emitter.position
+    // (ideal for infinite-world rain/snow following a scrolling camera via SetPosition(cam.x, cam.y))
+    relativeArea: false,
 
     // Circle / Ring emitter radii in pixels (used when emitterType === circle or emitterType === ring)
     EMISSION_RADIUS: 50,
@@ -519,12 +524,16 @@ class ParticleEmitter {
                 out.Set(this.position.x, this.position.y);
                 return out;
 
-            case emitterType.area:
-                out.Set(
-                    RandomBetweenFloat(this.area.x1, this.area.x2),
-                    RandomBetweenFloat(this.area.y1, this.area.y2)
-                );
+            case emitterType.area: {
+                let x = RandomBetweenFloat(this.area.x1, this.area.x2);
+                let y = RandomBetweenFloat(this.area.y1, this.area.y2);
+                if (this.config.relativeArea) {
+                    x += this.position.x;
+                    y += this.position.y;
+                }
+                out.Set(x, y);
                 return out;
+            }
 
             case emitterType.circle: {
                 const radius = Math.max(0, this.config.EMISSION_RADIUS);
@@ -553,10 +562,13 @@ class ParticleEmitter {
 
             case emitterType.line: {
                 const t = Math.random();
-                out.Set(
-                    this.area.x1 + (this.area.x2 - this.area.x1) * t,
-                    this.area.y1 + (this.area.y2 - this.area.y1) * t
-                );
+                let x = this.area.x1 + (this.area.x2 - this.area.x1) * t;
+                let y = this.area.y1 + (this.area.y2 - this.area.y1) * t;
+                if (this.config.relativeArea) {
+                    x += this.position.x;
+                    y += this.position.y;
+                }
+                out.Set(x, y);
                 return out;
             }
 
@@ -936,7 +948,9 @@ class ParticleSystem {
         const particle = this.particles[this._activeCount];
 
         if (overrideX !== undefined && overrideY !== undefined) {
-            if (this.config.emitterType === emitterType.circle || this.config.emitterType === emitterType.ring) {
+            const emType = this.config.emitterType;
+            if (emType === emitterType.circle || emType === emitterType.ring ||
+                (this.config.relativeArea && (emType === emitterType.area || emType === emitterType.line))) {
                 const savedX = this.emitter.position.x;
                 const savedY = this.emitter.position.y;
                 this.emitter.position.x = overrideX;
@@ -1045,10 +1059,9 @@ class ParticleSystem {
         if (this._activeCount === 0)
             return;
 
-        // globalCompositeOperation is a Canvas 2D concept only
-        if (renderer.ctx) {
-            renderer.ctx.globalCompositeOperation = this.config.globalCompositeOperation;
-        }
+        const targetBlend = this.config.globalCompositeOperation || "source-over";
+        const prevBlend   = renderer.GetBlendMode();
+        renderer.SetBlendMode(targetBlend);
 
         const colorFrames = renderer.ctx ? this._colorFrames : null;
 
@@ -1056,10 +1069,8 @@ class ParticleSystem {
             this.particles[i].Draw(renderer, colorFrames, this);
         }
 
-        // Restore defaults
-        if (renderer.ctx) {
-            renderer.ctx.globalCompositeOperation = 'source-over';
-        }
+        // Restore previous blend mode
+        renderer.SetBlendMode(prevBlend);
     }
 
     /** Returns how many particles are currently alive. */

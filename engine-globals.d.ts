@@ -593,6 +593,9 @@ declare class Renderer {
     SetScreenSize(width: number, height: number): void;
     SetCanvasFillWindow(matchNativeResolution?: boolean, useDevicePixelRatio?: boolean, preserveAspectRatio?: boolean): void;
     RestoreCanvasOriginalSize(): void;
+    static NormalizeBlendMode(mode?: string | null): string;
+    SetBlendMode(mode?: string): void;
+    GetBlendMode(): string;
 
     // Camera
     ApplyCameraTransform(camera: any): void;

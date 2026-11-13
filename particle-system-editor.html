@@ -317,6 +317,9 @@
                     <div id="area-bounds-panel" class="sub-panel" style="display:none">
                         <div class="sub-panel-header">
                             <span id="lbl-area-bounds">Area Bounds (px)</span>
+                            <label style="font-size:10px;color:#9aa4b8;cursor:pointer;display:flex;align-items:center;gap:4px" title="When enabled, AREA_X1..AREA_Y2 are treated as offsets relative to emitter.position (e.g. for camera-following rain/snow)">
+                                <input id="cfg-relativeArea" type="checkbox"> relativeArea
+                            </label>
                             <button id="btn-fit-area" class="mini-btn" title="Set area to current canvas size">Full Canvas</button>
                             <button id="btn-center-area" class="mini-btn" title="Set a centered 240x240 box">Center Box</button>
                             <button id="btn-horiz-line" class="mini-btn" title="Set a centered horizontal line segment" style="display:none">Horiz Line</button>

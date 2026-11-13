@@ -73,6 +73,7 @@ const rainConfig = {
     maxParticleCount: 2000,
     globalCompositeOperation: "source-over",
     emitterType: emitterType.line,
+    relativeArea: true,
 
     AREA_X1: -200, AREA_Y1: -100,
     AREA_X2:  1124, AREA_Y2: -100,
@@ -114,6 +115,7 @@ const snowConfig = {
     maxParticleCount: 1000,
     globalCompositeOperation: "source-over",
     emitterType: emitterType.area,
+    relativeArea: true,
 
     AREA_X1: -100, AREA_Y1: -100,
     AREA_X2:  1124, AREA_Y2: -100,

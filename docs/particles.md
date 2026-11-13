@@ -85,7 +85,9 @@ Every `ParticleSystem` merges your config object with `defaultParticleConfig` vi
 const defaultParticleConfig = {
     maxParticleCount: 500,                    // size of the pre-allocated particle pool
 
-    globalCompositeOperation: "source-over",  // Canvas 2D blending mode ("source-over", "lighter", "overlay", etc.)
+    // Blend mode applied during rendering ("source-over" / "normal", "lighter" / "add", "screen", "multiply", etc.)
+    // Works across both Canvas2DRenderer and WebGLRenderer via renderer.SetBlendMode().
+    globalCompositeOperation: "source-over",
 
     // Visual particle shape: "sprite" | "circle" | "rect" | "line" (defaults to "circle" if img is null)
     renderShape: "sprite",
@@ -103,6 +105,7 @@ const defaultParticleConfig = {
     // Area / Line emitter bounds in pixels (used when emitterType === area or emitterType === line)
     AREA_X1: 0,   AREA_Y1: 0,
     AREA_X2: 800, AREA_Y2: 640,
+    relativeArea: false,                      // when true, AREA_X1..AREA_Y2 are offsets relative to emitter.position
 
     // Circle / Ring emitter radii in pixels (used when emitterType === circle or emitterType === ring)
     EMISSION_RADIUS: 50,
@@ -215,7 +218,7 @@ The standalone particle controller class. Owns the particle pool, the `ParticleE
 | `Burst(count = 1, x, y)` | `number` | Immediately activates up to `count` particles from the pool and returns the number actually spawned. Works even when `this.active === false`. Optional `(x, y)` overrides the emitter's spawn point for that burst. Logs a `console.warn` if the pool is exhausted. |
 | `Reset()` | `void` | Immediately deactivates all alive particles and resets the spawn countdown. |
 | `Update(deltaTime)` | `void` | If `this.active` is `true`, advances the spawn timer and emits particles; then updates all currently active particles. Call once per frame in `Update(deltaTime)`. |
-| `Draw(renderer)` | `void` | Applies `config.globalCompositeOperation` (on `Canvas2DRenderer`), draws all active particles, and restores `"source-over"`. Call once per frame in `Draw()`. |
+| `Draw(renderer)` | `void` | Applies `config.globalCompositeOperation` via `renderer.SetBlendMode()`, draws all active particles, and restores the previous blend mode. Call once per frame in `Draw()`. |
 
 #### Properties
 
@@ -553,15 +556,24 @@ This section tracks all completed and planned improvements for the particle syst
 
 ### Phase 4 — Renderer, Documentation & Editor Polish
 
-#### 15. WebGL Blend Mode Support (`SetBlendMode` / Additive Particles in WebGL)
-- **Status**: `[ ] Pending`
-- **Motivation**: `ParticleSystem.Draw` currently applies `renderer.ctx.globalCompositeOperation = this.config.globalCompositeOperation`, which only affects `Canvas2DRenderer`. When running with `?webgl` (`WebGLRenderer`), additive particle effects (`"lighter"`, `"screen"`) render with standard alpha blending.
-- **Proposed Solution**:
-  - Add a `SetBlendMode(mode)` method on `Renderer` (`Canvas2DRenderer` sets `ctx.globalCompositeOperation`; `WebGLRenderer` flushes the current batch and switches `gl.blendFunc` between `gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA` for `"source-over"` and `gl.SRC_ALPHA, gl.ONE` for `"lighter"` / `"screen"`).
+#### 15. ~~WebGL Blend Mode Support (`SetBlendMode` / Additive Particles in WebGL)~~ ✅ *DONE*
+- **Status**: `[x] Completed`
+- **Solution**: Added polymorphic `SetBlendMode(mode)` and `GetBlendMode()` across `Renderer`, `Canvas2DRenderer`, and `WebGLRenderer`, plus `Renderer.NormalizeBlendMode(mode)`.
+  - In `Canvas2DRenderer`, `SetBlendMode` updates `this.ctx.globalCompositeOperation`.
+  - In `WebGLRenderer`, `SetBlendMode` flushes all pending batches (`FlushAllBatches()`) on transition, then switches `gl.blendFunc`:
+    - `"lighter"` (or `"add"`): `gl.blendFunc(gl.ONE, gl.ONE)` (additive blending matching premultiplied shader output).
+    - `"screen"`: `gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_COLOR)`.
+    - `"multiply"`: `gl.blendFunc(gl.DST_COLOR, gl.ONE_MINUS_SRC_ALPHA)`.
+    - `"copy"`: `gl.blendFunc(gl.ONE, gl.ZERO)`.
+    - `"source-over"` (or `"normal"`): `gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)`.
+    - Unsupported Canvas2D modes (e.g. `"overlay"`, `"color-dodge"`, etc.) gracefully fall back to `"source-over"` with a one-time console warning, avoiding redundant batch flushes and internal state drift.
+  - In `ParticleSystem.Draw(renderer)`, replaced `renderer.ctx.globalCompositeOperation` assignments with `renderer.SetBlendMode(targetBlend)` and restored `prevBlend` after drawing, enabling additive fire, sparks, lasers, and explosions under WebGL.
 
-#### 16. Camera Transform & Culling Awareness
-- **Status**: `[ ] Pending`
-- **Motivation**: Verify and document how `ParticleSystem` interacts with `renderer.ApplyCameraTransform(camera)` in scrolling worlds (such as *Run & Gun* or *Death Rally*), and optionally allow an area emitter's bounds to be relative to `emitter.position` (`relativeArea: true`) so an area emitter can follow the camera viewport automatically for infinite world rain/snow.
+#### 16. ~~Camera Transform & `relativeArea` Viewport Following~~ ✅ *DONE*
+- **Status**: `[x] Completed`
+- **Solution**:
+  - **Camera Transforms**: Verified that `ParticleSystem.Draw(renderer)` works seamlessly between `renderer.ApplyCameraTransform(camera)` and `renderer.RestoreCameraTransform()` on both `Canvas2DRenderer` (Canvas 2D transform stack) and `WebGLRenderer` (`viewMatrix` uniform in all batch shaders, preserved across `SetBlendMode()`).
+  - **`relativeArea: false`**: Added `relativeArea` to `defaultParticleConfig`. When `true` on `emitterType.area` or `emitterType.line`, `AREA_X1..AREA_Y2` are treated as offsets relative to `emitter.position` (both in `ParticleEmitter.GetSpawnPoint` and `Burst(count, x, y)`), allowing rain/snow emitters to follow a scrolling camera via `SetPosition(camera.x, camera.y)`. Enabled on `rainConfig` and `snowConfig` in `particles_example.js`, and added the `relativeArea` checkbox, gizmo offset/anchor crosshair, and motion-following support in `particle-system-editor.html` / `particle_system_editor.js`.
 
 #### 17. Sync `README.md` Quick-Start Snippet
 - **Status**: `[ ] Pending`
