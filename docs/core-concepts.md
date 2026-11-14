@@ -115,6 +115,8 @@ Set `this.config` in the constructor. `super.Start()` reads it to configure the 
 | `collidersOnly` | `boolean` | `false` | Skip all game object rendering and draw **only** collision shapes — useful for pure hitbox debugging |
 | `mobileSupport` | `boolean` | `false` | Controls touch/mobile setup. Touch support is activated **automatically** when the engine detects a touch-capable device (`navigator.maxTouchPoints > 0`), so you usually don't need to set this. Set to `true` to force it on non-touch devices (useful for testing on desktop). Set to `false` to suppress it even on touch devices (e.g. on hybrid laptops you want to treat as desktop-only). When active: sets `touch-action: none` on the canvas, `user-select: none` on `<body>`, injects a `<meta name="viewport">` tag if absent, and enables audio context resume on first touch. |
 | `autoFullscreen`| `boolean` | `false` | When `true` and running on a mobile touch device, automatically requests fullscreen mode on the first user interaction (hiding the browser navigation bar). |
+| `unlockFrameRate` | `boolean` | `false` | When `true`, the engine loop bypasses `requestAnimationFrame` VSync limits using an unthrottled `MessageChannel` / `setTimeout` loop. Can also be toggled at runtime via `this.unlockFrameRate`. |
+| `fpsCap` | `number` | `0` | Maximum FPS. Set to a value `> 0` to cap frame rate (works with both locked and unlocked modes). Use `0` (or less) for no cap. Can also be changed at runtime via `this.fpsCap`. |
 
 Call `this.Configure(partialConfig)` in your Game's constructor to merge new values into an already-running config.
 
@@ -129,7 +131,9 @@ this.Configure({
     preserveAspectRatio: true,    // keep aspect ratio when scaling
     matchNativeResolution: false, // use window size as resolution
     useDevicePixelRatio: false,   // handle high-DPI displays
-    autoFullscreen: true          // automatically go fullscreen on mobile tap
+    autoFullscreen: true,         // automatically go fullscreen on mobile tap
+    unlockFrameRate: false,       // true = bypass requestAnimationFrame (no VSync lock)
+    fpsCap: 0                     // cap FPS (0 = uncapped)
 });
 ```
 
@@ -193,6 +197,8 @@ Some properties that the base `Game` class provides and can be used in your game
 | `this.gameObjects` | Array of all `GameObject` instances; iterated by the base `Update` and `Draw` |
 | `this.renderer` | The active `Renderer` (Canvas 2D or WebGL) |
 | `this.audioActive` | Global mute flag — check before calling `audioPlayer.Play*()` |
+| `this.unlockFrameRate` | `boolean` — getter/setter that mirrors `config.unlockFrameRate` to unlock or lock VSync at runtime |
+| `this.fpsCap` | `number` — getter/setter that mirrors `config.fpsCap` (`0` = uncapped) at runtime |
 
 ### Key methods
 

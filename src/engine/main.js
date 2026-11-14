@@ -1,17 +1,23 @@
 
 var canvas = /** @type {HTMLCanvasElement} */(null);
 var requestAnimationFrameID = -1;
+var setTimeoutID = -1;
+var unlockedLoopChannel = null;
 
 /** @type {Renderer} The active Renderer instance. Set by the engine at startup and available globally throughout the game's lifetime. */
 var renderer = null
 
-var targetDT = 1/60; // 60fps
 var globalDT;
 var time = 0,
     fps = 0,
     framesAcum = 0,
     acumDelta = 0;
 var totalTime = 0.0; // acumulator of the time
+var unlockFrameRate = false;
+var fpsCap = 0;
+var targetDT = 0;
+var frameLimiterAcum = 0;
+var frameDeltaAcum = 0;
 
 var drawStats = true;
 var debugMode = false;
@@ -221,20 +227,64 @@ function Init(GameClass, canvasId = null) {
 
 function Start() {
     time = performance.now();
+    frameLimiterAcum = 0;
+    frameDeltaAcum = 0;
+
+    if (!unlockedLoopChannel) {
+        unlockedLoopChannel = new MessageChannel();
+        unlockedLoopChannel.port1.onmessage = () => {
+            setTimeoutID = setTimeout(Loop, 0);
+        };
+    }
 
     game.Start();
 }
 
-function Loop() {
+function ScheduleNextLoop() {
+    if (unlockFrameRate) {
+        requestAnimationFrameID = -1;
+        if (fpsCap > 0) {
+            const remainingMs = (targetDT - frameLimiterAcum) * 1000;
+            if (remainingMs > 5) {
+                setTimeoutID = setTimeout(Loop, Math.floor(remainingMs - 4));
+                return;
+            }
+        }
+        setTimeoutID = -1;
+        unlockedLoopChannel.port2.postMessage(null);
+        return;
+    }
+
+    setTimeoutID = -1;
     requestAnimationFrameID = requestAnimationFrame(Loop);
+}
+
+function Loop() {
+    ScheduleNextLoop();
 
     // compute FPS
     let now = performance.now();
     let deltaTime = (now - time) / 1000;
-    globalDT = deltaTime;
-
     time = now;
 
+    if (deltaTime > 1) {
+        frameLimiterAcum = 0;
+        frameDeltaAcum = 0;
+        return;
+    }
+
+    if (fpsCap > 0) {
+        frameLimiterAcum += deltaTime;
+        frameDeltaAcum += deltaTime;
+        if (frameLimiterAcum < targetDT)
+            return;
+
+        deltaTime = frameDeltaAcum;
+        frameDeltaAcum = 0;
+        frameLimiterAcum %= targetDT;
+    }
+
+    globalDT = deltaTime;
     framesAcum++;
     acumDelta += deltaTime;
 
@@ -243,9 +293,6 @@ function Loop() {
         framesAcum = 0;
         acumDelta -= 1;
     }
-
-    if (deltaTime > 1)
-        return;
 
     totalTime += deltaTime;
 
@@ -293,9 +340,10 @@ function Draw() {
 }
 
 function DrawStats() {
+    const fpsDT = globalDT > 0 ? (1 / globalDT).toFixed(2) : "∞";
     if (renderer instanceof WebGLRenderer) {
         this.statsElements.fps.innerText    = `FPS: ${fps.toFixed(1)}`;
-        this.statsElements.fpsdt.innerText  = `FPS (dt): ${(1 / globalDT).toFixed(2)}`;
+        this.statsElements.fpsdt.innerText  = `FPS (dt): ${fpsDT}`;
         this.statsElements.dt.innerText     = `Delta: ${(globalDT * 1000).toFixed(2)} ms`;
         this.statsElements.dc.innerText     = `Draw calls: ${renderer.drawCallCount}`;
     }
@@ -311,7 +359,7 @@ function DrawStats() {
         ctx.font = "12px Comic Sans MS regular";
 
         ctx.fillText("FPS: " + fps, 6, 16);
-        ctx.fillText("FPS (dt): " + (1 / globalDT).toFixed(2), 6, 34);
+        ctx.fillText("FPS (dt): " + fpsDT, 6, 34);
         ctx.fillText("deltaTime (ms): " + (globalDT * 1000).toFixed(2), 6, 52);
     }
 }

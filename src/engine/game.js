@@ -37,7 +37,9 @@ class Game {
          *   drawColliders?: boolean,
          *   collidersOnly?: boolean,
          *   mobileSupport?: boolean,
-         *   autoFullscreen?: boolean
+         *   autoFullscreen?: boolean,
+         *   unlockFrameRate?: boolean,
+         *   fpsCap?: number
          * }}
          */
         this.config = {
@@ -55,7 +57,11 @@ class Game {
 
             // Mobile support
             mobileSupport: false,
-            autoFullscreen: false
+            autoFullscreen: false,
+
+            // Frame pacing
+            unlockFrameRate: false,
+            fpsCap: 0
         };
         // config example:
         // {
@@ -76,7 +82,9 @@ class Game {
         //     mobileSupport: false,   // mobile support is activated automatically on touch-capable
         //                             // devices. Set to false to suppress it (e.g. hybrid laptops).
         //                             // Set to true to force it on non-touch devices (e.g. for testing).
-        //     autoFullscreen: false   // automatically requests fullscreen on first interaction on mobile
+        //     autoFullscreen: false,  // automatically requests fullscreen on first interaction on mobile
+        //     unlockFrameRate: false, // run loop with setTimeout instead of requestAnimationFrame
+        //     fpsCap: 0               // cap FPS to this value (<= 0 means no cap)
         // };
 
         /**
@@ -135,6 +143,14 @@ class Game {
     get audioActive() {
         return this._audioActive;
     }
+    /** @returns {boolean} Whether the frame rate is unlocked (bypasses VSync). */
+    get unlockFrameRate() {
+        return unlockFrameRate;
+    }
+    /** @returns {number} Maximum FPS cap (0 = uncapped). */
+    get fpsCap() {
+        return fpsCap;
+    }
 
     set screenWidth(value) {
         this.renderer.width = value;
@@ -144,6 +160,20 @@ class Game {
     }
     set audioActive(value) {
         this._audioActive = value;
+    }
+    set unlockFrameRate(value) {
+        unlockFrameRate = value;
+        this.config.unlockFrameRate = unlockFrameRate;
+        frameLimiterAcum = 0;
+        frameDeltaAcum = 0;
+    }
+    set fpsCap(value) {
+        const cap = Number(value);
+        fpsCap = (isFinite(cap) && cap > 0) ? cap : 0;
+        targetDT = fpsCap > 0 ? 1 / fpsCap : 0;
+        this.config.fpsCap = fpsCap;
+        frameLimiterAcum = 0;
+        frameDeltaAcum = 0;
     }
 
     /** Called once when the game starts. Override to set up your scene. */
@@ -156,6 +186,10 @@ class Game {
         if (this.config.imageSmoothingEnabled !== undefined) {
             this.renderer.imageSmoothingEnabled = this.config.imageSmoothingEnabled;
         }
+
+        // Sync frame pacing globals from config
+        this.unlockFrameRate = this.config.unlockFrameRate ?? false;
+        this.fpsCap = this.config.fpsCap ?? 0;
 
         // Fill window if configured
         // Supports: false (never), true (always), or "mobile" (mobile devices only)
@@ -482,13 +516,22 @@ class Game {
      *   drawColliders?: boolean,
      *   collidersOnly?: boolean,
      *   mobileSupport?: boolean,
-     *   autoFullscreen?: boolean
+     *   autoFullscreen?: boolean,
+     *   unlockFrameRate?: boolean,
+     *   fpsCap?: number
      *   
      * }} newConfig - Config properties to merge. All fields are optional.
      */
     Configure(newConfig) {
         // Merge new configuration with existing config
         Object.assign(this.config, newConfig);
+
+        if (newConfig.unlockFrameRate !== undefined) {
+            this.unlockFrameRate = newConfig.unlockFrameRate;
+        }
+        if (newConfig.fpsCap !== undefined) {
+            this.fpsCap = newConfig.fpsCap;
+        }
     }
 
     /**

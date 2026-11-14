@@ -22,6 +22,10 @@ declare var canvas: HTMLCanvasElement;
 declare var drawStats: boolean;
 /** When true, enables debug rendering. */
 declare var debugMode: boolean;
+/** When true, bypasses requestAnimationFrame VSync limits. Mirrored by game.unlockFrameRate. */
+declare var unlockFrameRate: boolean;
+/** Maximum FPS cap (0 = uncapped). Mirrored by game.fpsCap. */
+declare var fpsCap: number;
 
 /** Bootstraps the engine and starts the game. Call inside `window.onload`. */
 declare function Init(gameClass: new (renderer: Renderer) => Game): void;
@@ -468,6 +472,8 @@ declare class Game {
     gameObjects: GameObject[];
     colliders: Collider[];
     audioActive: boolean;
+    unlockFrameRate: boolean;
+    fpsCap: number;
     config: any;
 
     /**

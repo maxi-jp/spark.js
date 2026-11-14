@@ -2,10 +2,11 @@ class PerformanceTest extends Game {
     constructor(renderer) {
         super(renderer);
 
-        this.config = {
+        this.Configure({
             imageSmoothingEnabled: false,
-            drawColliders: false
-        };
+            drawColliders: false,
+            unlockFrameRate: false
+        });
 
         this.numObjects = 1000;
         this._step = 100;        // objects added/removed per key press
@@ -18,13 +19,13 @@ class PerformanceTest extends Game {
     Start() {
         super.Start();
 
-        const rendererType = this.renderer instanceof WebGLRenderer ? "WebGL" : "2D Canvas";
         this.infoLabel = new TextLabel(
-            `${rendererType} - ${this.numObjects} objects  [↑/↓ or wheel to adjust]`,
+            "",
             new Vector2(this.screenHalfWidth, 20),
-            "16px monospace",
+            "14px monospace",
             Color.white, "center", "middle"
         );
+        this._updateLabel();
 
         for (let i = 0; i < this.numObjects; i++)
             this.AddGameObject(this._spawnObject());
@@ -51,12 +52,18 @@ class PerformanceTest extends Game {
 
     _updateLabel() {
         const rendererType = this.renderer instanceof WebGLRenderer ? "WebGL" : "2D Canvas";
-        this.infoLabel.text = `${rendererType} - ${this.numObjects} objects  [↑/↓ or wheel to adjust]`;
+        const fpsMode = this.unlockFrameRate ? "ON" : "OFF";
+        this.infoLabel.text = `${rendererType} - ${this.numObjects} objects  [↑/↓ or wheel] [U unlock FPS: ${fpsMode}]`;
     }
 
     Update(deltaTime) {
-        const up   = Input.IsKeyPressed(KEY_UP)   || Input.IsKeyPressed(KEY_RIGHT);
-        const down = Input.IsKeyPressed(KEY_DOWN)  || Input.IsKeyPressed(KEY_LEFT);
+        if (Input.IsKeyDown(KEY_U)) {
+            this.unlockFrameRate = !this.unlockFrameRate;
+            this._updateLabel();
+        }
+
+        const up   = Input.IsKeyPressed(KEY_UP)  || Input.IsKeyPressed(KEY_RIGHT);
+        const down = Input.IsKeyPressed(KEY_DOWN) || Input.IsKeyPressed(KEY_LEFT);
 
         if (up || down) {
             this._holdTimer += deltaTime;
@@ -308,8 +315,9 @@ class PerformanceTestSpritesBasicTint extends PerformanceTest {
 
     _updateLabel() {
         const rendererType = this.renderer instanceof WebGLRenderer ? "WebGL" : "2D Canvas";
+        const fpsMode = this.unlockFrameRate ? "ON" : "OFF";
         const tintMode = this.tintEnabled ? "ON" : "OFF";
-        this.infoLabel.text = `${rendererType} - ${this.numObjects} objects  [↑/↓ or wheel to adjust] [T tint: ${tintMode}]`;
+        this.infoLabel.text = `${rendererType} - ${this.numObjects} objects  [↑/↓] [U unlock FPS: ${fpsMode}] [T tint: ${tintMode}]`;
     }
 
     Update(deltaTime) {

@@ -39,6 +39,8 @@ Each example HTML file must load engine scripts in this order before any game co
 | `audioPlayer` | `AudioPlayer` | Global audio manager |
 | `totalTime` | `number` | Elapsed seconds since game start |
 | `mobileWithTouchScreen` | `boolean` | True on touch-primary devices |
+| `unlockFrameRate` | `boolean` | When true, bypasses VSync (`requestAnimationFrame`); mirrored on `game.unlockFrameRate` and `game.config.unlockFrameRate` |
+| `fpsCap` | `number` | Maximum FPS cap (`0` = uncapped); mirrored on `game.fpsCap` and `game.config.fpsCap` |
 
 ---
 
