@@ -3,22 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>spark.js ⚡ - Particle System</title>
+    <title>spark.js ⚡ - Particle System Showcase</title>
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
     <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="src/examples/particles/particles_showcase_ui.css">
     <script src="src/engine/renderer.js"></script>
     <script src="src/engine/main.js"></script>
     <script src="src/engine/utils_math.js"></script>
     <script src="src/engine/input.js"></script>
     <script src="src/engine/audioplayer.js"></script>
     <script src="src/engine/game.js"></script>
+    <script src="src/engine/htmlmenu.js"></script>
     <script src="src/engine/utils_classes.js"></script>
     <script src="src/engine/gameobjects.js"></script>
     <script src="src/engine/particlesystem.js"></script>
-    <script src="src/examples/particles/particles_example.js"></script>
+    <script src="src/examples/particles/particles_menu.js"></script>
+    <script src="src/examples/particles/particles_showcase.js"></script>
 </head>
 <body>
-    <canvas id="myCanvas" width="800" height="640"></canvas>
+    <div id="canvas-container">
+        <canvas id="myCanvas" width="1920" height="1080"></canvas>
+
+        <!-- HTML+CSS UI overlay managed via ParticlesShowcaseMenu extends HTMLMenu -->
+        <div id="particles-ui">
+            <button id="ps-show-ui-btn" type="button">[V] Show Sidebar UI</button>
+
+            <aside id="ps-sidebar">
+                <div id="ps-header">
+                    <div class="ps-header-top">
+                        <span class="ps-title">⚡spark.js - PARTICLE SHOWCASE</span>
+                        <button id="ps-renderer-btn" type="button">[R] Canvas2D</button>
+                    </div>
+                    <div id="ps-telemetry-1">FPS: 0 | DT: 16.7ms</div>
+                    <div id="ps-telemetry-2">Particles: 0 / 0 | Emitters: 0</div>
+                </div>
+
+                <div id="ps-tabs">
+                    <button id="ps-tab-scenes" class="ps-tab active" type="button">🎬 Scenes (6)</button>
+                    <button id="ps-tab-presets" class="ps-tab" type="button">✨ Presets (18)</button>
+                </div>
+
+                <div id="ps-list"></div>
+
+                <div id="ps-footer">Up/Down: Browse | Tab: Mode | V: Hide UI</div>
+            </aside>
+
+            <div id="ps-banner">
+                <div id="ps-banner-title"></div>
+                <div id="ps-banner-hint"></div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

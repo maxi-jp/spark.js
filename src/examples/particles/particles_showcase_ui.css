@@ -1,0 +1,367 @@
+/* Particle Showcase — HTMLMenu overlay styling */
+
+#canvas-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+}
+
+#canvas-container canvas {
+    display: block;
+    margin: 0;
+    border: solid black 1px;
+    box-sizing: border-box;
+}
+
+#particles-ui {
+    font-family: monospace;
+    text-align: left;
+    color: #ffffff;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+#particles-ui button {
+    font-family: monospace;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    color: inherit;
+    background: transparent;
+}
+
+#particles-ui button:focus {
+    outline: none;
+}
+
+/* Collapsed "[V] Show Sidebar UI" pill */
+#ps-show-ui-btn {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 185px;
+    height: 28px;
+    padding: 0 10px;
+    border-radius: 5px;
+    background: rgba(15, 20, 36, 0.90);
+    border: 1px solid rgba(71, 107, 184, 0.65);
+    color: #4df0ff;
+    font: bold 12px monospace;
+    text-align: left;
+    display: none;
+    align-items: center;
+    pointer-events: auto;
+    box-sizing: border-box;
+}
+
+#ps-show-ui-btn:hover {
+    background: rgba(36, 56, 102, 0.85);
+    border-color: #4df0ff;
+}
+
+#particles-ui.ui-hidden #ps-show-ui-btn {
+    display: flex;
+}
+
+#particles-ui.ui-hidden #ps-sidebar,
+#particles-ui.ui-hidden #ps-banner {
+    display: none;
+}
+
+/* Main left sidebar */
+#ps-sidebar {
+    position: absolute;
+    top: 10px;
+    bottom: 10px;
+    left: 10px;
+    width: 272px;
+    background: rgba(15, 20, 36, 0.90);
+    border: 1.5px solid rgba(71, 107, 184, 0.65);
+    border-radius: 8px;
+    padding: 6px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    pointer-events: auto;
+}
+
+/* Header block */
+#ps-header {
+    height: auto;
+    background: rgba(26, 38, 66, 0.95);
+    border-radius: 6px;
+    padding: 7px 8px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.ps-header-top {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 5px;
+}
+
+.ps-title {
+    font: bold 13px monospace;
+    color: #4df0ff;
+    white-space: nowrap;
+}
+
+#ps-renderer-btn {
+    width: 100%;
+    height: 20px;
+    border-radius: 4px;
+    background: rgba(36, 46, 71, 0.90);
+    color: #ffffff;
+    font: bold 10px monospace;
+    text-align: center;
+    line-height: 20px;
+    flex-shrink: 0;
+}
+
+#ps-renderer-btn.active {
+    background: #2b5cff;
+}
+
+#ps-renderer-btn:hover {
+    filter: brightness(1.15);
+}
+
+#ps-telemetry-1 {
+    font: 11px monospace;
+    color: #ffffff;
+    white-space: nowrap;
+}
+
+#ps-telemetry-2 {
+    font: 11px monospace;
+    color: #ffd166;
+    white-space: nowrap;
+}
+
+/* Category tabs */
+#ps-tabs {
+    margin-top: 6px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.ps-tab {
+    height: 26px;
+    border-radius: 5px;
+    background: rgba(36, 46, 71, 0.90);
+    color: #ffffff;
+    font: bold 11px monospace;
+    text-align: center;
+    line-height: 26px;
+}
+
+.ps-tab.active {
+    background: #2b5cff;
+}
+
+.ps-tab:hover:not(.active) {
+    background: rgba(48, 62, 96, 0.95);
+}
+
+/* Item list container */
+#ps-list {
+    margin-top: 8px;
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 2px;
+}
+
+#ps-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+#ps-list::-webkit-scrollbar-thumb {
+    background: rgba(71, 107, 184, 0.55);
+    border-radius: 2px;
+}
+
+/* Scene rows */
+.ps-scene-row {
+    width: 100%;
+    height: 54px;
+    margin-bottom: 6px;
+    padding: 6px 8px 6px 10px;
+    border-radius: 5px;
+    background: rgba(23, 31, 51, 0.65);
+    border: 1.5px solid transparent;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    text-align: left;
+}
+
+.ps-scene-row:hover {
+    background: rgba(36, 56, 102, 0.75);
+}
+
+.ps-scene-row.active {
+    background: rgba(46, 87, 173, 0.85);
+    border-color: #4df0ff;
+}
+
+.ps-scene-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+}
+
+.ps-scene-title {
+    font: bold 12px monospace;
+    color: rgba(173, 191, 224, 1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ps-scene-row.active .ps-scene-title {
+    color: #ffffff;
+}
+
+.ps-scene-badge {
+    font: bold 9px monospace;
+    color: #ffd166;
+    flex-shrink: 0;
+}
+
+.ps-scene-desc {
+    font: 10px monospace;
+    color: rgba(122, 140, 173, 1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Autopilot toggle button inside Scenes mode */
+#ps-autopilot-btn {
+    width: 100%;
+    height: 28px;
+    margin-top: 6px;
+    border-radius: 5px;
+    background: rgba(26, 38, 66, 0.95);
+    border: 1px solid #4df0ff;
+    color: #4df0ff;
+    font: bold 11px monospace;
+    text-align: center;
+    line-height: 26px;
+    box-sizing: border-box;
+}
+
+#ps-autopilot-btn:hover {
+    background: rgba(36, 56, 102, 0.95);
+}
+
+/* Preset rows */
+.ps-preset-row {
+    width: 100%;
+    height: 24px;
+    margin-bottom: 3px;
+    padding: 0 8px;
+    border-radius: 4px;
+    background: rgba(23, 31, 51, 0.65);
+    color: rgba(173, 191, 224, 1);
+    font: 11px monospace;
+    display: flex;
+    align-items: center;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-sizing: border-box;
+}
+
+.ps-preset-row:hover {
+    background: rgba(36, 56, 102, 0.75);
+}
+
+.ps-preset-row.active {
+    background: rgba(46, 87, 173, 0.85);
+    color: #ffffff;
+    font-weight: bold;
+}
+
+/* Live renderShape switcher */
+#ps-shape-row {
+    margin-top: 6px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2px;
+}
+
+.ps-shape-btn {
+    height: 24px;
+    border-radius: 4px;
+    background: rgba(36, 46, 71, 0.90);
+    color: #ffffff;
+    font: 10px monospace;
+    text-align: center;
+    line-height: 24px;
+}
+
+.ps-shape-btn.active {
+    background: #2b5cff;
+    font-weight: bold;
+}
+
+.ps-shape-btn:hover:not(.active) {
+    background: rgba(48, 62, 96, 0.95);
+}
+
+/* Sidebar footer */
+#ps-footer {
+    font: 10px monospace;
+    color: rgba(122, 140, 173, 1);
+    text-align: center;
+    padding: 4px 0 2px;
+    flex-shrink: 0;
+}
+
+/* Bottom-right floating active effect banner */
+#ps-banner {
+    position: absolute;
+    left: 296px;
+    right: 14px;
+    bottom: 10px;
+    height: 56px;
+    background: rgba(15, 20, 36, 0.90);
+    border: 1px solid rgba(71, 107, 184, 0.65);
+    border-radius: 6px;
+    padding: 8px 14px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    pointer-events: auto;
+}
+
+#ps-banner-title {
+    font: bold 11px monospace;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#ps-banner-hint {
+    font: 11px monospace;
+    color: #4df0ff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

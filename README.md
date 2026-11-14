@@ -90,7 +90,7 @@ Documentation can be consulted [here](https://maxi-jp.github.io/spark.js/docs/).
   - mode7/                # Mode 7 pseudo-3D example
   - pacmon/               # Pac-Man clone (WIP)
   - parallax/             # Parallax scrolling demo
-  - particles/            # Particle system demo (smoke, rain, snow effects)
+  - particles/            # Particle System Showcase (6 multi-emitter scenes, 18 presets, HTMLMenu HUD)
   - tetris/               # Tetris implementations
     - simple_tetris.js    # Basic Tetris game
     - tetris.js           # Complex Tetris with modern features
@@ -318,7 +318,7 @@ class MyGame extends Game {
 }
 ```
 
-See `src/examples/particles/particles_example.js` for a full demo with smoke, rain, and snow presets, or open `particle-system-editor.html` to visually design and export particle system configurations as JSON.
+See `src/examples/particles/particles_showcase.js` for the full interactive showcase (6 multi-emitter scenes + 18 presets), or open `particle-system-editor.html` to visually design and export particle system configurations as JSON.
 
 > The particle system is based on the standalone [HTML5_ParticleSystem](https://github.com/maxi-jp/HTML5_ParticleSystem) project.
 

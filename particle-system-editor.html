@@ -38,7 +38,8 @@
         <label for="select-preset" class="tb-label">Preset</label>
         <select id="select-preset" class="tb-select" title="Load a preset configuration">
             <option value="missileSmoke">Missile Smoke (Death Rally)</option>
-            <option value="spriteSheetSmoke">Sprite-Sheet Smoke (smoke2.png 4×4)</option>
+            <option value="spriteSheetSmoke">Sprite-Sheet Smoke 1/sec (smoke2.png 4×4)</option>
+            <option value="spriteSheetSmokeStream">Sprite-Sheet Smoke Stream (smoke2.png 4×4)</option>
             <option value="defaultArea">Default (Area Smoke)</option>
             <option value="pointSmoke">Point Smoke</option>
             <option value="fire">Fire / Exhaust</option>
@@ -47,8 +48,14 @@
             <option value="explosionBurst">Explosion / Debris (Drag + Gravity)</option>
             <option value="circleCampfire">Campfire / Aura (Circle Emitter)</option>
             <option value="portalRing">Portal / Shockwave (Ring + Radial)</option>
+            <option value="blackHole">Black Hole (Ring + Inward Radial)</option>
             <option value="localAura">Shield Aura (Local Space)</option>
+            <option value="healingAura">Healing Aura (Circle + Rect)</option>
             <option value="firewallLine">Flame Barrier (Line Emitter)</option>
+            <option value="confetti">Confetti Cannon (Spinning Rects)</option>
+            <option value="bloodSpatter">Blood / Hit Spatter (High Drag)</option>
+            <option value="magicSparkles">Magic Fairy Dust (Mouse Trail)</option>
+            <option value="electricSparks">Tesla Electric Arcs (Line Streaks)</option>
             <option value="rain">Rain</option>
             <option value="snow">Snow</option>
         </select>
@@ -414,17 +421,17 @@
                     <div class="dual-param">
                         <div class="param-row">
                             <div class="param-header">
-                                <label for="cfg-MIN_INITIAL_VELOCITY" title="MIN_INITIAL_VELOCITY">MIN_SPEED</label>
-                                <input id="cfg-MIN_INITIAL_VELOCITY" type="number" min="0" max="2000" step="1" class="num-input">
+                                <label for="cfg-MIN_INITIAL_VELOCITY" title="MIN_INITIAL_VELOCITY (negative values pull inward when radialVelocity is true)">MIN_SPEED</label>
+                                <input id="cfg-MIN_INITIAL_VELOCITY" type="number" min="-1000" max="2000" step="1" class="num-input">
                             </div>
-                            <input id="rng-MIN_INITIAL_VELOCITY" type="range" min="0" max="1000" step="1" class="range-input">
+                            <input id="rng-MIN_INITIAL_VELOCITY" type="range" min="-500" max="1000" step="1" class="range-input">
                         </div>
                         <div class="param-row">
                             <div class="param-header">
-                                <label for="cfg-MAX_INITIAL_VELOCITY" title="MAX_INITIAL_VELOCITY">MAX_SPEED</label>
-                                <input id="cfg-MAX_INITIAL_VELOCITY" type="number" min="0" max="2000" step="1" class="num-input">
+                                <label for="cfg-MAX_INITIAL_VELOCITY" title="MAX_INITIAL_VELOCITY (negative values pull inward when radialVelocity is true)">MAX_SPEED</label>
+                                <input id="cfg-MAX_INITIAL_VELOCITY" type="number" min="-1000" max="2000" step="1" class="num-input">
                             </div>
-                            <input id="rng-MAX_INITIAL_VELOCITY" type="range" min="0" max="1000" step="1" class="range-input">
+                            <input id="rng-MAX_INITIAL_VELOCITY" type="range" min="-500" max="1000" step="1" class="range-input">
                         </div>
                     </div>
 

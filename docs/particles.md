@@ -418,22 +418,39 @@ this.rain.SetPosition(this.camera.x, this.camera.y);
 this.rain.Update(deltaTime);
 ```
 
-### 4. Interactive Demo (`src/examples/particles/particles_example.js`)
+### 6. Interactive Showcase & Preset Explorer (`src/examples/particles/particles_showcase.js`)
 
-The included demo project ([`particles_example.js`](../src/examples/particles/particles_example.js ':ignore')) demonstrates switching between preset configurations at runtime using keyboard keys:
+The included demo project ([`particles_showcase.js`](../src/examples/particles/particles_showcase.js ':ignore')) features an interactive HTML+CSS sidebar (`ParticlesShowcaseMenu extends HTMLMenu`, `[V]` to hide/show), a live **`[R]` `Canvas2DRenderer` ⇄ `WebGLRenderer`** switcher, and two browseable categories (`[Tab]` to switch, `Up`/`Down` or Mouse Click to select):
 
-- **`A` — Area Smoke (`smokeAreaConfig`)**: Uses `defaultParticleConfig` (`emitterType.area` across `0..800 × 0..640`) to fill the screen with drifting smoke clouds.
-- **`S` — Mouse-Following Smoke (`smokePointConfig`)**: Uses `emitterType.point` with `globalCompositeOperation: "overlay"`, thermal upward buoyancy (`GRAVITY_Y: -35`), gentle air drag (`VELOCITY_DAMPING: 0.4`), and soft peak opacity (`0.35–0.65`), updating `SetPosition(Input.mouse.x, Input.mouse.y)` every frame.
-- **`D` — Rain (`rainConfig`)**: Uses `emitterType.line` spawning along a line segment above the top of the screen (`AREA_X1: -200, AREA_Y1: -100, AREA_X2: 700, AREA_Y2: -100`), high downward speed (`400–800 px/s`), slight wind slant (`MIN_DIRECTION_X: 0.15, MAX_DIRECTION_X: 0.25, MIN_DIRECTION_Y: 1, MAX_DIRECTION_Y: 1`), zero scale growth, and fast spawn interval (`0.001–0.002s` with `maxParticleCount: 1000`).
-- **`F` — Snow (`snowConfig`)**: Spawns above the canvas (`AREA_Y1: -100, AREA_Y2: -100`), gentle downward speed (`30–60 px/s`), horizontal flutter (`MIN_DIRECTION_X: -0.25, MAX_DIRECTION_X: 0.25`), slow fade-in/out, and continuous rotation (`0.1–0.5 rad/s`).
-- **`G` — Sparks Fountain (`fountainConfig`)**: Point emitter following the mouse that launches procedural velocity-aligned spark streaks (`renderShape: "line", PARTICLE_SIZE: 80`) upward in a polar cone (`directionMode: "polar", MIN_ANGLE: -Math.PI * 0.65, MAX_ANGLE: -Math.PI * 0.35`) and pulls them down in a parabolic arc using `GRAVITY_Y: 550` and `VELOCITY_DAMPING: 0.2`.
-- **`H` — Rotating Thruster / Flamethrower (`thrusterConfig`)**: Narrow directional polar cone (`MIN_ANGLE: -0.22, MAX_ANGLE: 0.22`) at the screen center that rotates every frame via `SetRotation(angleToMouse)` to aim a stream of fire toward the mouse cursor.
-- **`J` — Campfire / Fire Aura (`circleCampfireConfig`)**: Uses `emitterType.circle` (`EMISSION_RADIUS: 60`) following the mouse cursor with uniform disk sampling (`r = R * Math.max(Math.random(), Math.random())`) and upward thermal buoyancy (`GRAVITY_Y: -90`).
-- **`K` — Portal Ring / Shockwave (`portalRingConfig`)**: Uses `emitterType.ring` (`EMISSION_INNER_RADIUS: 75, EMISSION_RADIUS: 90`) following the mouse cursor with `radialVelocity: true` so particles expand radially outward from the ring perimeter and decelerate under `VELOCITY_DAMPING: 2.2`.
-- **`L` — Flame Barrier (`firewallLineConfig`)**: Uses `emitterType.line` anchored at `(150, 480)` with its second endpoint `(AREA_X2, AREA_Y2)` tracking the mouse cursor in real time, spawning a rising wall of fire along the segment.
-- **`Z` — Sprite-Sheet Smoke Column (`spriteSheetSmokeConfig`)**: Uses `smoke2.png` split into a `4×4` grid (`sheetColumns: 4, sheetRows: 4`) with `frameMode: "animate"`, so each puff plays all 16 frames over its lifetime while rising from a small circle emitter following the mouse. Press **`X`** to toggle `frameMode` between `"animate"` and `"random"` via `SetFrames()`.
-- **`1 / 2 / 3 / 4` — Live Particle Shape Switch (`renderShape`)**: Switches the active emitter and burst emitter live between `"sprite"` (`1`), `"circle"` (`2`), `"rect"` (`3`), and `"line"` (`4`).
-- **`Click / Space` — Explosion Burst (`explosionBurstConfig`)**: Fires a 55-particle one-shot `Burst()` at the cursor using a uniform 360° polar distribution (`MIN_ANGLE: 0, MAX_ANGLE: PI2`) and high initial speed (`180–520 px/s`) that rapidly decelerates mid-air via `VELOCITY_DAMPING: 3.5` while drifting downward under `GRAVITY_Y: 160`.
+#### Category 1: 🎬 Multi-Emitter & Gameplay Showcase Scenes (6 Scenes)
+1. **Spaceship Combat (`scene-spaceship`)**: Combines 4 simultaneous emitters — a prewarmed deep-space starfield (`emitterType.area`), a rigid ship shield (`simulationSpace: "local"`, `emitterType.ring`), a directional ion thruster (`directionMode: "polar"` + `SetRotation`), and a world-space 4×4 `smoke2.png` exhaust trail — plus **Click / Space** plasma torpedoes that detonate into pooled two-stage explosions (`Pool<ParticleSystemGO>`) and **`[M]`** to toggle between Figure-8 Autopilot and Mouse Steer.
+2. **Campfire & Torch (`scene-campfire`)**: A 4-layer composite hearth fire (4×4 rising dark smoke column + outer flame disk + white-hot core + rising shrinking spark embers) paired with a mouse-driven hand torch and **Click / Space** ember stoking.
+3. **Fireworks Finale (`scene-fireworks`)**: Auto-launching and click-targeted aerial shells with velocity-aligned `"line"` spark tails that detonate at apex into 3-layer Chrysanthemum star bursts, expanding shockwave rings, and crackling `"rect"` glitter.
+4. **Thunderstorm & Camera (`scene-storm`)**: Demonstrates `relativeArea: true` synced to a scrolling `Camera` (`renderer.ApplyCameraTransform`) across a 2800px road scene with slanted heavy rain, ground puddle splashes, drifting storm fog, and **Click / Space** branching lightning strikes.
+5. **Sci-Fi Laser & Black Hole (`scene-scifi`)**: Pairs an imploding Black Hole singularity (`emitterType.ring` with negative speed `MIN_INITIAL_VELOCITY: -155, MAX_INITIAL_VELOCITY: -85` and `radialVelocity: true`) with an interactive plasma turret firing a dynamic `emitterType.line` laser beam and welding impact sparks at the cursor.
+6. **Combat & Gore VFX Lab (`scene-combat`)**: Interactive target dummy (directional `bloodSpatterConfig` + blood mist on click), destructible supply crate (spinning `"rect"` shrapnel debris + explosion on click/space), and a sanctuary healing totem (`healingAuraConfig`).
+
+#### Category 2: ✨ Single-Emitter Presets (18 Presets)
+- **`A` — Area Smoke (`smokeAreaConfig`)**: Uses `defaultParticleConfig` (`emitterType.area` with `prewarm: true`) to fill the screen with drifting smoke clouds.
+- **`S` — Rising Point Smoke (`smokePointConfig`)**: Uses `emitterType.point` with `globalCompositeOperation: "overlay"`, thermal upward buoyancy (`GRAVITY_Y: -35`), gentle air drag (`VELOCITY_DAMPING: 0.4`), and soft peak opacity (`0.35–0.65`).
+- **`Z` — Sprite-Sheet 4×4 (1/sec) (`spriteSheetSmokeConfig`)**: Spawns ~1 particle/sec (`MIN_TIME_TO_SPAWN_PARTICLE: 1, MAX_TIME_TO_SPAWN_PARTICLE: 1.5`) using `smoke2.png` split into a `4×4` grid (`sheetColumns: 4, sheetRows: 4, frameMode: "animate"`) so you can clearly observe how an individual particle steps through all 16 frames across its lifetime. Press **`X`** to toggle `frameMode` between `"animate"` and `"random"` via `SetFrames()`.
+- **`W` — Sprite-Sheet 4×4 (Stream) (`spriteSheetSmokeStreamConfig`)**: Continuous billowing smoke column (`MIN_TIME_TO_SPAWN_PARTICLE: 0.06, MAX_TIME_TO_SPAWN_PARTICLE: 0.12`) using the same `4×4` `smoke2.png` sprite sheet. Press **`X`** to toggle `frameMode` between `"animate"` and `"random"`.
+- **`D` — Slanted Rain (`rainConfig`)**: Uses `emitterType.line` with `relativeArea: true`, `alignToVelocity: true`, and `prewarm: true`.
+- **`F` — Snowfall (`snowConfig`)**: Area emitter above the canvas with gentle horizontal flutter and `15s` prewarm.
+- **`G` — Sparks Fountain (`fountainConfig`)**: Point emitter launching velocity-aligned spark streaks (`renderShape: "line", PARTICLE_SIZE: 80`) in an upward polar cone with parabolic gravity (`GRAVITY_Y: 550`).
+- **`H` — Rotating Jet Thruster (`thrusterConfig`)**: Narrow directional polar cone (`MIN_ANGLE: -0.22, MAX_ANGLE: 0.22`) aimed at the mouse via `SetRotation(angle)`.
+- **`J` — Campfire Disk (`circleCampfireConfig`)**: Uniform disk sampling (`emitterType.circle`, `EMISSION_RADIUS: 60`) with upward thermal buoyancy (`GRAVITY_Y: -90`).
+- **`K` — Portal Shockwave (`portalRingConfig`)**: Annulus emitter (`emitterType.ring`, `75..90px`) with outward `radialVelocity: true` and air drag (`VELOCITY_DAMPING: 2.2`).
+- **`L` — Flame Barrier (`firewallLineConfig`)**: Dynamic `emitterType.line` segment with its second endpoint tracking the mouse cursor.
+- **`C` — Shield Aura (`localAuraConfig`)**: Uses `simulationSpace: "local"` on an `emitterType.ring` so active particles translate and rotate rigidly with the emitter.
+- **`B` — Black Hole Vortex (`blackHoleConfig`)**: Uses `emitterType.ring` (`95..120px`) with `radialVelocity: true` and negative initial velocity (`-155..-85 px/s`) so particles implode inward while shrinking.
+- **`N` — Healing / Buff Aura (`healingAuraConfig`)**: Uses `emitterType.circle` spawning rising procedural `"rect"` particles with an emerald-to-gold gradient (`#2bff88` → `#e6ff66`).
+- **`M` — Confetti Cannon (`confettiConfig`)**: Upward polar cone launching fast-spinning procedural rectangles (`renderShape: "rect"`, `MIN/MAX_ROTATION_VELOCITY: -9..9`) with rainbow `SetColor()` cycling.
+- **`P` — Blood / Hit Spatter (`bloodSpatterConfig`)**: High-speed directional polar spray (`renderShape: "circle"`) with strong `VELOCITY_DAMPING: 4.2`, gravity, and shrinking crimson droplets.
+- **`Q` — Magic Fairy Dust (`magicSparklesConfig`)**: Mouse-trailing circle emitter spawning fast-spinning, rapidly shrinking `"rect"` sparkles (`#ff80ff` → `#ffee55`).
+- **`E` — Tesla Electric Arcs (`electricSparksConfig`)**: High-speed velocity-aligned `"line"` streaks bursting from a small ring with extreme damping (`VELOCITY_DAMPING: 6.5`).
+- **`1 / 2 / 3 / 4` — Live Particle Shape Switch (`renderShape`)**: Switches the active preset and burst pool live between `"sprite"` (`1`), `"circle"` (`2`), `"rect"` (`3`), and `"line"` (`4`).
+- **`Click / Space` — Pooled Explosion Burst (`explosionBurstConfig`)**: Activates a `ParticleSystemGO` from `this._explosionPool` and triggers a 55-particle one-shot `PlayBurst()`.
 
 ---
 
@@ -446,9 +463,10 @@ The standalone **[Particle System Editor](../particle-system-editor.html ':ignor
 - **Particle Textures (Built-in & Custom)**:
   - Switch between 4 built-in sample assets (`smoke.png`, `smoke2.png`, `snow.png`, `waterdrop.png`) and a procedural radial-gradient fallback (`Built-in: Soft Circle`).
   - Load any custom image via the **Load Image** button, by clicking the sprite thumbnail preview, or by dragging and dropping an image file anywhere onto the window.
-- **13 Built-in Presets**:
+- **21 Built-in Presets**:
   - *Missile Smoke (Death Rally)* (`missileSmokeConfig`)
-  - *Sprite-Sheet Smoke (smoke2.png 4×4)* (`spriteSheetSmokeConfig` — `sheetColumns: 4, sheetRows: 4, frameMode: "animate"`)
+  - *Sprite-Sheet Smoke 1/sec (smoke2.png 4×4)* (`spriteSheetSmokeConfig` — ~1 particle/sec to inspect single-particle 16-frame flipbook animation)
+  - *Sprite-Sheet Smoke Stream (smoke2.png 4×4)* (`spriteSheetSmokeStreamConfig` — continuous billowing 16-frame smoke column)
   - *Default (Area Smoke)* (`smokeAreaConfig`)
   - *Point Smoke* (`smokePointConfig`)
   - *Fire / Exhaust* (`fireExhaustConfig` — additive `"lighter"` blending with upward thermal buoyancy `GRAVITY_Y: -60`)
@@ -457,7 +475,14 @@ The standalone **[Particle System Editor](../particle-system-editor.html ':ignor
   - *Explosion / Debris (Drag + Gravity)* (`explosionBurstConfig` — 360° polar bursts braked by `VELOCITY_DAMPING: 3.5`)
   - *Campfire / Aura (Circle Emitter)* (`circleCampfireConfig` — `emitterType.circle` disk with rising buoyancy)
   - *Portal / Shockwave (Ring + Radial)* (`portalRingConfig` — `emitterType.ring` annulus with `radialVelocity: true`)
+  - *Black Hole (Ring + Inward Radial)* (`blackHoleConfig` — `emitterType.ring` with negative speed `-155..-85` imploding inward)
+  - *Shield Aura (Local Space)* (`localAuraConfig` — `simulationSpace: "local"` ring)
+  - *Healing Aura (Circle + Rect)* (`healingAuraConfig` — rising emerald-to-gold `"rect"` particles)
   - *Flame Barrier (Line Emitter)* (`firewallLineConfig` — `emitterType.line` segment with draggable endpoints)
+  - *Confetti Cannon (Spinning Rects)* (`confettiConfig` — upward polar cone with spinning `"rect"` particles)
+  - *Blood / Hit Spatter (High Drag)* (`bloodSpatterConfig` — directional polar spray with `VELOCITY_DAMPING: 4.2`)
+  - *Magic Fairy Dust (Mouse Trail)* (`magicSparklesConfig` — shrinking, fast-spinning `"rect"` sparkles)
+  - *Tesla Electric Arcs (Line Streaks)* (`electricSparksConfig` — velocity-aligned `"line"` streaks with `VELOCITY_DAMPING: 6.5`)
   - *Rain* (`rainConfig`)
   - *Snow* (`snowConfig`)
 - **Playback & Burst Toolbar**:
@@ -632,4 +657,4 @@ This section tracks all completed and planned improvements for the particle syst
 ## Live Demo & Tools
 
 - **Interactive Editor:** [Particle System Editor](../particle-system-editor.html ':ignore :target=_blank') (`src/examples/particle_system_editor/`)
-- **Live Example:** [Particle System Demo](../particles.html ':ignore :target=_blank') (`src/examples/particles/particles_example.js`) — showcases smoke (area and point emitters), rain, and snow presets.
+- **Live Example:** [Particle System Showcase](../particles.html ':ignore :target=_blank') (`src/examples/particles/particles_showcase.js`, with HTML+CSS overlay in `particles_menu.js` / `particles_ui.css`) — showcases 6 multi-emitter scenes and 18 single-emitter presets.
