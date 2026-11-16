@@ -517,7 +517,6 @@ class GOAPCombatScene extends Game {
         this.ammoCratesAvailable = true;
         this.projectiles = [];
         this.floatingTexts = [];
-        this.buttons = [];
     }
 
     Start() {
@@ -532,21 +531,14 @@ class GOAPCombatScene extends Game {
         this.gameObjects = [this.soldier];
         this.soldier.goap.Plan('Initial Combat Plan');
 
-        this.SetupButtons();
-    }
-
-    SetupButtons() {
-        const y = 510;
-        const h = 34;
-        this.buttons = [
-            { key: '1', label: '[1] Hurt Soldier (-65 HP)', x: 20,  y, w: 145, h, action: () => this.HurtSoldier() },
-            { key: '2', label: '[2] Empty Clip',            x: 173, y, w: 105, h, action: () => this.EmptyClip() },
-            { key: '3', label: '[3] Empty All Ammo',        x: 286, y, w: 125, h, action: () => this.EmptyAllAmmo() },
-            { key: '4', label: '[4] Toggle Target Cover',   x: 419, y, w: 145, h, action: () => this.ToggleTargetCover() },
-            { key: '5', label: '[5] Toggle Grenades',       x: 572, y, w: 130, h, action: () => this.ToggleGrenades() },
-            { key: '6', label: '[6] Toggle Ammo Crate',     x: 710, y, w: 140, h, action: () => this.ToggleAmmoCrates() },
-            { key: 'R', label: '[R] Reset Arena',           x: 858, y, w: 102, h, action: () => this.ResetArena() }
-        ];
+        // HTML+CSS HUD, Toolbar & Live GOAP Inspector (CombatMenu extends HTMLMenu)
+        if (!this.menu) {
+            this.menu = new CombatMenu(this, canvas);
+            this.menu.Start();
+        }
+        else {
+            this.menu.SyncState();
+        }
     }
 
     FindBestCoverForSoldier(soldierPos) {
@@ -646,16 +638,6 @@ class GOAPCombatScene extends Game {
         if (Input.IsKeyDown(KEY_6)) this.ToggleAmmoCrates();
         if (Input.IsKeyDown(KEY_R)) this.ResetArena();
 
-        if (Input.IsMouseDown()) {
-            const mx = Input.mouse.x;
-            const my = Input.mouse.y;
-            for (const btn of this.buttons) {
-                if (mx >= btn.x && mx <= btn.x + btn.w && my >= btn.y && my <= btn.y + btn.h) {
-                    btn.action();
-                }
-            }
-        }
-
         // Update visual effects
         for (let i = this.projectiles.length - 1; i >= 0; i--) {
             this.projectiles[i].timer -= dt;
@@ -668,6 +650,10 @@ class GOAPCombatScene extends Game {
             if (this.floatingTexts[i].timer <= 0)
                 this.floatingTexts.splice(i, 1);
         }
+
+        if (this.menu) {
+            this.menu.SyncState();
+        }
     }
 
     Draw() {
@@ -676,11 +662,6 @@ class GOAPCombatScene extends Game {
 
         // Background
         r.DrawFillBasicRectangle(0, 0, this.screenWidth, this.screenHeight, c.bg);
-
-        // Header bar
-        r.DrawFillBasicRectangle(0, 0, this.screenWidth, 46, c.headerBg);
-        r.DrawFillText('GOAP DEMO 2: F.E.A.R. Tactical Combat Squad (Forward State-Space A*)', 20, 20, 'bold 15px monospace', c.headerTitle, 'left', 'alphabetic');
-        r.DrawFillText(this.soldier.statusBanner, 20, 38, '11px monospace', c.headerSub, 'left', 'alphabetic');
 
         // Tactical Arena viewport
         r.DrawFillBasicRoundRectangle(20, 55, 495, 440, 6, c.arenaBg);
@@ -719,26 +700,6 @@ class GOAPCombatScene extends Game {
         for (const ft of this.floatingTexts) {
             r.DrawFillText(ft.text, ft.x, ft.y, 'bold 11px monospace', ft.color, 'center', 'alphabetic');
         }
-
-        // Soldier Equipment Bar inside Arena
-        r.DrawFillBasicRoundRectangle(28, 62, 478, 28, 4, c.hudBg);
-        r.DrawFillText(
-            `SOLDIER HP: ${this.soldier.hp}/100 | CLIP: ${this.soldier.clip}/${this.soldier.maxClip} | RESERVE: ${this.soldier.reserveAmmo} | GRENADES: ${this.soldier.grenades} | CRATE: ${this.ammoCratesAvailable ? 'READY' : 'EMPTY'}`,
-            36, 80, '11px monospace', c.landmarkText, 'left', 'alphabetic'
-        );
-
-        // Draw Interactive Sandbox Buttons
-        for (const btn of this.buttons) {
-            r.DrawFillBasicRoundRectangle(btn.x, btn.y, btn.w, btn.h, 5, c.btnBg);
-            r.DrawStrokeBasicRoundRectangle(btn.x, btn.y, btn.w, btn.h, 5, c.btnStroke, 1.5);
-            r.DrawFillText(btn.label, btn.x + btn.w / 2, btn.y + 21, '11px monospace', c.btnText, 'center', 'alphabetic');
-        }
-
-        // Draw GOAP Inspector Panel on the Right
-        DrawGOAPInspector(r, this.soldier.goap, 530, 55, {
-            width: 430,
-            title: 'GOAP TACTICAL INSPECTOR (F.E.A.R. AI)'
-        });
     }
 }
 

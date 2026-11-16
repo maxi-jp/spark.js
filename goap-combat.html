@@ -7,6 +7,7 @@
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
     <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="src/examples/goap_combat/combat_ui.css">
     <script src="src/engine/utils_math.js"></script>
     <script src="src/engine/utils_classes.js"></script>
     <script src="src/engine/renderer.js"></script>
@@ -19,11 +20,34 @@
     <script src="src/engine/game.js"></script>
     <script src="src/engine/goap.js"></script>
     <script src="src/engine/main.js"></script>
+    <script src="src/examples/goap_combat/combat_menu.js"></script>
     <script src="src/examples/goap_combat/goap_combat.js"></script>
 </head>
 <body>
     <div id="canvasContainer">
         <canvas id="canvas"></canvas>
+
+        <!-- HTML+CSS HUD, Toolbar & GOAP Inspector overlay managed via CombatMenu extends HTMLMenu -->
+        <div id="combat-ui">
+            <header id="combat-header">
+                <div class="comb-title">GOAP DEMO 2: F.E.A.R. Tactical Combat Squad (Forward State-Space A*)</div>
+                <div id="comb-status-banner">Initializing tactical plan...</div>
+            </header>
+
+            <div id="combat-equipment"></div>
+
+            <div id="combat-goap-inspector"></div>
+
+            <div id="combat-toolbar">
+                <button id="comb-btn-hurt" class="comb-btn" type="button">[1] Hurt Soldier (-65 HP)</button>
+                <button id="comb-btn-clip" class="comb-btn" type="button">[2] Empty Clip</button>
+                <button id="comb-btn-ammo" class="comb-btn" type="button">[3] Empty All Ammo</button>
+                <button id="comb-btn-cover" class="comb-btn" type="button">[4] Toggle Target Cover</button>
+                <button id="comb-btn-grenades" class="comb-btn" type="button">[5] Toggle Grenades</button>
+                <button id="comb-btn-crate" class="comb-btn" type="button">[6] Toggle Ammo Crate</button>
+                <button id="comb-btn-reset" class="comb-btn" type="button">[R] Reset Arena</button>
+            </div>
+        </div>
     </div>
 </body>
 </html>

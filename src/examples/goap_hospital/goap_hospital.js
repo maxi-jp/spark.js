@@ -70,7 +70,15 @@ class GOAPHospitalScene extends Game {
         this.pathfinder = floorplan.pathfinder;
 
         this.SpawnInitialStaffAndPatients();
-        this.BuildControlButtons();
+
+        // HTML+CSS HUD, Top Toolbar & Live GOAP Inspector (HospitalMenu extends HTMLMenu)
+        if (!this.menu) {
+            this.menu = new HospitalMenu(this, canvas);
+            this.menu.Start();
+        }
+        else {
+            this.menu.SyncState();
+        }
     }
 
     // ------------------------------------------------------------------------
@@ -327,86 +335,49 @@ class GOAPHospitalScene extends Game {
     }
 
     // ------------------------------------------------------------------------
-    // Interactive Top Toolbar & Controls
+    // Toolbar Actions & Input Handling (shared by HospitalMenu + keyboard)
     // ------------------------------------------------------------------------
-    BuildControlButtons() {
-        this.buttons = [
-            {
-                key: KEY_1,
-                x: 12, y: 10, w: 118, h: 32,
-                getLabel: () => '[1] +Patient',
-                colorHex: '#2dd4bf',
-                onClick: () => {
-                    const pt = this.SpawnPatient();
-                    if (pt) {
-                        this.selectedNPC = pt;
-                        this.SpawnFloatingText(`+${pt.ailment.name}`, pt.position.x + 24, pt.position.y - 10, pt.ailment.colorHex);
-                    }
-                }
-            },
-            {
-                key: KEY_2,
-                x: 136, y: 10, w: 148, h: 32,
-                getLabel: () => '[2] +Fracture (X-Ray)',
-                colorHex: '#fb923c',
-                onClick: () => {
-                    const pt = this.SpawnPatient(PATIENT_AILMENTS[5]); // Radius Fracture
-                    if (pt) {
-                        this.selectedNPC = pt;
-                        this.SpawnFloatingText('+Fracture (Needs X-Ray)', pt.position.x + 30, pt.position.y - 10, '#fb923c');
-                    }
-                }
-            },
-            {
-                key: KEY_3,
-                x: 290, y: 10, w: 158, h: 32,
-                getLabel: () => '[3] Coffee Surge (+WC)',
-                colorHex: '#eab308',
-                onClick: () => {
-                    const all = [...this.staffNPCs, ...this.patients];
-                    for (let i = 0; i < all.length; i++) {
-                        all[i].bladder = Math.min(98, all[i].bladder + 38);
-                    }
-                    this.SpawnFloatingText('☕ +38% Bladder to all NPCs!', 450, 340, '#facc15');
-                }
-            },
-            {
-                key: KEY_4,
-                x: 454, y: 10, w: 146, h: 32,
-                getLabel: () => {
-                    const modes = ['Paused', 'Normal', 'Rush Hour'];
-                    return `[4] Spawn: ${modes[this.autoSpawnMode]}`;
-                },
-                colorHex: '#38bdf8',
-                onClick: () => {
-                    this.autoSpawnMode = (this.autoSpawnMode + 1) % 3;
-                }
-            },
-            {
-                key: KEY_5,
-                x: 606, y: 10, w: 118, h: 32,
-                getLabel: () => '[5] Next NPC',
-                colorHex: '#c084fc',
-                onClick: () => this.CycleSelectedNPC()
-            },
-            {
-                key: KEY_6,
-                x: 730, y: 10, w: 106, h: 32,
-                getLabel: () => `[6] Paths:${this.showAllPaths ? 'ON' : 'OFF'}`,
-                colorHex: '#60a5fa',
-                onClick: () => {
-                    this.showAllPaths = !this.showAllPaths;
-                    this.showNavGrid = this.showAllPaths;
-                }
-            },
-            {
-                key: KEY_R,
-                x: 842, y: 10, w: 58, h: 32,
-                getLabel: () => '[R] Rst',
-                colorHex: '#f87171',
-                onClick: () => this.Start()
-            }
-        ];
+    ActionSpawnRandomPatient() {
+        const pt = this.SpawnPatient();
+        if (pt) {
+            this.selectedNPC = pt;
+            this.SpawnFloatingText(`+${pt.ailment.name}`, pt.position.x + 24, pt.position.y - 10, pt.ailment.colorHex);
+            if (this.menu)
+                this.menu.SyncState();
+        }
+    }
+
+    ActionSpawnFracturePatient() {
+        const pt = this.SpawnPatient(PATIENT_AILMENTS[5]); // Radius Fracture
+        if (pt) {
+            this.selectedNPC = pt;
+            this.SpawnFloatingText('+Fracture (Needs X-Ray)', pt.position.x + 30, pt.position.y - 10, '#fb923c');
+            if (this.menu)
+                this.menu.SyncState();
+        }
+    }
+
+    ActionCoffeeSurge() {
+        const all = [...this.staffNPCs, ...this.patients];
+        for (let i = 0; i < all.length; i++) {
+            all[i].bladder = Math.min(98, all[i].bladder + 38);
+        }
+        this.SpawnFloatingText('☕ +38% Bladder to all NPCs!', 450, 340, '#facc15');
+        if (this.menu)
+            this.menu.SyncGOAPInspector();
+    }
+
+    ActionCycleAutoSpawn() {
+        this.autoSpawnMode = (this.autoSpawnMode + 1) % 3;
+        if (this.menu)
+            this.menu.SyncToolbar();
+    }
+
+    ActionTogglePaths() {
+        this.showAllPaths = !this.showAllPaths;
+        this.showNavGrid = this.showAllPaths;
+        if (this.menu)
+            this.menu.SyncToolbar();
     }
 
     CycleSelectedNPC() {
@@ -415,27 +386,22 @@ class GOAPHospitalScene extends Game {
             return;
         const idx = all.indexOf(this.selectedNPC);
         this.selectedNPC = all[(idx + 1) % all.length];
+        if (this.menu)
+            this.menu.SyncGOAPInspector();
     }
 
     HandleInput() {
-        for (let i = 0; i < this.buttons.length; i++) {
-            if (Input.IsKeyDown(this.buttons[i].key)) {
-                this.buttons[i].onClick();
-            }
-        }
+        if (Input.IsKeyDown(KEY_1)) this.ActionSpawnRandomPatient();
+        if (Input.IsKeyDown(KEY_2)) this.ActionSpawnFracturePatient();
+        if (Input.IsKeyDown(KEY_3)) this.ActionCoffeeSurge();
+        if (Input.IsKeyDown(KEY_4)) this.ActionCycleAutoSpawn();
+        if (Input.IsKeyDown(KEY_5)) this.CycleSelectedNPC();
+        if (Input.IsKeyDown(KEY_6)) this.ActionTogglePaths();
+        if (Input.IsKeyDown(KEY_R)) this.Start();
 
         if (Input.IsMouseDown(0)) {
             const mx = Input.mouse.x;
             const my = Input.mouse.y;
-
-            // Check top toolbar buttons
-            for (let i = 0; i < this.buttons.length; i++) {
-                const b = this.buttons[i];
-                if (mx >= b.x && mx <= b.x + b.w && my >= b.y && my <= b.y + b.h) {
-                    b.onClick();
-                    return;
-                }
-            }
 
             // Check click on any NPC in the hospital to inspect their GOAP + FSM brain
             const allNPCs = [...this.staffNPCs, ...this.patients];
@@ -451,6 +417,8 @@ class GOAPHospitalScene extends Game {
             }
             if (closest) {
                 this.selectedNPC = closest;
+                if (this.menu)
+                    this.menu.SyncGOAPInspector();
             }
         }
     }
@@ -507,6 +475,11 @@ class GOAPHospitalScene extends Game {
                 this.floatingTexts.splice(i, 1);
             }
         }
+
+        // Sync HTMLMenu overlay (Telemetry + Live GOAP Inspector)
+        if (this.menu) {
+            this.menu.SyncState();
+        }
     }
 
     LeaveAllQueues(pt) {
@@ -526,7 +499,6 @@ class GOAPHospitalScene extends Game {
 
         // 1. Background & Hospital Floor
         r.DrawFillBasicRectangle(0, 0, this.screenWidth, this.screenHeight, Color.FromHex('#070b14'));
-        this.DrawTopToolbar(r);
         this.DrawHospitalBuilding(r);
 
         // 2. Draw all NPCs (Patients + Receptionist + Doctors)
@@ -541,19 +513,6 @@ class GOAPHospitalScene extends Game {
         for (let i = 0; i < this.floatingTexts.length; i++) {
             const ft = this.floatingTexts[i];
             r.DrawFillText(ft.text, ft.x, ft.y, 'bold 11px monospace', ft.color, 'center', 'alphabetic');
-        }
-
-        // 4. Right-Hand Sidebar: Hospital Telemetry + Live GOAP & FSM Inspector
-        this.DrawRightSidebar(r);
-    }
-
-    DrawTopToolbar(r) {
-        for (let i = 0; i < this.buttons.length; i++) {
-            const b = this.buttons[i];
-            const accent = Color.FromHex(b.colorHex);
-            r.DrawFillBasicRoundRectangle(b.x, b.y, b.w, b.h, 5, new Color(0.09, 0.13, 0.22, 0.94));
-            r.DrawStrokeBasicRoundRectangle(b.x, b.y, b.w, b.h, 5, accent, 1.4);
-            r.DrawFillText(b.getLabel(), b.x + b.w / 2, b.y + 20, 'bold 10px monospace', accent, 'center', 'alphabetic');
         }
     }
 
@@ -712,98 +671,6 @@ class GOAPHospitalScene extends Game {
                     }
                 }
             }
-        }
-    }
-
-    // ------------------------------------------------------------------------
-    // Right-Hand Sidebar: Hospital State Telemetry + Live GOAP & FSM Inspector
-    // ------------------------------------------------------------------------
-    DrawRightSidebar(r) {
-        const panelX = 910;
-        const panelW = 360;
-
-        // ── Panel 1: Hospital State & Live Telemetry (y: 10..248) ─────────
-        const statH = 236;
-        r.DrawFillBasicRoundRectangle(panelX, 10, panelW, statH, 6, new Color(0.05, 0.07, 0.12, 0.94));
-        r.DrawStrokeBasicRoundRectangle(panelX, 10, panelW, statH, 6, new Color(0.22, 0.74, 0.97, 0.45), 1.5);
-
-        r.DrawFillBasicRoundRectangle(panelX + 1, 11, panelW - 2, 26, [6, 6, 0, 0], new Color(0.12, 0.16, 0.23, 0.96));
-        r.DrawFillText('🏥 HOSPITAL STATE & TELEMETRY', panelX + 10, 28, 'bold 12px monospace', Color.FromHex('#38bdf8'), 'left', 'alphabetic');
-
-        // Global summary counters
-        r.DrawFillText(
-            `Active Pts: ${this.patients.length}/${this.maxActivePatients} | Triaged: ${this.stats.totalTriaged} | X-Rays: ${this.stats.totalXRayScans} | Discharged: ${this.stats.totalDischarged}`,
-            panelX + 10, 50, '10px monospace', Color.FromHex('#cbd5e1'), 'left', 'alphabetic'
-        );
-        r.DrawFillText(
-            `Reception Queue: ${this.receptionQueue.length} waiting | X-Ray Queue: ${this.xrayQueue.length} waiting`,
-            panelX + 10, 65, '10px monospace', Color.FromHex('#94a3b8'), 'left', 'alphabetic'
-        );
-
-        // Department Telemetry Table
-        r.DrawFillText('SECTION          QUEUE   TREATED   AVG WAIT   DOCTOR STATUS', panelX + 10, 84, 'bold 9px monospace', Color.FromHex('#64748b'), 'left', 'alphabetic');
-
-        const deptKeys = Object.keys(HOSPITAL_DEPARTMENTS);
-        let rowY = 90;
-        for (let i = 0; i < deptKeys.length; i++) {
-            const key = deptKeys[i];
-            const cfg = HOSPITAL_DEPARTMENTS[key];
-            const secStat = this.stats.sections[key];
-            const qLen = this.departmentQueues[key].length;
-            const doc = this.doctors[key];
-            const docAction = doc && doc.goap && doc.goap.GetCurrentAction()
-                ? doc.goap.GetCurrentAction().name.replace('TreatPatientAilment', 'Treating').replace('LogMedicalRecordAtPC', 'Logging PC').replace('CallNextPatientFromQueue', 'Calling Pt').replace('UseNearestRestroom', 'In Restroom').slice(0, 12)
-                : 'Standby';
-
-            r.DrawFillBasicRoundRectangle(panelX + 8, rowY, panelW - 16, 20, 3, new Color(0.11, 0.15, 0.23, 0.7));
-            r.DrawFillText(`${cfg.icon} ${cfg.shortName}`, panelX + 12, rowY + 14, 'bold 10px monospace', Color.FromHex(cfg.accentHex), 'left', 'alphabetic');
-            r.DrawFillText(`${qLen}`, panelX + 124, rowY + 14, 'bold 10px monospace', qLen > 0 ? Color.FromHex('#facc15') : Color.FromHex('#94a3b8'), 'center', 'alphabetic');
-            r.DrawFillText(`${secStat.treated}`, panelX + 174, rowY + 14, 'bold 10px monospace', Color.FromHex('#4ade80'), 'center', 'alphabetic');
-            r.DrawFillText(secStat.waitCount > 0 ? `${secStat.avgWait.toFixed(1)}s` : '—', panelX + 230, rowY + 14, '10px monospace', Color.FromHex('#e2e8f0'), 'center', 'alphabetic');
-            r.DrawFillText(docAction, panelX + panelW - 12, rowY + 14, '9px monospace', Color.FromHex('#cbd5e1'), 'right', 'alphabetic');
-            rowY += 23;
-        }
-
-        // Restroom Usage Telemetry Bar
-        rowY += 6;
-        r.DrawFillText('🚻 RESTROOM USAGE FREQUENCY:', panelX + 10, rowY + 8, 'bold 9px monospace', Color.FromHex('#7dd3fc'), 'left', 'alphabetic');
-        rowY += 13;
-
-        const rrKeys = ['west', 'north', 'south'];
-        const cellW = (panelW - 28) / 3;
-        for (let i = 0; i < rrKeys.length; i++) {
-            const rk = rrKeys[i];
-            const rStat = this.stats.restrooms[rk];
-            const rrLayout = this.layout.restrooms[i];
-            const busyCount = rrLayout.stalls.filter(s => Boolean(s.occupant)).length;
-            const bx = panelX + 8 + i * (cellW + 6);
-
-            r.DrawFillBasicRoundRectangle(bx, rowY, cellW, 32, 4, new Color(0.09, 0.14, 0.22, 0.85));
-            r.DrawStrokeBasicRoundRectangle(bx, rowY, cellW, 32, 4, busyCount > 0 ? Color.FromHex('#38bdf8') : Color.FromHex('#334155'), 1);
-            r.DrawFillText(rStat.name, bx + cellW / 2, rowY + 13, 'bold 9px monospace', Color.FromHex('#e2e8f0'), 'center', 'alphabetic');
-            r.DrawFillText(`Uses: ${rStat.uses} (${busyCount}/2 busy)`, bx + cellW / 2, rowY + 26, '9px monospace', Color.FromHex('#38bdf8'), 'center', 'alphabetic');
-        }
-
-        // ── Panel 2: Live GOAP & FSM Inspector for Selected NPC (y: 254..) ──
-        const npc = this.selectedNPC;
-        if (npc && npc.goap) {
-            const roleDetail = npc.role === 'Patient'
-                ? `Patient (${npc.ailment.name})`
-                : npc.role === 'Doctor'
-                    ? `Specialist (${HOSPITAL_DEPARTMENTS[npc.department].shortName})`
-                    : 'Reception Triage Staff';
-
-            const subtitle = `${roleDetail} | FSM: ${npc.fsm.currentStateName} | Bladder: ${Math.round(npc.bladder)}%`;
-
-            npc.goap.DrawGOAPInspector(r, panelX, 254, {
-                width: panelW,
-                title: `${npc.name} — GOAP Inspector`,
-                subtitle: subtitle,
-                compact: true,
-                showWorldState: true,
-                showGoals: true,
-                showPlan: true
-            });
         }
     }
 }

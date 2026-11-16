@@ -1,0 +1,217 @@
+/* GOAP Survival Crafter — HTMLMenu overlay styling */
+
+#canvasContainer {
+    position: relative;
+    margin: 0 auto;
+    margin-top: 20px;
+    overflow: hidden;
+}
+
+#canvasContainer canvas {
+    display: block;
+    margin: 0;
+}
+
+#survival-ui {
+    font-family: monospace;
+    text-align: left;
+    color: #f8fafc;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+#survival-ui button {
+    font-family: monospace;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+#survival-ui button:focus {
+    outline: none;
+}
+
+/* ── Top Title Banner ──────────────────────────────────────────────────── */
+#survival-header {
+    position: absolute;
+    top: 8px;
+    left: 16px;
+    width: 745px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    pointer-events: none;
+}
+
+.surv-title {
+    font: bold 16px/1.2 monospace;
+    color: #f8fafc;
+}
+
+.surv-subtitle {
+    font: 12px/1.2 monospace;
+    color: #94a3b8;
+}
+
+/* ── Survivor Vitals Card (top-left of Arena: x: 22, y: 62) ────────────── */
+#survival-vitals {
+    position: absolute;
+    top: 62px;
+    left: 22px;
+    width: 256px;
+    padding: 6px 8px;
+    box-sizing: border-box;
+    border-radius: 5px;
+    background: rgba(15, 23, 41, 0.86);
+    border: 1px solid rgba(148, 163, 184, 0.30);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    pointer-events: auto;
+}
+
+.surv-vital-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font: bold 11px/1.2 monospace;
+    color: #f8fafc;
+}
+
+.surv-bar-track {
+    width: 110px;
+    height: 11px;
+    border-radius: 3px;
+    background: #334155;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.surv-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.08s linear;
+}
+
+.surv-inv-line {
+    font: 10px/1.25 monospace;
+    color: #cbd5e1;
+    white-space: nowrap;
+}
+
+/* ── Recent Event Log (bottom-left of Arena: x: 22, y: 558) ────────────── */
+#survival-log {
+    position: absolute;
+    top: 558px;
+    left: 22px;
+    width: 430px;
+    padding: 5px 8px;
+    box-sizing: border-box;
+    border-radius: 5px;
+    background: rgba(15, 23, 41, 0.82);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    pointer-events: auto;
+}
+
+.surv-log-title {
+    font: bold 10px/1.2 monospace;
+    color: #38bdf8;
+    margin-bottom: 3px;
+}
+
+#surv-log-entries {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    font: 10px/1.25 monospace;
+    color: #e2e8f0;
+}
+
+/* ── Bottom Interactive Sandbox Toolbar (x: 16, y: 632) ────────────────── */
+#survival-toolbar {
+    position: absolute;
+    top: 632px;
+    left: 16px;
+    width: 745px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    pointer-events: auto;
+}
+
+.surv-btn {
+    height: 34px;
+    padding: 0 11px;
+    border-radius: 5px;
+    background: #1e293b;
+    border: 1.2px solid #38bdf8;
+    color: #f8fafc;
+    font: bold 11px/1 monospace;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.12s ease, transform 0.08s ease;
+}
+
+.surv-btn:hover {
+    background: #283548;
+}
+
+.surv-btn:active {
+    transform: translateY(1px);
+}
+
+#surv-btn-reset {
+    margin-left: auto;
+    border-color: #f87171;
+    color: #f87171;
+}
+
+/* ── Right-Side Sidebar (x: 775..1165, y: 14..666) ─────────────────────── */
+#survival-sidebar {
+    position: absolute;
+    top: 14px;
+    left: 775px;
+    width: 390px;
+    bottom: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: auto;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(56, 189, 248, 0.35) transparent;
+}
+
+#survival-goap-inspector {
+    flex: 0 0 auto;
+}
+
+#survival-cost-box {
+    background: rgba(13, 18, 31, 0.92);
+    border: 1.2px solid rgba(250, 204, 21, 0.40);
+    border-radius: 6px;
+    padding: 8px 10px;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+.surv-cost-title {
+    font: bold 11px/1.25 monospace;
+    color: #facc15;
+    margin-bottom: 6px;
+}
+
+.surv-cost-line {
+    font: 10px/1.45 monospace;
+    color: #cbd5e1;
+    white-space: pre;
+}
+
+.surv-cost-tip {
+    margin-top: 6px;
+    font: 10px/1.35 monospace;
+    color: #38bdf8;
+}

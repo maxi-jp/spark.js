@@ -7,6 +7,7 @@
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
     <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="src/examples/goap_hospital/hospital_ui.css">
     <script src="src/engine/utils_math.js"></script>
     <script src="src/engine/utils_classes.js"></script>
     <script src="src/engine/renderer.js"></script>
@@ -24,11 +25,47 @@
     <script src="src/examples/goap_hospital/hospital_defs.js"></script>
     <script src="src/examples/goap_hospital/hospital_npc_base.js"></script>
     <script src="src/examples/goap_hospital/hospital_agents.js"></script>
+    <script src="src/examples/goap_hospital/hospital_menu.js"></script>
     <script src="src/examples/goap_hospital/goap_hospital.js"></script>
 </head>
 <body>
     <div id="canvasContainer">
         <canvas id="canvas"></canvas>
+
+        <!-- HTML+CSS HUD, Toolbar & GOAP Inspector overlay managed via HospitalMenu extends HTMLMenu -->
+        <div id="hospital-ui">
+            <div id="hospital-toolbar">
+                <button id="hosp-btn-patient" class="hosp-btn hosp-btn-teal" type="button">[1] +Patient</button>
+                <button id="hosp-btn-fracture" class="hosp-btn hosp-btn-orange" type="button">[2] +Fracture (X-Ray)</button>
+                <button id="hosp-btn-coffee" class="hosp-btn hosp-btn-yellow" type="button">[3] Coffee Surge (+WC)</button>
+                <button id="hosp-btn-spawn" class="hosp-btn hosp-btn-sky" type="button">[4] Spawn: Normal</button>
+                <button id="hosp-btn-next-npc" class="hosp-btn hosp-btn-purple" type="button">[5] Next NPC</button>
+                <button id="hosp-btn-paths" class="hosp-btn hosp-btn-blue" type="button">[6] Paths:OFF</button>
+                <button id="hosp-btn-reset" class="hosp-btn hosp-btn-red" type="button">[R] Rst</button>
+            </div>
+
+            <aside id="hospital-sidebar">
+                <section id="hospital-telemetry-panel">
+                    <div class="hosp-panel-header">🏥 HOSPITAL STATE &amp; TELEMETRY</div>
+                    <div class="hosp-telemetry-body">
+                        <div id="hosp-summary-1" class="hosp-summary-line"></div>
+                        <div id="hosp-summary-2" class="hosp-summary-sub"></div>
+                        <div class="hosp-table-head">
+                            <span>SECTION</span>
+                            <span>QUEUE</span>
+                            <span>TREATED</span>
+                            <span>AVG WAIT</span>
+                            <span>DOCTOR STATUS</span>
+                        </div>
+                        <div id="hosp-dept-rows"></div>
+                        <div class="hosp-restroom-title">🚻 RESTROOM USAGE FREQUENCY:</div>
+                        <div id="hosp-restroom-cards"></div>
+                    </div>
+                </section>
+
+                <div id="hospital-goap-inspector"></div>
+            </aside>
+        </div>
     </div>
 </body>
 </html>

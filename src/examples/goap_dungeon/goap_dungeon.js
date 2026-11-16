@@ -410,25 +410,20 @@ class GOAPDungeonScene extends Game {
         };
         this.heistsCompleted = 0;
         this.floatingTexts = [];
-        this.buttons = [];
     }
 
     Start() {
         super.Start();
         this.ResetHeist();
-        this.SetupButtons();
-    }
 
-    SetupButtons() {
-        const y = this.screenHeight - 34 - 12;
-        const h = 34;
-        this.buttons = [
-            { label: '[1] Toggle Rusty Key (Lockpick Fallback)', x: 20,  y, w: 260, h, action: () => this.ToggleRustyKey() },
-            { label: '[2] Grant Bomb Directly',                  x: 288, y, w: 150, h, action: () => this.GrantBomb() },
-            { label: '[3] Re-Arm Laser Grid',                    x: 446, y, w: 145, h, action: () => this.ToggleLaserTrap() },
-            { label: '[4] Toggle Teleporter Shortcut',           x: 599, y, w: 195, h, action: () => this.ToggleTeleporter() },
-            { label: '[R] Reset Dungeon Heist',                  x: 802, y, w: 158, h, action: () => this.ResetHeist() }
-        ];
+        // HTML+CSS HUD, Toolbar & Live GOAP Inspector (DungeonMenu extends HTMLMenu)
+        if (!this.menu) {
+            this.menu = new DungeonMenu(this, canvas);
+            this.menu.Start();
+        }
+        else {
+            this.menu.SyncState();
+        }
     }
 
     ResetHeist() {
@@ -495,20 +490,14 @@ class GOAPDungeonScene extends Game {
         if (Input.IsKeyDown(KEY_4)) this.ToggleTeleporter();
         if (Input.IsKeyDown(KEY_R)) this.ResetHeist();
 
-        if (Input.IsMouseDown()) {
-            const mx = Input.mouse.x;
-            const my = Input.mouse.y;
-            for (const btn of this.buttons) {
-                if (mx >= btn.x && mx <= btn.x + btn.w && my >= btn.y && my <= btn.y + btn.h) {
-                    btn.action();
-                }
-            }
-        }
-
         for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
             this.floatingTexts[i].y -= 20 * dt;
             this.floatingTexts[i].timer -= dt;
             if (this.floatingTexts[i].timer <= 0) this.floatingTexts.splice(i, 1);
+        }
+
+        if (this.menu) {
+            this.menu.SyncState();
         }
     }
 
@@ -518,11 +507,6 @@ class GOAPDungeonScene extends Game {
 
         // Background
         r.DrawFillBasicRectangle(0, 0, this.screenWidth, this.screenHeight, c.bg);
-
-        // Header
-        r.DrawFillBasicRectangle(0, 0, this.screenWidth, 46, c.headerBg);
-        r.DrawFillText('GOAP DEMO 3: Multi-Room Dungeon Heist (8-Step Deep A* Dependency Chain)', 20, 20, 'bold 15px monospace', c.headerTitle, 'left', 'alphabetic');
-        r.DrawFillText(this.rogue.statusBanner, 20, 38, '11px monospace', c.headerSub, 'left', 'alphabetic');
 
         // Dungeon Floor
         r.DrawFillBasicRoundRectangle(20, 55, 495, 440, 6, c.floorBg);
@@ -625,26 +609,6 @@ class GOAPDungeonScene extends Game {
         for (const ft of this.floatingTexts) {
             r.DrawFillText(ft.text, ft.x, ft.y, 'bold 11px monospace', ft.color, 'center', 'alphabetic');
         }
-
-        // Rogue Inventory HUD inside Dungeon
-        r.DrawFillBasicRoundRectangle(28, 462, 478, 26, 4, c.hudBg);
-        r.DrawFillText(
-            `INVENTORY: RustyKey:${this.rogue.hasRustyKey ? 'YES' : 'NO'} | Bomb:${this.rogue.hasBomb ? 'YES' : 'NO'} | VaultKey:${this.rogue.hasVaultKey ? 'YES' : 'NO'} | Idol:${this.rogue.hasIdol ? 'YES' : 'NO'} | Heists:${this.heistsCompleted}`,
-            36, 479, '11px monospace', c.hudText, 'left', 'alphabetic'
-        );
-
-        // Draw Interactive Sandbox Buttons
-        for (const btn of this.buttons) {
-            r.DrawFillBasicRoundRectangle(btn.x, btn.y, btn.w, btn.h, 5, c.btnBg);
-            r.DrawStrokeBasicRoundRectangle(btn.x, btn.y, btn.w, btn.h, 5, c.btnStroke, 1.5);
-            r.DrawFillText(btn.label, btn.x + btn.w / 2, btn.y + 21, '11px monospace', c.hudText, 'center', 'alphabetic');
-        }
-
-        // Draw GOAP Inspector on the Right
-        DrawGOAPInspector(r, this.rogue.goap, 530, 55, {
-            width: 430,
-            title: 'GOAP HEIST PLANNER (8-STEP CHAIN)'
-        });
     }
 }
 

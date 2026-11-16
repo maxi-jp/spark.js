@@ -1069,6 +1069,19 @@ class GOAPAgent {
     };
 
     /**
+     * Build the compact `[Goal] ▶ Action (step/total)` debug label string.
+     * @returns {string}
+     */
+    GetDebugLabel() {
+        const goalText = this.currentGoal ? this.currentGoal.name : 'Idle';
+        const act = this.GetCurrentAction();
+        const actText = act
+            ? ` ▶ ${act.name} (${this.currentStepIndex + 1}/${this.currentPlan.length})`
+            : '';
+        return `[${goalText}]${actText}`;
+    }
+
+    /**
      * Draw a compact world-space label above the agent showing `[Goal] ▶ Action (step/total)`.
      * Renders when global `debugMode` is true (or always if `forceDraw = true`).
      *
@@ -1083,12 +1096,7 @@ class GOAPAgent {
             return;
 
         const c = GOAPAgent._debugColors;
-        const goalText = this.currentGoal ? this.currentGoal.name : 'Idle';
-        const act = this.GetCurrentAction();
-        const actText = act
-            ? ` ▶ ${act.name} (${this.currentStepIndex + 1}/${this.currentPlan.length})`
-            : '';
-        const label = `[${goalText}]${actText}`;
+        const label = this.GetDebugLabel();
         const font = 'bold 11px monospace';
 
         const w = renderer.MeasureText(label, font) + 12;
@@ -1349,6 +1357,511 @@ class GOAPAgent {
 
         return totalHeight;
     }
+
+    // ========================================================================
+    // 7. HTMLMenu / DOM Visual Debugging Tools
+    // ========================================================================
+
+    /**
+     * Resolve an HTMLMenu, CSS selector string, or HTMLElement to an HTMLElement.
+     * @param {HTMLElement|HTMLMenu|string|null} target
+     * @returns {HTMLElement|null}
+     * @private
+     */
+    static _resolveHTMLTarget(target) {
+        if (!target || typeof document === 'undefined')
+            return null;
+        if (typeof target === 'string')
+            return document.querySelector(target);
+        if (typeof HTMLMenu !== 'undefined' && target instanceof HTMLMenu)
+            return target.container || null;
+        if (target.container && target.container instanceof HTMLElement)
+            return target.container;
+        return target instanceof HTMLElement ? target : null;
+    }
+
+    /**
+     * Escape HTML special characters for safe DOM rendering.
+     * @param {*} value
+     * @returns {string}
+     * @private
+     */
+    static _escapeHTML(value) {
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    /**
+     * Inject default scoped CSS for GOAP HTML debug panels once per document.
+     * @private
+     */
+    static _ensureHTMLDebugStyles() {
+        if (typeof document === 'undefined')
+            return;
+        if (document.getElementById('spark-goap-inspector-styles'))
+            return;
+
+        const style = document.createElement('style');
+        style.id = 'spark-goap-inspector-styles';
+        style.textContent = `
+.spark-goap-debug-badge {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 4px;
+    background: rgba(10, 14, 24, 0.85);
+    border: 1px solid #facc15;
+    color: #f8fafc;
+    font: bold 11px/1.3 monospace;
+    white-space: nowrap;
+}
+.spark-goap-inspector {
+    background: rgba(13, 18, 31, 0.92);
+    border: 1.5px solid rgba(56, 189, 248, 0.45);
+    border-radius: 6px;
+    color: #f8fafc;
+    font-family: monospace;
+    font-size: 11px;
+    box-sizing: border-box;
+    overflow: hidden;
+    text-align: left;
+}
+.spark-goap-header {
+    background: rgba(31, 41, 59, 0.95);
+    padding: 7px 10px;
+    border-bottom: 1px solid rgba(56, 189, 248, 0.22);
+}
+.spark-goap-title {
+    font-size: 13px;
+    font-weight: bold;
+    color: #38bdf8;
+    line-height: 1.25;
+}
+.spark-goap-telemetry {
+    margin-top: 2px;
+    font-size: 11px;
+    color: #94a3b8;
+    line-height: 1.25;
+}
+.spark-goap-subtitle {
+    margin-top: 3px;
+    font-size: 10px;
+    color: #fef08a;
+    line-height: 1.25;
+}
+.spark-goap-body {
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.spark-goap-inspector.is-compact .spark-goap-body {
+    padding: 6px 8px;
+    gap: 6px;
+}
+.spark-goap-section-title {
+    font-size: 10px;
+    font-weight: bold;
+    color: #cbd5e1;
+    margin-bottom: 4px;
+    letter-spacing: 0.02em;
+}
+.spark-goap-facts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 3px 6px;
+}
+.spark-goap-fact-pill {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-size: 10px;
+    line-height: 1.25;
+    border: 1px solid rgba(99, 115, 140, 0.35);
+    background: rgba(99, 115, 140, 0.18);
+    min-width: 0;
+}
+.spark-goap-fact-pill.is-true {
+    background: rgba(33, 196, 94, 0.16);
+    border-color: rgba(33, 196, 94, 0.50);
+}
+.spark-goap-fact-pill.is-false {
+    background: rgba(99, 115, 140, 0.18);
+    border-color: rgba(99, 115, 140, 0.35);
+}
+.spark-goap-fact-pill.is-other {
+    background: rgba(56, 189, 248, 0.16);
+    border-color: rgba(56, 189, 248, 0.50);
+}
+.spark-goap-fact-key {
+    color: #e2e8f0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.spark-goap-fact-val {
+    font-weight: bold;
+    flex-shrink: 0;
+}
+.spark-goap-fact-pill.is-true .spark-goap-fact-val { color: #4ade80; }
+.spark-goap-fact-pill.is-false .spark-goap-fact-val { color: #94a3b8; }
+.spark-goap-fact-pill.is-other .spark-goap-fact-val { color: #38bdf8; }
+.spark-goap-list {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+.spark-goap-goal-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(31, 41, 59, 0.65);
+    border: 1px solid rgba(71, 85, 105, 0.40);
+    font-size: 11px;
+    line-height: 1.3;
+    overflow: hidden;
+}
+.spark-goap-goal-row.is-satisfied {
+    border-color: rgba(33, 196, 94, 0.45);
+}
+.spark-goap-goal-row.is-active {
+    background: rgba(250, 204, 21, 0.16);
+    border-color: #facc15;
+    border-width: 1.5px;
+}
+.spark-goap-goal-bar {
+    position: absolute;
+    top: 1px;
+    bottom: 1px;
+    left: 1px;
+    border-radius: 3px;
+    background: rgba(56, 189, 248, 0.25);
+    pointer-events: none;
+}
+.spark-goap-goal-row.is-active .spark-goap-goal-bar {
+    background: rgba(250, 204, 21, 0.35);
+}
+.spark-goap-goal-name,
+.spark-goap-goal-status {
+    position: relative;
+    z-index: 1;
+}
+.spark-goap-goal-name {
+    color: #f1f5f9;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.spark-goap-goal-row.is-active .spark-goap-goal-name {
+    color: #fef08a;
+    font-weight: bold;
+}
+.spark-goap-goal-status {
+    font-size: 10px;
+    font-weight: bold;
+    color: #94a3b8;
+    flex-shrink: 0;
+}
+.spark-goap-goal-status.is-satisfied { color: #4ade80; }
+.spark-goap-goal-status.is-active { color: #facc15; }
+.spark-goap-step-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(31, 41, 59, 0.55);
+    border: 1px solid rgba(71, 85, 105, 0.45);
+    font-size: 11px;
+    line-height: 1.3;
+    color: #cbd5e1;
+}
+.spark-goap-step-row.is-done {
+    background: rgba(23, 102, 51, 0.32);
+    border-color: rgba(74, 222, 128, 0.60);
+    color: #86efac;
+}
+.spark-goap-step-row.is-running {
+    background: rgba(161, 97, 8, 0.38);
+    border-color: #facc15;
+    border-width: 1.5px;
+    color: #fef08a;
+    font-weight: bold;
+}
+.spark-goap-step-row.is-fail {
+    background: rgba(153, 28, 28, 0.38);
+    border-color: #f87171;
+    color: #fca5a5;
+}
+.spark-goap-step-empty {
+    padding: 3px 6px;
+    border-radius: 4px;
+    background: rgba(31, 41, 59, 0.55);
+    color: #94a3b8;
+    font-style: italic;
+    font-size: 11px;
+}
+.spark-goap-step-meta {
+    font-size: 10px;
+    font-weight: normal;
+    color: #94a3b8;
+    flex-shrink: 0;
+}
+`;
+        document.head.appendChild(style);
+    }
+
+    /**
+     * Render a compact `[Goal] ▶ Action (step/total)` debug badge inside an
+     * HTMLMenu or DOM container. Respects global `debugMode` unless `forceDraw` is true.
+     *
+     * @param {HTMLElement|HTMLMenu|string} target
+     * @param {Object} [options={}]
+     * @param {string} [options.color] - CSS border color (default `#facc15`).
+     * @param {boolean} [options.forceDraw=false]
+     * @param {boolean} [options.injectStyles=true]
+     * @returns {HTMLElement|null}
+     */
+    DrawDebugHTML(target, options = {}) {
+        const el = GOAPAgent._resolveHTMLTarget(target);
+        if (!el)
+            return null;
+
+        const forceDraw = options.forceDraw === true;
+        if (!forceDraw && (typeof debugMode === 'undefined' || !debugMode)) {
+            if (el._sparkGoapDebugKey !== '__hidden__') {
+                el._sparkGoapDebugKey = '__hidden__';
+                el.innerHTML = '';
+            }
+            return el;
+        }
+
+        if (options.injectStyles !== false)
+            GOAPAgent._ensureHTMLDebugStyles();
+
+        const label = this.GetDebugLabel();
+        const borderColor = options.color instanceof Color
+            ? options.color.ToCSS()
+            : (options.color || '#facc15');
+        const key = `${label}|${borderColor}`;
+
+        if (el._sparkGoapDebugKey === key && el._sparkGoapDebugAgent === this)
+            return el;
+
+        el._sparkGoapDebugKey = key;
+        el._sparkGoapDebugAgent = this;
+        el.innerHTML = `<span class="spark-goap-debug-badge" style="border-color:${GOAPAgent._escapeHTML(borderColor)}">${GOAPAgent._escapeHTML(label)}</span>`;
+        return el;
+    }
+
+    /**
+     * Render the full GOAP Inspector HUD panel inside an HTMLMenu or DOM container.
+     * Mirrors `DrawGOAPInspector` using HTML+CSS and skips DOM updates when the
+     * serialized planner snapshot has not changed.
+     *
+     * @param {HTMLElement|HTMLMenu|string} target - Container element, CSS selector, or HTMLMenu instance.
+     * @param {Object} [options={}]
+     * @param {string} [options.title='GOAP Planner Inspector']
+     * @param {string} [options.subtitle='']
+     * @param {boolean} [options.compact=false]
+     * @param {boolean} [options.showWorldState=true]
+     * @param {boolean} [options.showGoals=true]
+     * @param {boolean} [options.showPlan=true]
+     * @param {string} [options.className='']
+     * @param {boolean} [options.injectStyles=true]
+     * @returns {HTMLElement|null}
+     */
+    DrawGOAPInspectorHTML(target, options = {}) {
+        const el = GOAPAgent._resolveHTMLTarget(target);
+        if (!el)
+            return null;
+
+        if (options.injectStyles !== false)
+            GOAPAgent._ensureHTMLDebugStyles();
+
+        const title = options.title || 'GOAP Planner Inspector';
+        const subtitle = options.subtitle || '';
+        const compact = options.compact === true;
+        const showWorldState = options.showWorldState !== false;
+        const showGoals = options.showGoals !== false;
+        const showPlan = options.showPlan !== false;
+        const extraClass = options.className ? ` ${options.className}` : '';
+
+        const costStr = this.planner.lastPlanCost.toFixed(1);
+        const stateKeys = showWorldState ? Object.keys(this.worldState.values) : [];
+        const sortedGoals = showGoals
+            ? this.goals.slice().sort((a, b) => b.lastEvaluatedPriority - a.lastEvaluatedPriority)
+            : [];
+
+        // Build snapshot key to avoid unnecessary innerHTML rebuilds at 60fps
+        const keyParts = [
+            title,
+            subtitle,
+            compact ? '1' : '0',
+            showWorldState ? '1' : '0',
+            showGoals ? '1' : '0',
+            showPlan ? '1' : '0',
+            extraClass,
+            this.planner.lastNodesExpanded,
+            costStr,
+            this.replanCount,
+            this.currentGoal ? this.currentGoal.name : '',
+            this.currentStepIndex
+        ];
+
+        if (showWorldState) {
+            for (let i = 0; i < stateKeys.length; i++) {
+                const k = stateKeys[i];
+                keyParts.push(k, String(this.worldState.values[k]));
+            }
+        }
+        if (showGoals) {
+            for (let i = 0; i < sortedGoals.length; i++) {
+                const g = sortedGoals[i];
+                keyParts.push(
+                    g.name,
+                    Math.round(g.lastEvaluatedPriority),
+                    this.currentGoal === g ? '1' : '0',
+                    g.IsSatisfied(this.worldState) ? '1' : '0'
+                );
+            }
+        }
+        if (showPlan) {
+            for (let i = 0; i < this.currentPlan.length; i++) {
+                const act = this.currentPlan[i];
+                const st = this.stepStatuses[i] || GOAPStatus.IDLE;
+                const cost = this.stepCosts[i] !== undefined ? this.stepCosts[i] : act.cost;
+                keyParts.push(act.name, st, cost.toFixed(1));
+            }
+        }
+
+        const snapshotKey = keyParts.join('|');
+        if (el._sparkGoapSnapshotKey === snapshotKey && el._sparkGoapAgent === this)
+            return el;
+
+        el._sparkGoapSnapshotKey = snapshotKey;
+        el._sparkGoapAgent = this;
+
+        const esc = GOAPAgent._escapeHTML;
+        let html = `<div class="spark-goap-inspector${compact ? ' is-compact' : ''}${esc(extraClass)}">`;
+        html += `<div class="spark-goap-header">`;
+        html += `<div class="spark-goap-title">🧠 ${esc(title)}</div>`;
+        html += `<div class="spark-goap-telemetry">A* Nodes: ${this.planner.lastNodesExpanded} | Plan Cost: ${costStr} | Replans: ${this.replanCount}</div>`;
+        if (subtitle) {
+            html += `<div class="spark-goap-subtitle">${esc(subtitle)}</div>`;
+        }
+        html += `</div>`;
+
+        html += `<div class="spark-goap-body">`;
+
+        // ── Section 1: Symbolic World State ─────────────────────────────
+        if (showWorldState) {
+            html += `<div><div class="spark-goap-section-title">WORLD STATE (FACTS)</div>`;
+            html += `<div class="spark-goap-facts-grid">`;
+            for (let i = 0; i < stateKeys.length; i++) {
+                const key = stateKeys[i];
+                const val = this.worldState.values[key];
+                const stateCls = val === true ? 'is-true' : val === false ? 'is-false' : 'is-other';
+                html += `<div class="spark-goap-fact-pill ${stateCls}" title="${esc(key)}: ${esc(val)}">`;
+                html += `<span class="spark-goap-fact-key">${esc(key)}</span>`;
+                html += `<span class="spark-goap-fact-val">${esc(val)}</span>`;
+                html += `</div>`;
+            }
+            html += `</div></div>`;
+        }
+
+        // ── Section 2: Goals Ranked by Priority ─────────────────────────
+        if (showGoals) {
+            html += `<div><div class="spark-goap-section-title">GOALS (PRIORITY &amp; SATISFACTION)</div>`;
+            html += `<div class="spark-goap-list">`;
+            for (let i = 0; i < sortedGoals.length; i++) {
+                const g = sortedGoals[i];
+                const isActive = this.currentGoal === g;
+                const isSat = g.IsSatisfied(this.worldState);
+                const prio = Math.max(0, Math.min(100, g.lastEvaluatedPriority));
+                const roundedPrio = Math.round(g.lastEvaluatedPriority);
+                const rowCls = isActive ? 'is-active' : (isSat ? 'is-satisfied' : '');
+
+                let statusCls = '';
+                let statusText = `P:${roundedPrio}`;
+                if (isSat) {
+                    statusCls = 'is-satisfied';
+                    statusText = `✔ SATISFIED (P:${roundedPrio})`;
+                }
+                else if (isActive) {
+                    statusCls = 'is-active';
+                    statusText = `ACTIVE (P:${roundedPrio})`;
+                }
+
+                html += `<div class="spark-goap-goal-row ${rowCls}">`;
+                html += `<div class="spark-goap-goal-bar" style="width:${prio.toFixed(1)}%"></div>`;
+                html += `<span class="spark-goap-goal-name">${isActive ? '▶ ' : ''}${esc(g.name)}</span>`;
+                html += `<span class="spark-goap-goal-status ${statusCls}">${esc(statusText)}</span>`;
+                html += `</div>`;
+            }
+            html += `</div></div>`;
+        }
+
+        // ── Section 3: Synthesized A* Action Plan Pipeline ──────────────
+        if (showPlan) {
+            const goalLabel = this.currentGoal ? ` → ${this.currentGoal.name}` : '';
+            html += `<div><div class="spark-goap-section-title">ACTIVE A* ACTION PLAN${esc(goalLabel)}</div>`;
+            html += `<div class="spark-goap-list">`;
+
+            if (this.currentPlan.length === 0) {
+                html += `<div class="spark-goap-step-empty">(No active plan — all valid goals satisfied)</div>`;
+            }
+            else {
+                for (let i = 0; i < this.currentPlan.length; i++) {
+                    const act = this.currentPlan[i];
+                    const st = this.stepStatuses[i] || GOAPStatus.IDLE;
+                    const cost = this.stepCosts[i] !== undefined ? this.stepCosts[i] : act.cost;
+                    const isCurrent = i === this.currentStepIndex;
+
+                    let stepCls = '';
+                    let badge = '○';
+                    if (st === GOAPStatus.SUCCESS) {
+                        stepCls = 'is-done';
+                        badge = '✔';
+                    }
+                    else if (st === GOAPStatus.RUNNING || isCurrent) {
+                        stepCls = 'is-running';
+                        badge = '⏳';
+                    }
+                    else if (st === GOAPStatus.FAILURE) {
+                        stepCls = 'is-fail';
+                        badge = '✖';
+                    }
+
+                    const effKeys = Object.keys(act.effects);
+                    const effPreview = effKeys.length > 0
+                        ? `[${effKeys[0]}:${act.effects[effKeys[0]]}] `
+                        : '';
+
+                    html += `<div class="spark-goap-step-row ${stepCls}">`;
+                    html += `<span>${i + 1}. ${badge} ${esc(act.name)}</span>`;
+                    html += `<span class="spark-goap-step-meta">${esc(effPreview)}cost:${cost.toFixed(1)}</span>`;
+                    html += `</div>`;
+                }
+            }
+            html += `</div></div>`;
+        }
+
+        html += `</div></div>`;
+        el.innerHTML = html;
+        return el;
+    }
 }
 
 /**
@@ -1365,5 +1878,47 @@ function DrawGOAPInspector(renderer, agent, x, y, options = {}) {
         return 0;
     
     return agent.DrawGOAPInspector(renderer, x, y, options);
+}
+
+/**
+ * Standalone helper to render a GOAPAgent's compact debug badge into an HTMLMenu or DOM container.
+ * @param {GOAPAgent} agent
+ * @param {HTMLElement|HTMLMenu|string} target
+ * @param {Object} [options={}]
+ * @returns {HTMLElement|null}
+ */
+function DrawDebugHTML(agent, target, options = {}) {
+    if (!agent || typeof agent.DrawDebugHTML !== 'function') {
+        const el = GOAPAgent._resolveHTMLTarget(target);
+        if (el) {
+            el._sparkGoapDebugKey = '';
+            el._sparkGoapDebugAgent = null;
+            el.innerHTML = '';
+        }
+        return null;
+    }
+
+    return agent.DrawDebugHTML(target, options);
+}
+
+/**
+ * Standalone helper to render a GOAPAgent's inspector panel into an HTMLMenu or DOM container.
+ * @param {GOAPAgent} agent
+ * @param {HTMLElement|HTMLMenu|string} target
+ * @param {Object} [options={}]
+ * @returns {HTMLElement|null}
+ */
+function DrawGOAPInspectorHTML(agent, target, options = {}) {
+    if (!agent || typeof agent.DrawGOAPInspectorHTML !== 'function') {
+        const el = GOAPAgent._resolveHTMLTarget(target);
+        if (el) {
+            el._sparkGoapSnapshotKey = '';
+            el._sparkGoapAgent = null;
+            el.innerHTML = '';
+        }
+        return null;
+    }
+
+    return agent.DrawGOAPInspectorHTML(target, options);
 }
 

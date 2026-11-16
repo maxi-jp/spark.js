@@ -7,6 +7,7 @@
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
     <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="src/examples/goap_dungeon/dungeon_ui.css">
     <script src="src/engine/utils_math.js"></script>
     <script src="src/engine/utils_classes.js"></script>
     <script src="src/engine/renderer.js"></script>
@@ -19,11 +20,32 @@
     <script src="src/engine/game.js"></script>
     <script src="src/engine/goap.js"></script>
     <script src="src/engine/main.js"></script>
+    <script src="src/examples/goap_dungeon/dungeon_menu.js"></script>
     <script src="src/examples/goap_dungeon/goap_dungeon.js"></script>
 </head>
 <body>
     <div id="canvasContainer">
         <canvas id="canvas"></canvas>
+
+        <!-- HTML+CSS HUD, Toolbar & GOAP Inspector overlay managed via DungeonMenu extends HTMLMenu -->
+        <div id="dungeon-ui">
+            <header id="dungeon-header">
+                <div class="dung-title">GOAP DEMO 3: Multi-Room Dungeon Heist (8-Step Deep A* Dependency Chain)</div>
+                <div id="dung-status-banner">Synthesizing dungeon heist plan...</div>
+            </header>
+
+            <div id="dungeon-inventory"></div>
+
+            <div id="dungeon-goap-inspector"></div>
+
+            <div id="dungeon-toolbar">
+                <button id="dung-btn-key" class="dung-btn" type="button">[1] Toggle Rusty Key (Lockpick Fallback)</button>
+                <button id="dung-btn-bomb" class="dung-btn" type="button">[2] Grant Bomb Directly</button>
+                <button id="dung-btn-laser" class="dung-btn" type="button">[3] Re-Arm Laser Grid</button>
+                <button id="dung-btn-teleporter" class="dung-btn" type="button">[4] Toggle Teleporter Shortcut</button>
+                <button id="dung-btn-reset" class="dung-btn" type="button">[R] Reset Dungeon Heist</button>
+            </div>
+        </div>
     </div>
 </body>
 </html>

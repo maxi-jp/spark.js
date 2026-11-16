@@ -1,0 +1,139 @@
+/* GOAP Tactical Combat — HTMLMenu overlay styling */
+
+#canvasContainer {
+    position: relative;
+    margin: 0 auto;
+    margin-top: 20px;
+    overflow: hidden;
+}
+
+#canvasContainer canvas {
+    display: block;
+    margin: 0;
+}
+
+#combat-ui {
+    font-family: monospace;
+    text-align: left;
+    color: #f8fafc;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+#combat-ui button {
+    font-family: monospace;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+#combat-ui button:focus {
+    outline: none;
+}
+
+/* ── Top Header Bar (y: 0..46) ─────────────────────────────────────────── */
+#combat-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 46px;
+    padding: 5px 20px;
+    box-sizing: border-box;
+    background: #111827;
+    border-bottom: 1px solid rgba(51, 65, 85, 0.7);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    pointer-events: auto;
+}
+
+.comb-title {
+    font: bold 15px/1.2 monospace;
+    color: #38bdf8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#comb-status-banner {
+    font: 11px/1.2 monospace;
+    color: #cbd5e1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ── Soldier Equipment Bar (inside top of Arena: x: 28, y: 62) ─────────── */
+#combat-equipment {
+    position: absolute;
+    top: 62px;
+    left: 28px;
+    width: 478px;
+    height: 28px;
+    padding: 0 10px;
+    box-sizing: border-box;
+    border-radius: 4px;
+    background: rgba(9, 13, 22, 0.88);
+    border: 1px solid rgba(51, 65, 85, 0.6);
+    display: flex;
+    align-items: center;
+    font: 11px/1 monospace;
+    color: #f8fafc;
+    white-space: nowrap;
+    pointer-events: auto;
+}
+
+/* ── Right-Hand GOAP Inspector (x: 530..960, y: 55..500) ───────────────── */
+#combat-goap-inspector {
+    position: absolute;
+    top: 55px;
+    left: 530px;
+    width: 430px;
+    max-height: 446px;
+    overflow-y: auto;
+    pointer-events: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(56, 189, 248, 0.35) transparent;
+}
+
+/* ── Bottom Interactive Sandbox Toolbar (y: 510, h: 34) ────────────────── */
+#combat-toolbar {
+    position: absolute;
+    top: 510px;
+    left: 20px;
+    right: 20px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    pointer-events: auto;
+}
+
+.comb-btn {
+    height: 34px;
+    padding: 0 9px;
+    border-radius: 5px;
+    background: #1e293b;
+    border: 1.5px solid #475569;
+    color: #f8fafc;
+    font: 11px/1 monospace;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.12s ease, border-color 0.12s ease, transform 0.08s ease;
+}
+
+.comb-btn:hover {
+    background: #283548;
+    border-color: #64748b;
+}
+
+.comb-btn:active {
+    transform: translateY(1px);
+}
+
+#comb-btn-reset {
+    margin-left: auto;
+}
