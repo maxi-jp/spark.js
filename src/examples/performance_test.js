@@ -5,7 +5,8 @@ class PerformanceTest extends Game {
         this.Configure({
             imageSmoothingEnabled: false,
             drawColliders: false,
-            unlockFrameRate: false
+            unlockFrameRate: false,
+            fpsCap: 0
         });
 
         this.numObjects = 1000;
@@ -13,6 +14,8 @@ class PerformanceTest extends Game {
         this._holdTimer = 0;     // time accumulator for held-key repeat
         this._holdDelay = 0.45;  // seconds before held-key repeat starts
         this._holdRate  = 0.08;  // seconds between repeat ticks
+        this._fpsCapPresets = [0, 30, 60, 120, 144, 240];
+        this._fpsCapIndex = 0;
         this.infoLabel = null;
     }
 
@@ -50,15 +53,26 @@ class PerformanceTest extends Game {
         this._updateLabel();
     }
 
-    _updateLabel() {
+    _getLabelText() {
         const rendererType = this.renderer instanceof WebGLRenderer ? "WebGL" : "2D Canvas";
-        const fpsMode = this.unlockFrameRate ? "ON" : "OFF";
-        this.infoLabel.text = `${rendererType} - ${this.numObjects} objects  [↑/↓ or wheel] [U unlock FPS: ${fpsMode}]`;
+        const syncMode = this.unlockFrameRate ? "Uncapped" : "VSync";
+        const capLabel = this.fpsCap > 0 ? `${this.fpsCap}` : "OFF";
+        return `${rendererType} - ${this.numObjects} obj [↑/↓] [U: ${syncMode}] [C cap: ${capLabel}]`;
+    }
+
+    _updateLabel() {
+        this.infoLabel.text = this._getLabelText();
     }
 
     Update(deltaTime) {
         if (Input.IsKeyDown(KEY_U)) {
             this.unlockFrameRate = !this.unlockFrameRate;
+            this._updateLabel();
+        }
+
+        if (Input.IsKeyDown(KEY_C)) {
+            this._fpsCapIndex = (this._fpsCapIndex + 1) % this._fpsCapPresets.length;
+            this.fpsCap = this._fpsCapPresets[this._fpsCapIndex];
             this._updateLabel();
         }
 
@@ -314,10 +328,8 @@ class PerformanceTestSpritesBasicTint extends PerformanceTest {
     }
 
     _updateLabel() {
-        const rendererType = this.renderer instanceof WebGLRenderer ? "WebGL" : "2D Canvas";
-        const fpsMode = this.unlockFrameRate ? "ON" : "OFF";
         const tintMode = this.tintEnabled ? "ON" : "OFF";
-        this.infoLabel.text = `${rendererType} - ${this.numObjects} objects  [↑/↓] [U unlock FPS: ${fpsMode}] [T tint: ${tintMode}]`;
+        this.infoLabel.text = `${this._getLabelText()} [T tint: ${tintMode}]`;
     }
 
     Update(deltaTime) {
