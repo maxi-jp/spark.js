@@ -66,9 +66,11 @@ An efficient object pooling system for reusing frequently created and destroyed 
 
 A configurable, image-based particle emitter that supports both **point** and **area** spawn modes. Every per-particle property — velocity, direction, opacity fade, scale, and rotation — is controlled by min/max random ranges defined in a config object. The system uses an internal object pool so no garbage is created at runtime. Includes a standalone **[Particle System Editor](../particle-system-editor.html)** to upload a particle sprite, tune parameters live on canvas, and export JSON configs. Based on the standalone [HTML5_ParticleSystem](https://github.com/maxi-jp/HTML5_ParticleSystem) project.
 
-### Tiled Map Editor Integration
+### Tileset & Tiled Map Editors
 
-Load maps directly from **Tiled Map Editor** using the `TiledLoader` utility. Define tile layers visually in Tiled, export to JSON with embedded tilesets, and instantly render them in your game. The loader handles grid-based and Collection of Images tilesets automatically. See the [Tileset example](../tileset.html) and [Tiled integration guide](./tiled-integration.md) for details.
+Build tilemaps directly in the browser with the integrated **[Tileset & Map Editor](../tileset-editor.html)** — slice a sprite sheet into tile crops (manually or via uniform grid slicing), assign per-tile gameplay metadata (`walkable`, `terrainType`, `tags`), paint multi-layer grids with random multi-tile brush support, and load the exported JSON directly via `Tileset.FromData(img, pos, scale, data)`.
+
+You can also load maps created in **Tiled Map Editor** using the `TiledLoader` utility. Define tile layers visually in Tiled, export to JSON with embedded tilesets, and instantly render them in your game. See the [Tileset example](../tileset.html) and [Tiled integration guide](./tiled-integration.md) for details.
 
 ### A* Pathfinding
 

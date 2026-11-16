@@ -124,4 +124,72 @@ class GridMap {
         grid.PopulateFromLayer(layer.data, options.walkableGids || [3]);
         return grid;
     }
+
+    /**
+     * Builds a `GridMap` from a `Tileset` instance or JSON data exported by the spark.js Tileset Editor.
+     * Uses each tile's `walkable` and `terrainType` metadata when defined.
+     * @param {Tileset|Object} tilesetOrData - A `Tileset` instance or raw Tileset Editor JSON object.
+     * @param {Object} [options={}]
+     * @returns {GridMap}
+     */
+    static FromTileset(tilesetOrData, options = {}) {
+        const isInstance = typeof Tileset !== "undefined" && tilesetOrData instanceof Tileset;
+        const parsed = isInstance
+            ? {
+                width: tilesetOrData.mapWidth || (tilesetOrData.tilesetMap[0] ? tilesetOrData.tilesetMap[0].length : 0),
+                height: tilesetOrData.mapHeight || tilesetOrData.tilesetMap.length,
+                tileWidth: tilesetOrData.tileWidth,
+                tilesetConfig: tilesetOrData.tilesetConfig,
+                layers: tilesetOrData.layers || [{ name: tilesetOrData.layerName || "Ground", data: tilesetOrData.tilesetMap }]
+            }
+            : Tileset.Parse(tilesetOrData);
+
+        const layerName = options.layerName || null;
+        const layer = layerName
+            ? parsed.layers.find((l) => l.name === layerName)
+            : parsed.layers[0];
+
+        if (!layer || !layer.data) {
+            throw new Error("GridMap.FromTileset: Could not find a valid tile layer.");
+        }
+
+        const grid = new GridMap(
+            parsed.width,
+            parsed.height,
+            options.cellSize || parsed.tileWidth || 32
+        );
+
+        const walkableSet = options.walkableGids ? new Set(options.walkableGids) : null;
+
+        for (let row = 0; row < grid.height; row++) {
+            for (let col = 0; col < grid.width; col++) {
+                const tileId = (layer.data[row] && layer.data[row][col]) || 0;
+                const tileCfg = parsed.tilesetConfig[tileId];
+
+                let terrainType = "water";
+                let walkable = false;
+
+                if (tileCfg) {
+                    if (tileCfg.terrainType) {
+                        terrainType = tileCfg.terrainType;
+                    }
+                    else if (walkableSet ? walkableSet.has(tileId) : tileCfg.walkable !== false) {
+                        terrainType = "grass";
+                    }
+                    walkable = walkableSet ? walkableSet.has(tileId) : (tileCfg.walkable !== undefined ? Boolean(tileCfg.walkable) : terrainType === "grass");
+                }
+
+                const cell = grid.GetCell(col, row);
+                if (cell) {
+                    cell.terrainType = terrainType;
+                    cell.walkable = walkable;
+                    cell.buildable = walkable;
+                    cell.occupied = false;
+                    cell.occupant = null;
+                }
+            }
+        }
+
+        return grid;
+    }
 }

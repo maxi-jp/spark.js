@@ -102,10 +102,16 @@ class Game {
         this.audioAssets = null;
 
         /**
-         * Tled's JSON assets to preload. Assign in the constructor before the engine calls `Start()`.
+         * Tiled's JSON assets to preload. Assign in the constructor before the engine calls `Start()`.
          * Format: `{ key: { path: 'path/to/map.json', data: null } }`
          */
         this.tiledAssets = null;
+
+        /**
+         * Tileset Editor JSON assets to preload. Assign in the constructor before the engine calls `Start()`.
+         * Format: `{ key: { path: 'path/to/tileset_map.json', data: null } }`
+         */
+        this.tilesetAssets = null;
 
         /** @type {Renderer} The active renderer (Canvas2D or WebGL). */
         this.renderer = renderer;

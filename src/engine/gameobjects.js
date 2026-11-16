@@ -568,28 +568,334 @@ class SSAnimationObjectComplex extends SpriteObject {
 
 /**
  * A game object that renders a tile map from a sprite sheet.
+ * Can be constructed either with explicit `(tilesetConfig, tilesetMap, tileWidth, tileHeight)` arguments
+ * or directly from a JSON object exported by the spark.js Tileset Editor (`new Tileset(img, pos, scale, jsonData)`
+ * or `Tileset.FromData(img, pos, scale, jsonData)`).
  */
 class Tileset extends GameObject {
     /**
-     * @param {HTMLImageElement} img - The tile sheet image (used only if tilesetConfig entries don't have their own image).
+     * @param {HTMLImageElement} img - The tile sheet image (used if tilesetConfig entries don't have their own image).
      * @param {Vector2} position - Top-left draw position.
      * @param {number|Vector2} scale - Scale factor applied to tiles.
-     * @param {Object.<number, {rect: {x:number, y:number, w:number, h:number}, image?: HTMLImageElement}>} tilesetConfig
-     *   - Maps tile IDs to their source rect in the sheet. For Tiled maps, each tile can have its own image reference.
-     *   - If image is omitted, the constructor's `img` parameter is used as fallback.
-     * @param {number[][]} tilesetMap - 2D array of tile IDs (0 = empty).
-     * @param {number} tileWidth - Tile width in pixels.
-     * @param {number} tileHeight - Tile height in pixels.
+     * @param {Object} tilesetConfigOrData
+     *   - Either a `tilesetConfig` map (`Object.<number, {rect: {x:number, y:number, w:number, h:number}, image?: HTMLImageElement}>`)
+     *   - Or a complete JSON object exported by the spark.js Tileset Editor (`{ tileWidth, tileHeight, tiles, map, layers }`).
+     * @param {number[][]|string|number} [tilesetMap] - 2D array of tile IDs (0 = empty), or optional layer name/index when loading from Tileset Editor JSON.
+     * @param {number} [tileWidth] - Tile cell width in pixels (when not loading from JSON).
+     * @param {number} [tileHeight] - Tile cell height in pixels (when not loading from JSON).
      */
-    constructor(img, position, scale, tilesetConfig, tilesetMap, tileWidth, tileHeight) {
+    constructor(img, position, scale, tilesetConfigOrData, tilesetMap, tileWidth, tileHeight) {
         super(position);
 
         this.sprite = new Sprite(img, position, 0, scale);
+        this.layers = null;
+        this.layerName = null;
+        this.layerOpacity = 1;
+        this.mapWidth = 0;
+        this.mapHeight = 0;
 
-        this.tilesetMap = tilesetMap; // 2D array representing the map layout
-        this.tilesetConfig = tilesetConfig; // Mapping from tile ID to {rect: {...}, image?: HTMLImageElement}
-        this.tileWidth = tileWidth;
-        this.tileHeight = tileHeight;
+        // Detect spark.js Tileset Editor JSON object (passed as 4th argument when tilesetMap is omitted or is a layer selector)
+        if (Tileset._isTilesetData(tilesetConfigOrData) && !Array.isArray(tilesetMap)) {
+            const parsed = Tileset.Parse(tilesetConfigOrData, img);
+            this.tilesetConfig = parsed.tilesetConfig;
+            this.tileWidth = parsed.tileWidth;
+            this.tileHeight = parsed.tileHeight;
+            this.mapWidth = parsed.width;
+            this.mapHeight = parsed.height;
+
+            if (tilesetMap !== undefined && tilesetMap !== null) {
+                // Specific layer requested by name or index
+                const targetLayer = typeof tilesetMap === 'number'
+                    ? parsed.layers[tilesetMap]
+                    : parsed.layers.find(l => l.name === tilesetMap);
+                const layerToUse = targetLayer || parsed.layers[0];
+                this.tilesetMap = layerToUse ? layerToUse.data : parsed.map;
+                this.layerName = layerToUse ? layerToUse.name : null;
+                this.layerOpacity = layerToUse && layerToUse.opacity !== undefined ? layerToUse.opacity : 1;
+                this.layers = layerToUse ? [layerToUse] : [];
+            }
+            else {
+                // Default: primary map array, plus all layers if multi-layer
+                this.tilesetMap = parsed.map;
+                this.layers = parsed.layers;
+                if (parsed.layers.length === 1) {
+                    this.layerName = parsed.layers[0].name;
+                    this.layerOpacity = parsed.layers[0].opacity !== undefined ? parsed.layers[0].opacity : 1;
+                }
+            }
+        }
+        else {
+            this.tilesetMap = tilesetMap || []; // 2D array representing the map layout
+            this.tilesetConfig = Tileset._normalizeConfig(tilesetConfigOrData || {});
+            this.tileWidth = tileWidth || 32;
+            this.tileHeight = tileHeight || this.tileWidth;
+            this.mapHeight = Array.isArray(this.tilesetMap) ? this.tilesetMap.length : 0;
+            this.mapWidth = (this.mapHeight > 0 && Array.isArray(this.tilesetMap[0])) ? this.tilesetMap[0].length : 0;
+        }
+    }
+
+    /**
+     * Checks if an object looks like a JSON payload exported by the spark.js Tileset Editor.
+     * @param {*} data
+     * @returns {boolean}
+     */
+    static _isTilesetData(data) {
+        if (!data || typeof data !== 'object' || Array.isArray(data)) return false;
+        return (
+            data.format === 'spark.tileset' ||
+            (typeof data.tileWidth === 'number' && (Array.isArray(data.map) || Array.isArray(data.layers))) ||
+            (data.tiles && typeof data.tiles === 'object' && (Array.isArray(data.map) || Array.isArray(data.layers)))
+        );
+    }
+
+    /**
+     * Normalizes a tilesetConfig dictionary so every entry is guaranteed to have a `.rect` `{x, y, w, h}` object.
+     * @param {Object} rawConfig
+     * @param {HTMLImageElement} [defaultImg]
+     * @returns {Object.<number, {rect: {x:number, y:number, w:number, h:number}, name?: string, walkable?: boolean, terrainType?: string, tags?: string[], image?: HTMLImageElement}>}
+     */
+    static _normalizeConfig(rawConfig, defaultImg = null) {
+        const normalized = {};
+        if (!rawConfig || typeof rawConfig !== 'object') return normalized;
+
+        for (const [key, val] of Object.entries(rawConfig)) {
+            if (!val || typeof val !== 'object') continue;
+            const src = val.rect || val;
+            if (typeof src.x !== 'number' || typeof src.y !== 'number') continue;
+            normalized[key] = {
+                ...val,
+                rect: {
+                    x: src.x,
+                    y: src.y,
+                    w: src.w ?? src.width ?? 32,
+                    h: src.h ?? src.height ?? 32
+                }
+            };
+            if (defaultImg && !normalized[key].image) {
+                normalized[key].image = defaultImg;
+            }
+        }
+        return normalized;
+    }
+
+    /**
+     * Parses a JSON object exported by the spark.js Tileset Editor into normalized engine structures.
+     * @param {Object} data - Parsed JSON from the Tileset Editor.
+     * @param {HTMLImageElement} [img=null] - Optional image reference to attach.
+     * @returns {{
+     *   width: number,
+     *   height: number,
+     *   tileWidth: number,
+     *   tileHeight: number,
+     *   tilesetConfig: Object,
+     *   map: number[][],
+     *   layers: Array<{name: string, visible: boolean, opacity: number, data: number[][]}>,
+     *   sprites: Object,
+     *   image: HTMLImageElement|null
+     * }}
+     */
+    static Parse(data, img = null) {
+        if (!data || typeof data !== 'object') {
+            throw new Error('Tileset.Parse: Invalid tileset JSON data.');
+        }
+
+        const tileWidth = Number(data.tileWidth) || 32;
+        const tileHeight = Number(data.tileHeight) || tileWidth;
+        const tilesetConfig = Tileset._normalizeConfig(data.tiles || data.tilesetConfig || {}, img);
+
+        // Normalize layers
+        const layers = [];
+        if (Array.isArray(data.layers) && data.layers.length > 0) {
+            for (const l of data.layers) {
+                if (!l || !Array.isArray(l.data)) continue;
+                layers.push({
+                    name: l.name || 'Layer',
+                    visible: l.visible !== false,
+                    opacity: l.opacity !== undefined ? Number(l.opacity) : 1,
+                    data: l.data.map(row => Array.isArray(row) ? row.slice() : [])
+                });
+            }
+        }
+
+        // Primary 2D map fallback
+        let map = [];
+        if (Array.isArray(data.map) && data.map.length > 0) {
+            map = data.map.map(row => Array.isArray(row) ? row.slice() : []);
+        }
+        else if (layers.length > 0) {
+            map = layers[0].data.map(row => row.slice());
+        }
+
+        if (layers.length === 0 && map.length > 0) {
+            layers.push({
+                name: 'Ground',
+                visible: true,
+                opacity: 1,
+                data: map
+            });
+        }
+
+        const height = Number(data.mapHeight) || Number(data.height) || map.length || 0;
+        const width = Number(data.mapWidth) || Number(data.width) || (map[0] ? map[0].length : 0);
+
+        return {
+            width,
+            height,
+            tileWidth,
+            tileHeight,
+            tilesetConfig,
+            map,
+            layers,
+            sprites: data.sprites || {},
+            image: img
+        };
+    }
+
+    /**
+     * Creates a `Tileset` instance from JSON data exported by the spark.js Tileset Editor.
+     * @param {HTMLImageElement} img - The tileset image.
+     * @param {Vector2} position - Top-left world position.
+     * @param {number|Vector2} scale - Scale factor.
+     * @param {Object} data - Parsed JSON data from the Tileset Editor.
+     * @param {string|number|null} [layerIndexOrName=null] - Optional layer name or index. If omitted, renders all visible layers.
+     * @returns {Tileset}
+     */
+    static FromData(img, position, scale, data, layerIndexOrName = null) {
+        return new Tileset(img, position, scale, data, layerIndexOrName);
+    }
+
+    /**
+     * Alias for `Tileset.FromData()`.
+     * @param {HTMLImageElement} img
+     * @param {Vector2} position
+     * @param {number|Vector2} scale
+     * @param {Object} data
+     * @param {string|number|null} [layerIndexOrName=null]
+     * @returns {Tileset}
+     */
+    static FromJSON(img, position, scale, data, layerIndexOrName = null) {
+        return new Tileset(img, position, scale, data, layerIndexOrName);
+    }
+
+    /**
+     * Creates an array of `Tileset` GameObjects (one per visible layer) from Tileset Editor JSON data.
+     * Useful when you want to insert GameObjects between specific map layers (e.g., ground vs. foreground canopy).
+     * @param {HTMLImageElement} img - The tileset image.
+     * @param {Vector2} position - Top-left world position.
+     * @param {number|Vector2} scale - Scale factor.
+     * @param {Object} data - Parsed JSON data from the Tileset Editor.
+     * @returns {Array<Tileset>}
+     */
+    static CreateLayers(img, position, scale, data) {
+        const parsed = Tileset.Parse(data, img);
+        const result = [];
+        for (let i = 0; i < parsed.layers.length; i++) {
+            const layer = parsed.layers[i];
+            if (!layer.visible) continue;
+            const ts = new Tileset(
+                img,
+                Vector2.Copy(position),
+                scale,
+                parsed.tilesetConfig,
+                layer.data,
+                parsed.tileWidth,
+                parsed.tileHeight
+            );
+            ts.layerName = layer.name;
+            ts.layerOpacity = layer.opacity;
+            ts.sprite.alpha = layer.opacity;
+            ts.mapWidth = parsed.width;
+            ts.mapHeight = parsed.height;
+            result.push(ts);
+        }
+        return result;
+    }
+
+    /**
+     * Returns the tile configuration / metadata for a given tile ID, or `null` if not found.
+     * @param {number} tileId
+     * @returns {{rect: {x:number, y:number, w:number, h:number}, name?: string, walkable?: boolean, terrainType?: string, tags?: string[]}|null}
+     */
+    GetTileConfig(tileId) {
+        return this.tilesetConfig[tileId] || null;
+    }
+
+    /**
+     * Returns the tile ID at grid coordinates `(col, row)`, or `0` if out of bounds / empty.
+     * @param {number} col
+     * @param {number} row
+     * @param {number} [layerIndex=0]
+     * @returns {number}
+     */
+    GetTileAt(col, row, layerIndex = 0) {
+        const mapData = (this.layers && this.layers[layerIndex]) ? this.layers[layerIndex].data : this.tilesetMap;
+        if (!mapData || row < 0 || row >= mapData.length) return 0;
+        const rowArr = mapData[row];
+        if (!rowArr || col < 0 || col >= rowArr.length) return 0;
+        return rowArr[col] || 0;
+    }
+
+    /**
+     * Sets the tile ID at grid coordinates `(col, row)` and marks the WebGL batch buffer dirty.
+     * @param {number} col
+     * @param {number} row
+     * @param {number} tileId
+     * @param {number} [layerIndex=0]
+     * @returns {boolean} True if coordinates were in bounds.
+     */
+    SetTileAt(col, row, tileId, layerIndex = 0) {
+        const mapData = (this.layers && this.layers[layerIndex]) ? this.layers[layerIndex].data : this.tilesetMap;
+        if (!mapData || row < 0 || row >= mapData.length) return false;
+        const rowArr = mapData[row];
+        if (!rowArr || col < 0 || col >= rowArr.length) return false;
+        rowArr[col] = tileId;
+        if (layerIndex === 0 && this.tilesetMap && this.tilesetMap[row] && this.tilesetMap !== mapData) {
+            this.tilesetMap[row][col] = tileId;
+        }
+        this._batchDirty = true;
+        return true;
+    }
+
+    /**
+     * Returns the tile configuration object at grid coordinates `(col, row)`, or `null` if empty.
+     * @param {number} col
+     * @param {number} row
+     * @param {number} [layerIndex=0]
+     * @returns {Object|null}
+     */
+    GetTilePropertiesAt(col, row, layerIndex = 0) {
+        const tileId = this.GetTileAt(col, row, layerIndex);
+        return tileId ? (this.tilesetConfig[tileId] || null) : null;
+    }
+
+    /**
+     * Checks whether the cell at `(col, row)` is walkable according to its tile metadata.
+     * @param {number} col
+     * @param {number} row
+     * @param {number} [layerIndex=0]
+     * @returns {boolean}
+     */
+    IsWalkable(col, row, layerIndex = 0) {
+        const props = this.GetTilePropertiesAt(col, row, layerIndex);
+        if (!props) return false;
+        return props.walkable !== false;
+    }
+
+    /**
+     * Returns the list of 2D arrays to render (supports single `tilesetMap` or multi-layer `layers`).
+     * @returns {Array<{data: number[][], opacity: number}>}
+     */
+    _getDrawableLayers() {
+        if (this.layers && this.layers.length > 1) {
+            const list = [];
+            for (const l of this.layers) {
+                if (l.visible !== false && Array.isArray(l.data)) {
+                    list.push({ data: l.data, opacity: l.opacity !== undefined ? l.opacity : 1 });
+                }
+            }
+            return list;
+        }
+        return [{ data: this.tilesetMap, opacity: this.layerOpacity ?? 1 }];
     }
 
     Draw(renderer) {
@@ -603,10 +909,21 @@ class Tileset extends GameObject {
     }
 
     _DrawBatchedWebGL(renderer) {
-        // Build batch buffer if not exists or map changed
-        if (!this._batchVertices || this._batchDirty) {
+        // Rebuild batch buffer if not exists, map changed, or transform changed
+        if (
+            !this._batchVertices ||
+            this._batchDirty ||
+            this._lastBatchX !== this.position.x ||
+            this._lastBatchY !== this.position.y ||
+            this._lastBatchScaleX !== this.sprite.scale.x ||
+            this._lastBatchScaleY !== this.sprite.scale.y
+        ) {
             this._buildBatchBuffer();
             this._batchDirty = false;
+            this._lastBatchX = this.position.x;
+            this._lastBatchY = this.position.y;
+            this._lastBatchScaleX = this.sprite.scale.x;
+            this._lastBatchScaleY = this.sprite.scale.y;
         }
         
         if (this._batchCount === 0) return;
@@ -626,14 +943,17 @@ class Tileset extends GameObject {
         const basePosX = this.position.x;
         const basePosY = this.position.y;
         const img = this.sprite.img;
+        const drawableLayers = this._getDrawableLayers();
         
-        // Count non-empty tiles
+        // Count non-empty tiles across all visible layers
         let tileCount = 0;
-        this.tilesetMap.forEach(row => {
-            row.forEach(tileId => {
-                if (tileId && this.tilesetConfig[tileId]) tileCount++;
+        for (const layer of drawableLayers) {
+            layer.data.forEach(row => {
+                row.forEach(tileId => {
+                    if (tileId && this.tilesetConfig[tileId]) tileCount++;
+                });
             });
-        });
+        }
         
         // Allocate buffer: 6 vertices per tile, 4 floats per vertex (x, y, u, v)
         const vertexCount = tileCount * 6;
@@ -642,61 +962,63 @@ class Tileset extends GameObject {
         
         let bufferIndex = 0;
         
-        this.tilesetMap.forEach((row, rowIndex) => {
-            row.forEach((tileId, colIndex) => {
-                if (!tileId) return;
-                
-                const tileConfig = this.tilesetConfig[tileId];
-                if (!tileConfig) return;
-                
-                const sourceRect = tileConfig.rect;
-                
-                // Calculate tile position (top-left corner)
-                const x = basePosX + (colIndex * this.tileWidth * scaleX);
-                const y = basePosY + (rowIndex * this.tileHeight * scaleY);
-                const w = sourceRect.w * scaleX;
-                const h = sourceRect.h * scaleY;
-                
-                // Texture coordinates (normalized 0-1) with half-pixel inset to prevent bleeding
-                const u0 = (sourceRect.x + 0.5) / img.width;
-                const v0 = (sourceRect.y + 0.5) / img.height;
-                const u1 = (sourceRect.x + sourceRect.w - 0.5) / img.width;
-                const v1 = (sourceRect.y + sourceRect.h - 0.5) / img.height;
-                
-                // Two triangles (6 vertices) for this tile
-                // Triangle 1: top-left, top-right, bottom-left
-                this._batchVertices[bufferIndex++] = x;
-                this._batchVertices[bufferIndex++] = y;
-                this._batchVertices[bufferIndex++] = u0;
-                this._batchVertices[bufferIndex++] = v0;
-                
-                this._batchVertices[bufferIndex++] = x + w;
-                this._batchVertices[bufferIndex++] = y;
-                this._batchVertices[bufferIndex++] = u1;
-                this._batchVertices[bufferIndex++] = v0;
-                
-                this._batchVertices[bufferIndex++] = x;
-                this._batchVertices[bufferIndex++] = y + h;
-                this._batchVertices[bufferIndex++] = u0;
-                this._batchVertices[bufferIndex++] = v1;
-                
-                // Triangle 2: bottom-left, top-right, bottom-right
-                this._batchVertices[bufferIndex++] = x;
-                this._batchVertices[bufferIndex++] = y + h;
-                this._batchVertices[bufferIndex++] = u0;
-                this._batchVertices[bufferIndex++] = v1;
-                
-                this._batchVertices[bufferIndex++] = x + w;
-                this._batchVertices[bufferIndex++] = y;
-                this._batchVertices[bufferIndex++] = u1;
-                this._batchVertices[bufferIndex++] = v0;
-                
-                this._batchVertices[bufferIndex++] = x + w;
-                this._batchVertices[bufferIndex++] = y + h;
-                this._batchVertices[bufferIndex++] = u1;
-                this._batchVertices[bufferIndex++] = v1;
+        for (const layer of drawableLayers) {
+            layer.data.forEach((row, rowIndex) => {
+                row.forEach((tileId, colIndex) => {
+                    if (!tileId) return;
+                    
+                    const tileConfig = this.tilesetConfig[tileId];
+                    if (!tileConfig) return;
+                    
+                    const sourceRect = tileConfig.rect || tileConfig;
+                    
+                    // Calculate tile position (top-left corner)
+                    const x = basePosX + (colIndex * this.tileWidth * scaleX);
+                    const y = basePosY + (rowIndex * this.tileHeight * scaleY);
+                    const w = sourceRect.w * scaleX;
+                    const h = sourceRect.h * scaleY;
+                    
+                    // Texture coordinates (normalized 0-1) with half-pixel inset to prevent bleeding
+                    const u0 = (sourceRect.x + 0.5) / img.width;
+                    const v0 = (sourceRect.y + 0.5) / img.height;
+                    const u1 = (sourceRect.x + sourceRect.w - 0.5) / img.width;
+                    const v1 = (sourceRect.y + sourceRect.h - 0.5) / img.height;
+                    
+                    // Two triangles (6 vertices) for this tile
+                    // Triangle 1: top-left, top-right, bottom-left
+                    this._batchVertices[bufferIndex++] = x;
+                    this._batchVertices[bufferIndex++] = y;
+                    this._batchVertices[bufferIndex++] = u0;
+                    this._batchVertices[bufferIndex++] = v0;
+                    
+                    this._batchVertices[bufferIndex++] = x + w;
+                    this._batchVertices[bufferIndex++] = y;
+                    this._batchVertices[bufferIndex++] = u1;
+                    this._batchVertices[bufferIndex++] = v0;
+                    
+                    this._batchVertices[bufferIndex++] = x;
+                    this._batchVertices[bufferIndex++] = y + h;
+                    this._batchVertices[bufferIndex++] = u0;
+                    this._batchVertices[bufferIndex++] = v1;
+                    
+                    // Triangle 2: bottom-left, top-right, bottom-right
+                    this._batchVertices[bufferIndex++] = x;
+                    this._batchVertices[bufferIndex++] = y + h;
+                    this._batchVertices[bufferIndex++] = u0;
+                    this._batchVertices[bufferIndex++] = v1;
+                    
+                    this._batchVertices[bufferIndex++] = x + w;
+                    this._batchVertices[bufferIndex++] = y;
+                    this._batchVertices[bufferIndex++] = u1;
+                    this._batchVertices[bufferIndex++] = v0;
+                    
+                    this._batchVertices[bufferIndex++] = x + w;
+                    this._batchVertices[bufferIndex++] = y + h;
+                    this._batchVertices[bufferIndex++] = u1;
+                    this._batchVertices[bufferIndex++] = v1;
+                });
             });
-        });
+        }
     }
 
     _DrawPerTile(renderer) {
@@ -705,31 +1027,35 @@ class Tileset extends GameObject {
         const basePosY = this.position.y;
         const scaleX = this.sprite.scale.x;
         const scaleY = this.sprite.scale.y;
+        const drawableLayers = this._getDrawableLayers();
 
-        this.tilesetMap.forEach((row, rowIndex) => {
-            row.forEach((tileId, colIndex) => {
-                // A tileId of 0 (or any other falsy value) can represent an empty tile
-                if (!tileId) {
-                    return;
-                }
+        for (const layer of drawableLayers) {
+            const alpha = this.sprite.alpha * (layer.opacity !== undefined ? layer.opacity : 1);
+            layer.data.forEach((row, rowIndex) => {
+                row.forEach((tileId, colIndex) => {
+                    // A tileId of 0 (or any other falsy value) can represent an empty tile
+                    if (!tileId) {
+                        return;
+                    }
 
-                const tileConfig = this.tilesetConfig[tileId];
-                if (!tileConfig) {
-                    return; // Skip if no configuration for this tile ID
-                }
+                    const tileConfig = this.tilesetConfig[tileId];
+                    if (!tileConfig) {
+                        return; // Skip if no configuration for this tile ID
+                    }
 
-                const sourceRect = tileConfig.rect;
-                // Use tileConfig.image if available (Tiled multi-image maps), otherwise use base sprite image
-                const tileImage = tileConfig.image || this.sprite.img;
+                    const sourceRect = tileConfig.rect || tileConfig;
+                    // Use tileConfig.image if available (Tiled multi-image maps), otherwise use base sprite image
+                    const tileImage = tileConfig.image || this.sprite.img;
 
-                // Calculate the position to draw this tile on the canvas (top-left corner).
-                const drawX = basePosX + (colIndex * this.tileWidth * scaleX);
-                const drawY = basePosY + (rowIndex * this.tileHeight * scaleY);
+                    // Calculate the position to draw this tile on the canvas (top-left corner).
+                    const drawX = basePosX + (colIndex * this.tileWidth * scaleX);
+                    const drawY = basePosY + (rowIndex * this.tileHeight * scaleY);
 
-                // Draw the tile using its assigned or fallback image
-                renderer.DrawImageSectionBasic(tileImage, drawX, drawY, sourceRect.x, sourceRect.y, sourceRect.w, sourceRect.h, scaleX, scaleY, this.sprite.alpha);
+                    // Draw the tile using its assigned or fallback image
+                    renderer.DrawImageSectionBasic(tileImage, drawX, drawY, sourceRect.x, sourceRect.y, sourceRect.w, sourceRect.h, scaleX, scaleY, alpha);
+                });
             });
-        });
+        }
     }
 }
 

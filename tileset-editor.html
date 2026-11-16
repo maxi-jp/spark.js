@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>spark.js — Tileset &amp; Map Editor</title>
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="stylesheet" href="src/examples/tileset_editor/tileset_editor.css">
+
+    <!-- Engine dependencies for 1:1 Tileset preview & parsing -->
+    <script src="src/engine/utils_math.js"></script>
+    <script src="src/engine/utils_classes.js"></script>
+    <script src="src/engine/renderer.js"></script>
+    <script src="src/engine/gameobjects.js"></script>
+</head>
+<body>
+
+    <!-- ── Top Toolbar ── -->
+    <div id="toolbar">
+        <h1>🗺️ TILESET &amp; MAP EDITOR</h1>
+        <div class="tb-sep"></div>
+
+        <!-- Image & Sample Loader -->
+        <button id="btn-load-img" class="tb-btn" title="Load a tileset / sprite-sheet PNG image">Load Image</button>
+        <input type="file" id="file-img" accept="image/*" style="display:none">
+        <select id="select-sample" class="tb-select" title="Load a built-in sample tileset and map">
+            <option value="rts">Built-in: RTS Map (rts_tileset.png)</option>
+            <option value="beach">Built-in: RPG Island (beach_tileset.png)</option>
+            <option value="blank">Blank Project</option>
+        </select>
+        <span id="tb-image-name" class="tb-label">rts_tileset.png</span>
+
+        <div class="tb-sep"></div>
+
+        <!-- Workspace View Mode -->
+        <div class="tb-btn-group" title="Switch workspace layout">
+            <button id="btn-view-split" class="tb-btn active" data-view="split">◫ Split View</button>
+            <button id="btn-view-atlas" class="tb-btn" data-view="atlas">✂️ Atlas Crops</button>
+            <button id="btn-view-map"   class="tb-btn" data-view="map">🗺️ Map Grid</button>
+        </div>
+
+        <div class="tb-sep"></div>
+
+        <!-- Map Drawing Tools -->
+        <div class="tb-btn-group" id="map-tools-group">
+            <button id="tool-brush" class="tb-btn active" data-tool="brush" title="Paint Brush (B) — Left-click/drag to paint selected tile; Right-click to erase">🖌️ Brush</button>
+            <button id="tool-erase" class="tb-btn" data-tool="erase" title="Eraser (E) — Clear cells to empty (0)">🧹 Erase</button>
+            <button id="tool-fill"  class="tb-btn" data-tool="fill"  title="Flood Fill / Bucket (G) — Fill contiguous cells of the same tile ID">🪣 Fill</button>
+            <button id="tool-rect"  class="tb-btn" data-tool="rect"  title="Rectangle Fill (R) — Drag to fill a rectangular region (hold Shift to erase rect)">⬛ Rect</button>
+            <button id="tool-pick"  class="tb-btn" data-tool="pick"  title="Eyedropper (I or Ctrl+Click) — Pick tile from map cell">💧 Pick</button>
+        </div>
+
+        <button id="btn-undo" class="tb-btn" title="Undo map edit (Ctrl+Z)" disabled>↶</button>
+        <button id="btn-redo" class="tb-btn" title="Redo map edit (Ctrl+Y)" disabled>↷</button>
+
+        <div class="tb-sep"></div>
+
+        <!-- Project Name & JSON I/O -->
+        <input id="project-name" type="text" value="rts_tileset_map" class="tb-input tb-input-wide"
+               title="Export file / config name" spellcheck="false" autocomplete="off">
+        <button id="btn-load-json"    class="tb-btn" title="Load a Tileset JSON, Sprite Atlas JSON, or Tiled Map JSON">Load JSON</button>
+        <input type="file" id="file-json" accept=".json" style="display:none">
+        <button id="btn-import-atlas" class="tb-btn" title="Import crop rectangles from a Sprite Atlas JSON file">Import Atlas</button>
+        <input type="file" id="file-atlas-json" accept=".json" style="display:none">
+        <button id="btn-copy-js"      class="tb-btn" title="Copy spark.js Tileset usage snippet to clipboard">Copy JS</button>
+        <button id="btn-export-atlas" class="tb-btn" title="Export only the crop rectangles as a Sprite Atlas JSON">Export Atlas ↓</button>
+        <button id="btn-export"       class="tb-btn primary" title="Download complete Tileset + Map JSON for spark.js Tileset class">Export JSON ↓</button>
+    </div>
+
+    <!-- ── Main Content ── -->
+    <div id="main">
+
+        <!-- Dual / Split Workspace -->
+        <div id="workspace" class="view-split">
+
+            <!-- 1. LEFT PANE: Atlas / Sprite-Sheet Cropper -->
+            <div id="atlas-pane" class="editor-pane">
+                <div class="pane-header">
+                    <div class="ph-group">
+                        <span class="pane-title">✂️ ATLAS CROPS</span>
+                        <button id="btn-atlas-zoom-out" class="mini-btn" title="Zoom out to previous preset">−</button>
+                        <span id="atlas-zoom-display" class="zoom-badge" title="Click to reset zoom to 100%" style="cursor:pointer">100%</span>
+                        <button id="btn-atlas-zoom-in"  class="mini-btn" title="Zoom in to next preset">+</button>
+                        <button id="btn-atlas-fit"      class="mini-btn" title="Fit image to pane">Fit</button>
+                    </div>
+
+                    <div class="ph-group">
+                        <label class="ph-check" title="Snap crop rectangles to pixel grid">
+                            <input id="atlas-snap-check" type="checkbox" checked> Snap
+                        </label>
+                        <input id="atlas-grid-size" type="number" value="32" min="1" max="512" class="mini-input" title="Snap grid size (px)">
+                        <span class="tb-label">px</span>
+                    </div>
+
+                    <div class="ph-group">
+                        <span class="tb-label" title="Auto-slice uniform grid of tiles">Slice:</span>
+                        <input id="slice-w" type="number" value="32" min="1" max="512" class="mini-input" title="Tile Width (px)">
+                        <span class="tb-label">×</span>
+                        <input id="slice-h" type="number" value="32" min="1" max="512" class="mini-input" title="Tile Height (px)">
+                        <span class="tb-label" title="Margin / Spacing (px)">M/S</span>
+                        <input id="slice-margin"  type="number" value="0" min="0" max="128" class="mini-input mini-narrow" title="Margin (px)">
+                        <input id="slice-spacing" type="number" value="0" min="0" max="128" class="mini-input mini-narrow" title="Spacing (px)">
+                        <label class="ph-check" title="Skip completely transparent grid cells when slicing">
+                            <input id="slice-skip-empty" type="checkbox"> Skip Empty
+                        </label>
+                        <button id="btn-slice-grid" class="mini-btn accent" title="Auto-generate crop rectangles from grid">⚡ Slice Grid</button>
+                        <button id="btn-clear-crops" class="mini-btn danger" title="Remove all crop rectangles">Clear</button>
+                    </div>
+                </div>
+
+                <div id="atlas-canvas-wrap" class="canvas-wrap">
+                    <canvas id="atlas-canvas"></canvas>
+                    <div id="atlas-drop-hint" class="drop-hint" style="display:none">
+                        <span class="dh-icon">🖼</span>
+                        <p>Drop a tileset image here, or click <strong>Load Image</strong></p>
+                        <p style="font-size:11px;opacity:.65">Drag on the image to create crop rectangles, or use <strong>⚡ Slice Grid</strong></p>
+                    </div>
+                    <div id="atlas-coord-bar" class="coord-bar"></div>
+                </div>
+            </div>
+
+            <!-- Resizable Divider -->
+            <div id="pane-resizer" title="Drag to resize Split View"></div>
+
+            <!-- 2. RIGHT/CENTER PANE: Map Grid Builder -->
+            <div id="map-pane" class="editor-pane">
+                <div class="pane-header">
+                    <div class="ph-group">
+                        <span class="pane-title">🗺️ MAP GRID</span>
+                        <button id="btn-map-zoom-out" class="mini-btn" title="Zoom out to previous preset">−</button>
+                        <span id="map-zoom-display" class="zoom-badge" title="Click to reset zoom to 100%" style="cursor:pointer">100%</span>
+                        <button id="btn-map-zoom-in"  class="mini-btn" title="Zoom in to next preset">+</button>
+                        <button id="btn-map-fit"      class="mini-btn" title="Fit map to pane">Fit</button>
+                    </div>
+
+                    <div class="ph-group">
+                        <span class="tb-label">Grid:</span>
+                        <input id="map-cols" type="number" value="32" min="1" max="512" class="mini-input" title="Map width in columns">
+                        <span class="tb-label">×</span>
+                        <input id="map-rows" type="number" value="32" min="1" max="512" class="mini-input" title="Map height in rows">
+                        <span class="tb-label">Cell:</span>
+                        <input id="tile-w" type="number" value="32" min="1" max="512" class="mini-input" title="Cell width in pixels">
+                        <span class="tb-label">×</span>
+                        <input id="tile-h" type="number" value="32" min="1" max="512" class="mini-input" title="Cell height in pixels">
+                        <button id="btn-apply-map-size" class="mini-btn accent" title="Apply map dimensions and cell size (preserves existing tiles)">Apply</button>
+                    </div>
+
+                    <div class="ph-group">
+                        <label class="ph-check" title="Show cell grid lines">
+                            <input id="chk-map-grid" type="checkbox" checked> Grid
+                        </label>
+                        <label class="ph-check" title="Show walkable / terrainType debug overlay (like RTS GridMap)">
+                            <input id="chk-terrain-overlay" type="checkbox"> Terrain Info
+                        </label>
+                        <label class="ph-check" title="Render map using spark.js Tileset class directly">
+                            <input id="chk-engine-preview" type="checkbox" checked> Engine Render
+                        </label>
+                        <button id="btn-fill-layer"  class="mini-btn" title="Fill entire active layer with the currently selected tile">Fill All</button>
+                        <button id="btn-clear-layer" class="mini-btn danger" title="Clear all tiles on the active layer">Clear Layer</button>
+                    </div>
+                </div>
+
+                <div id="map-canvas-wrap" class="canvas-wrap">
+                    <canvas id="map-canvas"></canvas>
+                    <div id="map-coord-bar" class="coord-bar"></div>
+                </div>
+            </div>
+
+        </div><!-- /workspace -->
+
+        <!-- ── Right Side Panel ── -->
+        <div id="side-panel">
+
+            <!-- 1. Selected / New Tile Crop Inspector -->
+            <div class="panel-section">
+                <div class="panel-header-row">
+                    <div class="panel-title">Tile Crop Inspector</div>
+                    <button id="btn-new-crop" class="mini-btn accent" title="Add a new crop rect using current Tile W × Tile H">+ New Crop</button>
+                </div>
+
+                <div id="selected-tile-panel">
+                    <div class="sel-top-row">
+                        <div class="sel-thumb-box" title="Selected tile crop preview">
+                            <canvas id="sel-thumb-canvas" width="48" height="48"></canvas>
+                        </div>
+                        <div class="sel-meta-col">
+                            <div class="sel-id-row">
+                                <span id="sel-id-badge" class="id-badge" title="Click to change this tile's numeric ID" style="cursor:pointer">#1</span>
+                                <input id="sel-name" type="text" placeholder="tile_name" spellcheck="false" autocomplete="off" title="Tile / sprite name">
+                            </div>
+                            <div class="sel-actions-row">
+                                <button id="btn-dup-tile" class="mini-btn" title="Duplicate this tile crop">Duplicate</button>
+                                <button id="btn-del-tile" class="mini-btn danger" title="Delete this tile crop (Del)">Delete ✕</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Source rectangle coordinates -->
+                    <div class="coord-grid4">
+                        <div class="coord-field">
+                            <label for="sel-x">X</label>
+                            <input id="sel-x" type="number" min="0">
+                        </div>
+                        <div class="coord-field">
+                            <label for="sel-y">Y</label>
+                            <input id="sel-y" type="number" min="0">
+                        </div>
+                        <div class="coord-field">
+                            <label for="sel-w">W</label>
+                            <input id="sel-w" type="number" min="1">
+                        </div>
+                        <div class="coord-field">
+                            <label for="sel-h">H</label>
+                            <input id="sel-h" type="number" min="1">
+                        </div>
+                    </div>
+
+                    <!-- Gameplay / RTS Metadata -->
+                    <div class="meta-grid">
+                        <label class="ph-check meta-walkable" title="Whether units can walk/build on this tile (used by Tileset.IsWalkable and RTS GridMap)">
+                            <input id="sel-walkable" type="checkbox" checked>
+                            <span>Walkable</span>
+                        </label>
+                        <div class="meta-terrain">
+                            <label for="sel-terrain">Terrain</label>
+                            <select id="sel-terrain" title="Terrain type identifier (e.g. grass, shore, water)">
+                                <option value="grass">grass</option>
+                                <option value="shore">shore</option>
+                                <option value="water">water</option>
+                                <option value="road">road</option>
+                                <option value="dirt">dirt</option>
+                                <option value="sand">sand</option>
+                                <option value="wall">wall</option>
+                                <option value="cliff">cliff</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="tags-row">
+                        <label for="sel-tags">Tags</label>
+                        <input id="sel-tags" type="text" placeholder="e.g. buildable, ground" spellcheck="false" autocomplete="off" title="Comma-separated custom tags">
+                    </div>
+                </div>
+
+                <div id="no-tile-selected" class="empty-msg" style="display:none;padding:10px 4px">
+                    Eraser (Tile 0) active — click a tile below or drag on the Atlas image to create a crop.
+                </div>
+            </div>
+
+            <!-- 2. Map Layers -->
+            <div class="panel-section">
+                <div class="panel-header-row">
+                    <div class="panel-title">Map Layers</div>
+                    <div style="display:flex;gap:4px">
+                        <button id="btn-add-layer" class="mini-btn accent" title="Add a new tile layer">+ Layer</button>
+                        <button id="btn-dup-layer" class="mini-btn" title="Duplicate active layer">Dup</button>
+                    </div>
+                </div>
+                <div id="layer-list"></div>
+            </div>
+
+            <!-- 3. Tile Palette -->
+            <div class="panel-section palette-header-section">
+                <div class="panel-header-row" style="margin-bottom:6px">
+                    <div class="panel-title">Tile Palette (<span id="tile-count-label">0</span>)</div>
+                    <div style="display:flex;gap:4px">
+                        <button id="btn-palette-select-all" class="mini-btn" title="Select all visible tiles for bulk editing (Ctrl+A)">Select All</button>
+                        <button id="btn-palette-grid" class="mini-btn active" title="Grid thumbnail view">▦ Grid</button>
+                        <button id="btn-palette-list" class="mini-btn" title="Detailed list view">☰ List</button>
+                    </div>
+                </div>
+                <input id="palette-filter" type="text" placeholder="Filter tiles by name, ID, or terrain... (Ctrl/Shift+Click to multi-select)" spellcheck="false" autocomplete="off">
+            </div>
+
+            <div id="palette-wrap" class="palette-grid-mode"></div>
+
+            <!-- Shortcut Footer -->
+            <div id="shortcuts-bar">
+                <span><b>Drag Atlas</b>: New crop</span>
+                <span><b>B/E/G/R/I</b>: Tools</span>
+                <span><b>Right-Click</b>: Erase</span>
+                <span><b>Alt+Drag</b>: Pan</span>
+                <span><b>Ctrl+Z/Y</b>: Undo/Redo</span>
+            </div>
+
+        </div><!-- /side-panel -->
+
+    </div><!-- /main -->
+
+    <!-- Global drag-and-drop overlay -->
+    <div id="drop-overlay">
+        <span class="dh-icon">🗺️</span>
+        <p>Drop a <strong>PNG image</strong> or a <strong>.json</strong> file (Tileset, Sprite Atlas, or Tiled Map)</p>
+    </div>
+
+    <script src="src/examples/tileset_editor/tileset_editor.js"></script>
+</body>
+</html>

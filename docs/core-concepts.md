@@ -64,7 +64,7 @@ class MyGame extends Game {
 
 ### Asset loading
 
-`graphicAssets` and `audioAssets` are plain objects declared in the constructor. `main.js` reads both, loads every entry, and only calls `Start()` once all assets are resolved.
+`graphicAssets`, `audioAssets`, `tilesetAssets`, and `tiledAssets` are plain objects declared in the constructor. `main.js` reads them, loads every entry, and only calls `Start()` once all assets are resolved.
 
 ```javascript
 this.graphicAssets = {
@@ -76,9 +76,13 @@ this.audioAssets = {
     bgm:      { path: "assets/music.m4a",  audio: null },
     sfx_jump: { path: "assets/jump.wav",   audio: null },
 };
+
+this.tilesetAssets = {
+    levelMap: { path: "assets/level_map.json", data: null },
+};
 ```
 
-After loading, `img` / `audio` are populated and accessible anywhere as `this.graphicAssets.player.img`.
+After loading, `img`, `audio`, and `data` are populated and accessible anywhere as `this.graphicAssets.player.img` or `this.tilesetAssets.levelMap.data`.
 
 #### Color-key transparency
 
@@ -261,12 +265,58 @@ Override these in your subclass to inject logic:
 | `SpriteSectionObject` | `(position, rotation, scale, img, sectionRect, alpha)` | A rectangular section of a sprite sheet or image (cropped region) |
 | `SSAnimationObjectBasic` | `(position, rotation, scale, img, frameWidth, frameHeight, frameCount[], framesDuration)` | Regular grid sprite-sheet (all frames same size) |
 | `SSAnimationObjectComplex` | `(position, rotation, scale, img, animationsRectangles[][], framesDurations[])` | Packed-atlas sprite-sheet (arbitrary frame rects per animation) |
-| `Tileset` | `(img, position, scale, tilesetConfig, tilesetMap, tileWidth, tileHeight)` | Tile-map rendering. `img` is a fallback image; `tilesetConfig` tiles can optionally include their own `image` reference (for Tiled multi-image maps) |
+| `Tileset` | `(img, position, scale, tilesetConfigOrData, tilesetMap, tileWidth, tileHeight)` | Tile-map rendering. Supports manual `(tilesetConfig, tilesetMap, tileWidth, tileHeight)` or direct loading of JSON exported by the [Tileset & Map Editor](../tileset-editor.html) via `new Tileset(img, pos, scale, data)` / `Tileset.FromData(img, pos, scale, data)` |
 | `GameObjectsBackgroundLayer` | `(position, gameObjects[], speed)` | A parallax background layer that manages a group of game objects and updates their positions with the camera |
 
 **Tileset notes:**
-- **Single-image maps** (traditional): Pass `img` with the tile sheet; each `tilesetConfig[id]` contains only `{rect: {x, y, w, h}}`
+- **Tileset & Map Editor JSON**: Preload your exported JSON via `this.tilesetAssets = { level: { path: "assets/level.json", data: null } }` in your `Game` constructor, then instantiate with `Tileset.FromData(img, position, scale, this.tilesetAssets.level.data)` (or `Tileset.CreateLayers(img, position, scale, data)` to get an array of `Tileset` objects, one per visible layer). Query tile metadata at runtime with `tileset.GetTileAt(col, row)`, `tileset.SetTileAt(col, row, id)`, `tileset.GetTilePropertiesAt(col, row)`, and `tileset.IsWalkable(col, row)`.
+- **Single-image maps** (traditional): Pass `img` with the tile sheet; each `tilesetConfig[id]` contains `{rect: {x, y, w, h}}`
 - **Multi-image maps** (Tiled): Each `tilesetConfig[id]` can include `{rect: {...}, image: HTMLImageElement}` to reference a different image per tile
+
+#### Example: Using the Tileset & Map Editor
+
+Open the [Tileset & Map Editor](../tileset-editor.html ':ignore :target=_blank') to slice a tileset image (manually by dragging crop rectangles or automatically via **⚡ Slice Grid**), configure tile properties (`walkable`, `terrainType`, `tags`), paint single- or multi-layer maps, and export a `.json` file.
+
+Preload the image in `this.graphicAssets` and the exported JSON in `this.tilesetAssets`, then instantiate `Tileset` in `Start()`:
+
+```javascript
+class MyTilemapGame extends Game {
+    constructor(renderer) {
+        super(renderer);
+
+        this.Configure({
+            screenWidth: 1024,
+            screenHeight: 768,
+            imageSmoothingEnabled: false
+        });
+
+        this.graphicAssets = {
+            tileset: { path: "assets/rts_tileset.png", img: null }
+        };
+
+        this.tilesetAssets = {
+            levelMap: { path: "assets/rts_map.json", data: null }
+        };
+    }
+
+    Start() {
+        super.Start();
+
+        // Create and add the Tileset directly from the exported JSON data
+        this.tileset = this.AddGameObject(
+            Tileset.FromData(
+                this.graphicAssets.tileset.img,
+                Vector2.Zero(),
+                1,
+                this.tilesetAssets.levelMap.data
+            )
+        );
+
+        // Query tile metadata at runtime (e.g., walkability or terrainType)
+        console.log("Cell (8, 8) walkable:", this.tileset.IsWalkable(8, 8));
+    }
+}
+```
 
 ### Minimal example
 

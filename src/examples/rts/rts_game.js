@@ -14,7 +14,11 @@ class RTSGame extends Game {
 
         // Map and tileset assets (paths relative to HTML file location)
         this.tiledAssets = {
-            map: { path: "src/examples/rts/assets/rts_map.json", data: null }
+            map: { path: "src/examples/rts/assets/rts_map_tiled.json", data: null }
+        };
+
+        this.tilesetAssets = {
+            levelMap: { path: "src/examples/rts/assets/rts_map.json", data: null }
         };
 
         this.graphicAssets = {

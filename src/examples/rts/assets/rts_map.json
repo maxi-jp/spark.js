@@ -1,72 +1,9647 @@
-{ "compressionlevel":-1,
- "height":32,
- "infinite":false,
- "layers":[
-        {
-         "data":[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1,
-                 1, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 1, 1,
-                 1, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 1, 1,
-                 1, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 1, 1,
-                 1, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 1, 1,
-                 1, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 1, 1,
-                 1, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 1, 1,
-                 1, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 1, 1,
-                 1, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 1, 1,
-                 1, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 1, 1,
-                 1, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 1, 1,
-                 1, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 1, 1,
-                 1, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 1, 1,
-                 1, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 1, 1,
-                 1, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 1, 1,
-                 1, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 1, 1,
-                 1, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 1, 1,
-                 1, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 1, 1,
-                 1, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 1, 1,
-                 1, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 1, 1,
-                 1, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 1, 1,
-                 1, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 1, 1,
-                 1, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 1, 1,
-                 1, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 1, 1,
-                 1, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 1, 1,
-                 1, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 1, 1,
-                 1, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 1, 1,
-                 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1,
-                 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-         "height":32,
-         "id":1,
-         "name":"Ground",
-         "opacity":1,
-         "type":"tilelayer",
-         "visible":true,
-         "width":32,
-         "x":0,
-         "y":0
-        }],
- "nextlayerid":2,
- "nextobjectid":1,
- "orientation":"orthogonal",
- "renderorder":"right-down",
- "tiledversion":"1.11.0",
- "tileheight":32,
- "tilesets":[
-        {
-         "columns":8,
-         "firstgid":1,
-         "image":"rts_tileset.png",
-         "imageheight":352,
-         "imagewidth":256,
-         "margin":0,
-         "name":"rts_tileset",
-         "spacing":0,
-         "tilecount":88,
-         "tileheight":32,
-         "tilewidth":32
-        }],
- "tilewidth":32,
- "type":"map",
- "version":"1.10",
- "width":32
+{
+  "format": "spark.tileset",
+  "version": 1,
+  "name": "rts_map",
+  "image": "rts_tileset.png",
+  "tileWidth": 16,
+  "tileHeight": 16,
+  "mapWidth": 32,
+  "mapHeight": 32,
+  "tiles": {
+    "1": {
+      "id": 1,
+      "name": "tile_1",
+      "x": 16,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 16,
+        "y": 16,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "2": {
+      "id": 2,
+      "name": "tile_2",
+      "x": 32,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 32,
+        "y": 16,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "3": {
+      "id": 3,
+      "name": "tile_3",
+      "x": 48,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 48,
+        "y": 16,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "4": {
+      "id": 4,
+      "name": "tile_4",
+      "x": 64,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 64,
+        "y": 16,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "5": {
+      "id": 5,
+      "name": "tile_5",
+      "x": 80,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 80,
+        "y": 16,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "6": {
+      "id": 6,
+      "name": "tile_6",
+      "x": 96,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 96,
+        "y": 16,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "7": {
+      "id": 7,
+      "name": "tile_7",
+      "x": 112,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 112,
+        "y": 16,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "8": {
+      "id": 8,
+      "name": "tile_8",
+      "x": 160,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 160,
+        "y": 16,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "9": {
+      "id": 9,
+      "name": "tile_9",
+      "x": 176,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 176,
+        "y": 16,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "10": {
+      "id": 10,
+      "name": "tile_10",
+      "x": 192,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 192,
+        "y": 16,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "11": {
+      "id": 11,
+      "name": "tile_11",
+      "x": 208,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 208,
+        "y": 16,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "12": {
+      "id": 12,
+      "name": "tile_12",
+      "x": 224,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 224,
+        "y": 16,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "13": {
+      "id": 13,
+      "name": "tile_13",
+      "x": 240,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 240,
+        "y": 16,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "14": {
+      "id": 14,
+      "name": "tile_14",
+      "x": 256,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 256,
+        "y": 16,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "15": {
+      "id": 15,
+      "name": "tile_15",
+      "x": 304,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 304,
+        "y": 16,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "16": {
+      "id": 16,
+      "name": "tile_16",
+      "x": 320,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 320,
+        "y": 16,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "17": {
+      "id": 17,
+      "name": "tile_17",
+      "x": 336,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 336,
+        "y": 16,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "18": {
+      "id": 18,
+      "name": "tile_18",
+      "x": 352,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 352,
+        "y": 16,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "19": {
+      "id": 19,
+      "name": "tile_19",
+      "x": 368,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 368,
+        "y": 16,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "20": {
+      "id": 20,
+      "name": "tile_20",
+      "x": 384,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 384,
+        "y": 16,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "21": {
+      "id": 21,
+      "name": "tile_21",
+      "x": 400,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 400,
+        "y": 16,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "22": {
+      "id": 22,
+      "name": "tile_22",
+      "x": 448,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 448,
+        "y": 16,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "23": {
+      "id": 23,
+      "name": "tile_23",
+      "x": 464,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 464,
+        "y": 16,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "24": {
+      "id": 24,
+      "name": "tile_24",
+      "x": 480,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 480,
+        "y": 16,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "25": {
+      "id": 25,
+      "name": "tile_25",
+      "x": 496,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 496,
+        "y": 16,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "26": {
+      "id": 26,
+      "name": "tile_26",
+      "x": 512,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 512,
+        "y": 16,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "27": {
+      "id": 27,
+      "name": "tile_27",
+      "x": 528,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 528,
+        "y": 16,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "28": {
+      "id": 28,
+      "name": "tile_28",
+      "x": 544,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 544,
+        "y": 16,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "29": {
+      "id": 29,
+      "name": "tile_29",
+      "x": 16,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 16,
+        "y": 32,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "30": {
+      "id": 30,
+      "name": "tile_30",
+      "x": 48,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 48,
+        "y": 32,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "31": {
+      "id": 31,
+      "name": "tile_31",
+      "x": 64,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 64,
+        "y": 32,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "32": {
+      "id": 32,
+      "name": "tile_32",
+      "x": 80,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 80,
+        "y": 32,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "33": {
+      "id": 33,
+      "name": "tile_33",
+      "x": 112,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 112,
+        "y": 32,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "34": {
+      "id": 34,
+      "name": "tile_34",
+      "x": 160,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 160,
+        "y": 32,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "35": {
+      "id": 35,
+      "name": "tile_35",
+      "x": 192,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 192,
+        "y": 32,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "36": {
+      "id": 36,
+      "name": "tile_36",
+      "x": 208,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 208,
+        "y": 32,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "37": {
+      "id": 37,
+      "name": "tile_37",
+      "x": 224,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 224,
+        "y": 32,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "38": {
+      "id": 38,
+      "name": "tile_38",
+      "x": 256,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 256,
+        "y": 32,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "39": {
+      "id": 39,
+      "name": "tile_39",
+      "x": 304,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 304,
+        "y": 32,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "40": {
+      "id": 40,
+      "name": "tile_40",
+      "x": 336,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 336,
+        "y": 32,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "41": {
+      "id": 41,
+      "name": "tile_41",
+      "x": 352,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 352,
+        "y": 32,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "42": {
+      "id": 42,
+      "name": "tile_42",
+      "x": 368,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 368,
+        "y": 32,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "43": {
+      "id": 43,
+      "name": "tile_43",
+      "x": 400,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 400,
+        "y": 32,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "44": {
+      "id": 44,
+      "name": "tile_44",
+      "x": 448,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 448,
+        "y": 32,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "45": {
+      "id": 45,
+      "name": "tile_45",
+      "x": 480,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 480,
+        "y": 32,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "46": {
+      "id": 46,
+      "name": "tile_46",
+      "x": 496,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 496,
+        "y": 32,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "47": {
+      "id": 47,
+      "name": "tile_47",
+      "x": 512,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 512,
+        "y": 32,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "48": {
+      "id": 48,
+      "name": "tile_48",
+      "x": 544,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 544,
+        "y": 32,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "49": {
+      "id": 49,
+      "name": "tile_49",
+      "x": 16,
+      "y": 48,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 16,
+        "y": 48,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "50": {
+      "id": 50,
+      "name": "tile_50",
+      "x": 32,
+      "y": 48,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 32,
+        "y": 48,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "51": {
+      "id": 51,
+      "name": "tile_51",
+      "x": 96,
+      "y": 48,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 96,
+        "y": 48,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "52": {
+      "id": 52,
+      "name": "tile_52",
+      "x": 112,
+      "y": 48,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 112,
+        "y": 48,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "53": {
+      "id": 53,
+      "name": "tile_53",
+      "x": 160,
+      "y": 48,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 160,
+        "y": 48,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "54": {
+      "id": 54,
+      "name": "tile_54",
+      "x": 176,
+      "y": 48,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 176,
+        "y": 48,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "55": {
+      "id": 55,
+      "name": "tile_55",
+      "x": 240,
+      "y": 48,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 240,
+        "y": 48,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "56": {
+      "id": 56,
+      "name": "tile_56",
+      "x": 256,
+      "y": 48,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 256,
+        "y": 48,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "57": {
+      "id": 57,
+      "name": "tile_57",
+      "x": 304,
+      "y": 48,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 304,
+        "y": 48,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "58": {
+      "id": 58,
+      "name": "tile_58",
+      "x": 320,
+      "y": 48,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 320,
+        "y": 48,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "59": {
+      "id": 59,
+      "name": "tile_59",
+      "x": 384,
+      "y": 48,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 384,
+        "y": 48,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "60": {
+      "id": 60,
+      "name": "tile_60",
+      "x": 400,
+      "y": 48,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 400,
+        "y": 48,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "61": {
+      "id": 61,
+      "name": "tile_61",
+      "x": 448,
+      "y": 48,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 448,
+        "y": 48,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "62": {
+      "id": 62,
+      "name": "tile_62",
+      "x": 464,
+      "y": 48,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 464,
+        "y": 48,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "63": {
+      "id": 63,
+      "name": "tile_63",
+      "x": 528,
+      "y": 48,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 528,
+        "y": 48,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "64": {
+      "id": 64,
+      "name": "tile_64",
+      "x": 544,
+      "y": 48,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 544,
+        "y": 48,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "65": {
+      "id": 65,
+      "name": "tile_65",
+      "x": 16,
+      "y": 64,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 16,
+        "y": 64,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "66": {
+      "id": 66,
+      "name": "tile_66",
+      "x": 32,
+      "y": 64,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 32,
+        "y": 64,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "67": {
+      "id": 67,
+      "name": "tile_67",
+      "x": 64,
+      "y": 64,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 64,
+        "y": 64,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "68": {
+      "id": 68,
+      "name": "tile_68",
+      "x": 96,
+      "y": 64,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 96,
+        "y": 64,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "69": {
+      "id": 69,
+      "name": "tile_69",
+      "x": 112,
+      "y": 64,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 112,
+        "y": 64,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "70": {
+      "id": 70,
+      "name": "tile_70",
+      "x": 160,
+      "y": 64,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 160,
+        "y": 64,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "71": {
+      "id": 71,
+      "name": "tile_71",
+      "x": 176,
+      "y": 64,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 176,
+        "y": 64,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "72": {
+      "id": 72,
+      "name": "tile_72",
+      "x": 208,
+      "y": 64,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 208,
+        "y": 64,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "73": {
+      "id": 73,
+      "name": "tile_73",
+      "x": 240,
+      "y": 64,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 240,
+        "y": 64,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "74": {
+      "id": 74,
+      "name": "tile_74",
+      "x": 256,
+      "y": 64,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 256,
+        "y": 64,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "75": {
+      "id": 75,
+      "name": "tile_75",
+      "x": 304,
+      "y": 64,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 304,
+        "y": 64,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "76": {
+      "id": 76,
+      "name": "tile_76",
+      "x": 320,
+      "y": 64,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 320,
+        "y": 64,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "77": {
+      "id": 77,
+      "name": "tile_77",
+      "x": 352,
+      "y": 64,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 352,
+        "y": 64,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "78": {
+      "id": 78,
+      "name": "tile_78",
+      "x": 384,
+      "y": 64,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 384,
+        "y": 64,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "79": {
+      "id": 79,
+      "name": "tile_79",
+      "x": 400,
+      "y": 64,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 400,
+        "y": 64,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "80": {
+      "id": 80,
+      "name": "tile_80",
+      "x": 448,
+      "y": 64,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 448,
+        "y": 64,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "81": {
+      "id": 81,
+      "name": "tile_81",
+      "x": 464,
+      "y": 64,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 464,
+        "y": 64,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "82": {
+      "id": 82,
+      "name": "tile_82",
+      "x": 496,
+      "y": 64,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 496,
+        "y": 64,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "83": {
+      "id": 83,
+      "name": "tile_83",
+      "x": 528,
+      "y": 64,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 528,
+        "y": 64,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "84": {
+      "id": 84,
+      "name": "tile_84",
+      "x": 544,
+      "y": 64,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 544,
+        "y": 64,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "85": {
+      "id": 85,
+      "name": "tile_85",
+      "x": 16,
+      "y": 80,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 16,
+        "y": 80,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "86": {
+      "id": 86,
+      "name": "tile_86",
+      "x": 32,
+      "y": 80,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 32,
+        "y": 80,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "87": {
+      "id": 87,
+      "name": "tile_87",
+      "x": 96,
+      "y": 80,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 96,
+        "y": 80,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "88": {
+      "id": 88,
+      "name": "tile_88",
+      "x": 112,
+      "y": 80,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 112,
+        "y": 80,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "89": {
+      "id": 89,
+      "name": "tile_89",
+      "x": 160,
+      "y": 80,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 160,
+        "y": 80,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "90": {
+      "id": 90,
+      "name": "tile_90",
+      "x": 176,
+      "y": 80,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 176,
+        "y": 80,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "91": {
+      "id": 91,
+      "name": "tile_91",
+      "x": 240,
+      "y": 80,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 240,
+        "y": 80,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "92": {
+      "id": 92,
+      "name": "tile_92",
+      "x": 256,
+      "y": 80,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 256,
+        "y": 80,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "93": {
+      "id": 93,
+      "name": "tile_93",
+      "x": 304,
+      "y": 80,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 304,
+        "y": 80,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "94": {
+      "id": 94,
+      "name": "tile_94",
+      "x": 320,
+      "y": 80,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 320,
+        "y": 80,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "95": {
+      "id": 95,
+      "name": "tile_95",
+      "x": 384,
+      "y": 80,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 384,
+        "y": 80,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "96": {
+      "id": 96,
+      "name": "tile_96",
+      "x": 400,
+      "y": 80,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 400,
+        "y": 80,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "97": {
+      "id": 97,
+      "name": "tile_97",
+      "x": 448,
+      "y": 80,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 448,
+        "y": 80,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "98": {
+      "id": 98,
+      "name": "tile_98",
+      "x": 464,
+      "y": 80,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 464,
+        "y": 80,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "99": {
+      "id": 99,
+      "name": "tile_99",
+      "x": 528,
+      "y": 80,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 528,
+        "y": 80,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "100": {
+      "id": 100,
+      "name": "tile_100",
+      "x": 544,
+      "y": 80,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 544,
+        "y": 80,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "101": {
+      "id": 101,
+      "name": "tile_101",
+      "x": 16,
+      "y": 96,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 16,
+        "y": 96,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "102": {
+      "id": 102,
+      "name": "tile_102",
+      "x": 48,
+      "y": 96,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 48,
+        "y": 96,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "103": {
+      "id": 103,
+      "name": "tile_103",
+      "x": 64,
+      "y": 96,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 64,
+        "y": 96,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "104": {
+      "id": 104,
+      "name": "tile_104",
+      "x": 80,
+      "y": 96,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 80,
+        "y": 96,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "105": {
+      "id": 105,
+      "name": "tile_105",
+      "x": 112,
+      "y": 96,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 112,
+        "y": 96,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "106": {
+      "id": 106,
+      "name": "tile_106",
+      "x": 160,
+      "y": 96,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 160,
+        "y": 96,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "107": {
+      "id": 107,
+      "name": "tile_107",
+      "x": 192,
+      "y": 96,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 192,
+        "y": 96,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "108": {
+      "id": 108,
+      "name": "tile_108",
+      "x": 208,
+      "y": 96,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 208,
+        "y": 96,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "109": {
+      "id": 109,
+      "name": "tile_109",
+      "x": 224,
+      "y": 96,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 224,
+        "y": 96,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "110": {
+      "id": 110,
+      "name": "tile_110",
+      "x": 256,
+      "y": 96,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 256,
+        "y": 96,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "111": {
+      "id": 111,
+      "name": "tile_111",
+      "x": 304,
+      "y": 96,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 304,
+        "y": 96,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "112": {
+      "id": 112,
+      "name": "tile_112",
+      "x": 336,
+      "y": 96,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 336,
+        "y": 96,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "113": {
+      "id": 113,
+      "name": "tile_113",
+      "x": 352,
+      "y": 96,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 352,
+        "y": 96,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "114": {
+      "id": 114,
+      "name": "tile_114",
+      "x": 368,
+      "y": 96,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 368,
+        "y": 96,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "115": {
+      "id": 115,
+      "name": "tile_115",
+      "x": 400,
+      "y": 96,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 400,
+        "y": 96,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "116": {
+      "id": 116,
+      "name": "tile_116",
+      "x": 448,
+      "y": 96,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 448,
+        "y": 96,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "117": {
+      "id": 117,
+      "name": "tile_117",
+      "x": 480,
+      "y": 96,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 480,
+        "y": 96,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "118": {
+      "id": 118,
+      "name": "tile_118",
+      "x": 496,
+      "y": 96,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 496,
+        "y": 96,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "119": {
+      "id": 119,
+      "name": "tile_119",
+      "x": 512,
+      "y": 96,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 512,
+        "y": 96,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "120": {
+      "id": 120,
+      "name": "tile_120",
+      "x": 544,
+      "y": 96,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 544,
+        "y": 96,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "121": {
+      "id": 121,
+      "name": "tile_121",
+      "x": 16,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 16,
+        "y": 112,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "122": {
+      "id": 122,
+      "name": "tile_122",
+      "x": 32,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 32,
+        "y": 112,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "123": {
+      "id": 123,
+      "name": "tile_123",
+      "x": 48,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 48,
+        "y": 112,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "124": {
+      "id": 124,
+      "name": "tile_124",
+      "x": 64,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 64,
+        "y": 112,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "125": {
+      "id": 125,
+      "name": "tile_125",
+      "x": 80,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 80,
+        "y": 112,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "126": {
+      "id": 126,
+      "name": "tile_126",
+      "x": 96,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 96,
+        "y": 112,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "127": {
+      "id": 127,
+      "name": "tile_127",
+      "x": 112,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 112,
+        "y": 112,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "128": {
+      "id": 128,
+      "name": "tile_128",
+      "x": 160,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 160,
+        "y": 112,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "129": {
+      "id": 129,
+      "name": "tile_129",
+      "x": 176,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 176,
+        "y": 112,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "130": {
+      "id": 130,
+      "name": "tile_130",
+      "x": 192,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 192,
+        "y": 112,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "131": {
+      "id": 131,
+      "name": "tile_131",
+      "x": 208,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 208,
+        "y": 112,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "132": {
+      "id": 132,
+      "name": "tile_132",
+      "x": 224,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 224,
+        "y": 112,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "133": {
+      "id": 133,
+      "name": "tile_133",
+      "x": 240,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 240,
+        "y": 112,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "134": {
+      "id": 134,
+      "name": "tile_134",
+      "x": 256,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 256,
+        "y": 112,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "135": {
+      "id": 135,
+      "name": "tile_135",
+      "x": 304,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 304,
+        "y": 112,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "136": {
+      "id": 136,
+      "name": "tile_136",
+      "x": 320,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 320,
+        "y": 112,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "137": {
+      "id": 137,
+      "name": "tile_137",
+      "x": 336,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 336,
+        "y": 112,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "138": {
+      "id": 138,
+      "name": "tile_138",
+      "x": 352,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 352,
+        "y": 112,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "139": {
+      "id": 139,
+      "name": "tile_139",
+      "x": 368,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 368,
+        "y": 112,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "140": {
+      "id": 140,
+      "name": "tile_140",
+      "x": 384,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 384,
+        "y": 112,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "141": {
+      "id": 141,
+      "name": "tile_141",
+      "x": 400,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 400,
+        "y": 112,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "142": {
+      "id": 142,
+      "name": "tile_142",
+      "x": 448,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 448,
+        "y": 112,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "143": {
+      "id": 143,
+      "name": "tile_143",
+      "x": 464,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 464,
+        "y": 112,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "144": {
+      "id": 144,
+      "name": "tile_144",
+      "x": 480,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 480,
+        "y": 112,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "145": {
+      "id": 145,
+      "name": "tile_145",
+      "x": 496,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 496,
+        "y": 112,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "146": {
+      "id": 146,
+      "name": "tile_146",
+      "x": 512,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 512,
+        "y": 112,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "147": {
+      "id": 147,
+      "name": "tile_147",
+      "x": 528,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 528,
+        "y": 112,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "148": {
+      "id": 148,
+      "name": "tile_148",
+      "x": 544,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 544,
+        "y": 112,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "149": {
+      "id": 149,
+      "name": "tile_149",
+      "x": 16,
+      "y": 144,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 16,
+        "y": 144,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "150": {
+      "id": 150,
+      "name": "tile_150",
+      "x": 32,
+      "y": 144,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 32,
+        "y": 144,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "151": {
+      "id": 151,
+      "name": "tile_151",
+      "x": 48,
+      "y": 144,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 48,
+        "y": 144,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "152": {
+      "id": 152,
+      "name": "tile_152",
+      "x": 64,
+      "y": 144,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 64,
+        "y": 144,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "153": {
+      "id": 153,
+      "name": "tile_153",
+      "x": 128,
+      "y": 144,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 128,
+        "y": 144,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "dirt",
+      "tags": []
+    },
+    "154": {
+      "id": 154,
+      "name": "tile_154",
+      "x": 144,
+      "y": 144,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 144,
+        "y": 144,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "dirt",
+      "tags": []
+    },
+    "155": {
+      "id": 155,
+      "name": "tile_155",
+      "x": 160,
+      "y": 144,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 160,
+        "y": 144,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "dirt",
+      "tags": []
+    },
+    "156": {
+      "id": 156,
+      "name": "tile_156",
+      "x": 176,
+      "y": 144,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 176,
+        "y": 144,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "dirt",
+      "tags": []
+    },
+    "157": {
+      "id": 157,
+      "name": "tile_157",
+      "x": 192,
+      "y": 144,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 192,
+        "y": 144,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "dirt",
+      "tags": []
+    },
+    "158": {
+      "id": 158,
+      "name": "tile_158",
+      "x": 208,
+      "y": 144,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 208,
+        "y": 144,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "dirt",
+      "tags": []
+    },
+    "159": {
+      "id": 159,
+      "name": "tile_159",
+      "x": 224,
+      "y": 144,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 224,
+        "y": 144,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "dirt",
+      "tags": []
+    },
+    "160": {
+      "id": 160,
+      "name": "tile_160",
+      "x": 240,
+      "y": 144,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 240,
+        "y": 144,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "161": {
+      "id": 161,
+      "name": "tile_161",
+      "x": 256,
+      "y": 144,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 256,
+        "y": 144,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "162": {
+      "id": 162,
+      "name": "tile_162",
+      "x": 272,
+      "y": 144,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 272,
+        "y": 144,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "163": {
+      "id": 163,
+      "name": "tile_163",
+      "x": 288,
+      "y": 144,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 288,
+        "y": 144,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "164": {
+      "id": 164,
+      "name": "tile_164",
+      "x": 304,
+      "y": 144,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 304,
+        "y": 144,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "165": {
+      "id": 165,
+      "name": "tile_165",
+      "x": 320,
+      "y": 144,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 320,
+        "y": 144,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "166": {
+      "id": 166,
+      "name": "tile_166",
+      "x": 336,
+      "y": 144,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 336,
+        "y": 144,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "167": {
+      "id": 167,
+      "name": "tile_167",
+      "x": 352,
+      "y": 144,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 352,
+        "y": 144,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "168": {
+      "id": 168,
+      "name": "tile_168",
+      "x": 16,
+      "y": 160,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 16,
+        "y": 160,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "169": {
+      "id": 169,
+      "name": "tile_169",
+      "x": 32,
+      "y": 160,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 32,
+        "y": 160,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "170": {
+      "id": 170,
+      "name": "tile_170",
+      "x": 48,
+      "y": 160,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 48,
+        "y": 160,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "171": {
+      "id": 171,
+      "name": "tile_171",
+      "x": 64,
+      "y": 160,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 64,
+        "y": 160,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "172": {
+      "id": 172,
+      "name": "tile_172",
+      "x": 112,
+      "y": 160,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 112,
+        "y": 160,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "dirt",
+      "tags": []
+    },
+    "173": {
+      "id": 173,
+      "name": "tile_173",
+      "x": 128,
+      "y": 160,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 128,
+        "y": 160,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "dirt",
+      "tags": []
+    },
+    "174": {
+      "id": 174,
+      "name": "tile_174",
+      "x": 144,
+      "y": 160,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 144,
+        "y": 160,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "dirt",
+      "tags": []
+    },
+    "175": {
+      "id": 175,
+      "name": "tile_175",
+      "x": 160,
+      "y": 160,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 160,
+        "y": 160,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "dirt",
+      "tags": []
+    },
+    "176": {
+      "id": 176,
+      "name": "tile_176",
+      "x": 176,
+      "y": 160,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 176,
+        "y": 160,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "dirt",
+      "tags": []
+    },
+    "177": {
+      "id": 177,
+      "name": "tile_177",
+      "x": 192,
+      "y": 160,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 192,
+        "y": 160,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "dirt",
+      "tags": []
+    },
+    "178": {
+      "id": 178,
+      "name": "tile_178",
+      "x": 208,
+      "y": 160,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 208,
+        "y": 160,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "dirt",
+      "tags": []
+    },
+    "179": {
+      "id": 179,
+      "name": "tile_179",
+      "x": 224,
+      "y": 160,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 224,
+        "y": 160,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "dirt",
+      "tags": []
+    },
+    "180": {
+      "id": 180,
+      "name": "tile_180",
+      "x": 240,
+      "y": 160,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 240,
+        "y": 160,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "181": {
+      "id": 181,
+      "name": "tile_181",
+      "x": 256,
+      "y": 160,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 256,
+        "y": 160,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "182": {
+      "id": 182,
+      "name": "tile_182",
+      "x": 272,
+      "y": 160,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 272,
+        "y": 160,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "183": {
+      "id": 183,
+      "name": "tile_183",
+      "x": 288,
+      "y": 160,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 288,
+        "y": 160,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "184": {
+      "id": 184,
+      "name": "tile_184",
+      "x": 304,
+      "y": 160,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 304,
+        "y": 160,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "185": {
+      "id": 185,
+      "name": "tile_185",
+      "x": 320,
+      "y": 160,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 320,
+        "y": 160,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "186": {
+      "id": 186,
+      "name": "tile_186",
+      "x": 336,
+      "y": 160,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 336,
+        "y": 160,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "187": {
+      "id": 187,
+      "name": "tile_187",
+      "x": 352,
+      "y": 160,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 352,
+        "y": 160,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "188": {
+      "id": 188,
+      "name": "tile_188",
+      "x": 16,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 16,
+        "y": 176,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "189": {
+      "id": 189,
+      "name": "tile_189",
+      "x": 32,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 32,
+        "y": 176,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "190": {
+      "id": 190,
+      "name": "tile_190",
+      "x": 48,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 48,
+        "y": 176,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "191": {
+      "id": 191,
+      "name": "tile_191",
+      "x": 64,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 64,
+        "y": 176,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "192": {
+      "id": 192,
+      "name": "tile_192",
+      "x": 112,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 112,
+        "y": 176,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "wall",
+      "tags": []
+    },
+    "193": {
+      "id": 193,
+      "name": "tile_193",
+      "x": 128,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 128,
+        "y": 176,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "wall",
+      "tags": []
+    },
+    "194": {
+      "id": 194,
+      "name": "tile_194",
+      "x": 144,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 144,
+        "y": 176,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "wall",
+      "tags": []
+    },
+    "195": {
+      "id": 195,
+      "name": "tile_195",
+      "x": 160,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 160,
+        "y": 176,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "wall",
+      "tags": []
+    },
+    "196": {
+      "id": 196,
+      "name": "tile_196",
+      "x": 176,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 176,
+        "y": 176,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "wall",
+      "tags": []
+    },
+    "197": {
+      "id": 197,
+      "name": "tile_197",
+      "x": 192,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 192,
+        "y": 176,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "wall",
+      "tags": []
+    },
+    "198": {
+      "id": 198,
+      "name": "tile_198",
+      "x": 208,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 208,
+        "y": 176,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "wall",
+      "tags": []
+    },
+    "199": {
+      "id": 199,
+      "name": "tile_199",
+      "x": 224,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 224,
+        "y": 176,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "wall",
+      "tags": []
+    },
+    "200": {
+      "id": 200,
+      "name": "tile_200",
+      "x": 240,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 240,
+        "y": 176,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "201": {
+      "id": 201,
+      "name": "tile_201",
+      "x": 256,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 256,
+        "y": 176,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "202": {
+      "id": 202,
+      "name": "tile_202",
+      "x": 272,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 272,
+        "y": 176,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "203": {
+      "id": 203,
+      "name": "tile_203",
+      "x": 288,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 288,
+        "y": 176,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "204": {
+      "id": 204,
+      "name": "tile_204",
+      "x": 304,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 304,
+        "y": 176,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "205": {
+      "id": 205,
+      "name": "tile_205",
+      "x": 320,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 320,
+        "y": 176,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "206": {
+      "id": 206,
+      "name": "tile_206",
+      "x": 336,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 336,
+        "y": 176,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "207": {
+      "id": 207,
+      "name": "tile_207",
+      "x": 352,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 352,
+        "y": 176,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "208": {
+      "id": 208,
+      "name": "tile_208",
+      "x": 112,
+      "y": 192,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 112,
+        "y": 192,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "wall",
+      "tags": []
+    },
+    "209": {
+      "id": 209,
+      "name": "tile_209",
+      "x": 128,
+      "y": 192,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 128,
+        "y": 192,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "wall",
+      "tags": []
+    },
+    "210": {
+      "id": 210,
+      "name": "tile_210",
+      "x": 144,
+      "y": 192,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 144,
+        "y": 192,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "wall",
+      "tags": []
+    },
+    "211": {
+      "id": 211,
+      "name": "tile_211",
+      "x": 160,
+      "y": 192,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 160,
+        "y": 192,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "wall",
+      "tags": []
+    },
+    "212": {
+      "id": 212,
+      "name": "tile_212",
+      "x": 176,
+      "y": 192,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 176,
+        "y": 192,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "wall",
+      "tags": []
+    },
+    "213": {
+      "id": 213,
+      "name": "tile_213",
+      "x": 192,
+      "y": 192,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 192,
+        "y": 192,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "wall",
+      "tags": []
+    },
+    "214": {
+      "id": 214,
+      "name": "tile_214",
+      "x": 208,
+      "y": 192,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 208,
+        "y": 192,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "wall",
+      "tags": []
+    },
+    "215": {
+      "id": 215,
+      "name": "tile_215",
+      "x": 224,
+      "y": 192,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 224,
+        "y": 192,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": false,
+      "terrainType": "wall",
+      "tags": []
+    },
+    "216": {
+      "id": 216,
+      "name": "tile_216",
+      "x": 240,
+      "y": 192,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 240,
+        "y": 192,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "217": {
+      "id": 217,
+      "name": "tile_217",
+      "x": 256,
+      "y": 192,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 256,
+        "y": 192,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "218": {
+      "id": 218,
+      "name": "tile_218",
+      "x": 272,
+      "y": 192,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 272,
+        "y": 192,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "219": {
+      "id": 219,
+      "name": "tile_219",
+      "x": 288,
+      "y": 192,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 288,
+        "y": 192,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "220": {
+      "id": 220,
+      "name": "tile_220",
+      "x": 304,
+      "y": 192,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 304,
+        "y": 192,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "221": {
+      "id": 221,
+      "name": "tile_221",
+      "x": 320,
+      "y": 192,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 320,
+        "y": 192,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "222": {
+      "id": 222,
+      "name": "tile_222",
+      "x": 336,
+      "y": 192,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 336,
+        "y": 192,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "223": {
+      "id": 223,
+      "name": "tile_223",
+      "x": 352,
+      "y": 192,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 352,
+        "y": 192,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "224": {
+      "id": 224,
+      "name": "tile_224",
+      "x": 16,
+      "y": 208,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 16,
+        "y": 208,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "225": {
+      "id": 225,
+      "name": "tile_225",
+      "x": 48,
+      "y": 224,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 48,
+        "y": 224,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "226": {
+      "id": 226,
+      "name": "tile_226",
+      "x": 48,
+      "y": 208,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 48,
+        "y": 208,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "227": {
+      "id": 227,
+      "name": "tile_227",
+      "x": 112,
+      "y": 208,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 112,
+        "y": 208,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "228": {
+      "id": 228,
+      "name": "tile_228",
+      "x": 128,
+      "y": 208,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 128,
+        "y": 208,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "229": {
+      "id": 229,
+      "name": "tile_229",
+      "x": 144,
+      "y": 208,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 144,
+        "y": 208,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "230": {
+      "id": 230,
+      "name": "tile_230",
+      "x": 160,
+      "y": 208,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 160,
+        "y": 208,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "231": {
+      "id": 231,
+      "name": "tile_231",
+      "x": 176,
+      "y": 208,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 176,
+        "y": 208,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "232": {
+      "id": 232,
+      "name": "tile_232",
+      "x": 192,
+      "y": 208,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 192,
+        "y": 208,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "233": {
+      "id": 233,
+      "name": "tile_233",
+      "x": 208,
+      "y": 208,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 208,
+        "y": 208,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "234": {
+      "id": 234,
+      "name": "tile_234",
+      "x": 224,
+      "y": 208,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 224,
+        "y": 208,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "235": {
+      "id": 235,
+      "name": "tile_235",
+      "x": 240,
+      "y": 208,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 240,
+        "y": 208,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "236": {
+      "id": 236,
+      "name": "tile_236",
+      "x": 256,
+      "y": 208,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 256,
+        "y": 208,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "237": {
+      "id": 237,
+      "name": "tile_237",
+      "x": 272,
+      "y": 208,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 272,
+        "y": 208,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "238": {
+      "id": 238,
+      "name": "tile_238",
+      "x": 288,
+      "y": 208,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 288,
+        "y": 208,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "239": {
+      "id": 239,
+      "name": "tile_239",
+      "x": 304,
+      "y": 208,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 304,
+        "y": 208,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "240": {
+      "id": 240,
+      "name": "tile_240",
+      "x": 320,
+      "y": 208,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 320,
+        "y": 208,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "241": {
+      "id": 241,
+      "name": "tile_241",
+      "x": 336,
+      "y": 208,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 336,
+        "y": 208,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "242": {
+      "id": 242,
+      "name": "tile_242",
+      "x": 352,
+      "y": 208,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 352,
+        "y": 208,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "243": {
+      "id": 243,
+      "name": "tile_243",
+      "x": 16,
+      "y": 224,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 16,
+        "y": 224,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "244": {
+      "id": 244,
+      "name": "tile_244",
+      "x": 32,
+      "y": 208,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 32,
+        "y": 208,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "245": {
+      "id": 245,
+      "name": "tile_245",
+      "x": 112,
+      "y": 224,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 112,
+        "y": 224,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "246": {
+      "id": 246,
+      "name": "tile_246",
+      "x": 128,
+      "y": 224,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 128,
+        "y": 224,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "247": {
+      "id": 247,
+      "name": "tile_247",
+      "x": 144,
+      "y": 224,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 144,
+        "y": 224,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "248": {
+      "id": 248,
+      "name": "tile_248",
+      "x": 160,
+      "y": 224,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 160,
+        "y": 224,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "249": {
+      "id": 249,
+      "name": "tile_249",
+      "x": 176,
+      "y": 224,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 176,
+        "y": 224,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "250": {
+      "id": 250,
+      "name": "tile_250",
+      "x": 192,
+      "y": 224,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 192,
+        "y": 224,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "251": {
+      "id": 251,
+      "name": "tile_251",
+      "x": 208,
+      "y": 224,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 208,
+        "y": 224,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "252": {
+      "id": 252,
+      "name": "tile_252",
+      "x": 224,
+      "y": 224,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 224,
+        "y": 224,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "253": {
+      "id": 253,
+      "name": "tile_253",
+      "x": 240,
+      "y": 224,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 240,
+        "y": 224,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "254": {
+      "id": 254,
+      "name": "tile_254",
+      "x": 256,
+      "y": 224,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 256,
+        "y": 224,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "255": {
+      "id": 255,
+      "name": "tile_255",
+      "x": 272,
+      "y": 224,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 272,
+        "y": 224,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "256": {
+      "id": 256,
+      "name": "tile_256",
+      "x": 288,
+      "y": 224,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 288,
+        "y": 224,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "257": {
+      "id": 257,
+      "name": "tile_257",
+      "x": 304,
+      "y": 224,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 304,
+        "y": 224,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "258": {
+      "id": 258,
+      "name": "tile_258",
+      "x": 320,
+      "y": 224,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 320,
+        "y": 224,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "259": {
+      "id": 259,
+      "name": "tile_259",
+      "x": 336,
+      "y": 224,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 336,
+        "y": 224,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "260": {
+      "id": 260,
+      "name": "tile_260",
+      "x": 352,
+      "y": 224,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 352,
+        "y": 224,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "261": {
+      "id": 261,
+      "name": "tile_261",
+      "x": 16,
+      "y": 240,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 16,
+        "y": 240,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "262": {
+      "id": 262,
+      "name": "tile_262",
+      "x": 48,
+      "y": 240,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 48,
+        "y": 240,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "263": {
+      "id": 263,
+      "name": "tile_263",
+      "x": 112,
+      "y": 240,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 112,
+        "y": 240,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "264": {
+      "id": 264,
+      "name": "tile_264",
+      "x": 128,
+      "y": 240,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 128,
+        "y": 240,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "265": {
+      "id": 265,
+      "name": "tile_265",
+      "x": 144,
+      "y": 240,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 144,
+        "y": 240,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "266": {
+      "id": 266,
+      "name": "tile_266",
+      "x": 160,
+      "y": 240,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 160,
+        "y": 240,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "267": {
+      "id": 267,
+      "name": "tile_267",
+      "x": 176,
+      "y": 240,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 176,
+        "y": 240,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "268": {
+      "id": 268,
+      "name": "tile_268",
+      "x": 192,
+      "y": 240,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 192,
+        "y": 240,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "269": {
+      "id": 269,
+      "name": "tile_269",
+      "x": 208,
+      "y": 240,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 208,
+        "y": 240,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "270": {
+      "id": 270,
+      "name": "tile_270",
+      "x": 224,
+      "y": 240,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 224,
+        "y": 240,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "271": {
+      "id": 271,
+      "name": "tile_271",
+      "x": 240,
+      "y": 240,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 240,
+        "y": 240,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "272": {
+      "id": 272,
+      "name": "tile_272",
+      "x": 256,
+      "y": 240,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 256,
+        "y": 240,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "273": {
+      "id": 273,
+      "name": "tile_273",
+      "x": 272,
+      "y": 240,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 272,
+        "y": 240,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "274": {
+      "id": 274,
+      "name": "tile_274",
+      "x": 288,
+      "y": 240,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 288,
+        "y": 240,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "275": {
+      "id": 275,
+      "name": "tile_275",
+      "x": 304,
+      "y": 240,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 304,
+        "y": 240,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "276": {
+      "id": 276,
+      "name": "tile_276",
+      "x": 320,
+      "y": 240,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 320,
+        "y": 240,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "277": {
+      "id": 277,
+      "name": "tile_277",
+      "x": 336,
+      "y": 240,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 336,
+        "y": 240,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "278": {
+      "id": 278,
+      "name": "tile_278",
+      "x": 16,
+      "y": 256,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 16,
+        "y": 256,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "279": {
+      "id": 279,
+      "name": "tile_279",
+      "x": 32,
+      "y": 256,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 32,
+        "y": 256,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "280": {
+      "id": 280,
+      "name": "tile_280",
+      "x": 48,
+      "y": 256,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 48,
+        "y": 256,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "281": {
+      "id": 281,
+      "name": "tile_281",
+      "x": 128,
+      "y": 256,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 128,
+        "y": 256,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "282": {
+      "id": 282,
+      "name": "tile_282",
+      "x": 160,
+      "y": 256,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 160,
+        "y": 256,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "283": {
+      "id": 283,
+      "name": "tile_283",
+      "x": 176,
+      "y": 256,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 176,
+        "y": 256,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "284": {
+      "id": 284,
+      "name": "tile_284",
+      "x": 192,
+      "y": 256,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 192,
+        "y": 256,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "285": {
+      "id": 285,
+      "name": "tile_285",
+      "x": 208,
+      "y": 256,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 208,
+        "y": 256,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "286": {
+      "id": 286,
+      "name": "tile_286",
+      "x": 224,
+      "y": 256,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 224,
+        "y": 256,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "287": {
+      "id": 287,
+      "name": "tile_287",
+      "x": 240,
+      "y": 256,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 240,
+        "y": 256,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "288": {
+      "id": 288,
+      "name": "tile_288",
+      "x": 256,
+      "y": 256,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 256,
+        "y": 256,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "289": {
+      "id": 289,
+      "name": "tile_289",
+      "x": 272,
+      "y": 256,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 272,
+        "y": 256,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "290": {
+      "id": 290,
+      "name": "tile_290",
+      "x": 288,
+      "y": 256,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 288,
+        "y": 256,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "291": {
+      "id": 291,
+      "name": "tile_291",
+      "x": 304,
+      "y": 256,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 304,
+        "y": 256,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "292": {
+      "id": 292,
+      "name": "tile_292",
+      "x": 320,
+      "y": 256,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 320,
+        "y": 256,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "293": {
+      "id": 293,
+      "name": "tile_293",
+      "x": 336,
+      "y": 256,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 336,
+        "y": 256,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "294": {
+      "id": 294,
+      "name": "tile_294",
+      "x": 352,
+      "y": 256,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 352,
+        "y": 256,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "295": {
+      "id": 295,
+      "name": "tile_295",
+      "x": 112,
+      "y": 272,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 112,
+        "y": 272,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "296": {
+      "id": 296,
+      "name": "tile_296",
+      "x": 128,
+      "y": 272,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 128,
+        "y": 272,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "297": {
+      "id": 297,
+      "name": "tile_297",
+      "x": 144,
+      "y": 272,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 144,
+        "y": 272,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "298": {
+      "id": 298,
+      "name": "tile_298",
+      "x": 160,
+      "y": 272,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 160,
+        "y": 272,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "299": {
+      "id": 299,
+      "name": "tile_299",
+      "x": 176,
+      "y": 272,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 176,
+        "y": 272,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "300": {
+      "id": 300,
+      "name": "tile_300",
+      "x": 192,
+      "y": 272,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 192,
+        "y": 272,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "301": {
+      "id": 301,
+      "name": "tile_301",
+      "x": 208,
+      "y": 272,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 208,
+        "y": 272,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "302": {
+      "id": 302,
+      "name": "tile_302",
+      "x": 224,
+      "y": 272,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 224,
+        "y": 272,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "303": {
+      "id": 303,
+      "name": "tile_303",
+      "x": 240,
+      "y": 272,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 240,
+        "y": 272,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "304": {
+      "id": 304,
+      "name": "tile_304",
+      "x": 256,
+      "y": 272,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 256,
+        "y": 272,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "305": {
+      "id": 305,
+      "name": "tile_305",
+      "x": 272,
+      "y": 272,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 272,
+        "y": 272,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "306": {
+      "id": 306,
+      "name": "tile_306",
+      "x": 288,
+      "y": 272,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 288,
+        "y": 272,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "307": {
+      "id": 307,
+      "name": "tile_307",
+      "x": 304,
+      "y": 272,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 304,
+        "y": 272,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "308": {
+      "id": 308,
+      "name": "tile_308",
+      "x": 320,
+      "y": 272,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 320,
+        "y": 272,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "309": {
+      "id": 309,
+      "name": "tile_309",
+      "x": 336,
+      "y": 272,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 336,
+        "y": 272,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "310": {
+      "id": 310,
+      "name": "tile_310",
+      "x": 352,
+      "y": 272,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 352,
+        "y": 272,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "311": {
+      "id": 311,
+      "name": "tile_311",
+      "x": 112,
+      "y": 288,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 112,
+        "y": 288,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "312": {
+      "id": 312,
+      "name": "tile_312",
+      "x": 128,
+      "y": 288,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 128,
+        "y": 288,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "313": {
+      "id": 313,
+      "name": "tile_313",
+      "x": 144,
+      "y": 288,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 144,
+        "y": 288,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "314": {
+      "id": 314,
+      "name": "tile_314",
+      "x": 160,
+      "y": 288,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 160,
+        "y": 288,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "315": {
+      "id": 315,
+      "name": "tile_315",
+      "x": 176,
+      "y": 288,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 176,
+        "y": 288,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "316": {
+      "id": 316,
+      "name": "tile_316",
+      "x": 192,
+      "y": 288,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 192,
+        "y": 288,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "317": {
+      "id": 317,
+      "name": "tile_317",
+      "x": 208,
+      "y": 288,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 208,
+        "y": 288,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "318": {
+      "id": 318,
+      "name": "tile_318",
+      "x": 224,
+      "y": 288,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 224,
+        "y": 288,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "319": {
+      "id": 319,
+      "name": "tile_319",
+      "x": 112,
+      "y": 304,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 112,
+        "y": 304,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "320": {
+      "id": 320,
+      "name": "tile_320",
+      "x": 128,
+      "y": 304,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 128,
+        "y": 304,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "321": {
+      "id": 321,
+      "name": "tile_321",
+      "x": 144,
+      "y": 304,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 144,
+        "y": 304,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "322": {
+      "id": 322,
+      "name": "tile_322",
+      "x": 160,
+      "y": 304,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 160,
+        "y": 304,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "323": {
+      "id": 323,
+      "name": "tile_323",
+      "x": 176,
+      "y": 304,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 176,
+        "y": 304,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "324": {
+      "id": 324,
+      "name": "tile_324",
+      "x": 192,
+      "y": 304,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 192,
+        "y": 304,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "325": {
+      "id": 325,
+      "name": "tile_325",
+      "x": 208,
+      "y": 304,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 208,
+        "y": 304,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "326": {
+      "id": 326,
+      "name": "tile_326",
+      "x": 224,
+      "y": 304,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 224,
+        "y": 304,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "327": {
+      "id": 327,
+      "name": "tile_327",
+      "x": 112,
+      "y": 320,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 112,
+        "y": 320,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "328": {
+      "id": 328,
+      "name": "tile_328",
+      "x": 128,
+      "y": 320,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 128,
+        "y": 320,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "329": {
+      "id": 329,
+      "name": "tile_329",
+      "x": 144,
+      "y": 320,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 144,
+        "y": 320,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "330": {
+      "id": 330,
+      "name": "tile_330",
+      "x": 160,
+      "y": 320,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 160,
+        "y": 320,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "331": {
+      "id": 331,
+      "name": "tile_331",
+      "x": 176,
+      "y": 320,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 176,
+        "y": 320,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "332": {
+      "id": 332,
+      "name": "tile_332",
+      "x": 192,
+      "y": 320,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 192,
+        "y": 320,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "333": {
+      "id": 333,
+      "name": "tile_333",
+      "x": 208,
+      "y": 320,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 208,
+        "y": 320,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "334": {
+      "id": 334,
+      "name": "tile_334",
+      "x": 112,
+      "y": 336,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 112,
+        "y": 336,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "335": {
+      "id": 335,
+      "name": "tile_335",
+      "x": 128,
+      "y": 336,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 128,
+        "y": 336,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "336": {
+      "id": 336,
+      "name": "tile_336",
+      "x": 176,
+      "y": 336,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 176,
+        "y": 336,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "337": {
+      "id": 337,
+      "name": "tile_337",
+      "x": 192,
+      "y": 336,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 192,
+        "y": 336,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "338": {
+      "id": 338,
+      "name": "tile_338",
+      "x": 208,
+      "y": 336,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 208,
+        "y": 336,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "339": {
+      "id": 339,
+      "name": "tile_339",
+      "x": 224,
+      "y": 336,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 224,
+        "y": 336,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "340": {
+      "id": 340,
+      "name": "tile_340",
+      "x": 112,
+      "y": 352,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 112,
+        "y": 352,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "341": {
+      "id": 341,
+      "name": "tile_341",
+      "x": 128,
+      "y": 352,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 128,
+        "y": 352,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "342": {
+      "id": 342,
+      "name": "tile_342",
+      "x": 192,
+      "y": 352,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 192,
+        "y": 352,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "343": {
+      "id": 343,
+      "name": "tile_343",
+      "x": 208,
+      "y": 352,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 208,
+        "y": 352,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "344": {
+      "id": 344,
+      "name": "tile_344",
+      "x": 224,
+      "y": 352,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 224,
+        "y": 352,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "345": {
+      "id": 345,
+      "name": "tile_345",
+      "x": 112,
+      "y": 368,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 112,
+        "y": 368,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "346": {
+      "id": 346,
+      "name": "tile_346",
+      "x": 128,
+      "y": 368,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 128,
+        "y": 368,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "347": {
+      "id": 347,
+      "name": "tile_347",
+      "x": 144,
+      "y": 368,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 144,
+        "y": 368,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "348": {
+      "id": 348,
+      "name": "tile_348",
+      "x": 176,
+      "y": 368,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 176,
+        "y": 368,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "349": {
+      "id": 349,
+      "name": "tile_349",
+      "x": 192,
+      "y": 368,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 192,
+        "y": 368,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "350": {
+      "id": 350,
+      "name": "tile_350",
+      "x": 224,
+      "y": 368,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 224,
+        "y": 368,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "351": {
+      "id": 351,
+      "name": "tile_351",
+      "x": 144,
+      "y": 384,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 144,
+        "y": 384,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "352": {
+      "id": 352,
+      "name": "tile_352",
+      "x": 176,
+      "y": 384,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 176,
+        "y": 384,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "353": {
+      "id": 353,
+      "name": "tile_353",
+      "x": 192,
+      "y": 384,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 192,
+        "y": 384,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "354": {
+      "id": 354,
+      "name": "tile_354",
+      "x": 224,
+      "y": 384,
+      "w": 16,
+      "h": 16,
+      "rect": {
+        "x": 224,
+        "y": 384,
+        "w": 16,
+        "h": 16
+      },
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    }
+  },
+  "sprites": {
+    "tile_1": {
+      "id": 1,
+      "x": 16,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_2": {
+      "id": 2,
+      "x": 32,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_3": {
+      "id": 3,
+      "x": 48,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_4": {
+      "id": 4,
+      "x": 64,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "tile_5": {
+      "id": 5,
+      "x": 80,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_6": {
+      "id": 6,
+      "x": 96,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_7": {
+      "id": 7,
+      "x": 112,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_8": {
+      "id": 8,
+      "x": 160,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_9": {
+      "id": 9,
+      "x": 176,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_10": {
+      "id": 10,
+      "x": 192,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_11": {
+      "id": 11,
+      "x": 208,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "tile_12": {
+      "id": 12,
+      "x": 224,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_13": {
+      "id": 13,
+      "x": 240,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_14": {
+      "id": 14,
+      "x": 256,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_15": {
+      "id": 15,
+      "x": 304,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_16": {
+      "id": 16,
+      "x": 320,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_17": {
+      "id": 17,
+      "x": 336,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_18": {
+      "id": 18,
+      "x": 352,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "tile_19": {
+      "id": 19,
+      "x": 368,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_20": {
+      "id": 20,
+      "x": 384,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_21": {
+      "id": 21,
+      "x": 400,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_22": {
+      "id": 22,
+      "x": 448,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_23": {
+      "id": 23,
+      "x": 464,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_24": {
+      "id": 24,
+      "x": 480,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_25": {
+      "id": 25,
+      "x": 496,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "tile_26": {
+      "id": 26,
+      "x": 512,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_27": {
+      "id": 27,
+      "x": 528,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_28": {
+      "id": 28,
+      "x": 544,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_29": {
+      "id": 29,
+      "x": 16,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_30": {
+      "id": 30,
+      "x": 48,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_31": {
+      "id": 31,
+      "x": 64,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_32": {
+      "id": 32,
+      "x": 80,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_33": {
+      "id": 33,
+      "x": 112,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_34": {
+      "id": 34,
+      "x": 160,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_35": {
+      "id": 35,
+      "x": 192,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_36": {
+      "id": 36,
+      "x": 208,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_37": {
+      "id": 37,
+      "x": 224,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_38": {
+      "id": 38,
+      "x": 256,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_39": {
+      "id": 39,
+      "x": 304,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_40": {
+      "id": 40,
+      "x": 336,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_41": {
+      "id": 41,
+      "x": 352,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_42": {
+      "id": 42,
+      "x": 368,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_43": {
+      "id": 43,
+      "x": 400,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_44": {
+      "id": 44,
+      "x": 448,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_45": {
+      "id": 45,
+      "x": 480,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_46": {
+      "id": 46,
+      "x": 496,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_47": {
+      "id": 47,
+      "x": 512,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_48": {
+      "id": 48,
+      "x": 544,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_49": {
+      "id": 49,
+      "x": 16,
+      "y": 48,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_50": {
+      "id": 50,
+      "x": 32,
+      "y": 48,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_51": {
+      "id": 51,
+      "x": 96,
+      "y": 48,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_52": {
+      "id": 52,
+      "x": 112,
+      "y": 48,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_53": {
+      "id": 53,
+      "x": 160,
+      "y": 48,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_54": {
+      "id": 54,
+      "x": 176,
+      "y": 48,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_55": {
+      "id": 55,
+      "x": 240,
+      "y": 48,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_56": {
+      "id": 56,
+      "x": 256,
+      "y": 48,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_57": {
+      "id": 57,
+      "x": 304,
+      "y": 48,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_58": {
+      "id": 58,
+      "x": 320,
+      "y": 48,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_59": {
+      "id": 59,
+      "x": 384,
+      "y": 48,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_60": {
+      "id": 60,
+      "x": 400,
+      "y": 48,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_61": {
+      "id": 61,
+      "x": 448,
+      "y": 48,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_62": {
+      "id": 62,
+      "x": 464,
+      "y": 48,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_63": {
+      "id": 63,
+      "x": 528,
+      "y": 48,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_64": {
+      "id": 64,
+      "x": 544,
+      "y": 48,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_65": {
+      "id": 65,
+      "x": 16,
+      "y": 64,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "tile_66": {
+      "id": 66,
+      "x": 32,
+      "y": 64,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_67": {
+      "id": 67,
+      "x": 64,
+      "y": 64,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_68": {
+      "id": 68,
+      "x": 96,
+      "y": 64,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_69": {
+      "id": 69,
+      "x": 112,
+      "y": 64,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "tile_70": {
+      "id": 70,
+      "x": 160,
+      "y": 64,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "tile_71": {
+      "id": 71,
+      "x": 176,
+      "y": 64,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_72": {
+      "id": 72,
+      "x": 208,
+      "y": 64,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_73": {
+      "id": 73,
+      "x": 240,
+      "y": 64,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_74": {
+      "id": 74,
+      "x": 256,
+      "y": 64,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "tile_75": {
+      "id": 75,
+      "x": 304,
+      "y": 64,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "tile_76": {
+      "id": 76,
+      "x": 320,
+      "y": 64,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_77": {
+      "id": 77,
+      "x": 352,
+      "y": 64,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_78": {
+      "id": 78,
+      "x": 384,
+      "y": 64,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_79": {
+      "id": 79,
+      "x": 400,
+      "y": 64,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "tile_80": {
+      "id": 80,
+      "x": 448,
+      "y": 64,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "tile_81": {
+      "id": 81,
+      "x": 464,
+      "y": 64,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_82": {
+      "id": 82,
+      "x": 496,
+      "y": 64,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_83": {
+      "id": 83,
+      "x": 528,
+      "y": 64,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_84": {
+      "id": 84,
+      "x": 544,
+      "y": 64,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "tile_85": {
+      "id": 85,
+      "x": 16,
+      "y": 80,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_86": {
+      "id": 86,
+      "x": 32,
+      "y": 80,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_87": {
+      "id": 87,
+      "x": 96,
+      "y": 80,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_88": {
+      "id": 88,
+      "x": 112,
+      "y": 80,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_89": {
+      "id": 89,
+      "x": 160,
+      "y": 80,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_90": {
+      "id": 90,
+      "x": 176,
+      "y": 80,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_91": {
+      "id": 91,
+      "x": 240,
+      "y": 80,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_92": {
+      "id": 92,
+      "x": 256,
+      "y": 80,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_93": {
+      "id": 93,
+      "x": 304,
+      "y": 80,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_94": {
+      "id": 94,
+      "x": 320,
+      "y": 80,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_95": {
+      "id": 95,
+      "x": 384,
+      "y": 80,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_96": {
+      "id": 96,
+      "x": 400,
+      "y": 80,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_97": {
+      "id": 97,
+      "x": 448,
+      "y": 80,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_98": {
+      "id": 98,
+      "x": 464,
+      "y": 80,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_99": {
+      "id": 99,
+      "x": 528,
+      "y": 80,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_100": {
+      "id": 100,
+      "x": 544,
+      "y": 80,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_101": {
+      "id": 101,
+      "x": 16,
+      "y": 96,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_102": {
+      "id": 102,
+      "x": 48,
+      "y": 96,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_103": {
+      "id": 103,
+      "x": 64,
+      "y": 96,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_104": {
+      "id": 104,
+      "x": 80,
+      "y": 96,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_105": {
+      "id": 105,
+      "x": 112,
+      "y": 96,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_106": {
+      "id": 106,
+      "x": 160,
+      "y": 96,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_107": {
+      "id": 107,
+      "x": 192,
+      "y": 96,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_108": {
+      "id": 108,
+      "x": 208,
+      "y": 96,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_109": {
+      "id": 109,
+      "x": 224,
+      "y": 96,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_110": {
+      "id": 110,
+      "x": 256,
+      "y": 96,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_111": {
+      "id": 111,
+      "x": 304,
+      "y": 96,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_112": {
+      "id": 112,
+      "x": 336,
+      "y": 96,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_113": {
+      "id": 113,
+      "x": 352,
+      "y": 96,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_114": {
+      "id": 114,
+      "x": 368,
+      "y": 96,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_115": {
+      "id": 115,
+      "x": 400,
+      "y": 96,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_116": {
+      "id": 116,
+      "x": 448,
+      "y": 96,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_117": {
+      "id": 117,
+      "x": 480,
+      "y": 96,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_118": {
+      "id": 118,
+      "x": 496,
+      "y": 96,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_119": {
+      "id": 119,
+      "x": 512,
+      "y": 96,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_120": {
+      "id": 120,
+      "x": 544,
+      "y": 96,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_121": {
+      "id": 121,
+      "x": 16,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_122": {
+      "id": 122,
+      "x": 32,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_123": {
+      "id": 123,
+      "x": 48,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_124": {
+      "id": 124,
+      "x": 64,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "tile_125": {
+      "id": 125,
+      "x": 80,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_126": {
+      "id": 126,
+      "x": 96,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_127": {
+      "id": 127,
+      "x": 112,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_128": {
+      "id": 128,
+      "x": 160,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_129": {
+      "id": 129,
+      "x": 176,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_130": {
+      "id": 130,
+      "x": 192,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_131": {
+      "id": 131,
+      "x": 208,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "tile_132": {
+      "id": 132,
+      "x": 224,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_133": {
+      "id": 133,
+      "x": 240,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_134": {
+      "id": 134,
+      "x": 256,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_135": {
+      "id": 135,
+      "x": 304,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_136": {
+      "id": 136,
+      "x": 320,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_137": {
+      "id": 137,
+      "x": 336,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_138": {
+      "id": 138,
+      "x": 352,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "tile_139": {
+      "id": 139,
+      "x": 368,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_140": {
+      "id": 140,
+      "x": 384,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_141": {
+      "id": 141,
+      "x": 400,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_142": {
+      "id": 142,
+      "x": 448,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_143": {
+      "id": 143,
+      "x": 464,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_144": {
+      "id": 144,
+      "x": 480,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_145": {
+      "id": 145,
+      "x": 496,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "tile_146": {
+      "id": 146,
+      "x": 512,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_147": {
+      "id": 147,
+      "x": 528,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "water",
+      "tags": []
+    },
+    "tile_148": {
+      "id": 148,
+      "x": 544,
+      "y": 112,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "shore",
+      "tags": []
+    },
+    "tile_149": {
+      "id": 149,
+      "x": 16,
+      "y": 144,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "tile_150": {
+      "id": 150,
+      "x": 32,
+      "y": 144,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "tile_151": {
+      "id": 151,
+      "x": 48,
+      "y": 144,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "tile_152": {
+      "id": 152,
+      "x": 64,
+      "y": 144,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "tile_153": {
+      "id": 153,
+      "x": 128,
+      "y": 144,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "dirt",
+      "tags": []
+    },
+    "tile_154": {
+      "id": 154,
+      "x": 144,
+      "y": 144,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "dirt",
+      "tags": []
+    },
+    "tile_155": {
+      "id": 155,
+      "x": 160,
+      "y": 144,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "dirt",
+      "tags": []
+    },
+    "tile_156": {
+      "id": 156,
+      "x": 176,
+      "y": 144,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "dirt",
+      "tags": []
+    },
+    "tile_157": {
+      "id": 157,
+      "x": 192,
+      "y": 144,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "dirt",
+      "tags": []
+    },
+    "tile_158": {
+      "id": 158,
+      "x": 208,
+      "y": 144,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "dirt",
+      "tags": []
+    },
+    "tile_159": {
+      "id": 159,
+      "x": 224,
+      "y": 144,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "dirt",
+      "tags": []
+    },
+    "tile_160": {
+      "id": 160,
+      "x": 240,
+      "y": 144,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_161": {
+      "id": 161,
+      "x": 256,
+      "y": 144,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_162": {
+      "id": 162,
+      "x": 272,
+      "y": 144,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_163": {
+      "id": 163,
+      "x": 288,
+      "y": 144,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_164": {
+      "id": 164,
+      "x": 304,
+      "y": 144,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_165": {
+      "id": 165,
+      "x": 320,
+      "y": 144,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_166": {
+      "id": 166,
+      "x": 336,
+      "y": 144,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_167": {
+      "id": 167,
+      "x": 352,
+      "y": 144,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_168": {
+      "id": 168,
+      "x": 16,
+      "y": 160,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "tile_169": {
+      "id": 169,
+      "x": 32,
+      "y": 160,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "tile_170": {
+      "id": 170,
+      "x": 48,
+      "y": 160,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "tile_171": {
+      "id": 171,
+      "x": 64,
+      "y": 160,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "tile_172": {
+      "id": 172,
+      "x": 112,
+      "y": 160,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "dirt",
+      "tags": []
+    },
+    "tile_173": {
+      "id": 173,
+      "x": 128,
+      "y": 160,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "dirt",
+      "tags": []
+    },
+    "tile_174": {
+      "id": 174,
+      "x": 144,
+      "y": 160,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "dirt",
+      "tags": []
+    },
+    "tile_175": {
+      "id": 175,
+      "x": 160,
+      "y": 160,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "dirt",
+      "tags": []
+    },
+    "tile_176": {
+      "id": 176,
+      "x": 176,
+      "y": 160,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "dirt",
+      "tags": []
+    },
+    "tile_177": {
+      "id": 177,
+      "x": 192,
+      "y": 160,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "dirt",
+      "tags": []
+    },
+    "tile_178": {
+      "id": 178,
+      "x": 208,
+      "y": 160,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "dirt",
+      "tags": []
+    },
+    "tile_179": {
+      "id": 179,
+      "x": 224,
+      "y": 160,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "dirt",
+      "tags": []
+    },
+    "tile_180": {
+      "id": 180,
+      "x": 240,
+      "y": 160,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_181": {
+      "id": 181,
+      "x": 256,
+      "y": 160,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_182": {
+      "id": 182,
+      "x": 272,
+      "y": 160,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_183": {
+      "id": 183,
+      "x": 288,
+      "y": 160,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_184": {
+      "id": 184,
+      "x": 304,
+      "y": 160,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_185": {
+      "id": 185,
+      "x": 320,
+      "y": 160,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_186": {
+      "id": 186,
+      "x": 336,
+      "y": 160,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_187": {
+      "id": 187,
+      "x": 352,
+      "y": 160,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_188": {
+      "id": 188,
+      "x": 16,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "tile_189": {
+      "id": 189,
+      "x": 32,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "tile_190": {
+      "id": 190,
+      "x": 48,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "tile_191": {
+      "id": 191,
+      "x": 64,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "tile_192": {
+      "id": 192,
+      "x": 112,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "wall",
+      "tags": []
+    },
+    "tile_193": {
+      "id": 193,
+      "x": 128,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "wall",
+      "tags": []
+    },
+    "tile_194": {
+      "id": 194,
+      "x": 144,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "wall",
+      "tags": []
+    },
+    "tile_195": {
+      "id": 195,
+      "x": 160,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "wall",
+      "tags": []
+    },
+    "tile_196": {
+      "id": 196,
+      "x": 176,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "wall",
+      "tags": []
+    },
+    "tile_197": {
+      "id": 197,
+      "x": 192,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "wall",
+      "tags": []
+    },
+    "tile_198": {
+      "id": 198,
+      "x": 208,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "wall",
+      "tags": []
+    },
+    "tile_199": {
+      "id": 199,
+      "x": 224,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "wall",
+      "tags": []
+    },
+    "tile_200": {
+      "id": 200,
+      "x": 240,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_201": {
+      "id": 201,
+      "x": 256,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_202": {
+      "id": 202,
+      "x": 272,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_203": {
+      "id": 203,
+      "x": 288,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_204": {
+      "id": 204,
+      "x": 304,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_205": {
+      "id": 205,
+      "x": 320,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_206": {
+      "id": 206,
+      "x": 336,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_207": {
+      "id": 207,
+      "x": 352,
+      "y": 176,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_208": {
+      "id": 208,
+      "x": 112,
+      "y": 192,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "wall",
+      "tags": []
+    },
+    "tile_209": {
+      "id": 209,
+      "x": 128,
+      "y": 192,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "wall",
+      "tags": []
+    },
+    "tile_210": {
+      "id": 210,
+      "x": 144,
+      "y": 192,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "wall",
+      "tags": []
+    },
+    "tile_211": {
+      "id": 211,
+      "x": 160,
+      "y": 192,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "wall",
+      "tags": []
+    },
+    "tile_212": {
+      "id": 212,
+      "x": 176,
+      "y": 192,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "wall",
+      "tags": []
+    },
+    "tile_213": {
+      "id": 213,
+      "x": 192,
+      "y": 192,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "wall",
+      "tags": []
+    },
+    "tile_214": {
+      "id": 214,
+      "x": 208,
+      "y": 192,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "wall",
+      "tags": []
+    },
+    "tile_215": {
+      "id": 215,
+      "x": 224,
+      "y": 192,
+      "w": 16,
+      "h": 16,
+      "walkable": false,
+      "terrainType": "wall",
+      "tags": []
+    },
+    "tile_216": {
+      "id": 216,
+      "x": 240,
+      "y": 192,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_217": {
+      "id": 217,
+      "x": 256,
+      "y": 192,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_218": {
+      "id": 218,
+      "x": 272,
+      "y": 192,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_219": {
+      "id": 219,
+      "x": 288,
+      "y": 192,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_220": {
+      "id": 220,
+      "x": 304,
+      "y": 192,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_221": {
+      "id": 221,
+      "x": 320,
+      "y": 192,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_222": {
+      "id": 222,
+      "x": 336,
+      "y": 192,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_223": {
+      "id": 223,
+      "x": 352,
+      "y": 192,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_224": {
+      "id": 224,
+      "x": 16,
+      "y": 208,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "tile_225": {
+      "id": 225,
+      "x": 48,
+      "y": 224,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "tile_226": {
+      "id": 226,
+      "x": 48,
+      "y": 208,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "tile_227": {
+      "id": 227,
+      "x": 112,
+      "y": 208,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_228": {
+      "id": 228,
+      "x": 128,
+      "y": 208,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_229": {
+      "id": 229,
+      "x": 144,
+      "y": 208,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_230": {
+      "id": 230,
+      "x": 160,
+      "y": 208,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_231": {
+      "id": 231,
+      "x": 176,
+      "y": 208,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_232": {
+      "id": 232,
+      "x": 192,
+      "y": 208,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_233": {
+      "id": 233,
+      "x": 208,
+      "y": 208,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_234": {
+      "id": 234,
+      "x": 224,
+      "y": 208,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_235": {
+      "id": 235,
+      "x": 240,
+      "y": 208,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_236": {
+      "id": 236,
+      "x": 256,
+      "y": 208,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_237": {
+      "id": 237,
+      "x": 272,
+      "y": 208,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_238": {
+      "id": 238,
+      "x": 288,
+      "y": 208,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_239": {
+      "id": 239,
+      "x": 304,
+      "y": 208,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_240": {
+      "id": 240,
+      "x": 320,
+      "y": 208,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_241": {
+      "id": 241,
+      "x": 336,
+      "y": 208,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_242": {
+      "id": 242,
+      "x": 352,
+      "y": 208,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_243": {
+      "id": 243,
+      "x": 16,
+      "y": 224,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "tile_244": {
+      "id": 244,
+      "x": 32,
+      "y": 208,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "tile_245": {
+      "id": 245,
+      "x": 112,
+      "y": 224,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_246": {
+      "id": 246,
+      "x": 128,
+      "y": 224,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_247": {
+      "id": 247,
+      "x": 144,
+      "y": 224,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_248": {
+      "id": 248,
+      "x": 160,
+      "y": 224,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_249": {
+      "id": 249,
+      "x": 176,
+      "y": 224,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_250": {
+      "id": 250,
+      "x": 192,
+      "y": 224,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_251": {
+      "id": 251,
+      "x": 208,
+      "y": 224,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_252": {
+      "id": 252,
+      "x": 224,
+      "y": 224,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_253": {
+      "id": 253,
+      "x": 240,
+      "y": 224,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_254": {
+      "id": 254,
+      "x": 256,
+      "y": 224,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_255": {
+      "id": 255,
+      "x": 272,
+      "y": 224,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_256": {
+      "id": 256,
+      "x": 288,
+      "y": 224,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_257": {
+      "id": 257,
+      "x": 304,
+      "y": 224,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_258": {
+      "id": 258,
+      "x": 320,
+      "y": 224,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_259": {
+      "id": 259,
+      "x": 336,
+      "y": 224,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_260": {
+      "id": 260,
+      "x": 352,
+      "y": 224,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_261": {
+      "id": 261,
+      "x": 16,
+      "y": 240,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "tile_262": {
+      "id": 262,
+      "x": 48,
+      "y": 240,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "tile_263": {
+      "id": 263,
+      "x": 112,
+      "y": 240,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_264": {
+      "id": 264,
+      "x": 128,
+      "y": 240,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_265": {
+      "id": 265,
+      "x": 144,
+      "y": 240,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_266": {
+      "id": 266,
+      "x": 160,
+      "y": 240,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_267": {
+      "id": 267,
+      "x": 176,
+      "y": 240,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_268": {
+      "id": 268,
+      "x": 192,
+      "y": 240,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_269": {
+      "id": 269,
+      "x": 208,
+      "y": 240,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_270": {
+      "id": 270,
+      "x": 224,
+      "y": 240,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_271": {
+      "id": 271,
+      "x": 240,
+      "y": 240,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_272": {
+      "id": 272,
+      "x": 256,
+      "y": 240,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_273": {
+      "id": 273,
+      "x": 272,
+      "y": 240,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_274": {
+      "id": 274,
+      "x": 288,
+      "y": 240,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_275": {
+      "id": 275,
+      "x": 304,
+      "y": 240,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_276": {
+      "id": 276,
+      "x": 320,
+      "y": 240,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_277": {
+      "id": 277,
+      "x": 336,
+      "y": 240,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_278": {
+      "id": 278,
+      "x": 16,
+      "y": 256,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "tile_279": {
+      "id": 279,
+      "x": 32,
+      "y": 256,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "tile_280": {
+      "id": 280,
+      "x": 48,
+      "y": 256,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "sand",
+      "tags": []
+    },
+    "tile_281": {
+      "id": 281,
+      "x": 128,
+      "y": 256,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_282": {
+      "id": 282,
+      "x": 160,
+      "y": 256,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_283": {
+      "id": 283,
+      "x": 176,
+      "y": 256,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_284": {
+      "id": 284,
+      "x": 192,
+      "y": 256,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_285": {
+      "id": 285,
+      "x": 208,
+      "y": 256,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_286": {
+      "id": 286,
+      "x": 224,
+      "y": 256,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_287": {
+      "id": 287,
+      "x": 240,
+      "y": 256,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_288": {
+      "id": 288,
+      "x": 256,
+      "y": 256,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_289": {
+      "id": 289,
+      "x": 272,
+      "y": 256,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_290": {
+      "id": 290,
+      "x": 288,
+      "y": 256,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_291": {
+      "id": 291,
+      "x": 304,
+      "y": 256,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_292": {
+      "id": 292,
+      "x": 320,
+      "y": 256,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_293": {
+      "id": 293,
+      "x": 336,
+      "y": 256,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_294": {
+      "id": 294,
+      "x": 352,
+      "y": 256,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_295": {
+      "id": 295,
+      "x": 112,
+      "y": 272,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_296": {
+      "id": 296,
+      "x": 128,
+      "y": 272,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_297": {
+      "id": 297,
+      "x": 144,
+      "y": 272,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_298": {
+      "id": 298,
+      "x": 160,
+      "y": 272,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_299": {
+      "id": 299,
+      "x": 176,
+      "y": 272,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_300": {
+      "id": 300,
+      "x": 192,
+      "y": 272,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_301": {
+      "id": 301,
+      "x": 208,
+      "y": 272,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_302": {
+      "id": 302,
+      "x": 224,
+      "y": 272,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_303": {
+      "id": 303,
+      "x": 240,
+      "y": 272,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_304": {
+      "id": 304,
+      "x": 256,
+      "y": 272,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_305": {
+      "id": 305,
+      "x": 272,
+      "y": 272,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_306": {
+      "id": 306,
+      "x": 288,
+      "y": 272,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_307": {
+      "id": 307,
+      "x": 304,
+      "y": 272,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_308": {
+      "id": 308,
+      "x": 320,
+      "y": 272,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_309": {
+      "id": 309,
+      "x": 336,
+      "y": 272,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_310": {
+      "id": 310,
+      "x": 352,
+      "y": 272,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_311": {
+      "id": 311,
+      "x": 112,
+      "y": 288,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_312": {
+      "id": 312,
+      "x": 128,
+      "y": 288,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_313": {
+      "id": 313,
+      "x": 144,
+      "y": 288,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_314": {
+      "id": 314,
+      "x": 160,
+      "y": 288,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_315": {
+      "id": 315,
+      "x": 176,
+      "y": 288,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_316": {
+      "id": 316,
+      "x": 192,
+      "y": 288,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_317": {
+      "id": 317,
+      "x": 208,
+      "y": 288,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_318": {
+      "id": 318,
+      "x": 224,
+      "y": 288,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_319": {
+      "id": 319,
+      "x": 112,
+      "y": 304,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_320": {
+      "id": 320,
+      "x": 128,
+      "y": 304,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_321": {
+      "id": 321,
+      "x": 144,
+      "y": 304,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_322": {
+      "id": 322,
+      "x": 160,
+      "y": 304,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_323": {
+      "id": 323,
+      "x": 176,
+      "y": 304,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_324": {
+      "id": 324,
+      "x": 192,
+      "y": 304,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_325": {
+      "id": 325,
+      "x": 208,
+      "y": 304,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_326": {
+      "id": 326,
+      "x": 224,
+      "y": 304,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_327": {
+      "id": 327,
+      "x": 112,
+      "y": 320,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_328": {
+      "id": 328,
+      "x": 128,
+      "y": 320,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_329": {
+      "id": 329,
+      "x": 144,
+      "y": 320,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_330": {
+      "id": 330,
+      "x": 160,
+      "y": 320,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_331": {
+      "id": 331,
+      "x": 176,
+      "y": 320,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_332": {
+      "id": 332,
+      "x": 192,
+      "y": 320,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_333": {
+      "id": 333,
+      "x": 208,
+      "y": 320,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_334": {
+      "id": 334,
+      "x": 112,
+      "y": 336,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_335": {
+      "id": 335,
+      "x": 128,
+      "y": 336,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_336": {
+      "id": 336,
+      "x": 176,
+      "y": 336,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_337": {
+      "id": 337,
+      "x": 192,
+      "y": 336,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_338": {
+      "id": 338,
+      "x": 208,
+      "y": 336,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_339": {
+      "id": 339,
+      "x": 224,
+      "y": 336,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_340": {
+      "id": 340,
+      "x": 112,
+      "y": 352,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_341": {
+      "id": 341,
+      "x": 128,
+      "y": 352,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_342": {
+      "id": 342,
+      "x": 192,
+      "y": 352,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_343": {
+      "id": 343,
+      "x": 208,
+      "y": 352,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_344": {
+      "id": 344,
+      "x": 224,
+      "y": 352,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_345": {
+      "id": 345,
+      "x": 112,
+      "y": 368,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_346": {
+      "id": 346,
+      "x": 128,
+      "y": 368,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_347": {
+      "id": 347,
+      "x": 144,
+      "y": 368,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_348": {
+      "id": 348,
+      "x": 176,
+      "y": 368,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_349": {
+      "id": 349,
+      "x": 192,
+      "y": 368,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_350": {
+      "id": 350,
+      "x": 224,
+      "y": 368,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_351": {
+      "id": 351,
+      "x": 144,
+      "y": 384,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_352": {
+      "id": 352,
+      "x": 176,
+      "y": 384,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_353": {
+      "id": 353,
+      "x": 192,
+      "y": 384,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    },
+    "tile_354": {
+      "id": 354,
+      "x": 224,
+      "y": 384,
+      "w": 16,
+      "h": 16,
+      "walkable": true,
+      "terrainType": "grass",
+      "tags": []
+    }
+  },
+  "map": [
+    [67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67],
+    [67, 67, 112, 118, 103, 103, 103, 103, 103, 103, 103, 103, 103, 103, 103, 103, 103, 103, 103, 103, 103, 103, 103, 103, 103, 103, 103, 103, 103, 119, 82, 67],
+    [67, 59, 137, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 146, 62, 67],
+    [67, 83, 69, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 176, 159, 159, 159, 159, 159, 159, 65, 66, 67],
+    [67, 83, 69, 159, 159, 159, 157, 159, 159, 154, 159, 159, 159, 159, 159, 159, 174, 159, 159, 159, 159, 159, 159, 159, 159, 159, 157, 159, 159, 65, 66, 67],
+    [67, 83, 69, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 65, 66, 67],
+    [67, 83, 69, 159, 159, 159, 159, 159, 159, 159, 159, 156, 172, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 176, 159, 159, 159, 65, 66, 67],
+    [67, 83, 69, 159, 159, 159, 159, 159, 159, 159, 195, 196, 159, 159, 159, 159, 159, 159, 159, 159, 155, 159, 159, 159, 159, 159, 159, 159, 159, 65, 66, 67],
+    [67, 83, 69, 159, 159, 159, 179, 155, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 154, 159, 65, 66, 67],
+    [67, 83, 69, 159, 159, 159, 178, 159, 159, 159, 159, 156, 159, 159, 159, 159, 194, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 65, 66, 67],
+    [67, 83, 69, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 192, 159, 159, 159, 159, 159, 159, 65, 66, 67],
+    [67, 83, 69, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 65, 66, 67],
+    [67, 83, 69, 159, 153, 159, 159, 159, 159, 159, 159, 154, 159, 159, 159, 157, 159, 159, 159, 158, 159, 159, 159, 159, 159, 158, 159, 159, 159, 65, 66, 67],
+    [67, 83, 69, 159, 157, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 156, 159, 159, 175, 159, 172, 159, 65, 66, 67],
+    [67, 83, 69, 159, 159, 159, 159, 159, 158, 176, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 65, 66, 67],
+    [67, 83, 69, 159, 159, 159, 159, 159, 159, 159, 159, 159, 195, 196, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 65, 66, 67],
+    [67, 83, 69, 159, 159, 159, 159, 172, 159, 159, 159, 159, 159, 159, 159, 159, 159, 157, 172, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 65, 66, 67],
+    [67, 83, 69, 159, 159, 159, 159, 173, 159, 159, 172, 159, 159, 159, 159, 159, 159, 155, 178, 159, 159, 159, 159, 193, 159, 159, 159, 159, 159, 65, 66, 67],
+    [67, 83, 69, 159, 159, 159, 159, 159, 159, 154, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 65, 66, 67],
+    [67, 83, 69, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 156, 159, 159, 158, 156, 159, 65, 66, 67],
+    [67, 83, 69, 159, 159, 153, 159, 159, 192, 159, 159, 159, 159, 159, 156, 159, 159, 159, 159, 157, 159, 159, 159, 159, 159, 159, 159, 159, 159, 65, 66, 67],
+    [67, 83, 69, 159, 159, 156, 159, 159, 159, 159, 159, 159, 159, 174, 195, 196, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 65, 66, 67],
+    [67, 83, 69, 159, 159, 153, 159, 159, 159, 159, 159, 159, 159, 192, 194, 192, 159, 159, 159, 159, 159, 178, 159, 159, 159, 159, 159, 159, 159, 65, 66, 67],
+    [67, 83, 69, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 158, 159, 159, 159, 159, 159, 159, 159, 65, 66, 67],
+    [67, 83, 69, 159, 159, 159, 159, 159, 159, 159, 173, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 176, 159, 65, 66, 67],
+    [67, 83, 69, 159, 159, 159, 159, 174, 159, 159, 176, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 173, 159, 65, 66, 67],
+    [67, 83, 69, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 178, 174, 159, 159, 159, 159, 159, 174, 159, 159, 65, 66, 67],
+    [67, 83, 69, 159, 173, 159, 159, 159, 159, 159, 159, 174, 159, 159, 177, 159, 159, 159, 159, 159, 159, 159, 159, 159, 156, 159, 159, 159, 159, 65, 66, 67],
+    [67, 83, 69, 159, 155, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 155, 159, 159, 159, 159, 159, 159, 159, 159, 159, 65, 66, 67],
+    [67, 67, 17, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 5, 37, 67],
+    [67, 67, 95, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 90, 67, 67],
+    [67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67]
+  ],
+  "layers": [
+    {
+      "name": "Ground",
+      "visible": true,
+      "opacity": 1,
+      "data": [
+        [67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67],
+        [67, 67, 112, 118, 103, 103, 103, 103, 103, 103, 103, 103, 103, 103, 103, 103, 103, 103, 103, 103, 103, 103, 103, 103, 103, 103, 103, 103, 103, 119, 82, 67],
+        [67, 59, 137, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 146, 62, 67],
+        [67, 83, 69, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 176, 159, 159, 159, 159, 159, 159, 65, 66, 67],
+        [67, 83, 69, 159, 159, 159, 157, 159, 159, 154, 159, 159, 159, 159, 159, 159, 174, 159, 159, 159, 159, 159, 159, 159, 159, 159, 157, 159, 159, 65, 66, 67],
+        [67, 83, 69, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 65, 66, 67],
+        [67, 83, 69, 159, 159, 159, 159, 159, 159, 159, 159, 156, 172, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 176, 159, 159, 159, 65, 66, 67],
+        [67, 83, 69, 159, 159, 159, 159, 159, 159, 159, 195, 196, 159, 159, 159, 159, 159, 159, 159, 159, 155, 159, 159, 159, 159, 159, 159, 159, 159, 65, 66, 67],
+        [67, 83, 69, 159, 159, 159, 179, 155, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 154, 159, 65, 66, 67],
+        [67, 83, 69, 159, 159, 159, 178, 159, 159, 159, 159, 156, 159, 159, 159, 159, 194, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 65, 66, 67],
+        [67, 83, 69, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 192, 159, 159, 159, 159, 159, 159, 65, 66, 67],
+        [67, 83, 69, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 65, 66, 67],
+        [67, 83, 69, 159, 153, 159, 159, 159, 159, 159, 159, 154, 159, 159, 159, 157, 159, 159, 159, 158, 159, 159, 159, 159, 159, 158, 159, 159, 159, 65, 66, 67],
+        [67, 83, 69, 159, 157, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 156, 159, 159, 175, 159, 172, 159, 65, 66, 67],
+        [67, 83, 69, 159, 159, 159, 159, 159, 158, 176, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 65, 66, 67],
+        [67, 83, 69, 159, 159, 159, 159, 159, 159, 159, 159, 159, 195, 196, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 65, 66, 67],
+        [67, 83, 69, 159, 159, 159, 159, 172, 159, 159, 159, 159, 159, 159, 159, 159, 159, 157, 172, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 65, 66, 67],
+        [67, 83, 69, 159, 159, 159, 159, 173, 159, 159, 172, 159, 159, 159, 159, 159, 159, 155, 178, 159, 159, 159, 159, 193, 159, 159, 159, 159, 159, 65, 66, 67],
+        [67, 83, 69, 159, 159, 159, 159, 159, 159, 154, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 65, 66, 67],
+        [67, 83, 69, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 156, 159, 159, 158, 156, 159, 65, 66, 67],
+        [67, 83, 69, 159, 159, 153, 159, 159, 192, 159, 159, 159, 159, 159, 156, 159, 159, 159, 159, 157, 159, 159, 159, 159, 159, 159, 159, 159, 159, 65, 66, 67],
+        [67, 83, 69, 159, 159, 156, 159, 159, 159, 159, 159, 159, 159, 174, 195, 196, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 65, 66, 67],
+        [67, 83, 69, 159, 159, 153, 159, 159, 159, 159, 159, 159, 159, 192, 194, 192, 159, 159, 159, 159, 159, 178, 159, 159, 159, 159, 159, 159, 159, 65, 66, 67],
+        [67, 83, 69, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 158, 159, 159, 159, 159, 159, 159, 159, 65, 66, 67],
+        [67, 83, 69, 159, 159, 159, 159, 159, 159, 159, 173, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 176, 159, 65, 66, 67],
+        [67, 83, 69, 159, 159, 159, 159, 174, 159, 159, 176, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 173, 159, 65, 66, 67],
+        [67, 83, 69, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 178, 174, 159, 159, 159, 159, 159, 174, 159, 159, 65, 66, 67],
+        [67, 83, 69, 159, 173, 159, 159, 159, 159, 159, 159, 174, 159, 159, 177, 159, 159, 159, 159, 159, 159, 159, 159, 159, 156, 159, 159, 159, 159, 65, 66, 67],
+        [67, 83, 69, 159, 155, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 155, 159, 159, 159, 159, 159, 159, 159, 159, 159, 65, 66, 67],
+        [67, 67, 17, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 5, 37, 67],
+        [67, 67, 95, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 90, 67, 67],
+        [67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67]
+      ]
+    }
+  ]
 }

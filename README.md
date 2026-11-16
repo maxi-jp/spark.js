@@ -30,6 +30,7 @@ Documentation can be consulted [here](https://maxi-jp.github.io/spark.js/docs/).
 - **Utilities**: A collection of helpers for vector math, collision detection, color manipulation, and more.
 - **Sprite Atlas**: `SpriteAtlas` class in `utils_classes.js` wraps a named-rect JSON file and returns `{x,y,w,h}` crop rectangles by id — use with `DrawImageSection` to render individual frames from a sprite sheet. Declare `atlasAssets` in the game constructor (same pattern as `graphicAssets`) and the engine preloads the JSON before `Start()` is called.
 - **Sprite Atlas Editor**: Standalone browser dev tool (`sprite-atlas-editor.html`) for defining named crop rectangles on sprite-sheet images — drag to draw, grid-snap, zoom/pan, numeric editing, import/export JSON.
+- **Tileset & Map Editor**: Integrated browser dev tool (`tileset-editor.html`) that combines sprite-sheet cropping and grid auto-slicing with a multi-layer 2D tilemap builder — define or import atlas crops, assign bulk per-tile metadata (`walkable`, `terrainType`, `tags`), paint with Brush/Erase/Fill/Rect/Pick tools (including random multi-tile brush painting), and export JSON directly loadable by `Tileset.FromData(img, pos, scale, data)` or `new Tileset(img, pos, scale, data)`.
 - **Particle System Editor**: Standalone browser dev tool (`particle-system-editor.html`) for designing, previewing, and exporting `ParticleSystem` configurations in real time — upload custom particle textures (or use built-in procedural shapes), tune all emitter/particle parameters with live sliders, test emitter movement modes (drag, follow mouse, orbit), and export JSON or JS snippets.
 - **Debugging Tools**: Optional debug drawing for physics bodies and an FPS/stats overlay.
 - **Mode 7 Renderer**: Simulate SNES-style pseudo-3D backgrounds (as in F-Zero or Mario Kart).
@@ -134,6 +135,9 @@ Documentation can be consulted [here](https://maxi-jp.github.io/spark.js/docs/).
   - sprite_atlas_editor/  # Standalone sprite-sheet crop-rect editor (no engine dependency)
     - sprite_atlas_editor.js   # Interactive canvas editor — draw, name, snap, export JSON
     - sprite_atlas_editor.css
+  - tileset_editor/       # Integrated Tileset & 2D Map Editor for the Tileset class
+    - tileset_editor.js        # Split-view atlas cropper + multi-layer map painter & JSON exporter
+    - tileset_editor.css
   - particle_system_editor/ # Standalone real-time particle system config editor
     - particle_system_editor.js # Interactive canvas preview, parameter sliders, presets & JSON export
     - particle_system_editor.css
@@ -321,6 +325,51 @@ class MyGame extends Game {
 See `src/examples/particles/particles_showcase.js` for the full interactive showcase (6 multi-emitter scenes + 18 presets), or open `particle-system-editor.html` to visually design and export particle system configurations as JSON.
 
 > The particle system is based on the standalone [HTML5_ParticleSystem](https://github.com/maxi-jp/HTML5_ParticleSystem) project.
+
+## Example: Using the Tileset & Map Editor
+
+Open `tileset-editor.html` in your browser to slice a tileset image (manually by dragging crop rectangles or automatically via **⚡ Slice Grid**), configure tile properties (`walkable`, `terrainType`, `tags`), paint single- or multi-layer maps, and export a `.json` file.
+
+Preload the image in `this.graphicAssets` and the exported JSON in `this.tilesetAssets`, then instantiate `Tileset` in `Start()`:
+
+```javascript
+class MyTilemapGame extends Game {
+    constructor(renderer) {
+        super(renderer);
+
+        this.Configure({
+            screenWidth: 1024,
+            screenHeight: 768,
+            imageSmoothingEnabled: false
+        });
+
+        this.graphicAssets = {
+            tileset: { path: "assets/rts_tileset.png", img: null }
+        };
+
+        this.tilesetAssets = {
+            levelMap: { path: "assets/rts_map.json", data: null }
+        };
+    }
+
+    Start() {
+        super.Start();
+
+        // Create and add the Tileset directly from the exported JSON data
+        this.tileset = this.AddGameObject(
+            Tileset.FromData(
+                this.graphicAssets.tileset.img,
+                Vector2.Zero(),
+                1,
+                this.tilesetAssets.levelMap.data
+            )
+        );
+
+        // Query tile metadata at runtime (e.g., walkability or terrainType)
+        console.log("Cell (8, 8) walkable:", this.tileset.IsWalkable(8, 8));
+    }
+}
+```
 
 ## Example: Using Box2D Physics
 
