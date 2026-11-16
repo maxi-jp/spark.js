@@ -139,7 +139,8 @@ class FSM {
     Stop() {
         if (this._active && this._currentStateName) {
             const state = this._states[this._currentStateName];
-            if (state) state.Exit(this._owner, null);
+            if (state)
+                state.Exit(this._owner, null);
         }
         this._currentStateName  = null;
         this._pendingTransition = null;
@@ -193,7 +194,8 @@ class FSM {
         }
 
         // Step 3: run state action
-        if (state) state.Update(dt, this._owner, this);
+        if (state)
+            state.Update(dt, this._owner, this);
 
         // Step 4: apply any imperative transition set during Update()
         if (this._pendingTransition !== null) {
@@ -211,20 +213,25 @@ class FSM {
      * @param {Color}    [color]
      */
     DrawDebug(renderer, x, y, color = Color.yellow) {
-        if (!debugMode || !this._currentStateName) return;
+        if (!debugMode || !this._currentStateName)
+            return;
+
         renderer.DrawFillText(this._currentStateName, x, y, '11px monospace', color, 'center');
     }
 
     _EnterState(name, prevName) {
         this._currentStateName = name;
         const state = this._states[name];
-        if (state) state.Enter(this._owner, prevName);
+        if (state)
+            state.Enter(this._owner, prevName);
     }
 
     _ApplyTransition(name) {
         const prevName  = this._currentStateName;
         const prevState = this._states[prevName];
-        if (prevState) prevState.Exit(this._owner, name);
+        if (prevState)
+            prevState.Exit(this._owner, name);
+
         this._previousStateName = prevName;
         this._EnterState(name, prevName);
     }

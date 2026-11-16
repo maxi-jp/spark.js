@@ -545,6 +545,14 @@ class BTWorkerGame extends Game {
             this.AddGameObject(worker);
         }
         this.AddGameObject(this.predator);
+
+        if (!this.menu) {
+            this.menu = new WorkerMenu(this, canvas);
+            this.menu.Start();
+        }
+        else {
+            this.menu.SyncState();
+        }
     }
 
     Update(dt) {
@@ -576,6 +584,8 @@ class BTWorkerGame extends Game {
             const selected = this.workers[this.selectedWorkerIndex];
             if (selected) selected.stamina = 5;
         }
+
+        this.menu.SyncState();
     }
 
     Draw() {
@@ -597,21 +607,6 @@ class BTWorkerGame extends Game {
 
         // Draw Entities (Workers & Predator)
         super.Draw();
-
-        // Header Title & Controls
-        this._DrawHeader();
-
-        // Behavior Tree Inspector Panel
-        if (this.showTreeInspector && this.workers[this.selectedWorkerIndex]) {
-            const selected = this.workers[this.selectedWorkerIndex];
-            selected.bt.DrawTreeInspector(renderer, 240, 75, {
-                width: 320,
-                title: `Live BT: ${selected.name}`
-            });
-        }
-
-        // Legend
-        this._DrawLegend();
     }
 
     _DrawGrid() {
@@ -622,47 +617,6 @@ class BTWorkerGame extends Game {
         for (let y = 0; y < this.screenHeight; y += step) {
             renderer.DrawLine(0, y, this.screenWidth, y, this.gridColor, 1);
         }
-    }
-
-    _DrawHeader() {
-        renderer.DrawFillText(
-            'Behavior Tree Demo — Autonomous Resource Worker AI',
-            this.screenWidth / 2, 22,
-            'bold 18px Arial', Color.white, 'center'
-        );
-        renderer.DrawFillText(
-            'Click anywhere to place Predator (Wolf) • [E] Exhaust Stamina • [TAB/SPACE] Switch Worker • [T] Toggle Tree Inspector',
-            this.screenWidth / 2, 44,
-            '12px Arial', new Color(0.7, 0.75, 0.85), 'center'
-        );
-    }
-
-    _DrawLegend() {
-        const lx = this.screenWidth - 250;
-        let   ly = 75;
-
-        renderer.DrawFillBasicRectangle(lx - 10, ly - 10, 244, 210, new Color(0.05, 0.07, 0.1, 0.88));
-        renderer.DrawStrokeBasicRectangle(lx - 10, ly - 10, 244, 210, new Color(0.2, 0.3, 0.45, 0.7), 1);
-
-        renderer.DrawFillText('Priority Hierarchy (BTReactiveSelector):', lx, ly + 4, 'bold 11px monospace', Color.cyan, 'left');
-        ly += 22;
-
-        const items = [
-            ['1. Evade Threat', WORKER_COLORS.flee, 'Predator within 140px range'],
-            ['2. Rest Routine', WORKER_COLORS.rest, 'Stamina < 20% → Campfire'],
-            ['3. Deposit Cargo', WORKER_COLORS.carry, 'Backpack full (5/5) → Hall'],
-            ['4. Harvest Ore', WORKER_COLORS.mine, 'Find Mine → Walk → Mine'],
-            ['5. Camp Idle', WORKER_COLORS.idle, 'All mines depleted / Standby']
-        ];
-
-        for (const [name, color, desc] of items) {
-            renderer.DrawFillCircle(lx + 6, ly + 2, 5, color);
-            renderer.DrawFillText(name, lx + 18, ly + 2, 'bold 11px monospace', Color.white, 'left', 'middle');
-            renderer.DrawFillText(desc, lx + 18, ly + 15, '10px monospace', Color.grey, 'left', 'middle');
-            ly += 30;
-        }
-
-        renderer.DrawFillText('Status: 🟢 SUCCESS  🔴 FAIL  🟡 RUN', lx, ly + 14, '10px monospace', Color.white, 'left');
     }
 }
 

@@ -1,0 +1,150 @@
+/* BT Boss Demo — HTMLMenu overlay styling */
+
+#canvasContainer {
+    position: relative;
+    margin: 0 auto;
+    margin-top: 20px;
+    overflow: hidden;
+}
+
+#canvasContainer canvas {
+    display: block;
+    margin: 0;
+}
+
+#boss-ui {
+    font-family: monospace;
+    text-align: left;
+    color: #f8fafc;
+    user-select: none;
+    -webkit-user-select: none;
+    pointer-events: none;
+}
+
+/* ── Top Header ────────────────────────────────────────────────────────── */
+#boss-header {
+    position: absolute;
+    top: 6px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    pointer-events: none;
+}
+
+.boss-title {
+    font: bold 17px/1.2 Arial, sans-serif;
+    color: #ffffff;
+}
+
+.boss-subtitle {
+    margin-top: 2px;
+    font: 11px/1.2 Arial, sans-serif;
+    color: #b3bfd9;
+}
+
+/* ── Top Boss Health Bar (y: 48, w: 420, centered) ─────────────────────── */
+#boss-hp-wrap {
+    position: absolute;
+    top: 48px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 420px;
+    height: 16px;
+    background: rgba(30, 38, 51, 0.90);
+    border: 1.5px solid #ffffff;
+    box-sizing: border-box;
+    pointer-events: none;
+}
+
+#boss-hp-fill {
+    height: 100%;
+    width: 100%;
+    transition: width 0.06s linear;
+}
+
+.boss-hp-tick {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #ffffff;
+}
+
+.boss-hp-tick-30 { left: 30%; }
+.boss-hp-tick-65 { left: 65%; }
+
+#boss-hp-label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font: bold 11px/1 monospace;
+    color: #ffffff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75);
+}
+
+/* ── Left Behavior Tree Inspector (x: 10, y: 70, w: 326) ───────────────── */
+#boss-tree-inspector {
+    position: absolute;
+    top: 70px;
+    left: 10px;
+    width: 326px;
+    pointer-events: none;
+}
+
+/* ── Right Legend Card (x: right 10, y: 65, w: 244) ────────────────────── */
+#boss-legend {
+    position: absolute;
+    top: 65px;
+    right: 10px;
+    width: 244px;
+    padding: 10px;
+    box-sizing: border-box;
+    background: rgba(13, 18, 26, 0.88);
+    border: 1px solid rgba(51, 77, 115, 0.7);
+    pointer-events: none;
+}
+
+.boss-legend-title {
+    font: bold 11px/1.2 monospace;
+    color: #22d3ee;
+    margin-bottom: 10px;
+}
+
+.boss-legend-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.boss-legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.boss-legend-name {
+    font: bold 11px/1.2 monospace;
+    color: #ffffff;
+}
+
+.boss-legend-desc {
+    font: 10px/1.25 monospace;
+    color: #9ca3af;
+}
+
+.boss-legend-note {
+    margin-top: 6px;
+    font: 10px/1.3 monospace;
+    color: #facc15;
+}
+
+.boss-legend-status {
+    margin-top: 4px;
+    font: 10px/1.3 monospace;
+    color: #ffffff;
+}

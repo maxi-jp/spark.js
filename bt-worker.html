@@ -7,6 +7,7 @@
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
     <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="src/examples/bt_worker/worker_ui.css">
     <script src="src/engine/utils_math.js"></script>
     <script src="src/engine/utils_classes.js"></script>
     <script src="src/engine/renderer.js"></script>
@@ -19,11 +20,62 @@
     <script src="src/engine/game.js"></script>
     <script src="src/engine/bt.js"></script>
     <script src="src/engine/main.js"></script>
+    <script src="src/examples/bt_worker/worker_menu.js"></script>
     <script src="src/examples/bt_worker/bt_worker.js"></script>
 </head>
 <body>
     <div id="canvasContainer">
         <canvas id="canvas"></canvas>
+
+        <!-- HTML+CSS HUD, Legend & Live BT Inspector overlay -->
+        <div id="worker-ui">
+            <header id="worker-header">
+                <div class="worker-title">Behavior Tree Demo — Autonomous Resource Worker AI</div>
+                <div class="worker-subtitle">Click anywhere to place Predator (Wolf) • [E] Exhaust Stamina • [TAB/SPACE] Switch Worker • [T] Toggle Tree Inspector</div>
+            </header>
+
+            <div id="worker-tree-inspector"></div>
+
+            <aside id="worker-legend">
+                <div class="worker-legend-title">Priority Hierarchy (BTReactiveSelector):</div>
+                <div class="worker-legend-item">
+                    <span class="worker-legend-dot" style="background:#ef4444"></span>
+                    <div>
+                        <div class="worker-legend-name">1. Evade Threat</div>
+                        <div class="worker-legend-desc">Predator within 140px range</div>
+                    </div>
+                </div>
+                <div class="worker-legend-item">
+                    <span class="worker-legend-dot" style="background:#22c55e"></span>
+                    <div>
+                        <div class="worker-legend-name">2. Rest Routine</div>
+                        <div class="worker-legend-desc">Stamina &lt; 20% → Campfire</div>
+                    </div>
+                </div>
+                <div class="worker-legend-item">
+                    <span class="worker-legend-dot" style="background:#eab308"></span>
+                    <div>
+                        <div class="worker-legend-name">3. Deposit Cargo</div>
+                        <div class="worker-legend-desc">Backpack full (5/5) → Hall</div>
+                    </div>
+                </div>
+                <div class="worker-legend-item">
+                    <span class="worker-legend-dot" style="background:#06b6d4"></span>
+                    <div>
+                        <div class="worker-legend-name">4. Harvest Ore</div>
+                        <div class="worker-legend-desc">Find Mine → Walk → Mine</div>
+                    </div>
+                </div>
+                <div class="worker-legend-item">
+                    <span class="worker-legend-dot" style="background:#64748b"></span>
+                    <div>
+                        <div class="worker-legend-name">5. Camp Idle</div>
+                        <div class="worker-legend-desc">All mines depleted / Standby</div>
+                    </div>
+                </div>
+                <div class="worker-legend-status">Status: 🟢 SUCCESS  🔴 FAIL  🟡 RUN</div>
+            </aside>
+        </div>
     </div>
 </body>
 </html>

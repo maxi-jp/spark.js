@@ -7,6 +7,7 @@
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
     <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="src/examples/bt_boss/boss_ui.css">
     <script src="src/engine/utils_math.js"></script>
     <script src="src/engine/utils_classes.js"></script>
     <script src="src/engine/renderer.js"></script>
@@ -19,11 +20,56 @@
     <script src="src/engine/game.js"></script>
     <script src="src/engine/bt.js"></script>
     <script src="src/engine/main.js"></script>
+    <script src="src/examples/bt_boss/boss_menu.js"></script>
     <script src="src/examples/bt_boss/bt_boss.js"></script>
 </head>
 <body>
     <div id="canvasContainer">
         <canvas id="canvas"></canvas>
+
+        <!-- HTML+CSS HUD, Health Bar, Legend & Live BT Inspector overlay -->
+        <div id="boss-ui">
+            <header id="boss-header">
+                <div class="boss-title">Behavior Tree Demo — Multiphase Arena Boss AI</div>
+                <div class="boss-subtitle">WASD: Move Hero • Mouse: Aim &amp; Shoot • [1/2/3] Jump to Phase • [R] Reset Boss • [T] Toggle Tree Inspector</div>
+            </header>
+
+            <div id="boss-hp-wrap">
+                <div id="boss-hp-fill"></div>
+                <div class="boss-hp-tick boss-hp-tick-30"></div>
+                <div class="boss-hp-tick boss-hp-tick-65"></div>
+                <div id="boss-hp-label">TITAN MECH: 1000 / 1000 HP</div>
+            </div>
+
+            <div id="boss-tree-inspector"></div>
+
+            <aside id="boss-legend">
+                <div class="boss-legend-title">Boss Phases (BTReactiveSelector):</div>
+                <div class="boss-legend-item">
+                    <span class="boss-legend-dot" style="background:#ef4444"></span>
+                    <div>
+                        <div class="boss-legend-name">Phase 3: Berserk</div>
+                        <div class="boss-legend-desc">HP ≤ 30% • Slams + Barrage</div>
+                    </div>
+                </div>
+                <div class="boss-legend-item">
+                    <span class="boss-legend-dot" style="background:#f97316"></span>
+                    <div>
+                        <div class="boss-legend-name">Phase 2: Overdrive</div>
+                        <div class="boss-legend-desc">HP ≤ 65% • Lasers + Spread</div>
+                    </div>
+                </div>
+                <div class="boss-legend-item">
+                    <span class="boss-legend-dot" style="background:#3b82f6"></span>
+                    <div>
+                        <div class="boss-legend-name">Phase 1: Guardian</div>
+                        <div class="boss-legend-desc">HP &gt; 65% • Lunge + Homing</div>
+                    </div>
+                </div>
+                <div class="boss-legend-note">Decorators: BTCooldown + BTWait</div>
+                <div class="boss-legend-status">Status: 🟢 SUCCESS  🔴 FAIL  🟡 RUN</div>
+            </aside>
+        </div>
     </div>
 </body>
 </html>

@@ -1046,7 +1046,8 @@ class BehaviorTree {
      * @param {{showStatus?: boolean, color?: Color, force?: boolean}} [options={}]
      */
     DrawDebug(renderer, x, y, options = {}) {
-        if ((!debugMode && !options.force) || !renderer) return;
+        if ((!debugMode && !options.force) || !renderer)
+            return;
 
         const leaf = this.activeLeafNode;
         const text = leaf ? `[${leaf.name}] ${leaf.status ?? ''}` : `[BT: ${this.lastStatus ?? 'IDLE'}]`;
@@ -1065,7 +1066,8 @@ class BehaviorTree {
      * @param {{width?: number, title?: string, force?: boolean}} [options={}]
      */
     DrawTreeInspector(renderer, startX = 15, startY = 40, options = {}) {
-        if ((!debugMode && !options.force) || !renderer || !this.root) return;
+        if ((!debugMode && !options.force) || !renderer || !this.root)
+            return;
 
         const lines = [];
         this._CollectTreeLines(this.root, '', true, lines);
@@ -1094,6 +1096,223 @@ class BehaviorTree {
             const textX = startX + (item.prefix.length * 6.6);
             renderer.DrawFillText(item.text, textX, lineY, '11px monospace', item.color, 'left', 'middle');
         }
+    }
+
+    /**
+     * Render the Behavior Tree hierarchy inspector inside an HTMLMenu or DOM container.
+     * Mirrors `DrawTreeInspector` using HTML+CSS and skips DOM updates when the
+     * serialized tree snapshot has not changed.
+     *
+     * @param {HTMLElement|HTMLMenu|string} target - Container element, CSS selector, or HTMLMenu instance.
+     * @param {{title?: string, force?: boolean, injectStyles?: boolean, className?: string}} [options={}]
+     * @returns {HTMLElement|null}
+     */
+    DrawTreeInspectorHTML(target, options = {}) {
+        const el = BehaviorTree._resolveHTMLTarget(target);
+        if (!el)
+            return null;
+
+        if ((!debugMode && !options.force) || !this.root) {
+            if (el._sparkBtSnapshotKey !== '__hidden__') {
+                el._sparkBtSnapshotKey = '__hidden__';
+                el._sparkBtTree = null;
+                el.innerHTML = '';
+            }
+            return el;
+        }
+
+        if (options.injectStyles !== false)
+            BehaviorTree._ensureHTMLDebugStyles();
+
+        const lines = [];
+        this._CollectTreeLines(this.root, '', true, lines);
+        const title = options.title ?? `Behavior Tree [${this.lastStatus ?? 'IDLE'}]`;
+        const extraClass = options.className ? ` ${options.className}` : '';
+
+        const keyParts = [title, extraClass];
+        for (let i = 0; i < lines.length; i++) {
+            keyParts.push(lines[i].prefix, lines[i].text, lines[i].status ?? '');
+        }
+        const snapshotKey = keyParts.join('|');
+        if (el._sparkBtSnapshotKey === snapshotKey && el._sparkBtTree === this)
+            return el;
+
+        el._sparkBtSnapshotKey = snapshotKey;
+        el._sparkBtTree = this;
+
+        const esc = BehaviorTree._escapeHTML;
+        let html = `<div class="spark-bt-inspector${esc(extraClass)}">`;
+        html += `<div class="spark-bt-header">${esc(title)}</div>`;
+        html += `<div class="spark-bt-lines">`;
+
+        for (let i = 0; i < lines.length; i++) {
+            const item = lines[i];
+            const statusCls = item.status === BTStatus.SUCCESS
+                ? 'is-success'
+                : item.status === BTStatus.FAILURE
+                    ? 'is-failure'
+                    : item.status === BTStatus.RUNNING
+                        ? 'is-running'
+                        : 'is-idle';
+
+            html += `<div class="spark-bt-line">`;
+            html += `<span class="spark-bt-prefix">${esc(item.prefix)}</span>`;
+            html += `<span class="spark-bt-node ${statusCls}">${esc(item.text)}</span>`;
+            html += `</div>`;
+        }
+
+        html += `</div></div>`;
+        el.innerHTML = html;
+        return el;
+    }
+
+    /**
+     * Render a compact `[Leaf] STATUS` debug badge inside an HTMLMenu or DOM container.
+     * Respects global `debugMode` unless `options.force` is true.
+     *
+     * @param {HTMLElement|HTMLMenu|string} target
+     * @param {{force?: boolean, color?: string|Color, injectStyles?: boolean}} [options={}]
+     * @returns {HTMLElement|null}
+     */
+    DrawDebugHTML(target, options = {}) {
+        const el = BehaviorTree._resolveHTMLTarget(target);
+        if (!el)
+            return null;
+
+        if (!debugMode && !options.force) {
+            if (el._sparkBtDebugKey !== '__hidden__') {
+                el._sparkBtDebugKey = '__hidden__';
+                el._sparkBtDebugTree = null;
+                el.innerHTML = '';
+            }
+            return el;
+        }
+
+        if (options.injectStyles !== false)
+            BehaviorTree._ensureHTMLDebugStyles();
+
+        const leaf = this.activeLeafNode;
+        const text = leaf ? `[${leaf.name}] ${leaf.status ?? ''}` : `[BT: ${this.lastStatus ?? 'IDLE'}]`;
+        const status = leaf?.status ?? this.lastStatus;
+        const statusCls = status === BTStatus.SUCCESS
+            ? 'is-success'
+            : status === BTStatus.FAILURE
+                ? 'is-failure'
+                : status === BTStatus.RUNNING
+                    ? 'is-running'
+                    : 'is-idle';
+        const customColor = options.color instanceof Color
+            ? options.color.toString()
+            : (options.color || '');
+        const key = `${text}|${statusCls}|${customColor}`;
+
+        if (el._sparkBtDebugKey === key && el._sparkBtDebugTree === this)
+            return el;
+
+        el._sparkBtDebugKey = key;
+        el._sparkBtDebugTree = this;
+        const styleAttr = customColor ? ` style="color:${BehaviorTree._escapeHTML(customColor)}"` : '';
+        el.innerHTML = `<span class="spark-bt-debug-badge ${statusCls}"${styleAttr}>${BehaviorTree._escapeHTML(text)}</span>`;
+        return el;
+    }
+
+    /**
+     * Resolve an HTMLMenu, CSS selector string, or HTMLElement to an HTMLElement.
+     * @param {HTMLElement|HTMLMenu|string|null} target
+     * @returns {HTMLElement|null}
+     * @private
+     */
+    static _resolveHTMLTarget(target) {
+        if (!target || typeof document === 'undefined')
+            return null;
+        if (typeof target === 'string')
+            return document.querySelector(target);
+        if (typeof HTMLMenu !== 'undefined' && target instanceof HTMLMenu)
+            return target.container || null;
+        if (target.container && target.container instanceof HTMLElement)
+            return target.container;
+        return target instanceof HTMLElement ? target : null;
+    }
+
+    /**
+     * Escape HTML special characters for safe DOM rendering.
+     * @param {*} value
+     * @returns {string}
+     * @private
+     */
+    static _escapeHTML(value) {
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    /**
+     * Inject default scoped CSS for BehaviorTree HTML debug panels once per document.
+     * @private
+     */
+    static _ensureHTMLDebugStyles() {
+        if (typeof document === 'undefined')
+            return;
+        if (document.getElementById('spark-bt-inspector-styles'))
+            return;
+
+        const style = document.createElement('style');
+        style.id = 'spark-bt-inspector-styles';
+        style.textContent = `
+.spark-bt-debug-badge {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 4px;
+    background: rgba(13, 18, 26, 0.88);
+    border: 1px solid rgba(51, 77, 115, 0.8);
+    font: 11px/1.3 monospace;
+    white-space: nowrap;
+}
+.spark-bt-inspector {
+    background: rgba(13, 18, 26, 0.88);
+    border: 1px solid rgba(51, 77, 115, 0.8);
+    border-radius: 4px;
+    padding: 7px 8px;
+    box-sizing: border-box;
+    font-family: monospace;
+    text-align: left;
+    color: #e2e8f0;
+}
+.spark-bt-header {
+    font-size: 12px;
+    font-weight: bold;
+    color: #22d3ee;
+    margin-bottom: 6px;
+    line-height: 1.25;
+}
+.spark-bt-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+.spark-bt-line {
+    font-size: 11px;
+    line-height: 1.4;
+    white-space: pre;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.spark-bt-prefix {
+    color: #94a3b8;
+}
+.spark-bt-node.is-success,
+.spark-bt-debug-badge.is-success { color: #84cc16; }
+.spark-bt-node.is-failure,
+.spark-bt-debug-badge.is-failure { color: #ef4444; }
+.spark-bt-node.is-running,
+.spark-bt-debug-badge.is-running { color: #facc15; }
+.spark-bt-node.is-idle,
+.spark-bt-debug-badge.is-idle    { color: #cbd5e1; }
+`;
+        document.head.appendChild(style);
     }
 
     // ── Internal Helpers ────────────────────────────────────────────────────────
@@ -1155,7 +1374,8 @@ class BehaviorTree {
         outLines.push({
             prefix: prefix + branchSymbol,
             text: text,
-            color: color
+            color: color,
+            status: node.status
         });
 
         const newPrefix = prefix + (isTail ? '    ' : '│   ');
@@ -1200,6 +1420,48 @@ class BehaviorTree {
             default: return Color.lightGrey ?? Color.white;
         }
     }
+}
+
+/**
+ * Standalone helper to render a BehaviorTree's inspector panel into an HTMLMenu or DOM container.
+ * @param {BehaviorTree} bt
+ * @param {HTMLElement|HTMLMenu|string} target
+ * @param {{title?: string, force?: boolean, injectStyles?: boolean, className?: string}} [options={}]
+ * @returns {HTMLElement|null}
+ */
+function DrawTreeInspectorHTML(bt, target, options = {}) {
+    if (!bt || typeof bt.DrawTreeInspectorHTML !== 'function') {
+        const el = BehaviorTree._resolveHTMLTarget(target);
+        if (el) {
+            el._sparkBtSnapshotKey = '';
+            el._sparkBtTree = null;
+            el.innerHTML = '';
+        }
+        return null;
+    }
+
+    return bt.DrawTreeInspectorHTML(target, options);
+}
+
+/**
+ * Standalone helper to render a BehaviorTree's compact debug badge into an HTMLMenu or DOM container.
+ * @param {BehaviorTree} bt
+ * @param {HTMLElement|HTMLMenu|string} target
+ * @param {{force?: boolean, color?: string|Color, injectStyles?: boolean}} [options={}]
+ * @returns {HTMLElement|null}
+ */
+function DrawBTDebugHTML(bt, target, options = {}) {
+    if (!bt || typeof bt.DrawDebugHTML !== 'function') {
+        const el = BehaviorTree._resolveHTMLTarget(target);
+        if (el) {
+            el._sparkBtDebugKey = '';
+            el._sparkBtDebugTree = null;
+            el.innerHTML = '';
+        }
+        return null;
+    }
+
+    return bt.DrawDebugHTML(target, options);
 }
 
 // #endregion

@@ -1652,7 +1652,7 @@ class GOAPAgent {
 
         const label = this.GetDebugLabel();
         const borderColor = options.color instanceof Color
-            ? options.color.ToCSS()
+            ? options.color.toString()
             : (options.color || '#facc15');
         const key = `${label}|${borderColor}`;
 

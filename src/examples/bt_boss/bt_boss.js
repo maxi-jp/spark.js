@@ -505,6 +505,14 @@ class BTBossGame extends Game {
         super.Start();
         this.AddGameObject(this.boss);
         this.AddGameObject(this.hero);
+
+        if (!this.menu) {
+            this.menu = new BossMenu(this, canvas);
+            this.menu.Start();
+        }
+        else {
+            this.menu.SyncState();
+        }
     }
 
     SpawnHeroBullet(x, y, angle) {
@@ -626,6 +634,8 @@ class BTBossGame extends Game {
                 this.shockwaves.splice(i, 1);
             }
         }
+
+        this.menu.SyncState();
     }
 
     Draw() {
@@ -650,23 +660,6 @@ class BTBossGame extends Game {
 
         // Game Objects (Boss & Hero)
         super.Draw();
-
-        // Top Boss Health Bar
-        this._DrawBossHealthBar();
-
-        // Header Title & Controls
-        this._DrawHeader();
-
-        // Behavior Tree Inspector Panel
-        if (this.showTreeInspector && this.boss) {
-            this.boss.bt.DrawTreeInspector(renderer, 16, 75, {
-                width: 320,
-                title: 'Titan Boss Behavior Tree'
-            });
-        }
-
-        // Legend
-        this._DrawLegend();
     }
 
     _DrawGrid() {
@@ -677,75 +670,6 @@ class BTBossGame extends Game {
         for (let y = 0; y < this.screenHeight; y += step) {
             renderer.DrawLine(0, y, this.screenWidth, y, this.gridColor, 1);
         }
-    }
-
-    _DrawBossHealthBar() {
-        const barW = 420;
-        const barH = 16;
-        const barX = this.screenWidth / 2 - barW / 2;
-        const barY = 48;
-
-        const hpRatio = Math.max(0, this.boss.hp / this.boss.maxHp);
-
-        // Bar background
-        renderer.DrawFillBasicRectangle(barX, barY, barW, barH, new Color(0.12, 0.15, 0.2, 0.9));
-
-        // Health fill
-        renderer.DrawFillBasicRectangle(barX, barY, barW * hpRatio, barH, this.boss.phaseColor);
-
-        // Phase divider ticks at 65% (HP 650) and 30% (HP 300)
-        renderer.DrawLine(barX + barW * 0.65, barY, barX + barW * 0.65, barY + barH, Color.white, 2);
-        renderer.DrawLine(barX + barW * 0.30, barY, barX + barW * 0.30, barY + barH, Color.white, 2);
-
-        // Outline
-        renderer.DrawStrokeBasicRectangle(barX, barY, barW, barH, Color.white, 1.5);
-
-        // Label
-        renderer.DrawFillText(
-            `TITAN MECH: ${Math.round(this.boss.hp)} / ${this.boss.maxHp} HP`,
-            this.screenWidth / 2, barY + barH / 2,
-            'bold 11px monospace', Color.white, 'center', 'middle'
-        );
-    }
-
-    _DrawHeader() {
-        renderer.DrawFillText(
-            'Behavior Tree Demo — Multiphase Arena Boss AI',
-            this.screenWidth / 2, 20,
-            'bold 17px Arial', Color.white, 'center'
-        );
-        renderer.DrawFillText(
-            'WASD: Move Hero • Mouse: Aim & Shoot • [1/2/3] Jump to Phase • [R] Reset Boss • [T] Toggle Tree Inspector',
-            this.screenWidth / 2, 38,
-            '11px Arial', new Color(0.7, 0.75, 0.85), 'center'
-        );
-    }
-
-    _DrawLegend() {
-        const lx = this.screenWidth - 250;
-        let   ly = 75;
-
-        renderer.DrawFillBasicRectangle(lx - 10, ly - 10, 244, 210, new Color(0.05, 0.07, 0.1, 0.88));
-        renderer.DrawStrokeBasicRectangle(lx - 10, ly - 10, 244, 210, new Color(0.2, 0.3, 0.45, 0.7), 1);
-
-        renderer.DrawFillText('Boss Phases (BTReactiveSelector):', lx, ly + 4, 'bold 11px monospace', Color.cyan, 'left');
-        ly += 22;
-
-        const items = [
-            ['Phase 3: Berserk', BOSS_COLORS.phase3, 'HP ≤ 30% • Slams + Barrage'],
-            ['Phase 2: Overdrive', BOSS_COLORS.phase2, 'HP ≤ 65% • Lasers + Spread'],
-            ['Phase 1: Guardian', BOSS_COLORS.phase1, 'HP > 65% • Lunge + Homing']
-        ];
-
-        for (const [name, color, desc] of items) {
-            renderer.DrawFillCircle(lx + 6, ly + 2, 5, color);
-            renderer.DrawFillText(name, lx + 18, ly + 2, 'bold 11px monospace', Color.white, 'left', 'middle');
-            renderer.DrawFillText(desc, lx + 18, ly + 15, '10px monospace', Color.grey, 'left', 'middle');
-            ly += 30;
-        }
-
-        renderer.DrawFillText('Decorators: BTCooldown + BTWait', lx, ly + 8, '10px monospace', Color.yellow, 'left');
-        renderer.DrawFillText('Status: 🟢 SUCCESS  🔴 FAIL  🟡 RUN', lx, ly + 24, '10px monospace', Color.white, 'left');
     }
 }
 

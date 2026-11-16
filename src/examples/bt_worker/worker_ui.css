@@ -1,0 +1,102 @@
+/* BT Worker Demo — HTMLMenu overlay styling */
+
+#canvasContainer {
+    position: relative;
+    margin: 0 auto;
+    margin-top: 20px;
+    overflow: hidden;
+}
+
+#canvasContainer canvas {
+    display: block;
+    margin: 0;
+}
+
+#worker-ui {
+    font-family: monospace;
+    text-align: left;
+    color: #f8fafc;
+    user-select: none;
+    -webkit-user-select: none;
+    pointer-events: none;
+}
+
+/* ── Top Header ────────────────────────────────────────────────────────── */
+#worker-header {
+    position: absolute;
+    top: 6px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    pointer-events: none;
+}
+
+.worker-title {
+    font: bold 18px/1.2 Arial, sans-serif;
+    color: #ffffff;
+}
+
+.worker-subtitle {
+    margin-top: 3px;
+    font: 12px/1.2 Arial, sans-serif;
+    color: #b3bfd9;
+}
+
+/* ── Behavior Tree Inspector (x: 234, y: 70, w: 326) ───────────────────── */
+#worker-tree-inspector {
+    position: absolute;
+    top: 70px;
+    left: 234px;
+    width: 326px;
+    pointer-events: none;
+}
+
+/* ── Right Legend Card (x: right 10, y: 65, w: 244) ────────────────────── */
+#worker-legend {
+    position: absolute;
+    top: 65px;
+    right: 10px;
+    width: 244px;
+    padding: 10px;
+    box-sizing: border-box;
+    background: rgba(13, 18, 26, 0.88);
+    border: 1px solid rgba(51, 77, 115, 0.7);
+    pointer-events: none;
+}
+
+.worker-legend-title {
+    font: bold 11px/1.2 monospace;
+    color: #22d3ee;
+    margin-bottom: 10px;
+}
+
+.worker-legend-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.worker-legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.worker-legend-name {
+    font: bold 11px/1.2 monospace;
+    color: #ffffff;
+}
+
+.worker-legend-desc {
+    font: 10px/1.25 monospace;
+    color: #9ca3af;
+}
+
+.worker-legend-status {
+    margin-top: 8px;
+    font: 10px/1.3 monospace;
+    color: #ffffff;
+}

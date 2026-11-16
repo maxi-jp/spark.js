@@ -7,6 +7,7 @@
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
     <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="src/examples/bt_guard/guard_ui.css">
     <script src="src/engine/utils_math.js"></script>
     <script src="src/engine/utils_classes.js"></script>
     <script src="src/engine/renderer.js"></script>
@@ -19,11 +20,55 @@
     <script src="src/engine/game.js"></script>
     <script src="src/engine/bt.js"></script>
     <script src="src/engine/main.js"></script>
+    <script src="src/examples/bt_guard/guard_menu.js"></script>
     <script src="src/examples/bt_guard/bt_guard.js"></script>
 </head>
 <body>
     <div id="canvasContainer">
         <canvas id="canvas"></canvas>
+
+        <!-- HTML+CSS HUD, Legend & Live BT Inspector overlay -->
+        <div id="guard-ui">
+            <header id="guard-header">
+                <div class="guard-title">Behavior Tree Demo — Stealth Guard AI</div>
+                <div class="guard-subtitle">Move mouse as Intruder • Click to create Distraction Noise • [TAB/SPACE] Switch Guard • [T] Toggle Tree Inspector</div>
+            </header>
+
+            <div id="guard-tree-inspector"></div>
+
+            <aside id="guard-legend">
+                <div class="guard-legend-title">AI Priorities (BTReactiveSelector):</div>
+                <div class="guard-legend-item">
+                    <span class="guard-legend-dot" style="background:#ef4444"></span>
+                    <div>
+                        <div class="guard-legend-name">1. Combat Chase</div>
+                        <div class="guard-legend-desc">Intruder in vision cone</div>
+                    </div>
+                </div>
+                <div class="guard-legend-item">
+                    <span class="guard-legend-dot" style="background:#eab308"></span>
+                    <div>
+                        <div class="guard-legend-name">2. Investigate Noise</div>
+                        <div class="guard-legend-desc">Sound click heard</div>
+                    </div>
+                </div>
+                <div class="guard-legend-item">
+                    <span class="guard-legend-dot" style="background:#f97316"></span>
+                    <div>
+                        <div class="guard-legend-name">3. Search Last Seen</div>
+                        <div class="guard-legend-desc">Lost sight of intruder</div>
+                    </div>
+                </div>
+                <div class="guard-legend-item">
+                    <span class="guard-legend-dot" style="background:#38bdf8"></span>
+                    <div>
+                        <div class="guard-legend-name">4. Patrol Routine</div>
+                        <div class="guard-legend-desc">Waypoints + wait pauses</div>
+                    </div>
+                </div>
+                <div class="guard-legend-status">Status: 🟢 SUCCESS  🔴 FAIL  🟡 RUN</div>
+            </aside>
+        </div>
     </div>
 </body>
 </html>

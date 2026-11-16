@@ -457,6 +457,14 @@ class BTGuardGame extends Game {
         this.guards = [guardAlpha, guardBeta];
         this.AddGameObject(guardAlpha);
         this.AddGameObject(guardBeta);
+
+        if (!this.menu) {
+            this.menu = new GuardMenu(this, canvas);
+            this.menu.Start();
+        }
+        else {
+            this.menu.SyncState();
+        }
     }
 
     Update(dt) {
@@ -486,6 +494,8 @@ class BTGuardGame extends Game {
                 this.soundRipples.splice(i, 1);
             }
         }
+
+        this.menu.SyncState();
     }
 
     TriggerSound(x, y) {
@@ -522,21 +532,6 @@ class BTGuardGame extends Game {
 
         // Mouse Intruder Crosshair
         this._DrawIntruder();
-
-        // Header Title & Controls
-        this._DrawHeader();
-
-        // Real-Time Behavior Tree Inspector HUD
-        if (this.showTreeInspector && this.guards[this.selectedGuardIndex]) {
-            const selected = this.guards[this.selectedGuardIndex];
-            selected.bt.DrawTreeInspector(renderer, 16, 80, {
-                width: 320,
-                title: `Live BT: ${selected.name}`
-            });
-        }
-
-        // Legend
-        this._DrawLegend();
     }
 
     _DrawGrid() {
@@ -562,46 +557,6 @@ class BTGuardGame extends Game {
 
         // Label
         renderer.DrawFillText('INTRUDER', mx, my + 18, 'bold 10px monospace', Color.lime, 'center');
-    }
-
-    _DrawHeader() {
-        renderer.DrawFillText(
-            'Behavior Tree Demo — Stealth Guard AI',
-            this.screenWidth / 2, 22,
-            'bold 18px Arial', Color.white, 'center'
-        );
-        renderer.DrawFillText(
-            'Move mouse as Intruder • Click to create Distraction Noise • [TAB/SPACE] Switch Guard • [T] Toggle Tree Inspector',
-            this.screenWidth / 2, 44,
-            '12px Arial', new Color(0.7, 0.75, 0.85), 'center'
-        );
-    }
-
-    _DrawLegend() {
-        const lx = this.screenWidth - 250;
-        let   ly = 80;
-
-        renderer.DrawFillBasicRectangle(lx - 10, ly - 10, 244, 180, new Color(0.05, 0.07, 0.1, 0.85));
-        renderer.DrawStrokeBasicRectangle(lx - 10, ly - 10, 244, 180, new Color(0.2, 0.3, 0.4, 0.7), 1);
-
-        renderer.DrawFillText('AI Priorities (BTReactiveSelector):', lx, ly + 4, 'bold 11px monospace', Color.cyan, 'left');
-        ly += 22;
-
-        const items = [
-            ['1. Combat Chase', GUARD_COLORS.chase, 'Intruder in vision cone'],
-            ['2. Investigate Noise', GUARD_COLORS.investigate, 'Sound click heard'],
-            ['3. Search Last Seen', GUARD_COLORS.search, 'Lost sight of intruder'],
-            ['4. Patrol Routine', GUARD_COLORS.patrol, 'Waypoints + wait pauses']
-        ];
-
-        for (const [name, color, desc] of items) {
-            renderer.DrawFillCircle(lx + 6, ly + 2, 5, color);
-            renderer.DrawFillText(name, lx + 18, ly + 2, 'bold 11px monospace', Color.white, 'left', 'middle');
-            renderer.DrawFillText(desc, lx + 18, ly + 15, '10px monospace', Color.grey, 'left', 'middle');
-            ly += 30;
-        }
-
-        renderer.DrawFillText('Status: 🟢 SUCCESS  🔴 FAIL  🟡 RUN', lx, ly + 14, '10px monospace', Color.white, 'left');
     }
 }
 
