@@ -13,9 +13,9 @@ class RTSGame extends Game {
         });
 
         // Map and tileset assets (paths relative to HTML file location)
-        this.tiledAssets = {
-            map: { path: "src/examples/rts/assets/rts_map_tiled.json", data: null }
-        };
+        // this.tiledAssets = {
+        //     map: { path: "src/examples/rts/assets/rts_map_tiled.json", data: null }
+        // };
 
         this.tilesetAssets = {
             levelMap: { path: "src/examples/rts/assets/rts_map.json", data: null }
@@ -52,22 +52,41 @@ class RTSGame extends Game {
         console.log("RTSGame Started - Phase 1 Session 1.3");
 
         // Parse the Tiled map and create the tilesets
-        const mapData = TiledLoader.Parse(this.tiledAssets.map.data, this.graphicAssets);
-        this.tilesets = TiledLoader.CreateTilesets(mapData, Vector2.Zero(), 1);
+        // const mapData = TiledLoader.Parse(this.tiledAssets.map.data, this.graphicAssets);
+        // this.tilesets = TiledLoader.CreateTilesets(mapData, Vector2.Zero(), 1);
+        // this.tilesets.forEach(tileset => {
+        //     this.AddGameObject(tileset);
+        // });
+        // this.mapWidth = mapData.width * mapData.tileWidth;
+        // this.mapHeight = mapData.height * mapData.tileHeight;
+        // this.cameraBounds = new Rect(0, 0, this.mapWidth, this.mapHeight);
+        // this.gridMap = GridMap.FromTiledMap(mapData, {
+        //     layerName: "Ground",
+        //     cellSize: 32,
+        //     walkableGids: [3]
+        // });
 
-        this.tilesets.forEach(tileset => {
-            this.AddGameObject(tileset);
-        });
+        // Load the map exported by the spark.js Tileset & Map Editor (16x16 tiles scaled 2x -> 32x32 world cells)
+        const mapScale = 2;
+        this.tileset = this.AddGameObject(
+            Tileset.FromData(
+                this.graphicAssets.rts_tileset.img,
+                Vector2.Zero(),
+                mapScale,
+                this.tilesetAssets.levelMap.data
+            )
+        );
+        this.tilesets = [this.tileset];
 
         // Store map dimensions for camera bounds
-        this.mapWidth = mapData.width * mapData.tileWidth;
-        this.mapHeight = mapData.height * mapData.tileHeight;
+        const cellSize = this.tileset.tileWidth * mapScale;
+        this.mapWidth = this.tileset.mapWidth * cellSize;
+        this.mapHeight = this.tileset.mapHeight * cellSize;
         this.cameraBounds = new Rect(0, 0, this.mapWidth, this.mapHeight);
 
-        this.gridMap = GridMap.FromTiledMap(mapData, {
+        this.gridMap = GridMap.FromTileset(this.tileset, {
             layerName: "Ground",
-            cellSize: 32,
-            walkableGids: [3]
+            cellSize: cellSize
         });
 
         this.SpawnTestUnits();
@@ -79,7 +98,7 @@ class RTSGame extends Game {
             maxSelection: 60
         });
         
-        console.log(`Map loaded: ${mapData.width}x${mapData.height} tiles (${this.mapWidth}x${this.mapHeight} pixels)`);
+        console.log(`Map loaded: ${this.tileset.mapWidth}x${this.tileset.mapHeight} tiles (${this.mapWidth}x${this.mapHeight} pixels)`);
 
         // Initialize the camera at the center of the screen
         this.camera = new RTSCamera(new Vector2(this.screenHalfWidth, this.screenHalfHeight), this, this.mapWidth, this.mapHeight, {

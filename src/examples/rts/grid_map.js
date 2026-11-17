@@ -134,11 +134,12 @@ class GridMap {
      */
     static FromTileset(tilesetOrData, options = {}) {
         const isInstance = typeof Tileset !== "undefined" && tilesetOrData instanceof Tileset;
+        const scaleX = isInstance && tilesetOrData.sprite && tilesetOrData.sprite.scale ? tilesetOrData.sprite.scale.x : 1;
         const parsed = isInstance
             ? {
                 width: tilesetOrData.mapWidth || (tilesetOrData.tilesetMap[0] ? tilesetOrData.tilesetMap[0].length : 0),
                 height: tilesetOrData.mapHeight || tilesetOrData.tilesetMap.length,
-                tileWidth: tilesetOrData.tileWidth,
+                tileWidth: tilesetOrData.tileWidth * scaleX,
                 tilesetConfig: tilesetOrData.tilesetConfig,
                 layers: tilesetOrData.layers || [{ name: tilesetOrData.layerName || "Ground", data: tilesetOrData.tilesetMap }]
             }

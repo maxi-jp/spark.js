@@ -2163,15 +2163,13 @@ function loadSampleProject(sampleKey) {
             imgPath: 'src/examples/rts/assets/rts_tileset.png',
             imgFile: 'rts_tileset.png',
             jsonPath: 'src/examples/rts/assets/rts_map.json',
-            projName: 'rts_map',
-            onlyUsedCrops: true
+            projName: 'rts_map'
         },
         beach: {
             imgPath: 'src/examples/tileset/assets/rpg/beach_tileset.png',
             imgFile: 'beach_tileset.png',
             jsonPath: 'src/examples/tileset/assets/rpg/island.json',
-            projName: 'island_map',
-            onlyUsedCrops: false
+            projName: 'island_map'
         }
     };
 
@@ -2193,17 +2191,6 @@ function loadSampleProject(sampleKey) {
             .then(r => r.json())
             .then(json => {
                 importJSONData(json, false);
-                if (cfg.onlyUsedCrops) {
-                    // For RTS sample, keep the 3 primary tiles (water, shore, grass) clean and clear so the user can see crops & add more!
-                    for (const id of Object.keys(tiles).map(Number)) {
-                        if (id > 3) delete tiles[id];
-                    }
-                    nextTileId = 4;
-                    selectTile(3); // grass
-                    refreshPalette();
-                    redrawAtlas();
-                    redrawMap();
-                }
             })
             .catch(err => {
                 console.warn('Could not fetch sample JSON:', err);
