@@ -107,6 +107,13 @@ class AStarPathfinder {
 
         const worldPath = gridPath.map(n => this.grid.GridToWorld(n.col, n.row));
 
+        // Swap first point to exact startWorld to avoid jitter when unit is not centered in cell
+        worldPath[0] = startWorld;
+
+        // And last point to exact endWorld to avoid going to the center of a cell
+        if (this.grid.IsWalkable(end.col, end.row))
+            worldPath[worldPath.length - 1] = endWorld;
+
         return this.smoothPath ? this._SmoothPath(worldPath) : worldPath;
     }
 
