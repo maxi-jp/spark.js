@@ -25,8 +25,16 @@
         <!-- Atlas JSON -->
         <button id="btn-load-json" class="tb-btn">Load JSON</button>
         <input type="file" id="file-json" accept=".json" style="display:none">
+        <button id="btn-load-both" class="tb-btn" title="Select both an image and its .json atlas">Load Image + JSON</button>
+        <input type="file" id="file-both" accept="image/*,.json" multiple style="display:none">
         <button id="btn-export"   class="tb-btn primary">Export JSON ↓</button>
         <button id="btn-clear"    class="tb-btn danger">Clear All</button>
+
+        <div class="tb-sep"></div>
+
+        <!-- Undo / Redo -->
+        <button id="btn-undo" class="tb-btn" title="Undo (Ctrl+Z)" disabled>↶ Undo</button>
+        <button id="btn-redo" class="tb-btn" title="Redo (Ctrl+Y)" disabled>↷ Redo</button>
 
         <div class="tb-sep"></div>
 
@@ -54,8 +62,8 @@
             <canvas id="editor-canvas"></canvas>
             <div id="drop-hint">
                 <span class="dh-icon">🖼</span>
-                <p>Drag an image here, or click <strong>Load Image</strong></p>
-                <p style="font-size:12px;opacity:.6">Also accepts a .json atlas file to continue editing</p>
+                <p>Drag an image, .json, or folder here — or click <strong>Load Image</strong> / <strong>Load Image + JSON</strong></p>
+                <p style="font-size:12px;opacity:.6">Drop both files or a folder to auto-match image &amp; atlas JSON</p>
             </div>
             <div id="coord-bar"></div>
         </div>
@@ -72,8 +80,7 @@
                     <button id="btn-add" class="tb-btn primary">Add</button>
                 </div>
                 <p style="font-size:10px;color:var(--muted);margin-top:7px;line-height:1.5">
-                    Type a name, then <b>drag</b> on the canvas to define the crop rect.
-                    Click an existing rect to select and rename it.<br>
+                    <b>Drag</b> on canvas to draw rect &nbsp;·&nbsp; <b>Double-click</b> sprite pixel to auto-detect bounds.<br>
                     <b>Middle-click</b> or <b>Alt + drag</b> to pan &nbsp;·&nbsp; <b>Wheel</b> to zoom.
                 </p>
             </div>
@@ -103,14 +110,49 @@
                         <input id="sel-h" type="number" min="1">
                     </div>
                 </div>
+                <div class="sel-actions">
+                    <button id="btn-dup" class="tb-btn" title="Duplicate shifted right (Ctrl+D)">⧉ Duplicate</button>
+                    <button id="btn-trim" class="tb-btn" title="Trim transparent borders">✂ Auto-Trim</button>
+                </div>
+                <div class="strip-row">
+                    <span class="tb-label">Strip:</span>
+                    <input id="strip-count" type="number" min="2" max="64" value="4" class="tb-input" style="width:48px" title="Total frames in strip">
+                    <button id="btn-slice-strip" class="tb-btn" title="Create horizontal strip of sprites from selected rect">Slice Row →</button>
+                </div>
                 <p style="font-size:10px;color:var(--muted);margin-top:7px">
-                    Delete — press <b>Del</b> key
+                    <b>Arrows</b> to nudge &nbsp;·&nbsp; <b>Ctrl+D</b> dup &nbsp;·&nbsp; <b>Del</b> delete
                 </p>
             </div>
 
+            <!-- Animation Preview -->
+            <div class="panel-section" id="anim-panel">
+                <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                    <span>Animation Preview</span>
+                    <span id="anim-frames-label" style="font-size:10px;color:var(--accent);text-transform:none;letter-spacing:0">0 frames</span>
+                </div>
+                <div id="anim-wrap">
+                    <canvas id="anim-canvas" width="56" height="56"></canvas>
+                    <div id="anim-controls">
+                        <div style="display:flex;gap:6px;align-items:center">
+                            <button id="btn-anim-play" class="tb-btn" style="padding:3px 9px">⏸</button>
+                            <label class="tb-label" for="anim-fps">FPS</label>
+                            <input id="anim-fps" type="number" min="1" max="60" value="8" class="tb-input" style="width:48px;padding:3px 6px">
+                        </div>
+                        <input id="anim-prefix" type="text" placeholder="Prefix / filter (auto)" autocomplete="off" spellcheck="false">
+                    </div>
+                </div>
+            </div>
+
             <!-- Sprite list -->
-            <div class="panel-section" style="padding-bottom:4px">
-                <div class="panel-title">Sprites</div>
+            <div class="panel-section" style="padding-bottom:6px">
+                <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                    <span>Sprites</span>
+                    <span id="sprite-count" style="font-size:10px;color:var(--muted)">0</span>
+                </div>
+                <div class="search-wrap">
+                    <input id="sprite-search" type="text" placeholder="🔍 Filter sprites... (dbl-click item to focus)" autocomplete="off" spellcheck="false">
+                    <button id="btn-clear-search" class="search-clear" title="Clear search" style="display:none">✕</button>
+                </div>
             </div>
             <div id="sprite-list-wrap">
                 <p class="empty-msg">No sprites yet — drag to define one.</p>
