@@ -95,12 +95,18 @@ class Graph {
 class PacMon extends Game {
     constructor(renderer) {
         super(renderer);
+
         this.graphicAssets = {
             spritesheet: {
                 path: "src/examples/pacmon/assets/pacman.png",
-                img: null
+                img: null,
+                bgColor: "#000000",
+                atlasJsonPath: "src/examples/pacmon/assets/pacman.json",
+                atlas: null
             }
         };
+
+        this.spriteAtlas = null;
 
         this.config.imageSmoothingEnabled = false;
 
@@ -132,26 +138,43 @@ class PacMon extends Game {
     
     Start() {
         super.Start();
+
+        this.spriteAtlas = new SpriteAtlas(this.graphicAssets.spritesheet.atlas);
         
-        this.background = new Sprite(
+        this.background = new SpriteSection(
             this.graphicAssets.spritesheet.img,
-            new Vector2(112 + this.mazePosition.x, 124 + this.mazePosition.y),
+            new Vector2(this.mazePosition.x, this.mazePosition.y),
             0,
             1,
+            this.spriteAtlas.get("bg_lv1")
         );
-        this.dummyBackground = new Sprite(
+        this.dummyBackground = new SpriteSection(
             this.graphicAssets.spritesheet.img,
-            new Vector2(112 + this.mazePosition.x, 124 + this.mazePosition.y),
+            new Vector2(this.mazePosition.x, this.mazePosition.y),
             0,
             1,
+            this.spriteAtlas.get("bg_lv1_dummy")
         );
         
         this.graph = new Graph(this.nodeSize);
         this.BuildGraph();
 
-        this.pacman = new Pacman(this.graphicAssets.spritesheet.img, this.graph, PacMonData.level1Data.pacMonInitialNode, this.mazePosition);
+        this.pacman = new Pacman(
+            this.graphicAssets.spritesheet.img,
+            this.spriteAtlas,
+            this.graph,
+            PacMonData.level1Data.pacMonInitialNode,
+            this.mazePosition
+        );
 
-        this.blinky = new Ghost(this.graphicAssets.spritesheet.img, this.graph, PacMonData.level1Data.ghostsInitialNode, this.mazePosition, this.pacman);
+        this.blinky = new Ghost(
+            this.graphicAssets.spritesheet.img,
+            this.spriteAtlas,
+            this.graph,
+            PacMonData.level1Data.ghostsInitialNode,
+            this.mazePosition,
+            this.pacman
+        );
 
         // this.pinky = new Ghost(this.graphicAssets.spritesheet.img, this.graph, 3, this.mazePosition);
         // this.inky = new Ghost(this.graphicAssets.spritesheet.img, this.graph, 3, this.mazePosition);
@@ -329,8 +352,8 @@ class PacMon extends Game {
     Draw() {
         this.renderer.DrawFillBasicRectangle(0, 0, 800, 600, Color.black);
 
-        //this.dummyBackground.DrawSection(ctx, 0, 0, 224, 248);
-        this.background.DrawSection(this.renderer, 228, 0, 224, 248);
+        // this.dummyBackground.DrawBasic(this.renderer);
+        this.background.DrawBasic(this.renderer);
 
         // Draw the game objects
         super.Draw();
@@ -347,7 +370,7 @@ class PacMon extends Game {
 }
 
 class Pacman extends SSAnimationObjectComplex {
-    constructor(img, mazeGraph, initialNodeId, mazePosition) {
+    constructor(img, spriteAtlas, mazeGraph, initialNodeId, mazePosition) {
         const initialNode = mazeGraph.FindNodeById(initialNodeId);
 
         super(
@@ -355,8 +378,13 @@ class Pacman extends SSAnimationObjectComplex {
             0,
             1,
             img,
-            [ [new Rect(454, 0, 16, 16), new Rect(470, 0, 16, 16), new Rect(486, 0, 16, 16)] ],
-            [0.1]
+            [
+                [spriteAtlas.get("pm_u_0"), spriteAtlas.get("pm_u_1"), spriteAtlas.get("pm_u_2")], // moving up
+                [spriteAtlas.get("pm_r_0"), spriteAtlas.get("pm_r_1"), spriteAtlas.get("pm_r_2")], // moving right
+                [spriteAtlas.get("pm_b_0"), spriteAtlas.get("pm_b_1"), spriteAtlas.get("pm_b_2")], // moving down
+                [spriteAtlas.get("pm_l_0"), spriteAtlas.get("pm_l_1"), spriteAtlas.get("pm_l_2")], // moving left
+            ],
+            [0.125, 0.125, 0.125, 0.125]
         );
 
         this.mazeGraph = mazeGraph;
@@ -375,7 +403,8 @@ class Pacman extends SSAnimationObjectComplex {
         super.Start();
 
         this.direction = Direction.LEFT;
-        this.flipX = true;
+        // this.flipX = true;
+        this.PlayAnimationLoop(this.direction, true);
     }
 
     Update(deltaTime) {
@@ -395,8 +424,9 @@ class Pacman extends SSAnimationObjectComplex {
                 nextNode = this.mazeGraph.GetNeighborNode(this.currentNode, this.nextDirection);
                 if (nextNode) {
                     this.direction = this.nextDirection;
-                    this.flipX = this.direction == Direction.LEFT;
-                    this.rotation = this.direction == Direction.UP ? -PIH : this.direction == Direction.DOWN ? PIH : 0;
+                    // this.flipX = this.direction == Direction.LEFT;
+                    // this.rotation = this.direction == Direction.UP ? -PIH : this.direction == Direction.DOWN ? PIH : 0;
+                    this.PlayAnimationLoop(this.direction, false);
                 }
             }
             
@@ -469,7 +499,7 @@ class PowerPellet extends SpriteObject {
 }
 
 class Ghost extends SSAnimationObjectComplex {
-    constructor(img, mazeGraph, initialNodeId, mazePosition, pacman) {
+    constructor(img, spriteAtlas, mazeGraph, initialNodeId, mazePosition, pacman) {
         const initialNode = mazeGraph.FindNodeById(initialNodeId);
 
         super(
@@ -478,10 +508,10 @@ class Ghost extends SSAnimationObjectComplex {
             1,
             img,
             [
-                [new Rect(519, 64, 16, 16), new Rect(535, 64, 16, 16)], // up
-                [new Rect(455, 64, 16, 16), new Rect(471, 64, 16, 16)], // right
-                [new Rect(551, 64, 16, 16), new Rect(567, 64, 16, 16)],  // down
-                [new Rect(487, 64, 16, 16), new Rect(503, 64, 16, 16)] // left
+                [spriteAtlas.get("blinky_u_0"), spriteAtlas.get("blinky_u_1")], // up
+                [spriteAtlas.get("blinky_r_0"), spriteAtlas.get("blinky_r_1")], // right
+                [spriteAtlas.get("blinky_b_0"), spriteAtlas.get("blinky_b_1")], // down
+                [spriteAtlas.get("blinky_l_0"), spriteAtlas.get("blinky_l_1")], // left
             ],
             [0.125, 0.125, 0.125, 0.125]
         );
@@ -550,7 +580,8 @@ class Ghost extends SSAnimationObjectComplex {
                                 break;
                             }
                         }
-                        if (otherChoicesExist) continue; // Skip this reverse move, prefer others
+                        if (otherChoicesExist)
+                            continue; // Skip this reverse move, prefer others
                     }
                     possibleMoves.push({ direction: dir, node: neighbor });
                 }
@@ -562,12 +593,15 @@ class Ghost extends SSAnimationObjectComplex {
                 // Ghost is stuck (e.g., 1x1 tunnel end). Try to reverse if that's an option.
                 if (this.currentNode.neighbors[oppositeOfHowGhostArrived] && this.lastDirection !== Direction.NEUTRAL) {
                     newDirection = oppositeOfHowGhostArrived;
-                } else {
+                }
+                else {
                     newDirection = Direction.NEUTRAL; // Truly stuck
                 }
-            } else if (possibleMoves.length === 1) {
+            }
+            else if (possibleMoves.length === 1) {
                 newDirection = possibleMoves[0].direction;
-            } else {
+            }
+            else {
                 // Multiple choices: Blinky targets Pac-Man directly.
                 // Find move that minimizes Euclidean distance to targetNode, respecting priority for ties.
                 // possibleMoves is already sorted by directionPriority.
@@ -586,7 +620,8 @@ class Ghost extends SSAnimationObjectComplex {
 
                 if (bestMoveForTargeting) {
                     newDirection = bestMoveForTargeting.direction;
-                } else {
+                }
+                else {
                      // Fallback, should not happen if possibleMoves.length > 1
                     newDirection = possibleMoves[0].direction;
                 }
@@ -611,7 +646,8 @@ class Ghost extends SSAnimationObjectComplex {
                     4 + this.currentNode.position.x * this.mazeGraph.nodeSize + this.mazePosition.x,
                     4 + this.currentNode.position.y * this.mazeGraph.nodeSize + this.mazePosition.y
                 );
-            } else {
+            }
+            else {
                 // If chosen direction leads nowhere (e.g., waiting at intersection, or error)
                 // Ghost effectively stops or waits. lastDirection isn't updated if no move is made.
             }

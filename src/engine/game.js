@@ -89,7 +89,7 @@ class Game {
 
         /**
          * Graphic assets to preload. Assign in the constructor before the engine calls `Start()`.
-         * Format: `{ key: { path: 'path/to/image.png', img: null, atlasJsonPath: 'path/to/textureatlas.json', atlas: null } }`
+         * Format: `{ key: { path: 'path/to/image.png', img: null, atlasJsonPath: 'path/to/textureatlas.json', atlas: null, bgColor?: string } }`
          * @type {Object.<string, {path: string, img: HTMLImageElement|null, atlasJsonPath: string, atlas: Object|null}>|null}
          */
         this.graphicAssets = null;
