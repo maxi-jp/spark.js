@@ -478,20 +478,17 @@ function CheckCollisionPolygonPolygon(polygon1Points, polygon2Points, accurate=f
  */
 class Vector2 {
     /** @type {number} */
-    _x = 0;
+    x = 0;
     /** @type {number} */
-    _y = 0;
-    _onChange = null;
+    y = 0;
 
     /**
      * @param {number} x
      * @param {number} y
-     * @param {function(Vector2):void} [onChange] - Optional callback fired whenever x or y changes.
      */
-    constructor(x, y, onChange=null) {
-        this._x = x;
-        this._y = y;
-        this._onChange = onChange;
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
     }
 
     /** @returns {Vector2} A new `Vector2(0, 0)`. */
@@ -512,36 +509,13 @@ class Vector2 {
         return new Vector2((Math.random() * 2) - 1, (Math.random() * 2) - 1);
     }
 
-    get x() {
-        return this._x;
-    }
-    set x(val) {
-        this._x = val;
-        if (this._onChange)
-            this._onChange(this);
-    }
-    set onChange(onChange) {
-        this._onChange = onChange;
-    }
-
-    get y() {
-        return this._y;
-    }
-    set y(val) {
-        this._y = val;
-        if (this._onChange)
-            this._onChange(this);
-    }
-
     /**
      * Sets x and y components in-place.
      * @param {number} x @param {number} y
      */
     Set(x, y) {
-        this._x = x;
-        this._y = y;
-        if (this._onChange)
-            this._onChange(this);
+        this.x = x;
+        this.y = y;
     }
 
     /** @returns {number} The magnitude (length) of this vector. */
@@ -551,12 +525,12 @@ class Vector2 {
 
     /** @returns {number} The squared magnitude. Faster than `Length()` for comparisons. */
     SqrLength() {
-        return this._x * this._x + this._y * this._y;
+        return this.x * this.x + this.y * this.y;
     }
 
     /** @returns {boolean} True if both x and y are exactly 0. */
     IsZero() {
-        return this._x === 0 && this._y === 0;
+        return this.x === 0 && this.y === 0;
     }
 
     /**
@@ -587,8 +561,8 @@ class Vector2 {
         const length = this.Length();
 
         if (length > 0) {
-            this._x = this._x / length;
-            this._y = this._y / length;
+            this.x = this.x / length;
+            this.y = this.y / length;
         }
 
         return this;
@@ -599,8 +573,8 @@ class Vector2 {
      * @param {Vector2} otherVector
      */
     Add(otherVector) {
-        this._x += otherVector.x;
-        this._y += otherVector.y;
+        this.x += otherVector.x;
+        this.y += otherVector.y;
     }
 
     /**
@@ -608,15 +582,15 @@ class Vector2 {
      * @param {Vector2} otherVector
      */
     Sub(otherVector) {
-        this._x -= otherVector.x;
-        this._y -= otherVector.y;
+        this.x -= otherVector.x;
+        this.y -= otherVector.y;
     }
 
     /**
      * @param {Vector2} otherVector @returns {number} The dot product of this and `otherVector`.
      */
     DotProduct(otherVector) {
-        return this._x * otherVector.x + this._y * otherVector.y;
+        return this.x * otherVector.x + this.y * otherVector.y;
     }
 
     /**
@@ -624,15 +598,15 @@ class Vector2 {
      * @param {number} scalar @returns {Vector2}
      */
     MultiplyScalar(scalar) {
-        this._x *= scalar;
-        this._y *= scalar;
+        this.x *= scalar;
+        this.y *= scalar;
 
         return this;
     }
 
     /** @returns {number} The angle of this vector in radians (from the positive X axis). */
     Angle() {
-        return Math.atan2(this._y, this._x);
+        return Math.atan2(this.y, this.x);
     }
 
     /**
@@ -652,8 +626,8 @@ class Vector2 {
 
     /** Sets components to random values in [-1, 1] in-place. */
     Randomize() {
-        this._x = (Math.random() * 2) - 1;
-        this._y = (Math.random() * 2) - 1;
+        this.x = (Math.random() * 2) - 1;
+        this.y = (Math.random() * 2) - 1;
     }
 
     /** Sets this vector to a random unit direction in-place. */
@@ -675,8 +649,8 @@ class Vector2 {
     }
 
     Interpolate(otherVector, interpolationFactor) {
-        this._x = Lerp(this.x, otherVector.x, interpolationFactor);
-        this._y = Lerp(this.y, otherVector.y, interpolationFactor);
+        this.x = Lerp(this.x, otherVector.x, interpolationFactor);
+        this.y = Lerp(this.y, otherVector.y, interpolationFactor);
     }
 }
 
@@ -689,6 +663,7 @@ class Rect {
     _y = 0;
     _w = 0;
     _h = 0;
+    _pointsDirty = true;
 
     constructor(x, y, width, height) {
         this._x = x;
@@ -699,14 +674,12 @@ class Rect {
         this.halfWidth = width / 2;
         this.halfHeight = height / 2;
 
-        this.points = [
+        this._points = [
             { x: 0, y: 0 },
             { x: 0, y: 0 },
             { x: 0, y: 0 },
             { x: 0, y: 0 }
         ];
-
-        this._updatePoints();
     }
 
     get x() {
@@ -729,23 +702,30 @@ class Rect {
         return this._h;
     }
 
+    get points() {
+        if (this._pointsDirty) {
+            this._updatePoints();
+        }
+        return this._points;
+    }
+
     set x(value) {
         this._x = value;
-        this._updatePoints();
+        this._pointsDirty = true;
     }
     set y(value) {
         this._y = value;
-        this._updatePoints();
+        this._pointsDirty = true;
     }
     set w(value) {
         this._w = value;
         this.halfWidth = value / 2;
-        this._updatePoints();
+        this._pointsDirty = true;
     }
     set h(value) {
         this._h = value;
         this.halfHeight = value / 2;
-        this._updatePoints();
+        this._pointsDirty = true;
     }
 
     set width(value) {
@@ -755,15 +735,22 @@ class Rect {
         this.h = value;
     }
 
+    SetPosition(x, y) {
+        this._x = x;
+        this._y = y;
+        this._pointsDirty = true;
+    }
+
     _updatePoints() {
-        this.points[0].x = this._x;
-        this.points[0].y = this._y;
-        this.points[1].x = this._x + this._w;
-        this.points[1].y = this._y;
-        this.points[2].x = this._x + this._w;
-        this.points[2].y = this._y + this._h;
-        this.points[3].x = this._x;
-        this.points[3].y = this._y + this._h;
+        this._points[0].x = this._x;
+        this._points[0].y = this._y;
+        this._points[1].x = this._x + this._w;
+        this._points[1].y = this._y;
+        this._points[2].x = this._x + this._w;
+        this._points[2].y = this._y + this._h;
+        this._points[3].x = this._x;
+        this._points[3].y = this._y + this._h;
+        this._pointsDirty = false;
     }
 }
 

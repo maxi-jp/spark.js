@@ -229,7 +229,7 @@ class CircleGO extends GameObject {
      */
     constructor(position, radius=100, color=Color.red, stroke=false, lineWidth=1) {
         super(position);
-        this.circle = new Circle(this._position, radius, color, stroke=false, lineWidth=1)
+        this.circle = new Circle(this._position, radius, color, stroke, lineWidth);
     }
 
     get color() {
@@ -266,6 +266,7 @@ class SpriteObject extends GameObject {
         super(position);
         
         this.sprite = new Sprite(img, this._position, rotation, this._scale, alpha);
+        this.sprite.pivot = this._pivot;
         this._rotation = rotation;
         this.scale = scale;
 
@@ -326,8 +327,8 @@ class SpriteObject extends GameObject {
     }
 
     set pivot(value) {
-        this._pivot = value.x;
-        this._pivot = value.y;
+        this._pivot.x = value.x;
+        this._pivot.y = value.y;
         this.sprite.pivot.x = value.x;
         this.sprite.pivot.y = value.y;
     }
@@ -1066,6 +1067,8 @@ class Tileset extends GameObject {
  * Supports smooth zoom via `Zoom()` and an instant punch-zoom via `ZoomPunch()`.
  */
 class Camera {
+    /** @type {Game|null} Reference to the owning Game instance, assigned via game.AddGameObject() or constructor. */
+    game = null;
     _position;
     _rotation = 0;
     _scale = 1;
@@ -1076,8 +1079,9 @@ class Camera {
     _zoomTime     = 0;
     _zoomDuration = 1;
 
-    constructor(position) {
+    constructor(position, gameRef = null) {
         this._position = Vector2.Copy(position);
+        this.game = (gameRef || game);
         this.lastState = { x: 0, y: 0, r: 0, s: 1 };
     }
 
@@ -1184,15 +1188,15 @@ class FollowCameraBasic extends Camera {
 
     Start() {
         this.position.Set(
-            this.target.position.x - (canvas.width  / 2) + this.offset.x,
-            this.target.position.y - (canvas.height / 2) + this.offset.y
+            this.target.position.x - this.game.screenHalfWidth  + this.offset.x,
+            this.target.position.y - this.game.screenHalfHeight + this.offset.y
         );
     }
 
     Update(deltaTime) {
         this.position.Set(
-            this.target.position.x - (canvas.width  / 2) + this.offset.x,
-            this.target.position.y - (canvas.height / 2) + this.offset.y
+            this.target.position.x - this.game.screenHalfWidth  + this.offset.x,
+            this.target.position.y - this.game.screenHalfHeight + this.offset.y
         );
     }
 }
@@ -1236,14 +1240,14 @@ class FollowCamera extends Camera {
 
     Start() {
         this.position.Set(
-            this.target.position.x - (canvas.width  / 2) + this.offset.x,
-            this.target.position.y - (canvas.height / 2) + this.offset.y
+            this.target.position.x - this.game.screenHalfWidth + this.offset.x,
+            this.target.position.y - this.game.screenHalfHeight + this.offset.y
         );
     }
 
     Update(deltaTime) {
-        this.targetPosition.x = this.target.position.x - canvas.width / 2;
-        this.targetPosition.y = this.target.position.y - canvas.height / 2;
+        this.targetPosition.x = this.target.position.x - this.game.screenHalfWidth;
+        this.targetPosition.y = this.target.position.y - this.game.screenHalfHeight;
 
         if (this.targetPosition.x < this.minX)
             this.targetPosition.x = this.minX;
@@ -1429,7 +1433,7 @@ class StaticColorLayer {
     Update() {}
 
     Draw(renderer) {
-        renderer.DrawFillBasicRectangle(this.camera.x, this.camera.y, canvas.width, canvas.height, this.color);
+        renderer.DrawFillBasicRectangle(this.camera.x, this.camera.y, renderer.width, renderer.height, this.color);
     }
 }
 
@@ -1443,7 +1447,7 @@ class StaticGradientLayer {
     Update() {}
 
     Draw(renderer) {
-        renderer.DrawGradientRectangle(this.camera.x, this.camera.y, canvas.width, canvas.height, this.gradient);
+        renderer.DrawGradientRectangle(this.camera.x, this.camera.y, renderer.width, renderer.height, this.gradient);
     }
 }
 

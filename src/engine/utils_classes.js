@@ -892,19 +892,28 @@ class Collider {
 /** Axis-aligned rectangular collider. Position is the centre of the rectangle. */
 class RectangleCollider extends Collider {
 
+    get rect() {
+        const rx = this.position.x - this._rect.halfWidth;
+        const ry = this.position.y - this._rect.halfHeight;
+        if (rx !== this._rect._x || ry !== this._rect._y) {
+            this._rect.SetPosition(rx, ry);
+        }
+        return this._rect;
+    }
+
     get width() {
-        return this.rect.w;
+        return this._rect.w;
     }
     get height() {
-        return this.rect.h;
+        return this._rect.h;
     }
 
     set width(value) {
-        this.rect.w = value;
+        this._rect.w = value;
         this._calculateBoundingRadius();
     }
     set height(value) {
-        this.rect.h = value;
+        this._rect.h = value;
         this._calculateBoundingRadius();
     }
 
@@ -913,25 +922,23 @@ class RectangleCollider extends Collider {
         const boundingRadius = Math.sqrt(width * width + height * height) / 2;
 
         super(position, boundingRadius, gameObject);
-        this.position.onChange = (vec) => {
-            this.rect.x = vec.x - this.rect.halfWidth;
-            this.rect.y = vec.y - this.rect.halfHeight;
-        };
-        this.rect = new Rect(position.x - width / 2, position.y - height / 2, width, height);
+        this._rect = new Rect(position.x - width / 2, position.y - height / 2, width, height);
     }
 
     Draw(renderer) {
+        const rect = this.rect;
         renderer.DrawFillCircle(this.position.x, this.position.y, this.boundingRadius, Collider.bRAdColor);
         
-        renderer.DrawFillRectangle(this.rect.x + this.rect.halfWidth, this.rect.y + this.rect.halfHeight, this.rect.w, this.rect.h, this.color);
+        renderer.DrawFillRectangle(rect.x + rect.halfWidth, rect.y + rect.halfHeight, rect.w, rect.h, this.color);
     }
 
     IsPointInside(x, y) {
-        return CheckPointInsideRectangle(x, y, this.rect.x, this.rect.y, this.rect.w, this.rect.h);
+        const rect = this.rect;
+        return CheckPointInsideRectangle(x, y, rect.x, rect.y, rect.w, rect.h);
     }
 
     _calculateBoundingRadius() {
-        this.boundingRadius = Math.sqrt(this.rect.w * this.rect.w + this.rect.h * this.rect.h) / 2;
+        this.boundingRadius = Math.sqrt(this._rect.w * this._rect.w + this._rect.h * this._rect.h) / 2;
         this.boundingRadius2 = this.boundingRadius * this.boundingRadius;
     }
 }

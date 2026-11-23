@@ -262,7 +262,7 @@ function DrawWorldDebug(renderer, world) {
         const ctx = renderer.ctx;
 
         ctx.save();
-        ctx.translate(0, canvas.height);
+        ctx.translate(0, renderer.height);
         ctx.scale(1, -1);
         // fix the lineWidth is not well stablished in the box2d script
         renderer.ctx.lineWidth = world.m_debugDraw.GetLineThickness();
@@ -334,6 +334,7 @@ class WebGLDebugDraw {
     }
 
     DrawDebugData() {
+        const h = this.renderer.height;
         for (let body = this.world.GetBodyList(); body; body = body.GetNext()) {
             const transform = body.GetTransform();
             for (let fixture = body.GetFixtureList(); fixture; fixture = fixture.GetNext()) {
@@ -352,7 +353,7 @@ class WebGLDebugDraw {
                         const v = shape.GetVertices()[i];
                         // Transform to world coordinates
                         const worldV = body.GetWorldPoint(v);
-                        vertices.push({ x: worldV.x * this.scale, y: canvas.height - worldV.y * this.scale });
+                        vertices.push({ x: worldV.x * this.scale, y: h - worldV.y * this.scale });
                     }
 
                     if (fixture.IsSensor()) {
@@ -366,17 +367,17 @@ class WebGLDebugDraw {
                     const center = body.GetWorldPoint(shape.GetLocalPosition());
                     const radius = shape.GetRadius();
                     if (fixture.IsSensor()) {
-                        this.renderer.DrawCircle(center.x * this.scale, center.y * this.scale, radius * this.scale, color, true, 1);
+                        this.renderer.DrawCircle(center.x * this.scale, h - center.y * this.scale, radius * this.scale, color, true, 1);
                     }
                     else {
-                        this.renderer.DrawCircle(center.x * this.scale, canvas.height - center.y * this.scale, radius * this.scale, color, false, 1);
+                        this.renderer.DrawCircle(center.x * this.scale, h - center.y * this.scale, radius * this.scale, color, false, 1);
                         
                         const axis = { x: transform.R.col1.x, y: transform.R.col1.y };
                         this.renderer.DrawLine(
                             center.x * this.scale,
-                            canvas.height - center.y * this.scale,
+                            h - center.y * this.scale,
                             (center.x + axis.x * radius) * this.scale,
-                            canvas.height - (center.y + axis.y * radius) * this.scale,
+                            h - (center.y + axis.y * radius) * this.scale,
                             color, 1
                         );
                     }
@@ -385,7 +386,7 @@ class WebGLDebugDraw {
                     const v1 = body.GetWorldPoint(shape.GetVertex1());
                     const v2 = body.GetWorldPoint(shape.GetVertex2());
 
-                    this.renderer.DrawLine(v1.x * this.scale, canvas.height - v1.y * this.scale, v2.x * this.scale, canvas.height - v2.y * this.scale, color, 1);
+                    this.renderer.DrawLine(v1.x * this.scale, h - v1.y * this.scale, v2.x * this.scale, h - v2.y * this.scale, color, 1);
                 }
             }
             // Draw transform for each body
@@ -397,13 +398,14 @@ class WebGLDebugDraw {
         // Draw transform axes (red for x, green for y)
         const p = xf.position;
         const scale = this.scale;
-        this.renderer.DrawLine(p.x * scale, canvas.height - p.y * scale,
-            (p.x + xf.R.col1.x * 0.5) * scale, canvas.height - (p.y + xf.R.col1.y * 0.5) * scale,
+        const h = this.renderer.height;
+        this.renderer.DrawLine(p.x * scale, h - p.y * scale,
+            (p.x + xf.R.col1.x * 0.5) * scale, h - (p.y + xf.R.col1.y * 0.5) * scale,
             Color.red,
             2
         );
-        this.renderer.DrawLine(p.x * scale, canvas.height - p.y * scale,
-            (p.x + xf.R.col2.x * 0.5) * scale, canvas.height - (p.y + xf.R.col2.y * 0.5) * scale,
+        this.renderer.DrawLine(p.x * scale, h - p.y * scale,
+            (p.x + xf.R.col2.x * 0.5) * scale, h - (p.y + xf.R.col2.y * 0.5) * scale,
             Color.green,
             2
         );

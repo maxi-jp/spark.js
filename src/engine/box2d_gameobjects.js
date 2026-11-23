@@ -29,7 +29,8 @@ class Box2DGameObject extends GameObject {
         this.world = physicsWorld;
 
         // Create the Box2D body
-        this.body = CreatePhysicsObject(physicsWorld, type, position.x / physicsWorld.scale, (canvas.height - position.y) / physicsWorld.scale, bodyOptions);
+        const screenHeight = (this.game || game).screenHeight;
+        this.body = CreatePhysicsObject(physicsWorld, type, position.x / physicsWorld.scale, (screenHeight - position.y) / physicsWorld.scale, bodyOptions);
         this.body.SetUserData(this);
 
         this.hasContact = false; // true if the body has colide with another object
@@ -48,7 +49,8 @@ class Box2DGameObject extends GameObject {
     }
 
     set position(value) {
-        this.body.SetPosition(new b2Vec2(value.x / this.world.scale, (canvas.height - value.y) / this.world.scale));
+        const screenHeight = (this.game || game).screenHeight;
+        this.body.SetPosition(new b2Vec2(value.x / this.world.scale, (screenHeight - value.y) / this.world.scale));
     }
 
     get rotation() {
@@ -66,7 +68,8 @@ class Box2DGameObject extends GameObject {
     Update(deltaTime) {
         // Sync the GameObject's position and rotation with the Box2D body
         const pos = this.body.GetPosition();
-        this._position.Set(pos.x * this.world.scale, canvas.height - (pos.y * this.world.scale));
+        const screenHeight = (this.game || game).screenHeight;
+        this._position.Set(pos.x * this.world.scale, screenHeight - (pos.y * this.world.scale));
         this._rotation = -this.body.GetAngle();
 
         // consume Box2D collision events

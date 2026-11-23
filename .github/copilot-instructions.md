@@ -61,7 +61,7 @@ Each example HTML file must load engine scripts in this order before any game co
 | Add / subtract in-place | `v.Add(other)` / `v.Sub(other)` |
 | Scale in-place | `v.MultiplyScalar(s)` — returns `this` |
 | Set both components | `v.Set(x, y)` |
-| Access components | `v.x` / `v.y` (setters fire onChange if set) |
+| Access components | `v.x` / `v.y` (plain public properties) |
 
 > `Add`, `Sub`, and `MultiplyScalar` mutate in place and do **not** return a new vector. Use `Vector2.Copy(v).Sub(other)` when you need a non-destructive version.
 
