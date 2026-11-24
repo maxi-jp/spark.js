@@ -94,12 +94,27 @@ class AudioPlayer {
         // iterate through the object of assets and load every audio file
         for (let asset in assets) {
             if (assets.hasOwnProperty(asset)) {
+                // Already registered by a previous LoadAudio call: reuse it (never rebuild its audio graph)
+                if (this.audioAssets[asset]) {
+                    assets[asset].audio = this.audioAssets[asset].audio;
+                    continue;
+                }
                 audioToLoad++; // one more audio file to load
 
                 // create the new audio and set its path and onload event
                 const audio = new Audio();
                 audio.src = assets[asset].path;
-                audio.oncanplaythrough = onload;
+                const finish = () => {
+                    // clear both handlers so canplaythrough (which can re-fire) or error only count once
+                    audio.oncanplaythrough = null;
+                    audio.onerror = null;
+                    onload();
+                };
+                audio.oncanplaythrough = finish;
+                audio.onerror = () => {
+                    console.error(`Failed to load audio asset "${asset}" (${assets[asset].path})`);
+                    finish();
+                };
 
                 // create a gain node for volume control
                 const gainNode = this.audioContext.createGain();
@@ -120,6 +135,10 @@ class AudioPlayer {
                 this.audioAssets[asset] = { audio, gainNode, panner };
                 assets[asset].audio = this.audioAssets[asset].audio;
             }
+        }
+
+        if (audioToLoad === 0) {
+            onloaded();
         }
     }
 

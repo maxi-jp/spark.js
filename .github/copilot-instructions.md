@@ -20,7 +20,8 @@ Each example HTML file must load engine scripts in this order before any game co
 8. `src/engine/htmlmenu.js` — HTMLMenu overlay/layer system
 9. `src/engine/virtualcontrols.js` — VirtualJoystick, VirtualButton
 10. `src/engine/game.js` — Game base class
-11. `src/engine/tiled_loader.js` — TiledLoader *(optional — only if using Tiled maps)*
+11. `src/engine/scene.js` — Behavior, ScriptRegistry, TextGO, SceneLoader, SceneGame, Box2DSceneGame *(optional — for data-driven scenes & attachable scripts)*
+12. `src/engine/tiled_loader.js` — TiledLoader *(optional — only if using Tiled maps)*
 12. `src/engine/ai.js` — AStarPathfinder *(optional — only if using pathfinding)*
 13. `src/engine/fsm.js` — FSMState, FSM, FSMCompositeState *(optional — only if using FSM/HFSM)*
 14. `src/engine/bt.js` — BTStatus, BTBlackboard, BTNode, BTSelector, BTSequence, BTParallel, BTAction, BTCondition, BTWait, BehaviorTree; decorators: BTInverter, BTRepeater, BTRepeatUntilFail, BTRepeatUntilSuccess, BTSucceeder, BTFailer, BTCooldown, BTDelay; BTRandomSelector, BTRandomSequence, BTReactiveSelector, BTReactiveSequence *(optional — only if using Behavior Trees)*
@@ -359,11 +360,11 @@ Start() {
 // After assets load, parse and create tilesets:
 const mapData = TiledLoader.Parse(this.tiledAssets.forestMap.data, this.graphicAssets);
 const tilesets = TiledLoader.CreateTilesets(mapData, new Vector2(0, 0), 1);
-tilesets.forEach(ts => this.gameObjects.push(ts));
+tilesets.forEach(ts => this.AddGameObject(ts));
 
 // Create sprites from object layers:
 const sprites = TiledLoader.CreateSpriteObjects(this.tiledAssets.forestMap.data, mapData, Vector2.Zero());
-sprites.forEach(sprite => this.gameObjects.push(sprite));
+sprites.forEach(sprite => this.AddGameObject(sprite));
 ```
 
 ### Key TiledLoader methods

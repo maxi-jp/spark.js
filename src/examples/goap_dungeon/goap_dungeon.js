@@ -435,8 +435,10 @@ class GOAPDungeonScene extends Game {
             teleporterActive: false
         };
         this.floatingTexts = [];
+        if (this.rogue && this.gameObjects.includes(this.rogue))
+            this.Destroy(this.rogue);
         this.rogue = new DungeonRogue(new Vector2(this.rooms.exit.x, this.rooms.exit.y), this);
-        this.gameObjects = [this.rogue];
+        this.AddGameObject(this.rogue);
         this.rogue.goap.Plan();
     }
 

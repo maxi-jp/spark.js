@@ -4,6 +4,14 @@
 class GameObject {
     /** @type {Game|null} Reference to the owning Game instance, assigned automatically via game.AddGameObject(). */
     game = null;
+    /** @type {string|null} Optional unique identifier (used by SceneLoader and Scene Editor). */
+    id = null;
+    /** @type {string} Optional display/lookup name for this game object. */
+    name = "";
+    /** @type {string} Optional tag for grouping/querying objects. */
+    tag = "";
+    /** @type {number} Draw order priority (lower values draw first). */
+    _zIndex = 0;
     /** @type {boolean} */
     _active = true;
     /** @type {Vector2} */
@@ -16,10 +24,31 @@ class GameObject {
     _pivot = { x: 0, y: 0 };
     /** @type {Collider|undefined} */
     _collider;
+    /** @type {Array<*>} Attached Behavior script instances. */
+    scripts = [];
+    /** @type {boolean} Internal flag tracking whether Start() has run. */
+    _started = false;
+    /** @type {boolean} True when removed scripts are pending compaction (done at the start of the next _updateScripts). */
+    _scriptsDirty = false;
 
     /** @param {Vector2} position - Initial world position. */
     constructor(position) {
         this._position = Vector2.Copy(position);
+    }
+
+    get zIndex() {
+        return this._zIndex;
+    }
+    set zIndex(value) {
+        if (this._zIndex !== value) {
+            this._zIndex = value;
+            if (this.game) {
+                if (value !== 0) {
+                    this.game._hasCustomZIndex = true;
+                }
+                this.game._zOrderDirty = true;
+            }
+        }
     }
 
     get active() {
@@ -87,7 +116,10 @@ class GameObject {
     }
 
     /** Called once when the game starts. Override to initialise the object. */
-    Start() { }
+    Start() {
+        this._started = true;
+        this._startScripts();
+    }
 
     /**
      * Called every frame. Override to update game logic.
@@ -95,6 +127,9 @@ class GameObject {
      */
     Update(deltaTime) {
         this._collider?.UpdateFromGO();
+        if (this.scripts.length > 0) {
+            this._updateScripts(deltaTime);
+        }
     }
 
     /**
@@ -104,7 +139,165 @@ class GameObject {
     Draw(renderer) { }
 
     /** Called from the game when the game object is removed from it */
-    Destroy() {}
+    Destroy() {
+        if (this.scripts.length > 0) {
+            const scripts = this.scripts;
+            // Replace (not truncate) so any loop still iterating the old array stays valid
+            this.scripts = [];
+            this._scriptsDirty = false;
+            for (let i = 0; i < scripts.length; i++) {
+                const s = scripts[i];
+                if (s._removed)
+                    continue;
+
+                s.enabled = false;
+                s._removed = true;
+                s.Destroy();
+                s.gameObject = null;
+                s.game = null;
+            }
+        }
+    }
+
+    // #region Behavior Scripts
+
+    /**
+     * Attaches a Behavior script instance to this GameObject.
+     * Rejects values that do not inherit from `Behavior` (defined in `scene.js`).
+     * @param {Behavior} script - Instance of a Behavior subclass.
+     * @returns {Behavior|null} The attached script instance, or `null` if invalid.
+     */
+    AddScript(script) {
+        if (typeof Behavior === 'undefined' || !(script instanceof Behavior)) {
+            console.warn("GameObject.AddScript: script must be an instance of Behavior.", script);
+            return null;
+        }
+
+        script._removed = false;
+        script.gameObject = this;
+        script.game = this.game;
+        this.scripts.push(script);
+        script.Awake();
+        if (this._started && script.enabled && !script._started) {
+            script._started = true;
+            script.Start();
+        }
+        return script;
+    }
+
+    /**
+     * Returns the first attached script matching a class constructor or class name string.
+     * @param {Function|string} classOrName
+     * @returns {*|null}
+     */
+    GetScript(classOrName) {
+        for (let i = 0; i < this.scripts.length; i++) {
+            const s = this.scripts[i];
+            if (s._removed)
+                continue;
+            if (typeof classOrName === 'string') {
+                if (s.constructor && s.constructor.name === classOrName)
+                    return s;
+            }
+            else if (s instanceof classOrName) {
+                return s;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Returns all attached scripts matching a class constructor or class name string.
+     * @param {Function|string} classOrName
+     * @returns {Array<*>}
+     */
+    GetScripts(classOrName) {
+        const result = [];
+        for (let i = 0; i < this.scripts.length; i++) {
+            const s = this.scripts[i];
+            if (s._removed)
+                continue;
+            if (typeof classOrName === 'string') {
+                if (s.constructor && s.constructor.name === classOrName)
+                    result.push(s);
+            }
+            else if (s instanceof classOrName) {
+                result.push(s);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Detaches and destroys a script instance (or the first script matching a class/name).
+     * The script is disabled and flagged immediately (so it is skipped by any hook loop in progress);
+     * the array itself is compacted at the start of the next `_updateScripts()`.
+     * @param {*|Function|string} scriptOrClass
+     * @returns {boolean} True if a script was removed.
+     */
+    RemoveScript(scriptOrClass) {
+        const target = (typeof scriptOrClass === 'function' || typeof scriptOrClass === 'string')
+            ? this.GetScript(scriptOrClass)
+            : scriptOrClass;
+        if (!target || target._removed || this.scripts.indexOf(target) === -1)
+            return false;
+
+        target.enabled = false;
+        target._removed = true;
+        this._scriptsDirty = true;
+        target.Destroy();
+        target.gameObject = null;
+        target.game = null;
+
+        return true;
+    }
+
+    /** @private Starts any attached scripts that have not yet started. */
+    _startScripts() {
+        for (let i = 0; i < this.scripts.length; i++) {
+            const s = this.scripts[i];
+            s.game = this.game;
+            if (s.enabled && !s._started) {
+                s._started = true;
+                s.Start();
+            }
+        }
+    }
+
+    /** @private Updates all enabled attached scripts. */
+    _updateScripts(deltaTime) {
+        // Compact scripts removed since the last frame (never runs inside another script loop of this object)
+        if (this._scriptsDirty) {
+            this.scripts = this.scripts.filter(s => !s._removed);
+            this._scriptsDirty = false;
+        }
+
+        for (let i = 0; i < this.scripts.length; i++) {
+            const s = this.scripts[i];
+            if (s.enabled) {
+                if (!s._started) {
+                    s._started = true;
+                    s.Start();
+                }
+
+                if (s.enabled) {
+                    s.Update(deltaTime);
+                }
+            }
+        }
+    }
+
+    /** @private Draws all enabled attached scripts. Called by Game.Draw(). */
+    _drawScripts(renderer) {
+        for (let i = 0; i < this.scripts.length; i++) {
+            const s = this.scripts[i];
+            if (s.enabled) {
+                s.Draw(renderer);
+            }
+        }
+    }
+
+    // #endregion
 
     // #region Timer Methods (delegate to Game)
 
@@ -161,17 +354,47 @@ class GameObject {
      * @param {Collider} myCollider - This object's collider.
      * @param {Collider} otherCollider - The collider it collided with.
      */
-    OnCollisionEnter(myCollider, otherCollider) { }
+    OnCollisionEnter(myCollider, otherCollider) {
+        if (this.scripts.length === 0)
+            return;
+        
+        for (let i = 0; i < this.scripts.length; i++) {
+            const s = this.scripts[i];
+            if (s.enabled) {
+                s.OnCollisionEnter(myCollider, otherCollider);
+            }
+        }
+    }
 
     /**
      * Called when this object's collider stops touching another collider.
      * @param {Collider} myCollider - This object's collider.
      * @param {Collider} otherCollider - The collider it stopped colliding with.
      */
-    OnCollisionExit(myCollider, otherCollider) { }
+    OnCollisionExit(myCollider, otherCollider) {
+        if (this.scripts.length === 0)
+            return;
+        
+        for (let i = 0; i < this.scripts.length; i++) {
+            const s = this.scripts[i];
+            if (s.enabled) {
+                s.OnCollisionExit(myCollider, otherCollider);
+            }
+        }
+    }
 
     /** Called when the player clicks on this object's collider. */
-    OnClick() { }
+    OnClick() {
+        if (this.scripts.length === 0)
+            return;
+        
+        for (let i = 0; i < this.scripts.length; i++) {
+            const s = this.scripts[i];
+            if (s.enabled) {
+                s.OnClick();
+            }
+        }
+    }
 }
 
 /**
@@ -660,9 +883,13 @@ class Tileset extends GameObject {
         if (!rawConfig || typeof rawConfig !== 'object') return normalized;
 
         for (const [key, val] of Object.entries(rawConfig)) {
-            if (!val || typeof val !== 'object') continue;
+            if (!val || typeof val !== 'object')
+                continue;
+
             const src = val.rect || val;
-            if (typeof src.x !== 'number' || typeof src.y !== 'number') continue;
+            if (typeof src.x !== 'number' || typeof src.y !== 'number')
+                continue;
+
             normalized[key] = {
                 ...val,
                 rect: {
@@ -708,7 +935,9 @@ class Tileset extends GameObject {
         const layers = [];
         if (Array.isArray(data.layers) && data.layers.length > 0) {
             for (const l of data.layers) {
-                if (!l || !Array.isArray(l.data)) continue;
+                if (!l || !Array.isArray(l.data))
+                    continue;
+
                 layers.push({
                     name: l.name || 'Layer',
                     visible: l.visible !== false,
@@ -792,7 +1021,9 @@ class Tileset extends GameObject {
         const result = [];
         for (let i = 0; i < parsed.layers.length; i++) {
             const layer = parsed.layers[i];
-            if (!layer.visible) continue;
+            if (!layer.visible)
+                continue;
+
             const ts = new Tileset(
                 img,
                 Vector2.Copy(position),

@@ -110,7 +110,7 @@ class PhysicsCarGame extends Box2DGame {
             width, height, Color.FromString("rgba(100, 100, 100, 0.5)")
         );
         ground.rotation = rotation * degToRad;
-        this.gameObjects.push(ground);
+        this.AddGameObject(ground);
         return ground;
     }
 
@@ -134,8 +134,7 @@ class PhysicsCarGame extends Box2DGame {
             
             if (obj.type === "car") {
                 this.car = new Car(new Vector2(obj.x, obj.y), this.physicsWorld, this.physicsScale, this);
-                this.gameObjects.push(this.car);
-                this.car.Start();
+                this.AddGameObject(this.car);
 
                 this.fuelMax = obj.fuel;
                 this.fuel = obj.fuel;
@@ -221,8 +220,7 @@ class Car extends Box2DRectangleGO {
                 friction: 4.3
             }
         );
-        this.game.gameObjects.push(wheel);
-        wheel.Start();
+        this.game.AddGameObject(wheel);
         return wheel;
     }
     

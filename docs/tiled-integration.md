@@ -150,7 +150,7 @@ class MyGame extends Game {
 
         // Add to game objects
         this.tilesets.forEach(tileset => {
-            this.gameObjects.push(tileset);
+            this.AddGameObject(tileset);
         });
     }
 
@@ -298,11 +298,11 @@ const entityLayer = objectLayers.find(layer => layer.name === "Entities");
 entityLayer.objects.forEach(obj => {
     if (obj.name === "player_spawn") {
         this.player = new Player(new Vector2(obj.x, obj.y));
-        this.gameObjects.push(this.player);
+        this.AddGameObject(this.player);
     }
     else if (obj.name === "enemy") {
         const enemy = new Enemy(new Vector2(obj.x, obj.y));
-        this.gameObjects.push(enemy);
+        this.AddGameObject(enemy);
     }
 });
 ```
@@ -356,7 +356,7 @@ const resourceLayer = objectLayers.find(l => l.name === "Resources");
 resourceLayer.objects.forEach(obj => {
     if (obj.type === "tree") {
         const tree = new ResourceNode("wood", new Vector2(obj.x, obj.y), 500);
-        this.gameObjects.push(tree);
+        this.AddGameObject(tree);
     }
 });
 ```

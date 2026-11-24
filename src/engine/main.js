@@ -3,6 +3,7 @@ var canvas = /** @type {HTMLCanvasElement} */(null);
 var requestAnimationFrameID = -1;
 var setTimeoutID = -1;
 var unlockedLoopChannel = null;
+var engineRunning = false;
 
 /** @type {Renderer} The active Renderer instance. Set by the engine at startup and available globally throughout the game's lifetime. */
 var renderer = null
@@ -58,22 +59,40 @@ function LoadImages(assets, onloaded) {
         const entry = assets[assetKey];
 
         // ── Image ──────────────────────────────────────────────
-        pendingCount++;
-        const img = entry.img = new Image();
-        img.src = entry.path;
-        img.onload = () => {
-            let result = entry.img;
-            if (entry.bgColor) {
-                result = ApplyColorKey(entry.img, entry.bgColor);
-                entry.img = result;
-            }
-            result.halfWidth  = result.width  / 2;
-            result.halfHeight = result.height / 2;
-            done();
-        };
+        if (!entry.img) {
+            pendingCount++;
+            const img = entry.img = new Image();
+            img.src = entry.path;
+            img.onload = () => {
+                let result = entry.img;
+                if (entry.bgColor) {
+                    result = ApplyColorKey(entry.img, entry.bgColor);
+                    entry.img = result;
+                }
+                result.halfWidth  = result.width  / 2;
+                result.halfHeight = result.height / 2;
+                done();
+            };
+            img.onerror = () => {
+                console.error(`Failed to load image for "${assetKey}" (${entry.path})`);
+                done();
+            };
+        }
+        else if (!entry.img.complete) {
+            // Image created by an earlier loader is still in-flight (complete is true for loaded AND failed images)
+            pendingCount++;
+            const img = entry.img;
+            const onSettled = () => {
+                img.removeEventListener('load', onSettled);
+                img.removeEventListener('error', onSettled);
+                done();
+            };
+            img.addEventListener('load', onSettled);
+            img.addEventListener('error', onSettled);
+        }
 
         // ── Co-located atlas JSON (optional) ───────────────────
-        if (entry.atlasJsonPath) {
+        if (entry.atlasJsonPath && !entry.atlas) {
             pendingCount++;
             fetch(entry.atlasJsonPath)
                 .then(r => {
@@ -90,6 +109,10 @@ function LoadImages(assets, onloaded) {
                     done();
                 });
         }
+    }
+
+    if (pendingCount === 0) {
+        onloaded();
     }
 }
 
@@ -123,10 +146,14 @@ function LoadJSON(assets, onloaded) {
         }
     };
 
-    // Load each JSON file
+    // Load each JSON file (skip entries whose data is already populated)
     for (let assetKey in assets) {
         if (assets.hasOwnProperty(assetKey)) {
             const entry = assets[assetKey];
+            if (!entry || entry.data !== null && entry.data !== undefined || !entry.path) {
+                onload(assetKey, entry ? entry.data : null);
+                continue;
+            }
             fetch(entry.path)
                 .then(response => {
                     if (!response.ok) {
@@ -202,34 +229,49 @@ function Init(GameClass, canvasId = null) {
         game = new GameClass(renderer);
     }
 
+    if (game.config.audioAnalyzer) {
+        audioPlayer = new AudioPlayer(true, game.config.analyzerfftSize, game.config.analyzerSmoothing);
+    }
+    else {
+        audioPlayer = new AudioPlayer();
+    }
+
+    // Load all independent asset categories in parallel
+    let pendingAssetGroups = 6;
+    const onAssetGroupLoaded = () => {
+        if (--pendingAssetGroups === 0) {
+            console.log("Starting the game...");
+            Start();
+            Loop();
+        }
+    };
+
     LoadImages(game.graphicAssets, () => {
-        console.log(`All image files loaded.`);
-        
-        LoadJSON(game.tiledAssets, () => {
-            console.log(`All Tiled JSON files loaded.`);
-
-            LoadJSON(game.tilesetAssets, () => {
-                console.log(`All Tileset JSON files loaded.`);
-
-                if (game.config.audioAnalyzer) {
-                    audioPlayer = new AudioPlayer(true, game.config.analyzerfftSize, game.config.analyzerSmoothing);
-                }
-                else {
-                    audioPlayer = new AudioPlayer();
-                }
-                
-                audioPlayer.LoadAudio(game.audioAssets, () => {
-                    console.log("All audio files loaded.");
-                    console.log("Starting the game...");
-                    Start();
-                    Loop();
-                });
-            });
-        });
+        console.log("All image files loaded.");
+        onAssetGroupLoaded();
+    });
+    LoadJSON(game.tiledAssets, () => {
+        console.log("All Tiled JSON files loaded.");
+        onAssetGroupLoaded();
+    });
+    LoadJSON(game.tilesetAssets, () => {
+        console.log("All Tileset JSON files loaded.");
+        onAssetGroupLoaded();
+    });
+    LoadJSON(game.sceneAssets, () => {
+        onAssetGroupLoaded();
+    });
+    LoadJSON(game.particleAssets, () => {
+        onAssetGroupLoaded();
+    });
+    audioPlayer.LoadAudio(game.audioAssets, () => {
+        console.log("All audio files loaded.");
+        onAssetGroupLoaded();
     });
 }
 
 function Start() {
+    engineRunning = true;
     time = performance.now();
     frameLimiterAcum = 0;
     frameDeltaAcum = 0;
@@ -264,6 +306,9 @@ function ScheduleNextLoop() {
 }
 
 function Loop() {
+    if (!engineRunning)
+        return;
+
     ScheduleNextLoop();
 
     // compute FPS
@@ -425,6 +470,19 @@ function ResumeAudioContext() {
         }).catch((err) => {
             console.error("Failed to resume AudioContext:", err);
         });
+    }
+}
+
+/** Stops the active engine loop cleanly (cancels requestAnimationFrame / setTimeout / MessageChannel loop). */
+function StopEngine() {
+    engineRunning = false;
+    if (requestAnimationFrameID !== -1) {
+        cancelAnimationFrame(requestAnimationFrameID);
+        requestAnimationFrameID = -1;
+    }
+    if (setTimeoutID !== -1) {
+        clearTimeout(setTimeoutID);
+        setTimeoutID = -1;
     }
 }
 

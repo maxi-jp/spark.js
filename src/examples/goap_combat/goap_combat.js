@@ -528,7 +528,7 @@ class GOAPCombatScene extends Game {
         this.target = new TacticalTarget(255, 135);
         this.soldier = new TacticalSoldier(new Vector2(255, 345), this);
         this.soldier.inCover = true;
-        this.gameObjects = [this.soldier];
+        this.AddGameObject(this.soldier);
         this.soldier.goap.Plan('Initial Combat Plan');
 
         // HTML+CSS HUD, Toolbar & Live GOAP Inspector (CombatMenu extends HTMLMenu)

@@ -310,7 +310,7 @@ class PacMon extends Game {
             if (this.pacman.currentNode == this.pills[i].node) {
                 this.playerScore += this.pills[i].score;
                 this.scoreTextLabel.text = "SCORE: " + this.playerScore;
-                this.gameObjects.splice(this.gameObjects.indexOf(this.pills[i]), 1);
+                this.Destroy(this.pills[i]);
                 this.pills.splice(i, 1);
                 i--;
             }
@@ -320,7 +320,7 @@ class PacMon extends Game {
             if (this.pacman.currentNode == this.powerPellets[i].node) {
                 this.playerScore += this.powerPellets[i].score;
                 this.scoreTextLabel.text = "SCORE: " + this.playerScore;
-                this.gameObjects.splice(this.gameObjects.indexOf(this.powerPellets[i]), 1);
+                this.Destroy(this.powerPellets[i]);
                 this.powerPellets.splice(i, 1);
                 i--;
             }

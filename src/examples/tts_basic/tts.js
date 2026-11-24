@@ -160,10 +160,10 @@ class TTS extends Game {
     RemoveEnemy(enemy, index) {
         if (index === undefined) {
             this.enemies.splice(this.enemies.indexOf(enemy), 1);
-            this.gameObjects.splice(this.gameObjects.indexOf(enemy), 1);
+            this.Destroy(enemy);
         }
         else {
-            this.gameObjects.splice(this.gameObjects.indexOf(this.enemies[index]), 1);
+            this.Destroy(this.enemies[index]);
             this.enemies.splice(index, 1);
         }
     }

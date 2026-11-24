@@ -62,6 +62,7 @@ class Box2DGameObject extends GameObject {
     }
 
     Start() {
+        super.Start();
         this.objectsColliding = [];
     }
 
@@ -84,6 +85,10 @@ class Box2DGameObject extends GameObject {
             this.hasContactEnded = false;
             this.OnContactDetectEnded(this.contactEndedUserData);
         }
+
+        if (this.scripts.length > 0) {
+            this._updateScripts(deltaTime);
+        }
     }
 
     // DO NOT OVERRIDE: Used internally by Box2D contact system
@@ -105,8 +110,29 @@ class Box2DGameObject extends GameObject {
         this.hasContactEnded = true;
     }
 
-    OnContactDetected(other, contactPoint) { }
-    OnContactDetectEnded(other) { }
+    OnContactDetected(other, contactPoint) {
+        if (this.scripts.length === 0)
+            return;
+        
+        for (let i = 0; i < this.scripts.length; i++) {
+            const s = this.scripts[i];
+            if (s.enabled) {
+                s.OnContactDetected(other, contactPoint);
+            }
+        }
+    }
+    
+    OnContactDetectEnded(other) {
+        if (this.scripts.length === 0)
+            return;
+        
+        for (let i = 0; i < this.scripts.length; i++) {
+            const s = this.scripts[i];
+            if (s.enabled) {
+                s.OnContactDetectEnded(other);
+            }
+        }
+    }
 
     /**
      * Sets the linear velocity of the body.
@@ -214,8 +240,11 @@ class Box2DGameObject extends GameObject {
     }
 
     Destroy() {
-        this.world.DestroyBody(this.body);
-        this.body = null;
+        super.Destroy();
+        if (this.body) {
+            this.world.DestroyBody(this.body);
+            this.body = null;
+        }
     }
 }
 

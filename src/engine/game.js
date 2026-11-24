@@ -113,11 +113,27 @@ class Game {
          */
         this.tilesetAssets = null;
 
+        /**
+         * Scene Editor JSON assets to preload. Assign in the constructor before the engine calls `Start()`.
+         * Format: `{ key: { path: 'path/to/level.scene.json', data: null } }`
+         */
+        this.sceneAssets = null;
+
+        /**
+         * Particle System Editor JSON assets to preload. Assign in the constructor before the engine calls `Start()`.
+         * Format: `{ key: { path: 'path/to/particles.json', data: null } }`
+         */
+        this.particleAssets = null;
+
         /** @type {Renderer} The active renderer (Canvas2D or WebGL). */
         this.renderer = renderer;
 
-        /** @type {GameObject[]} All active game objects managed by this game. */
+        /** @type {GameObject[]} All active game objects managed by this game (kept in update order). */
         this.gameObjects = [];
+        /** @type {GameObject[]} Separate zIndex-sorted render list used only when _hasCustomZIndex is true. */
+        this._drawList = [];
+        this._hasCustomZIndex = false;
+        this._zOrderDirty = false;
         this.colliders = [];
         this.collidersById = new Map(); // Maps collider.id to Collider instance for quick lookups
         this.lastCollisions = new Set(); // ids of colliding pairs detected the last frame
@@ -237,6 +253,9 @@ class Game {
         }
         
         this.gameObjects = [];
+        this._drawList = [];
+        this._hasCustomZIndex = false;
+        this._zOrderDirty = false;
         this.colliders = [];
         this.collidersById.clear();
         this.lastCollisions.clear();
@@ -364,6 +383,9 @@ class Game {
                     gameObject.Destroy();
                     gameObject.game = null;
                     this.gameObjects.splice(index, 1);
+                    if (this._hasCustomZIndex) {
+                        this._zOrderDirty = true;
+                    }
                 }
             });
             this._objectsToDestroy.clear();
@@ -372,10 +394,23 @@ class Game {
     
     /** Called every frame after `Update()`. Override to draw custom graphics using `this.renderer`. */
     Draw() {
+        let drawOrder = this.gameObjects;
+        if (this._hasCustomZIndex) {
+            if (this._zOrderDirty) {
+                this._drawList = this.gameObjects.slice().sort((a, b) => a.zIndex - b.zIndex);
+                this._zOrderDirty = false;
+            }
+            drawOrder = this._drawList;
+        }
+
         if (!this.config.collidersOnly) {
-            this.gameObjects.forEach((gameObject) => {
-                if (gameObject.active)
+            drawOrder.forEach((gameObject) => {
+                if (gameObject.active) {
                     gameObject.Draw(this.renderer);
+                    if (gameObject.scripts && gameObject.scripts.length > 0) {
+                        gameObject._drawScripts(this.renderer);
+                    }
+                }
             });
         }
 
@@ -405,9 +440,64 @@ class Game {
      */
     AddGameObject(gameObject) {
         gameObject.game = this;
+        if (gameObject.scripts && gameObject.scripts.length > 0) {
+            for (let i = 0; i < gameObject.scripts.length; i++) {
+                gameObject.scripts[i].game = this;
+            }
+        }
         this.gameObjects.push(gameObject);
+        if (gameObject.zIndex) {
+            this._hasCustomZIndex = true;
+        }
+        if (this._hasCustomZIndex) {
+            this._zOrderDirty = true;
+        }
         gameObject.Start();
+        if (gameObject.scripts && gameObject.scripts.length > 0 && !gameObject._started) {
+            gameObject._started = true;
+            gameObject._startScripts();
+        }
         return gameObject;
+    }
+
+    /**
+     * Finds the first GameObject with the given `id`.
+     * @param {string} id
+     * @returns {GameObject|null}
+     */
+    FindGameObjectById(id) {
+        for (let i = 0; i < this.gameObjects.length; i++) {
+            if (this.gameObjects[i].id === id)
+                return this.gameObjects[i];
+        }
+        return null;
+    }
+
+    /**
+     * Finds the first GameObject with the given `name`.
+     * @param {string} name
+     * @returns {GameObject|null}
+     */
+    FindGameObjectByName(name) {
+        for (let i = 0; i < this.gameObjects.length; i++) {
+            if (this.gameObjects[i].name === name)
+                return this.gameObjects[i];
+        }
+        return null;
+    }
+
+    /**
+     * Returns all GameObjects matching the given `tag`.
+     * @param {string} tag
+     * @returns {GameObject[]}
+     */
+    FindGameObjectsByTag(tag) {
+        const result = [];
+        for (let i = 0; i < this.gameObjects.length; i++) {
+            if (this.gameObjects[i].tag === tag)
+                result.push(this.gameObjects[i]);
+        }
+        return result;
     }
 
     /**
@@ -431,8 +521,12 @@ class Game {
      */
     MoveGameObjectToEnd(gameObject) {
         const index = this.gameObjects.indexOf(gameObject);
-        if (index !== -1)
+        if (index !== -1) {
             this.gameObjects.push(this.gameObjects.splice(index, 1)[0]);
+            if (this._hasCustomZIndex) {
+                this._zOrderDirty = true;
+            }
+        }
         else
             console.warn("Error when moving the gameObjet to the end: GO not found in the gameObjects array.");
     }
