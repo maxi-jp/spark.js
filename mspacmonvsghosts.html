@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>spark.js ⚡ - Ms. Pac-Mon vs. Ghosts</title>
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="stylesheet" href="css/style.css">
+    <script src="src/engine/utils_math.js"></script>
+    <script src="src/engine/utils_classes.js"></script>
+    <script src="src/engine/renderer.js"></script>
+    <script src="src/engine/gameobjects.js"></script>
+    <script src="src/engine/input.js"></script>
+    <script src="src/engine/audioplayer.js"></script>
+    <script src="src/engine/game.js"></script>
+    <script src="src/engine/main.js"></script>
+    <script src="src/examples/mspacmonvsghosts/mspacmon_data.js"></script>
+    <script src="src/examples/mspacmonvsghosts/mspacmon_maze.js"></script>
+    <script src="src/examples/mspacmonvsghosts/mspacmon_state.js"></script>
+    <script src="src/examples/mspacmonvsghosts/mspacmon_controllers.js"></script>
+    <script src="src/examples/mspacmonvsghosts/mspacmon.js"></script>
+</head>
+<body>
+    <canvas id="myCanvas" width="640" height="480"></canvas>
+
+    <script>
+        window.onload = () => {
+            Init(PacMon);
+        }
+    </script>
+</body>
+</html>
