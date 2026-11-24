@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>spark.js — Scene Editor</title>
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="stylesheet" href="src/examples/scene_editor/scene_editor.css">
+
+    <!-- Engine dependencies for 1:1 viewport rendering & parsing -->
+    <script src="src/engine/utils_math.js"></script>
+    <script src="src/engine/utils_classes.js"></script>
+    <script src="src/engine/renderer.js"></script>
+    <script src="src/engine/gameobjects.js"></script>
+    <script src="src/engine/particlesystem.js"></script>
+    <script src="src/engine/input.js"></script>
+    <script src="src/engine/game.js"></script>
+    <script src="src/engine/scene.js"></script>
+</head>
+<body>
+
+    <!-- ── Top Toolbar ── -->
+    <div id="toolbar">
+        <h1>🎬 SCENE EDITOR</h1>
+        <div class="tb-sep"></div>
+
+        <!-- Sample / Project I/O -->
+        <select id="select-sample" class="tb-select" title="Load a built-in sample scene project">
+            <option value="arcadeCourtyard">Sample: 2D Arcade Courtyard</option>
+            <option value="physicsPlayground">Sample: Box2D Physics Playground</option>
+            <option value="blankScene">Blank 2D Scene</option>
+        </select>
+
+        <button id="btn-open-folder" class="tb-btn" title="Open a local project folder (File System Access API — Chrome/Edge)">📁 Open Folder</button>
+        <button id="btn-save-folder" class="tb-btn" title="Save scene.json & scripts to the open folder (Ctrl+S)" disabled>💾 Save</button>
+        <span id="folder-badge" class="tb-badge" style="display:none"></span>
+
+        <div class="tb-sep"></div>
+
+        <button id="btn-load-project" class="tb-btn" title="Load a .scene.json or .spark-project.json file">Load JSON</button>
+        <input type="file" id="file-project" accept=".json" style="display:none">
+        <button id="btn-export-scene" class="tb-btn" title="Download clean scene.json for SceneGame / SceneLoader">Export Scene ↓</button>
+        <button id="btn-export-bundle" class="tb-btn" title="Download self-contained .spark-project.json (scene + scripts + imported assets)">Save Bundle ↓</button>
+        <button id="btn-export-html" class="tb-btn primary" title="Export a standalone playable HTML file">Export HTML ↓</button>
+
+        <div class="tb-sep"></div>
+
+        <!-- Transform Gizmo Tools -->
+        <div class="tb-btn-group" id="tool-group">
+            <button id="tool-move"   class="tb-btn active" data-tool="move"   title="Select / Move (W)">✥ Move</button>
+            <button id="tool-rotate" class="tb-btn"        data-tool="rotate" title="Rotate (E)">⟳ Rotate</button>
+            <button id="tool-scale"  class="tb-btn"        data-tool="scale"  title="Scale (R)">⤢ Scale</button>
+        </div>
+
+        <button id="btn-undo" class="tb-btn" title="Undo (Ctrl+Z)" disabled>↶</button>
+        <button id="btn-redo" class="tb-btn" title="Redo (Ctrl+Y)" disabled>↷</button>
+
+        <div class="tb-sep"></div>
+
+        <!-- Grid & Snap -->
+        <label class="ph-check" title="Show viewport grid">
+            <input id="chk-grid" type="checkbox" checked> Grid
+        </label>
+        <label class="ph-check" title="Snap movement to grid">
+            <input id="chk-snap" type="checkbox"> Snap
+        </label>
+        <input id="grid-size" type="number" value="32" min="4" max="256" class="tb-input" style="width:52px" title="Grid size (px)">
+        <label class="ph-check" title="Show collider & Box2D physics gizmos">
+            <input id="chk-colliders" type="checkbox" checked> Colliders
+        </label>
+        <label class="ph-check" title="Animate particle systems live in Edit Mode">
+            <input id="chk-live-particles" type="checkbox" checked> Particles
+        </label>
+
+        <div class="tb-sep"></div>
+
+        <!-- Play-in-Editor Transport -->
+        <div class="tb-btn-group play-group">
+            <button id="btn-play"  class="tb-btn play-btn" title="Play Scene in sandboxed iframe (F5)">▶ Play</button>
+            <button id="btn-pause" class="tb-btn"          title="Pause / Resume Play Mode" disabled>⏸</button>
+            <button id="btn-step"  class="tb-btn"          title="Step 1 Frame (when paused)" disabled>⏭</button>
+            <button id="btn-stop"  class="tb-btn danger"   title="Stop Play Mode (Esc / F5)" disabled>⏹ Stop</button>
+        </div>
+
+        <select id="select-play-renderer" class="tb-select" title="Renderer used in Play Mode">
+            <option value="canvas2d">Canvas2D</option>
+            <option value="webgl">WebGL</option>
+        </select>
+    </div>
+
+    <!-- ── Main 3-Column Studio Body ── -->
+    <div id="main">
+
+        <!-- 1. LEFT SIDEBAR: Hierarchy & Prefabs -->
+        <aside id="left-panel" class="side-column">
+            <div class="tab-bar" id="left-tabs">
+                <button class="tab-btn active" data-left-tab="hierarchy">Hierarchy</button>
+                <button class="tab-btn"        data-left-tab="prefabs">Prefabs</button>
+            </div>
+
+            <!-- Hierarchy Pane -->
+            <div id="tab-hierarchy" class="tab-pane active">
+                <div class="pane-toolbar">
+                    <div class="add-entity-wrap">
+                        <button id="btn-add-entity" class="mini-btn accent">+ Add Entity ▾</button>
+                        <div id="add-entity-menu" class="dropdown-menu" style="display:none">
+                            <button data-entity-type="GameObject">📦 Empty GameObject</button>
+                            <button data-entity-type="RectangleGO">🟦 RectangleGO</button>
+                            <button data-entity-type="CircleGO">🔵 CircleGO</button>
+                            <button data-entity-type="SpriteObject">🖼 SpriteObject</button>
+                            <button data-entity-type="SpriteSectionObject">✂️ SpriteSection (Atlas)</button>
+                            <button data-entity-type="SSAnimationObjectBasic">🎞 Animated Sprite</button>
+                            <button data-entity-type="Tileset">🗺️ Tileset Map</button>
+                            <button data-entity-type="ParticleSystemGO">✨ ParticleSystemGO</button>
+                            <button data-entity-type="TextGO">🔤 TextGO</button>
+                            <div class="menu-sep"></div>
+                            <button data-entity-type="Box2DRectangleGO">⚛️ Box2D Rectangle</button>
+                            <button data-entity-type="Box2DSpriteObject">⚛️ Box2D Sprite</button>
+                            <button data-entity-type="Box2DTrigger">🟨 Box2D Trigger</button>
+                        </div>
+                    </div>
+                    <input id="hierarchy-search" type="text" class="search-input" placeholder="Filter..." spellcheck="false">
+                </div>
+
+                <div id="hierarchy-list" class="scroll-list"></div>
+
+                <div class="pane-footer">
+                    <button id="btn-dup-entity"   class="mini-btn" title="Duplicate selected (Ctrl+D)" disabled>⧉ Dup</button>
+                    <button id="btn-save-prefab"  class="mini-btn" title="Save selected entity as reusable Prefab" disabled>★ Prefab</button>
+                    <button id="btn-del-entity"   class="mini-btn danger" title="Delete selected (Del)" disabled>✕ Del</button>
+                </div>
+            </div>
+
+            <!-- Prefabs Pane -->
+            <div id="tab-prefabs" class="tab-pane">
+                <div class="pane-toolbar">
+                    <span class="tb-label">Drag onto viewport or click Spawn</span>
+                </div>
+                <div id="prefab-list" class="scroll-list"></div>
+            </div>
+        </aside>
+
+        <div class="col-resizer" data-resize="left"></div>
+
+        <!-- 2. CENTER WORKSPACE: Viewport + Bottom Drawer -->
+        <section id="center-column">
+
+            <!-- Viewport Header -->
+            <div id="viewport-header">
+                <div class="vh-group">
+                    <span id="viewport-mode-badge" class="mode-badge edit">EDIT MODE</span>
+                    <button id="btn-zoom-out" class="mini-btn" title="Zoom out">−</button>
+                    <span id="zoom-display" class="zoom-badge" title="Click to reset zoom to 100%">100%</span>
+                    <button id="btn-zoom-in"  class="mini-btn" title="Zoom in">+</button>
+                    <button id="btn-fit"      class="mini-btn" title="Frame camera & scene (F)">Fit</button>
+                </div>
+                <div class="vh-group">
+                    <span id="scene-title-label" class="tb-label">Untitled Scene</span>
+                    <span id="entity-count-label" class="tb-label">0 entities</span>
+                </div>
+            </div>
+
+            <!-- Dual-Canvas Edit Viewport + Sandboxed Playtest Overlay -->
+            <div id="viewport-wrap">
+                <canvas id="scene-canvas"></canvas>
+                <canvas id="gizmo-canvas"></canvas>
+
+                <!-- Sandboxed iframe Play Mode container -->
+                <div id="playtest-wrap" style="display:none">
+                    <div id="playtest-banner">
+                        <span id="playtest-status">▶ PLAYING</span>
+                        <label class="ph-check">
+                            <input id="chk-play-colliders" type="checkbox"> Draw Colliders
+                        </label>
+                        <button id="btn-play-restart" class="mini-btn">↻ Restart</button>
+                        <button id="btn-play-stop-banner" class="mini-btn danger">⏹ Stop</button>
+                    </div>
+                    <div id="playtest-frame-host"></div>
+                </div>
+
+                <div id="coord-bar">x: 0, y: 0</div>
+            </div>
+
+            <div class="row-resizer" data-resize="bottom"></div>
+
+            <!-- Bottom Drawer: Assets / Scripts / Console -->
+            <div id="bottom-drawer">
+                <div class="tab-bar drawer-tabs" id="bottom-tabs">
+                    <button class="tab-btn active" data-bottom-tab="assets">Assets</button>
+                    <button class="tab-btn"        data-bottom-tab="scripts">Scripts</button>
+                    <button class="tab-btn"        data-bottom-tab="console">Console <span id="console-badge" class="count-pill" style="display:none">0</span></button>
+                    <div class="drawer-actions">
+                        <button id="btn-import-asset" class="mini-btn accent">+ Import Asset</button>
+                        <input type="file" id="file-asset" accept="image/*,.json,.wav,.mp3,.ogg,.m4a,.js" multiple style="display:none">
+                        <button id="btn-new-script" class="mini-btn accent" style="display:none">+ New Script</button>
+                        <button id="btn-reload-scripts" class="mini-btn" style="display:none" title="Reload .js scripts from open local folder">↻ Reload Folder Scripts</button>
+                        <button id="btn-clear-console" class="mini-btn" style="display:none">Clear</button>
+                    </div>
+                </div>
+
+                <div id="drawer-assets" class="drawer-pane active">
+                    <div id="asset-grid" class="asset-grid"></div>
+                </div>
+
+                <div id="drawer-scripts" class="drawer-pane">
+                    <div id="script-list" class="script-list"></div>
+                </div>
+
+                <div id="drawer-console" class="drawer-pane">
+                    <div id="console-log" class="console-log"></div>
+                </div>
+            </div>
+        </section>
+
+        <div class="col-resizer" data-resize="right"></div>
+
+        <!-- 3. RIGHT SIDEBAR: Tabbed Inspector -->
+        <aside id="right-panel" class="side-column">
+            <div class="tab-bar" id="right-tabs">
+                <button class="tab-btn active" data-right-tab="entity">Entity</button>
+                <button class="tab-btn"        data-right-tab="scene">Scene</button>
+                <button class="tab-btn"        data-right-tab="backgrounds">BG</button>
+                <button class="tab-btn"        data-right-tab="input">Input</button>
+                <button class="tab-btn"        data-right-tab="physics">Physics</button>
+            </div>
+
+            <div id="inspector-scroll">
+                <div id="insp-entity"      class="insp-pane active"></div>
+                <div id="insp-scene"       class="insp-pane"></div>
+                <div id="insp-backgrounds" class="insp-pane"></div>
+                <div id="insp-input"       class="insp-pane"></div>
+                <div id="insp-physics"     class="insp-pane"></div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- ── Script Editor Modal ── -->
+    <div id="script-modal" class="modal-backdrop" style="display:none">
+        <div class="modal-dialog modal-large">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <span>📜 Script Editor</span>
+                    <input id="script-modal-name" type="text" class="tb-input" style="width:180px" placeholder="MyBehavior" spellcheck="false">
+                    <select id="script-template-select" class="tb-select" title="Insert starter template">
+                        <option value="">Insert Template…</option>
+                        <option value="blank">Blank Behavior</option>
+                        <option value="topDownPlayer">Top-Down Player Controller</option>
+                        <option value="patrol">Patrol Movement</option>
+                        <option value="collectible">Collectible / Trigger</option>
+                        <option value="spawner">Prefab Spawner</option>
+                        <option value="box2dImpulse">Box2D Impulse Controller</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button id="btn-script-download" class="mini-btn" title="Download as .js file">Download .js ↓</button>
+                    <button id="btn-script-save" class="mini-btn accent">Save &amp; Parse Schema</button>
+                    <button id="btn-script-close" class="mini-btn danger">✕</button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <textarea id="script-code-area" spellcheck="false" autocomplete="off"></textarea>
+                <div id="script-parse-status" class="parse-status">Ready</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Toast Notification ── -->
+    <div id="toast"></div>
+
+    <!-- Modular Scene Editor Scripts (plain global JS, fixed dependency order) -->
+    <script src="src/examples/scene_editor/editor_scripts.js"></script>
+    <script src="src/examples/scene_editor/editor_state.js"></script>
+    <script src="src/examples/scene_editor/editor_project_io.js"></script>
+    <script src="src/examples/scene_editor/editor_viewport.js"></script>
+    <script src="src/examples/scene_editor/editor_inspector.js"></script>
+    <script src="src/examples/scene_editor/editor_playtest.js"></script>
+    <script src="src/examples/scene_editor/scene_editor.js"></script>
+</body>
+</html>

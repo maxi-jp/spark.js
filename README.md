@@ -32,6 +32,7 @@ Documentation can be consulted [here](https://maxi-jp.github.io/spark.js/docs/).
 - **Sprite Atlas Editor**: Standalone browser dev tool (`sprite-atlas-editor.html`) for defining named crop rectangles on sprite-sheet images — drag to draw, grid-snap, zoom/pan, numeric editing, import/export JSON.
 - **Tileset & Map Editor**: Integrated browser dev tool (`tileset-editor.html`) that combines sprite-sheet cropping and grid auto-slicing with a multi-layer 2D tilemap builder — define or import atlas crops, assign bulk per-tile metadata (`walkable`, `terrainType`, `tags`), paint with Brush/Erase/Fill/Rect/Pick tools (including random multi-tile brush painting), and export JSON directly loadable by `Tileset.FromData(img, pos, scale, data)` or `new Tileset(img, pos, scale, data)`.
 - **Particle System Editor**: Standalone browser dev tool (`particle-system-editor.html`) for designing, previewing, and exporting `ParticleSystem` configurations in real time — upload custom particle textures (or use built-in procedural shapes), tune all emitter/particle parameters with live sliders, test emitter movement modes (drag, follow mouse, orbit), and export JSON or JS snippets.
+- **Scene Editor & Behavior Scripting**: Integrated browser studio (`scene-editor.html`) paired with `src/engine/scene.js` (`Behavior`, `ScriptRegistry`, `SceneLoader`, `SceneGame`, `Box2DSceneGame`) for visually composing 2D scenes, attaching reusable scripts with `static inspector` schemas, configuring game settings/input/cameras/parallax/Box2D, and playtesting live in a sandboxed `<iframe>`.
 - **Debugging Tools**: Optional debug drawing for physics bodies and an FPS/stats overlay.
 - **Mode 7 Renderer**: Simulate SNES-style pseudo-3D backgrounds (as in F-Zero or Mario Kart).
 
@@ -248,7 +249,7 @@ window.onload = () => {
 }
 ```
 
-5. Create GameObjects by inheriting from the classes in `gameobjects.js`, add them to the `this.gameObjects` array of your game's `Start` method, and run! (See the examples in `src/examples/`.)
+5. Create GameObjects by inheriting from the classes in `gameobjects.js`, register them with `this.AddGameObject(...)` in your game's `Start` method, and run! (See the examples in `src/examples/`.)
 
 ## Example: Creating a GameObject
 

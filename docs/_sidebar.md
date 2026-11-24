@@ -13,5 +13,6 @@
 - [GOAP Planner](goap.md)
 - [Utilities](utilities.md)
 - [Particle System](particles.md)
+- [Scene Editor & Scripting](scene-editor.md)
 - [Debugging Tools](debugging.md)
 - [Examples](examples.md)

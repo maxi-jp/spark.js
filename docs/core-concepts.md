@@ -225,7 +225,7 @@ Some methods that the base `Game` class provides and can be used in your game:
 
 ## GameObjects
 
-The `GameObject` class (`engine/gameobjects.js`) is the base class for every interactive entity. Push instances into `this.gameObjects` and the engine will call their lifecycle methods automatically.
+The `GameObject` class (`engine/gameobjects.js`) is the base class for every interactive entity. Register instances with `this.AddGameObject(go)` and the engine will call their lifecycle methods automatically.
 
 ### Lifecycle methods
 
@@ -240,7 +240,7 @@ Override these in your subclass to inject logic:
 | `OnCollisionExit(myCollider, otherCollider)` | First frame two previously overlapping colliders separate |
 | `OnClick()` | When the mouse is clicked inside the object's registered collider |
 
-> Always call `super.Update(deltaTime)` when overriding `Update` — the base implementation ticks the attached collider.
+> Always call `super.Update(deltaTime)` when overriding `Update` — the base implementation ticks the attached collider and runs attached Behavior scripts. Likewise, call `super.Start()`, `super.Destroy()`, `super.OnCollisionEnter/Exit(...)` and `super.OnClick()` when overriding them on objects that use scripts, or those script hooks will be skipped.
 
 ### Properties
 

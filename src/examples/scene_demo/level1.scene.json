@@ -1,0 +1,169 @@
+{
+  "format": "spark.scene",
+  "version": 1,
+  "meta": {
+    "name": "Standalone SceneGame Demo",
+    "author": "spark.js",
+    "gridSize": 32,
+    "backgroundColor": "#181c28"
+  },
+  "config": {
+    "screenWidth": 800,
+    "screenHeight": 500,
+    "imageSmoothingEnabled": false,
+    "fillWindow": false,
+    "preserveAspectRatio": true,
+    "drawColliders": false,
+    "mobileSupport": false,
+    "fpsCap": 0
+  },
+  "physics": {
+    "enabled": false,
+    "scale": 30,
+    "gravity": { "x": 0, "y": -9.8 },
+    "doSleep": true
+  },
+  "input": {
+    "actions": {
+      "Dash": [{ "type": "key", "code": 32 }]
+    },
+    "axes": {
+      "MoveX": [
+        { "type": "key", "positive": 68, "negative": 65 },
+        { "type": "key", "positive": 39, "negative": 37 }
+      ],
+      "MoveY": [
+        { "type": "key", "positive": 83, "negative": 87 },
+        { "type": "key", "positive": 40, "negative": 38 }
+      ]
+    }
+  },
+  "assets": {
+    "images": {
+      "rupee": { "path": "src/examples/common_assets/green_rupee.png" }
+    },
+    "tilesets": {},
+    "particles": {},
+    "audio": {},
+    "scripts": [
+      { "id": "DemoPlayerController", "path": "src/examples/scene_demo/scripts/demo_behaviors.js" },
+      { "id": "DemoPatrolEnemy", "path": "src/examples/scene_demo/scripts/demo_behaviors.js" },
+      { "id": "DemoCollectible", "path": "src/examples/scene_demo/scripts/demo_behaviors.js" }
+    ]
+  },
+  "camera": {
+    "type": "FollowCamera",
+    "x": 0,
+    "y": 0,
+    "zoom": 1,
+    "targetEntityId": "ent_player",
+    "minX": -80,
+    "maxX": 180,
+    "minY": -60,
+    "maxY": 120,
+    "smoothingSpeed": 6,
+    "offset": { "x": 0, "y": 0 }
+  },
+  "backgroundLayers": [
+    {
+      "type": "StaticGradientLayer",
+      "dirX": 0,
+      "dirY": 1,
+      "colorStops": [[0, "#14192b"], [1, "#1f2940"]]
+    }
+  ],
+  "prefabs": {
+    "rupee": {
+      "name": "Rupee",
+      "tag": "pickup",
+      "type": "SpriteObject",
+      "active": true,
+      "zIndex": 5,
+      "transform": { "x": 0, "y": 0, "rotation": 0, "scaleX": 0.4, "scaleY": 0.4, "pivotX": 0, "pivotY": 0 },
+      "props": { "imageKey": "rupee", "alpha": 1, "flipX": false, "flipY": false },
+      "collider": { "type": "CircleCollider", "radius": 18, "offsetX": 0, "offsetY": 0, "enabled": true },
+      "physicsBody": null,
+      "scripts": [{ "className": "DemoCollectible", "enabled": true, "props": { "bobAmplitude": 6, "bobSpeed": 4 } }]
+    }
+  },
+  "entities": [
+    {
+      "id": "ent_floor",
+      "name": "Floor",
+      "tag": "env",
+      "type": "RectangleGO",
+      "active": true,
+      "zIndex": -5,
+      "transform": { "x": 400, "y": 260, "rotation": 0, "scaleX": 1, "scaleY": 1, "pivotX": 0, "pivotY": 0 },
+      "props": { "width": 680, "height": 360, "color": "#242c3e", "stroke": false, "lineWidth": 2 },
+      "collider": { "type": "None" },
+      "physicsBody": null,
+      "scripts": []
+    },
+    {
+      "id": "ent_title",
+      "name": "Title",
+      "tag": "ui",
+      "type": "TextGO",
+      "active": true,
+      "zIndex": 20,
+      "transform": { "x": 400, "y": 46, "rotation": 0, "scaleX": 1, "scaleY": 1, "pivotX": 0, "pivotY": 0 },
+      "props": { "text": "SceneGame Standalone Demo — WASD/Arrows + Space to Dash", "font": "bold 16px Arial", "color": "#cfe0ff", "align": "center", "baseline": "middle", "stroke": false, "lineWidth": 1 },
+      "collider": { "type": "None" },
+      "physicsBody": null,
+      "scripts": []
+    },
+    {
+      "id": "ent_player",
+      "name": "Player",
+      "tag": "player",
+      "type": "RectangleGO",
+      "active": true,
+      "zIndex": 10,
+      "transform": { "x": 180, "y": 260, "rotation": 0, "scaleX": 1, "scaleY": 1, "pivotX": 0, "pivotY": 0 },
+      "props": { "width": 36, "height": 36, "color": "#5b8cff", "stroke": false, "lineWidth": 2 },
+      "collider": { "type": "RectangleCollider", "width": 36, "height": 36, "offsetX": 0, "offsetY": 0, "enabled": true },
+      "physicsBody": null,
+      "scripts": [{ "className": "DemoPlayerController", "enabled": true, "props": { "speed": 240, "dashMultiplier": 1.8 } }]
+    },
+    {
+      "id": "ent_guard",
+      "name": "Patrol Guard",
+      "tag": "enemy",
+      "type": "CircleGO",
+      "active": true,
+      "zIndex": 9,
+      "transform": { "x": 420, "y": 250, "rotation": 0, "scaleX": 1, "scaleY": 1, "pivotX": 0, "pivotY": 0 },
+      "props": { "radius": 22, "color": "#e05555", "stroke": false, "lineWidth": 2 },
+      "collider": { "type": "CircleCollider", "radius": 22, "offsetX": 0, "offsetY": 0, "enabled": true },
+      "physicsBody": null,
+      "scripts": [{ "className": "DemoPatrolEnemy", "enabled": true, "props": { "speed": 140, "distance": 110, "axis": "y" } }]
+    },
+    {
+      "id": "ent_rupee_1",
+      "name": "Rupee 1",
+      "tag": "pickup",
+      "type": "SpriteObject",
+      "active": true,
+      "zIndex": 5,
+      "transform": { "x": 580, "y": 190, "rotation": 0, "scaleX": 0.4, "scaleY": 0.4, "pivotX": 0, "pivotY": 0 },
+      "props": { "imageKey": "rupee", "alpha": 1, "flipX": false, "flipY": false },
+      "collider": { "type": "CircleCollider", "radius": 18, "offsetX": 0, "offsetY": 0, "enabled": true },
+      "physicsBody": null,
+      "scripts": [{ "className": "DemoCollectible", "enabled": true, "props": { "bobAmplitude": 6, "bobSpeed": 4 } }]
+    },
+    {
+      "id": "ent_rupee_2",
+      "name": "Rupee 2",
+      "tag": "pickup",
+      "type": "SpriteObject",
+      "active": true,
+      "zIndex": 5,
+      "transform": { "x": 600, "y": 330, "rotation": 0, "scaleX": 0.4, "scaleY": 0.4, "pivotX": 0, "pivotY": 0 },
+      "props": { "imageKey": "rupee", "alpha": 1, "flipX": false, "flipY": false },
+      "collider": { "type": "CircleCollider", "radius": 18, "offsetX": 0, "offsetY": 0, "enabled": true },
+      "physicsBody": null,
+      "scripts": [{ "className": "DemoCollectible", "enabled": true, "props": { "bobAmplitude": 6, "bobSpeed": 4.5 } }]
+    }
+  ]
+}
